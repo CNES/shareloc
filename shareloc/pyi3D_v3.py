@@ -521,7 +521,7 @@ class gld_xH:
 
 
         #   1.2 - Initialisation du rang du premier sommet de la visee
-        i0 = np.floor(dH3D_p1)
+        i0 = int(np.floor(dH3D_p1))
 
         #   1.3 - Initialisation du point de depart (dans p2)
         p2      = PointB_MNT.copy()
@@ -1197,8 +1197,8 @@ class gld_xH:
 
         dl = (lig - self.lig0)/self.paslig
         dc = (col - self.col0)/self.pascol
-        il = np.floor(dl)
-        ic = np.floor(dc)
+        il = int(np.floor(dl))
+        ic = int(np.floor(dc))
         (kh,kb) = self.renvoie_indices_grilles_alt(alt)
 
         lon_h00 = self.gld_lon[kh,il  ,ic]

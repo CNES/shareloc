@@ -132,7 +132,7 @@ class mnt:
                 setattr(self,key,hd_babel[key])
             self.Z = lit_grille_bsq(self.fic_mnt,self.nl,self.nc,self.codage)
         else:
-            print "format de mnt non reconnu"
+            print("format de mnt non reconnu")
 
     def eq_plan(self,i,P):
         return self.a[i]*P[0] + self.b[i]*P[1] + self.c[i]*P[2] - self.d[i]
@@ -315,7 +315,7 @@ class gld_xH:
             self.colmax = self.col0 + self.pascol*(self.nbcol-1)
         else:
 
-            print "format de mnt non reconnu"
+            print("format de mnt non reconnu")
 
 
     def checkCubeMNT(self,Visee,mnt):
@@ -1234,7 +1234,7 @@ class gld_xH:
         if abs(det) > 0.000000000001:
             Matdp = np.matrix([[dlat_l,-dlon_l],[-dlat_c,dlon_c]])/det
         else:
-            print "determinant nul"
+            print("determinant nul")
         return Matdp
     #-------------------------------------------------------------------------------------------------------------------------
     def fct_locinv(self,P,nb_iterations = 15):
@@ -1319,7 +1319,7 @@ start_time = time.time()
 gricol = fct_coloc(gri, gri, mntbsq,0.5, 0.5, 10, 100, 20, 20)
 gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)
 interval = time.time() - start_time
-print 'Total time in seconds 200x200 coloc:', interval
+print('Total time in seconds 200x200 coloc:', interval)
 
 
 #validation lecture de grille

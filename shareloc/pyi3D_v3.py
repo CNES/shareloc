@@ -6,6 +6,7 @@ Created on Tue Jun 09 18:44:35 2020
 """
 import numpy as np
 import os.path as op
+import os
 
 #------------------------------------------------------------------------------
 def lit_header_hdbabel(fic_mnt_bsq):
@@ -1299,12 +1300,23 @@ def fct_coloc(gld_xH_src, gld_hX_dst, mnt, \
 
     return gricoloc
 
+def test_path():
+    """
+    return the data folder
+    :return: data path.
+    :rtype: str
+    """    
+    data_folder = op.join(os.environ["TESTPATH"])
+    return data_folder
+
+data_folder = test_path()
+
 #chargement du mnt
-fic = '.\\valid_euclidium\MNT_extrait\mnt_extrait.c1'
+fic = op.join(data_folder,'MNT_extrait/mnt_extrait.c1')
 mntbsq = mnt(fic)
 
 #chargement des grilles
-gld = '.\\valid_euclidium\grilles_gld_xH\P1BP--2017030824934340CP_H1.hd'
+gld = op.join(data_folder,'grilles_gld_xH/P1BP--2017030824934340CP_H1.hd')
 gri = gld_xH(gld)
 
 #init des predicteurs

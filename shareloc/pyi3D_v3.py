@@ -249,6 +249,8 @@ class mnt:
 
 #-------------------------------------------------------------------------------
 class gld_xH:
+    """ multi H direct localization grid handling class 
+    """
     def __init__(self,fichier_gld_bsq, format_gri = 'bsq'):
         self.fichier_in = fichier_gld_bsq
         self.format    = format_gri

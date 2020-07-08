@@ -1328,13 +1328,16 @@ calcul_gld3d -all -path_visee ./grilles_gld_xH -nom_visee P1BP--2017030824934340
 -format BSQ -nbcol 200 -nblig 200 -pascol 50 -paslig 60 -j0 0 -i0 0 -col0 100.5 -lig0 100.5 -matrice 1 0 0 1
 """
 
-import time
-start_time = time.time()
-gricol = fct_coloc(gri, gri, mntbsq,0.5, 0.5, 10, 100, 20, 20)
-gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)
-interval = time.time() - start_time
-print('Total time in seconds 200x200 coloc: {:.2f}s'.format(interval))
 
 
-#validation lecture de grille
+if __name__ == '__main__':
+    import time
+    start_time = time.time()
+    gricol = fct_coloc(gri, gri, mntbsq,0.5, 0.5, 10, 100, 20, 20)
+    gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)
+    interval = time.time() - start_time
+    print('Total time in seconds 200x200 coloc: {:.2f}s'.format(interval))
+    
+    
+    #validation lecture de grille
 

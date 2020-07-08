@@ -1333,7 +1333,7 @@ start_time = time.time()
 gricol = fct_coloc(gri, gri, mntbsq,0.5, 0.5, 10, 100, 20, 20)
 gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)
 interval = time.time() - start_time
-print('Total time in seconds 200x200 coloc:', interval)
+print('Total time in seconds 200x200 coloc: {:.2f}s'.format(interval))
 
 
 #validation lecture de grille

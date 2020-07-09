@@ -16,9 +16,6 @@ def test_path():
     data_folder = os.path.join(os.environ["TESTPATH"])
     return data_folder
 
-
-
-
 def prepare_loc():
     """
     Read multiH grid
@@ -46,7 +43,6 @@ calcul_gld3d -all -path_visee ./grilles_gld_xH -nom_visee P1BP--2017030824934340
 -format BSQ -nbcol 200 -nblig 200 -pascol 50 -paslig 60 -j0 0 -i0 0 -col0 100.5 -lig0 100.5 -matrice 1 0 0 1
 """
  
- 
 @pytest.mark.unit_tests
 def test_gld_mnt():  
     """
@@ -55,6 +51,70 @@ def test_gld_mnt():
     mntbsq,gri = prepare_loc()                  
     gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)                
     assert(True)                
+
+
+@pytest.mark.unit_tests
+def test_loc_dir_check_cube_mnt():  
+    """
+    Test direct localization check mnt cube
+    """            
+    assert(True)
+
+@pytest.mark.unit_tests
+def test_loc_dir_interp_visee_unitaire_gld():  
+    """
+    Test los interpolation
+    """            
+    assert(True)
+
+    
+
+@pytest.mark.unit_tests
+def test_loc_dir_h():  
+    """
+    Test direct localization at constant altitude
+    """            
+    assert(True)  
+
+@pytest.mark.unit_tests
+def test_loc_dir_mnt():  
+    """
+    Test direct localization on DTM
+    """            
+    assert(True)
+
+@pytest.mark.unit_tests
+def test_loc_dir_mnt_opt():  
+    """
+    Test direct localization on DTM
+    """            
+    assert(True)
+
+@pytest.mark.unit_tests
+def test_loc_inv():
+    """
+    Test inverse localization
+    """
+    assert(True)
+
+@pytest.mark.unit_tests
+def test_loc_intersection():
+    """
+    Test direct localization intersection function
+    """
+    assert(True)
+
+
+
+@pytest.mark.unit_tests
+def test_loc_dir_loc_inv():
+    """
+    Test direct localization followed by inverse one
+    """
+    assert(True)
+
+
+
                 
 @pytest.mark.unit_tests
 def test_coloc():
@@ -64,6 +124,11 @@ def test_coloc():
     mntbsq,gri = prepare_loc()
     gricol = loc.fct_coloc(gri, gri, mntbsq, 0.5, 0.5, 10, 100, 20, 20)
     assert(True)
+    
+
+
+
+    
     
 
 

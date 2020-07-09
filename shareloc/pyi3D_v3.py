@@ -6,6 +6,7 @@ Created on Tue Jun 09 18:44:35 2020
 """
 import numpy as np
 import os.path as op
+import os
 
 #------------------------------------------------------------------------------
 def lit_header_hdbabel(fic_mnt_bsq):
@@ -132,7 +133,7 @@ class mnt:
                 setattr(self,key,hd_babel[key])
             self.Z = lit_grille_bsq(self.fic_mnt,self.nl,self.nc,self.codage)
         else:
-            print "format de mnt non reconnu"
+            print("format de mnt non reconnu")
 
     def eq_plan(self,i,P):
         return self.a[i]*P[0] + self.b[i]*P[1] + self.c[i]*P[2] - self.d[i]
@@ -249,6 +250,8 @@ class mnt:
 
 #-------------------------------------------------------------------------------
 class gld_xH:
+    """ multi H direct localization grid handling class 
+    """
     def __init__(self,fichier_gld_bsq, format_gri = 'bsq'):
         self.fichier_in = fichier_gld_bsq
         self.format    = format_gri
@@ -315,7 +318,7 @@ class gld_xH:
             self.colmax = self.col0 + self.pascol*(self.nbcol-1)
         else:
 
-            print "format de mnt non reconnu"
+            print("format de mnt non reconnu")
 
 
     def checkCubeMNT(self,Visee,mnt):
@@ -518,7 +521,7 @@ class gld_xH:
 
 
         #   1.2 - Initialisation du rang du premier sommet de la visee
-        i0 = np.floor(dH3D_p1)
+        i0 = int(np.floor(dH3D_p1))
 
         #   1.3 - Initialisation du point de depart (dans p2)
         p2      = PointB_MNT.copy()
@@ -1194,8 +1197,8 @@ class gld_xH:
 
         dl = (lig - self.lig0)/self.paslig
         dc = (col - self.col0)/self.pascol
-        il = np.floor(dl)
-        ic = np.floor(dc)
+        il = int(np.floor(dl))
+        ic = int(np.floor(dc))
         (kh,kb) = self.renvoie_indices_grilles_alt(alt)
 
         lon_h00 = self.gld_lon[kh,il  ,ic]
@@ -1234,7 +1237,7 @@ class gld_xH:
         if abs(det) > 0.000000000001:
             Matdp = np.matrix([[dlat_l,-dlon_l],[-dlat_c,dlon_c]])/det
         else:
-            print "determinant nul"
+            print("determinant nul")
         return Matdp
     #-------------------------------------------------------------------------------------------------------------------------
     def fct_locinv(self,P,nb_iterations = 15):
@@ -1297,30 +1300,45 @@ def fct_coloc(gld_xH_src, gld_hX_dst, mnt, \
 
     return gricoloc
 
-#chargement du mnt
-fic = '.\\valid_euclidium\MNT_extrait\mnt_extrait.c1'
-mntbsq = mnt(fic)
-
-#chargement des grilles
-gld = '.\\valid_euclidium\grilles_gld_xH\P1BP--2017030824934340CP_H1.hd'
-gri = gld_xH(gld)
-
-#init des predicteurs
-gri.init_pred_loc_inv()
-#
-"""
-calcul_gld3d -all -path_visee ./grilles_gld_xH -nom_visee P1BP--2017030824934340CP_H1 -type_visee LocalisateurGrille_Directe \
--mnt ./MNT_extrait/mnt_extrait -repter GRS80:G-D/:H-M -path_grille . -nom_grille test_intersect_euclide -convention BABEL \
--format BSQ -nbcol 200 -nblig 200 -pascol 50 -paslig 60 -j0 0 -i0 0 -col0 100.5 -lig0 100.5 -matrice 1 0 0 1
-"""
-
-import time
-start_time = time.time()
-gricol = fct_coloc(gri, gri, mntbsq,0.5, 0.5, 10, 100, 20, 20)
-gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)
-interval = time.time() - start_time
-print 'Total time in seconds 200x200 coloc:', interval
+def test_path():
+    """
+    return the data folder
+    :return: data path.
+    :rtype: str
+    """    
+    data_folder = op.join(os.environ["TESTPATH"])
+    return data_folder
 
 
-#validation lecture de grille
+
+
+if __name__ == '__main__':
+    """
+    calcul_gld3d -all -path_visee ./grilles_gld_xH -nom_visee P1BP--2017030824934340CP_H1 -type_visee LocalisateurGrille_Directe \
+    -mnt ./MNT_extrait/mnt_extrait -repter GRS80:G-D/:H-M -path_grille . -nom_grille test_intersect_euclide -convention BABEL \
+    -format BSQ -nbcol 200 -nblig 200 -pascol 50 -paslig 60 -j0 0 -i0 0 -col0 100.5 -lig0 100.5 -matrice 1 0 0 1
+    """
+
+    import time
+    data_folder = test_path()
+    
+    #chargement du mnt
+    fic = op.join(data_folder,'MNT_extrait/mnt_extrait.c1')
+    mntbsq = mnt(fic)
+    
+    #chargement des grilles
+    gld = op.join(data_folder,'grilles_gld_xH/P1BP--2017030824934340CP_H1.hd')
+    gri = gld_xH(gld)
+    
+    #init des predicteurs
+    gri.init_pred_loc_inv()
+    #
+    start_time = time.time()
+    gricol = fct_coloc(gri, gri, mntbsq,0.5, 0.5, 10, 100, 20, 20)
+    gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)
+    interval = time.time() - start_time
+    print('Total time in seconds 200x200 coloc: {:.2f}s'.format(interval))
+    
+    
+    #validation lecture de grille
 

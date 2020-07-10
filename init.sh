@@ -3,6 +3,8 @@
 export SHARELOCPATH="$( cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P )"
 echo "SHARELOCPATH: $SHARELOCPATH"
 
+export MODULEPATH=$MODULEPATH:${SHARELOCPATH}/Modulefiles
+
 module load python/3.7.2
 
 # shareloc vars

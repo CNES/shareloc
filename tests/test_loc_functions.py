@@ -32,8 +32,7 @@ def prepare_loc():
     gld = os.path.join(data_folder,'grilles_gld_xH/P1BP--2017030824934340CP_H1.hd')
     gri = loc.gld_xH(gld) 
     
-    #init des predicteurs
-    gri.init_pred_loc_inv()
+   
     return mntbsq,gri
  
  
@@ -86,7 +85,8 @@ def test_loc_dir_h():
     diff_lon = lonlatalt[0] - valid_lon
     diff_lat = lonlatalt[1] - valid_lat
     diff_alt = lonlatalt[2] - valid_alt
-    print(lonlatalt)
+    print("direct localization at constant altitude lig : {} col {} alt {}".format(lig,col,h))
+    print("lon {} lat {} alt {} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
     print('diff_lon {} diff_lat {} diff_alt {}'.format(diff_lon, diff_lat, diff_alt))
     assert(valid_lon == pytest.approx(lonlatalt[0],abs=1e-12))
     assert(valid_lat == pytest.approx(lonlatalt[1],abs=1e-12))
@@ -111,7 +111,22 @@ def test_loc_inv():
     """
     Test inverse localization
     """
-    assert(True)
+    #init des predicteurs
+    ___,gri = prepare_loc()
+    gri.init_pred_loc_inv()
+    lon = 57.2167252772905
+    lat = 21.9587514585812
+    alt = 10.0
+    #init des predicteurs
+
+    inv_lig,inv_col,valid = gri.fct_locinv([lon,lat,alt])
+    valid_lig = 50.5
+    valid_col = 10.0
+    print("inverse localization  : lon {} lat {} alt {}".format(lon,lat,alt))
+    print("lig {} col {}  ".format(inv_lig, inv_col))
+    print('diff_lig {} diff_col {} '.format(inv_lig - valid_lig, inv_col - valid_col))   
+    assert(inv_lig == pytest.approx(valid_lig,abs=1e-2))
+    assert(inv_col == pytest.approx(valid_col,abs=1e-2))     
 
 @pytest.mark.unit_tests
 def test_loc_intersection():
@@ -127,8 +142,19 @@ def test_loc_dir_loc_inv():
     """
     Test direct localization followed by inverse one
     """
-    assert(True)
+    lig = 150.5
+    col = 20.5
+    h = 10.0
+    ___,gri = prepare_loc()
+    #init des predicteurs
+    gri.init_pred_loc_inv()
+    lonlatalt = gri.fct_locdir_h(lig, col, h)
+    inv_lig,inv_col,valid = gri.fct_locinv(lonlatalt)
 
+    print('lig {} col {} valid {}'.format(inv_lig, inv_col, valid))
+    assert(lig == pytest.approx(inv_lig,abs=1e-2))
+    assert(col == pytest.approx(inv_col,abs=1e-2))
+    assert(valid == 1)
 
 
                 
@@ -138,6 +164,7 @@ def test_coloc():
     Test coloc function
     """
     mntbsq,gri = prepare_loc()
+    gri.init_pred_loc_inv()
     gricol = loc.fct_coloc(gri, gri, mntbsq, 0.5, 0.5, 10, 100, 20, 20)
     assert(True)
     

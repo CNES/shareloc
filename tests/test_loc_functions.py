@@ -73,8 +73,24 @@ def test_loc_dir_interp_visee_unitaire_gld():
 def test_loc_dir_h():  
     """
     Test direct localization at constant altitude
-    """            
-    assert(True)  
+    """
+    lig = 100.5
+    col = 50.5
+    h = 100.0
+    ___,gri = prepare_loc()
+    lonlatalt = gri.fct_locdir_h(lig, col, h)
+    # 57.2170045762374 21.959087150369 100
+    valid_lon = 57.2170045762374
+    valid_lat = 21.959087150369
+    valid_alt = 100.0
+    diff_lon = lonlatalt[0] - valid_lon
+    diff_lat = lonlatalt[1] - valid_lat
+    diff_alt = lonlatalt[2] - valid_alt
+    print(lonlatalt)
+    print('diff_lon {} diff_lat {} diff_alt {}'.format(diff_lon, diff_lat, diff_alt))
+    assert(valid_lon == pytest.approx(lonlatalt[0],abs=1e-7))
+    assert(valid_lat == pytest.approx(lonlatalt[1],abs=1e-7))
+    assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-4))
 
 @pytest.mark.unit_tests
 def test_loc_dir_mnt():  

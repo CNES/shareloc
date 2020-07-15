@@ -6,4 +6,6 @@
 
 ## Test (WIP) ##
 
-`python shareloc/pyi3D_v3.py` 
+`pytest tests/test_loc_functions.py`
+
+ 

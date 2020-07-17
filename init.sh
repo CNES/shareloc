@@ -9,7 +9,7 @@ module load python/3.7.2
 
 # shareloc vars
 export PYTHONPATH=$SHARELOCPATH:$PYTHONPATH
-export TESTPATH=$SHARELOCPATH/valid_euclidium
+export TESTPATH=$SHARELOCPATH/valid
 
 # extra application init
 export PYENV_HOME=/softs/projets/cars/pyenvs/pyenv-3.7-pandora-v1.b

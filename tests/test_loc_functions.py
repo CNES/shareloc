@@ -5,16 +5,8 @@
 import os
 import pytest
 import shareloc.pyi3D_v3 as loc
-
-
-def test_path():
-    """
-    return the data folder
-    :return: data path.
-    :rtype: str
-    """    
-    data_folder = os.path.join(os.environ["TESTPATH"])
-    return data_folder
+from rpc.rpc_phr_v2 import FonctRatD
+from utils import test_path
 
 def prepare_loc():
     """
@@ -48,8 +40,28 @@ def test_gld_mnt():
     Test loc direct grid on dtm function
     """
     mntbsq,gri = prepare_loc()                  
-    gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)                
-    assert(True)                
+    lig0 = 100.5
+    col0 = 150.5
+    paslig = 60
+    pascol = 50
+    nblig = 200
+    nbcol = 200
+    gri_gld = gri.fct_gld_mnt(lig0, col0, paslig, pascol, nblig, nbcol, mntbsq)
+
+    idxlig = 10
+    idxcol = 20
+
+    lonlatalt = gri_gld[:,idxlig,idxcol]
+
+    lig = lig0 + paslig * idxlig
+    col = col0 + pascol * idxcol
+
+    valid_lonlatalt = gri.fct_locdir_mnt(lig, col, mntbsq)
+    print("lon {} lat {} alt {} ".format(lonlatalt[0], lonlatalt[1], lonlatalt[2]))
+    print("valid lon {} lat {} alt {} ".format(valid_lonlatalt[0], valid_lonlatalt[1], valid_lonlatalt[2]))
+
+
+    assert(True)
 
 
 @pytest.mark.unit_tests
@@ -66,7 +78,6 @@ def test_loc_dir_interp_visee_unitaire_gld():
     """            
     assert(True)
 
-    
 
 @pytest.mark.unit_tests
 def test_loc_dir_h():  
@@ -96,14 +107,34 @@ def test_loc_dir_h():
 def test_loc_dir_mnt():  
     """
     Test direct localization on DTM
-    """            
-    assert(True)
+    """
+    mntbsq, gri = prepare_loc()
+    gri.init_pred_loc_inv()
+    index_x = 10.5
+    index_y = 20.5
+    vect_index = [index_x, index_y]
+    [lon,lat] = mntbsq.MntToTer(vect_index)
+    print([lon,lat])
+    alt = mntbsq.MakeAlti(index_x - 0.5,index_y - 0.5)
+    print(alt)
+    lig, col, valid = gri.fct_locinv([lon, lat, alt])
+    print(lig, col)
+    lonlath = gri.fct_locdir_mnt(lig,col,mntbsq)
+    assert(lon == pytest.approx(lonlath[0],abs=1e-8))
+    assert(lat == pytest.approx(lonlath[1],abs=1e-8))
+    assert(alt == pytest.approx(lonlath[2],abs=1e-4))
 
 @pytest.mark.unit_tests
 def test_loc_dir_mnt_opt():  
     """
     Test direct localization on DTM
-    """            
+    """
+    mntbsq, gri = prepare_loc()
+    gri.init_pred_loc_inv()
+    lig = 50.5
+    col = 10.0
+    #gri.fct_gld_mnt
+
     assert(True)
 
 @pytest.mark.unit_tests
@@ -157,6 +188,32 @@ def test_loc_dir_loc_inv():
     assert(valid == 1)
 
 
+@pytest.mark.unit_tests
+def test_loc_dir_loc_inv_rpc():
+    """
+    Test direct localization followed by inverse one
+    """
+    lig = 150.5
+    col = 20.5
+    h = 10.0
+    ___,gri = prepare_loc()
+    #init des predicteurs
+    gri.init_pred_loc_inv()
+    lonlatalt = gri.fct_locdir_h(lig, col, h)
+
+    data_folder = test_path()
+    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP.XML')
+
+    fctrat = FonctRatD(fichier_dimap)
+    (inv_col, inv_lig) = fctrat.evalue_loc_i(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    print('lig {} col {}'.format(inv_lig, inv_col))
+
+    #TODO: change the datum
+    #assert(lig == pytest.approx(inv_lig,abs=1e-2))
+    #assert(col == pytest.approx(inv_col,abs=1e-2))
+
+
+
                 
 @pytest.mark.unit_tests
 def test_coloc():
@@ -167,8 +224,21 @@ def test_coloc():
     gri.init_pred_loc_inv()
     gricol = loc.fct_coloc(gri, gri, mntbsq, 0.5, 0.5, 10, 100, 20, 20)
     assert(True)
-    
 
+
+@pytest.mark.unit_tests
+def test_interp_mnt():
+    """
+    Test coloc function
+    """
+    mntbsq, ___ = prepare_loc()
+    index_x = 10.5
+    index_y = 20.5
+    vect_index = [index_x, index_y]
+    coords = mntbsq.MntToTer(vect_index)
+    print(coords)
+    alti = mntbsq.MakeAlti(index_x - 0.5,index_y - 0.5)
+    assert(alti == 198.0)
 
 
     

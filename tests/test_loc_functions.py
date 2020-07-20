@@ -4,6 +4,7 @@
 
 import os
 import pytest
+import numpy as np
 from utils import test_path
 
 import shareloc.pyi3D_v3 as loc
@@ -70,14 +71,30 @@ def test_gld_mnt():
 def test_loc_dir_check_cube_mnt():  
     """
     Test direct localization check mnt cube
-    """            
-    assert(True)
+    """
+    mntbsq,gri = prepare_loc()
+    lig = 100.5
+    col = 50.5
+    visee = np.zeros((3, gri.nbalt))
+    vislonlat = gri.fct_interp_visee_unitaire_gld(lig,col)
+    visee[0,:] = vislonlat[0]
+    visee[1,:] = vislonlat[1]
+    visee[2,:] = gri.alts_down
+    v = visee.T
+    (code1, code2, PointB, dH3D) = gri.checkCubeMNT(v,mntbsq)
+    assert(PointB[0] == pytest.approx(57.21700176041541,abs=1e-12))
+    assert(PointB[1] == pytest.approx(21.959197148974,abs=1e-12))
+    assert(PointB[2] == pytest.approx(238.0,abs=1e-12))
 
 @pytest.mark.unit_tests
 def test_loc_dir_interp_visee_unitaire_gld():  
     """
     Test los interpolation
-    """            
+    """
+    ___, gri = prepare_loc()
+    lig = 100.5
+    col = 50.5
+    visee = gri.fct_interp_visee_unitaire_gld(lig,col)
     assert(True)
 
 
@@ -166,7 +183,24 @@ def test_loc_intersection():
     """
     Test direct localization intersection function
     """
-    assert(True)
+    mntbsq,gri = prepare_loc()
+    lig = 100.5
+    col = 50.5
+    visee = np.zeros((3, gri.nbalt))
+    vislonlat = gri.fct_interp_visee_unitaire_gld(lig,col)
+    visee[0,:] = vislonlat[0]
+    visee[1,:] = vislonlat[1]
+    visee[2,:] = gri.alts_down
+    v = visee.T
+    (code1, code2, PointB, dH3D) = gri.checkCubeMNT(v,mntbsq)
+    (code3,code4,Point_mnt) = gri.intersection(v, PointB, dH3D, mntbsq)
+    lon = 57.21700367698209
+    lat = 21.95912227930429
+    alt = 166.351227229112
+    assert(Point_mnt[0] == pytest.approx(lon,abs=1e-12))
+    assert(Point_mnt[1] == pytest.approx(lat,abs=1e-12))
+    assert(Point_mnt[2] == pytest.approx(alt,abs=1e-12))
+
 
 
 

@@ -4,9 +4,11 @@
 
 import os
 import pytest
-import shareloc.pyi3D_v3 as loc
-from rpc.rpc_phr_v2 import FonctRatD
 from utils import test_path
+
+import shareloc.pyi3D_v3 as loc
+from shareloc.rpc.rpc_phr_v2 import FonctRatD
+
 
 def prepare_loc():
     """

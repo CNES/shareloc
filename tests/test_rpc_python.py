@@ -5,10 +5,12 @@ Created on Tue Apr 28 19:07:16 2020
 @author: gresloud
 """
 
-from rpc.rpc_phr_v2 import FonctRatD
-from utils import test_path
 import os
 import pytest
+from utils import test_path
+
+from shareloc.rpc.rpc_phr_v2 import FonctRatD
+
 
 def test_rpc_eucl():
     data_folder = test_path()

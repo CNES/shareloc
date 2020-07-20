@@ -62,9 +62,8 @@ def test_gld_mnt():
     valid_lonlatalt = gri.fct_locdir_mnt(lig, col, mntbsq)
     print("lon {} lat {} alt {} ".format(lonlatalt[0], lonlatalt[1], lonlatalt[2]))
     print("valid lon {} lat {} alt {} ".format(valid_lonlatalt[0], valid_lonlatalt[1], valid_lonlatalt[2]))
+    assert(lonlatalt == pytest.approx(valid_lonlatalt, abs=1e-12))
 
-
-    assert(True)
 
 
 @pytest.mark.unit_tests
@@ -95,7 +94,9 @@ def test_loc_dir_interp_visee_unitaire_gld():
     lig = 100.5
     col = 50.5
     visee = gri.fct_interp_visee_unitaire_gld(lig,col)
-    assert(True)
+    print(visee)
+    assert (visee[0][1] == pytest.approx(57.2169100597702,abs=1e-12))
+    assert (visee[1][1] == pytest.approx(21.96277930762832, abs=1e-12))
 
 
 @pytest.mark.unit_tests
@@ -149,12 +150,11 @@ def test_loc_dir_mnt_opt():
     Test direct localization on DTM
     """
     mntbsq, gri = prepare_loc()
-    gri.init_pred_loc_inv()
     lig = 50.5
     col = 10.0
     #gri.fct_gld_mnt
-
-    assert(True)
+    code = gri.fct_locdir_mntopt(lig,col,mntbsq)
+    assert(code == True)
 
 @pytest.mark.unit_tests
 def test_loc_inv():
@@ -258,8 +258,17 @@ def test_coloc():
     """
     mntbsq,gri = prepare_loc()
     gri.init_pred_loc_inv()
-    gricol = loc.fct_coloc(gri, gri, mntbsq, 0.5, 0.5, 10, 100, 20, 20)
-    assert(True)
+    l0_src = 0.5
+    c0_src = 1.5
+    paslig_src = 10
+    pascol_src = 100
+    nblig_src = 20
+    nbcol_src = 20
+    gricol = loc.fct_coloc(gri, gri, mntbsq, l0_src, c0_src, paslig_src, pascol_src, nblig_src, nbcol_src)
+    index_lig = 1
+    index_col = 3
+    assert(gricol[0,index_lig, index_col] == pytest.approx(index_lig * paslig_src + l0_src,1e-6))
+    assert(gricol[1, index_lig, index_col] == pytest.approx(index_col * pascol_src + c0_src, 1e-6))
 
 
 @pytest.mark.unit_tests

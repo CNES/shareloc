@@ -1126,22 +1126,23 @@ class gld_xH:
                 imes +=1
 
         #Calcul des coeffcients
-        matAmin       = np.matrix(Amin)
-        matAmax       = np.matrix(Amax)
-        tAAmin        = matAmin.T*matAmin
-        tAAmax        = matAmax.T*matAmax
-        tAAmin_inv    = tAAmin.I
-        tAAmax_inv    = tAAmax.I
+        matAmin       = np.array(Amin)
+        matAmax       = np.array(Amax)
 
-        coef_col_min = tAAmin_inv*matAmin.T*Bcol
-        coef_lig_min = tAAmin_inv*matAmin.T*Blig
-        coef_col_max = tAAmax_inv*matAmax.T*Bcol
-        coef_lig_max = tAAmax_inv*matAmax.T*Blig
+        tAAmin        = matAmin.T@matAmin
+        tAAmax        = matAmax.T@matAmax
+        tAAmin_inv    = np.linalg.inv(tAAmin)
+        tAAmax_inv    = np.linalg.inv(tAAmax)
 
-        setattr(self,'pred_col_min',coef_col_min.A1)
-        setattr(self,'pred_lig_min',coef_lig_min.A1)
-        setattr(self,'pred_col_max',coef_col_max.A1)
-        setattr(self,'pred_lig_max',coef_lig_max.A1)
+        coef_col_min = tAAmin_inv@matAmin.T@Bcol
+        coef_lig_min = tAAmin_inv@matAmin.T@Blig
+        coef_col_max = tAAmax_inv@matAmax.T@Bcol
+        coef_lig_max = tAAmax_inv@matAmax.T@Blig
+
+        setattr(self,'pred_col_min',coef_col_min.flatten())
+        setattr(self,'pred_lig_min',coef_lig_min.flatten())
+        setattr(self,'pred_col_max',coef_col_max.flatten())
+        setattr(self,'pred_lig_max',coef_lig_max.flatten())
         setattr(self,'pred_ofset_scale_lon',  [lon_ofset , lon_scale])
         setattr(self,'pred_ofset_scale_lat',  [lat_ofset , lat_scale] )
         setattr(self,'pred_ofset_scale_lig',  [lig_ofset , lig_scale] )
@@ -1299,46 +1300,4 @@ def fct_coloc(gld_xH_src, gld_hX_dst, mnt, \
             gricoloc[:,l,c] = Pdst
 
     return gricoloc
-
-def test_path():
-    """
-    return the data folder
-    :return: data path.
-    :rtype: str
-    """    
-    data_folder = op.join(os.environ["TESTPATH"])
-    return data_folder
-
-
-
-
-if __name__ == '__main__':
-    """
-    calcul_gld3d -all -path_visee ./grilles_gld_xH -nom_visee P1BP--2017030824934340CP_H1 -type_visee LocalisateurGrille_Directe \
-    -mnt ./MNT_extrait/mnt_extrait -repter GRS80:G-D/:H-M -path_grille . -nom_grille test_intersect_euclide -convention BABEL \
-    -format BSQ -nbcol 200 -nblig 200 -pascol 50 -paslig 60 -j0 0 -i0 0 -col0 100.5 -lig0 100.5 -matrice 1 0 0 1
-    """
-
-    import time
-    data_folder = test_path()
-    
-    #chargement du mnt
-    fic = op.join(data_folder,'MNT_extrait/mnt_extrait.c1')
-    mntbsq = mnt(fic)
-    
-    #chargement des grilles
-    gld = op.join(data_folder,'grilles_gld_xH/P1BP--2017030824934340CP_H1.hd')
-    gri = gld_xH(gld)
-    
-    #init des predicteurs
-    gri.init_pred_loc_inv()
-    #
-    start_time = time.time()
-    gricol = fct_coloc(gri, gri, mntbsq,0.5, 0.5, 10, 100, 20, 20)
-    gri_gld = gri.fct_gld_mnt(100.5, 100.5, 60, 50, 200, 200,mntbsq)
-    interval = time.time() - start_time
-    print('Total time in seconds 200x200 coloc: {:.2f}s'.format(interval))
-    
-    
-    #validation lecture de grille
 

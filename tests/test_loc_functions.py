@@ -252,8 +252,8 @@ def test_loc_dir_loc_inv_rpc():
     """
     lig = 150.5
     col = 20.5
-    h = 10.0
-    ___,gri = prepare_loc()
+    h = 100.0
+    ___,gri = prepare_loc('ellipsoide')
     #init des predicteurs
     gri.init_pred_loc_inv()
     lonlatalt = gri.fct_locdir_h(lig, col, h)

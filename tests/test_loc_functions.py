@@ -178,6 +178,28 @@ def test_loc_inv():
     assert(inv_col == pytest.approx(valid_col,abs=1e-2))     
 
 @pytest.mark.unit_tests
+def test_pred_loc_inv():
+    """
+    Test inverse localization
+    """
+    #init des predicteurs
+    ___,gri = prepare_loc()
+    gri.init_pred_loc_inv()
+
+    col_min_valid = [4.15161251e-02, 1.95057636e-01, 1.10977819e+00, -8.35016563e-04,-3.50772271e-02, -9.46432481e-03]
+    assert (gri.pred_col_min.flatten() == pytest.approx(col_min_valid, abs=1e-6))
+    lig_min_valid = [ 0.05440845,  1.26513831, -0.36737151, -0.00229532, -0.07459378, -0.02558954]
+    assert (gri.pred_lig_min.flatten() == pytest.approx(lig_min_valid, abs=1e-6))
+    col_max_valid = [1.76451389e-02, 2.05533045e-01, 1.11758291e+00, -9.50086076e-04,-3.59923603e-02, -1.03291594e-02]
+    assert (gri.pred_col_max.flatten() == pytest.approx(col_max_valid, abs=1e-6))
+    lig_max_valid = [0.07565692,  1.27499912, -0.36677813, -0.00252395, -0.07539624, -0.0270914]
+    assert (gri.pred_lig_max.flatten() == pytest.approx(lig_max_valid, abs=1e-6))
+    assert(gri.pred_ofset_scale_lon == pytest.approx([57.37295223744326, 0.15660032225072484], abs=1e-12))
+    assert(gri.pred_ofset_scale_lat == pytest.approx([22.066877016445275, 0.14641205050748773] , abs=1e-12))
+    assert(gri.pred_ofset_scale_lig == pytest.approx([24913.0, 24912.5], abs=1e-6))
+    assert(gri.pred_ofset_scale_col == pytest.approx([19975.5, 19975.0], abs=1e-6))
+
+@pytest.mark.unit_tests
 def test_loc_intersection():
     """
     Test direct localization intersection function

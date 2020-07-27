@@ -6,11 +6,13 @@ Created on Tue Jul 17 09:44:35 2020
 """
 import os
 
-def test_path():
+def test_path(alti=""):
     """
     return the data folder
     :return: data path.
     :rtype: str
     """
-    data_folder = os.path.join(os.environ["TESTPATH"])
+
+    data_folder = os.path.join(os.environ["TESTPATH"],alti)
+
     return data_folder

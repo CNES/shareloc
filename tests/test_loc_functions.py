@@ -11,13 +11,13 @@ import shareloc.pyi3D_v3 as loc
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
 
 
-def prepare_loc():
+def prepare_loc(alti = 'geoide'):
     """
     Read multiH grid
     :return: multi H grid
     :rtype: str
     """   
-    data_folder = test_path()
+    data_folder = test_path(alti)
     
     #chargement du mnt
     fic = os.path.join(data_folder,'MNT_extrait/mnt_extrait.c1')

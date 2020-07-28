@@ -6,7 +6,11 @@ Created on Tue July 28 18:44:35 2020
 """
 import numpy as np
 import os.path as op
-import os
+
+"""
+This module contains the input/output for shareloc
+"""
+
 
 #------------------------------------------------------------------------------
 def lit_header_hdbabel(fic_mnt_bsq):

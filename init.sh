@@ -8,6 +8,5 @@ export TESTPATH=$SHARELOCPATH/valid
 ml python/3.7.2
 virtualenv venv_shareloc
 source ./venv_shareloc/bin/activate
-pip install numpy 
 pip install -e .
 pip install pytest

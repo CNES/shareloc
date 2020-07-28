@@ -34,8 +34,8 @@ def test_rpc_eucl():
 
 def test_rpc_phrdimap():
     data_folder = test_path()
-
-    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP.XML')
+    id_scene = 'P1BP--2018122638935449CP'
+    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
     fctrat = FonctRatD(fichier_dimap)
 

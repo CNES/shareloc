@@ -11,20 +11,23 @@ import shareloc.pyi3D_v3 as loc
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
 
 
-def prepare_loc(alti = 'geoide'):
+def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
     """
     Read multiH grid
+
+    :param alti: alti validation dir
+    :param id_scene: scene euclidium ID
     :return: multi H grid
     :rtype: str
     """   
-    data_folder = test_path(alti)
+    data_folder = test_path(alti, id_scene)
     
     #chargement du mnt
     fic = os.path.join(data_folder,'MNT_extrait/mnt_extrait.c1')
     mntbsq = loc.mnt(fic)
     
     #chargement des grilles
-    gld = os.path.join(data_folder,'grilles_gld_xH/P1BP--2017030824934340CP_H1.hd')
+    gld = os.path.join(data_folder,'grilles_gld_xH/{}_H1.hd'.format(id_scene))
     gri = loc.gld_xH(gld) 
     
    
@@ -253,21 +256,21 @@ def test_loc_dir_loc_inv_rpc():
     lig = 150.5
     col = 20.5
     h = 100.0
-    ___,gri = prepare_loc('ellipsoide')
+    id_scene = 'P1BP--2018122638935449CP'
+    ___,gri = prepare_loc('ellipsoide',id_scene)
     #init des predicteurs
     gri.init_pred_loc_inv()
     lonlatalt = gri.fct_locdir_h(lig, col, h)
 
     data_folder = test_path()
-    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP.XML')
+    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
     fctrat = FonctRatD(fichier_dimap)
     (inv_col, inv_lig) = fctrat.evalue_loc_i(lonlatalt[0], lonlatalt[1], lonlatalt[2])
     print('lig {} col {}'.format(inv_lig, inv_col))
 
-    #TODO: change the datum
-    #assert(lig == pytest.approx(inv_lig,abs=1e-2))
-    #assert(col == pytest.approx(inv_col,abs=1e-2))
+    assert(lig == pytest.approx(inv_lig - 0.5, abs=1e-2))
+    assert(col == pytest.approx(inv_col - 0.5, abs=1e-2))
 
 
 

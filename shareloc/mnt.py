@@ -93,6 +93,8 @@ class mnt:
         On va meme blinder plus que ca d'une maniere generale : si les coordonnees dX, dY debordent du MNT
         On "clipe" l'indice i1 pour qu'il rentre dans l'intervalle [0, _nl -2]
         On "clipe" l'indice j1 pour qu'il rentre dans l'intervalle [0, _nc -2]
+
+        Attention on est en convention "cellule" : [0,0] est le centre de la première cellules (pas [0.5,0.5])
         """
 
         if (dX < 0):

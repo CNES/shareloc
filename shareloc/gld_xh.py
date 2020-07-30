@@ -1058,5 +1058,5 @@ def fct_coloc(gld_xH_src, gld_hX_dst, mnt, \
             Psol = gld_xH_src.fct_locdir_mnt(lig,col, mnt)
             Pdst = gld_hX_dst.fct_locinv(Psol)
             gricoloc[:,l,c] = Pdst
-
     return gricoloc
+

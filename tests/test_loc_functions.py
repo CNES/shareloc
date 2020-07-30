@@ -10,6 +10,7 @@ from utils import test_path
 from shareloc.grid import grid, fct_coloc
 from shareloc.mnt import mnt
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
+from shareloc.sensor import sensor
 
 
 def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
@@ -118,6 +119,29 @@ def test_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     assert(valid_lat == pytest.approx(lonlatalt[1],abs=1e-12))
     assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-8))
 
+@pytest.mark.parametrize("col,lig,h", [(50.5,100.5,100.0)])
+@pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.2170054518422,21.9590529453258,100.0)])
+@pytest.mark.unit_tests
+def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
+    """
+    Test direct localization at constant altitude
+    """
+
+    ___,gri = prepare_loc()
+    loc = sensor(mnt = None,grid = gri)
+    lonlatalt = loc.forward(lig, col, h)
+
+    diff_lon = lonlatalt[0] - valid_lon
+    diff_lat = lonlatalt[1] - valid_lat
+    diff_alt = lonlatalt[2] - valid_alt
+    print("direct localization at constant altitude lig : {} col {} alt {}".format(lig,col,h))
+    print("lon {} lat {} alt {} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
+    print('diff_lon {} diff_lat {} diff_alt {}'.format(diff_lon, diff_lat, diff_alt))
+    assert(valid_lon == pytest.approx(lonlatalt[0],abs=1e-12))
+    assert(valid_lat == pytest.approx(lonlatalt[1],abs=1e-12))
+    assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-8))
+
+
 @pytest.mark.parametrize("index_x,index_y", [(10.5,20.5)])
 @pytest.mark.unit_tests
 def test_loc_dir_mnt(index_x,index_y):
@@ -131,9 +155,9 @@ def test_loc_dir_mnt(index_x,index_y):
     [lon,lat] = mntbsq.MntToTer(vect_index)
     print([lon,lat])
     alt = mntbsq.MakeAlti(index_x - 0.5,index_y - 0.5)
-    print(alt)
+
     lig, col, valid = gri.fct_locinv([lon, lat, alt])
-    print(lig, col)
+
     lonlath = gri.fct_locdir_mnt(lig,col,mntbsq)
     assert(lon == pytest.approx(lonlath[0],abs=1e-8))
     assert(lat == pytest.approx(lonlath[1],abs=1e-8))

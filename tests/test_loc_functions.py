@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 from utils import test_path
 
-from shareloc.gld_xh import gld_xH, fct_coloc
+from shareloc.grid import grid, fct_coloc
 from shareloc.mnt import mnt
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
 
@@ -29,7 +29,7 @@ def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
     
     #chargement des grilles
     gld = os.path.join(data_folder,'grilles_gld_xH/{}_H1.hd'.format(id_scene))
-    gri = gld_xH(gld)
+    gri = grid(gld)
     
    
     return mntbsq,gri

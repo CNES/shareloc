@@ -10,7 +10,7 @@ from shareloc.math_utils import interpol_bilin
 
 
 #-------------------------------------------------------------------------------
-class gld_xH:
+class grid:
     """ multi H direct localization grid handling class 
     """
     def __init__(self,fichier_gld_bsq, format_gri = 'bsq'):

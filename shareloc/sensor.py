@@ -21,13 +21,20 @@
 
 #-------------------------------------------------------------------------------
 
-
+import numpy as np
 
 
 class sensor:
-    """ sensor class
+    """ base class for localization function.
+    Underlying model can be both multi layer localization grids or RPCs models
     """
-    def __init__(self, mnt = None, grid = None, rpc = None ):
+    def __init__(self, grid = None, rpc = None, mnt = None):
+        """
+        If grid and RPC are set grid model is used
+        :param shareloc.grid grid: multi layer grid object
+        :param shareloc.rpc rpc: rpc object
+        :param shareloc.mnt mnt: mnt model
+        """
         self.mnt = mnt
         self.grid = grid
         self.rpc = rpc
@@ -36,29 +43,55 @@ class sensor:
             self.use_rpc = True
 
 
-    def forward(self, lig, col, h):
+    def forward(self, row, col, h):
+        """
+        forward localization
+        :param row :  sensor row
+        :param col : sensor col
+        :param h: altitude
+        :return coordinates : [lon,lat,h] (3D np.array)
+        """
         if self.use_rpc == True:
             print('use rpc')
-            return self.rpc.evalue_loc_d(col,lig, h)
+            coord = np.zeros(3)
+            coord[0:2] = self.rpc.evalue_loc_d(col,row, h)
+            coord[2] = h
+            return coord
         else:
-            return self.grid.fct_locdir_h(lig,col,h)
+            return self.grid.fct_locdir_h(row,col,h)
 
-    def forward_dtm(self, lig, col):
+    def forward_dtm(self, row, col):
+        """
+        forward localization on dtm
+        :param row : sensor row
+        :param col : sensor col
+        :return coordinates : [lon,lat,h] (3D np.array)
+        """
         if self.use_rpc == True:
             print('forward dtm not yet impelemented for RPC model')
             return None
         else:
             if self.mnt is not None:
-                return self.grid.fct_locdir_mnt(lig,col, self.mnt)
+                return self.grid.fct_locdir_mnt(row,col, self.mnt)
             else:
-                print('forward dtm needs a mntl')
+                print('forward dtm needs a mnt')
                 return None
 
-    def inverse(self,lat,lon,h):
+    def inverse(self,lon,lat,h):
+        """
+        inverse localization
+        :param lat :  latitude
+        :param lon : longitude
+        :param h : altitude
+        :return coordinates : [row,col,valid] (2D np.array)
+        """
         if self.use_rpc == True:
             print('use rpc')
-            return self.rpc.evalue_loc_i(lon,lat,h)
+            [col, row] = self.rpc.evalue_loc_i(lon,lat,h)
+            return row,col,1
         else:
+            if not hasattr(self.grid, 'pred_ofset_scale_lon'):
+                self.grid.init_pred_loc_inv()
             return self.grid.fct_locinv([lon,lat,h])
 
 

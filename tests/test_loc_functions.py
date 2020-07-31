@@ -126,9 +126,8 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     """
     Test direct localization at constant altitude
     """
-
     ___,gri = prepare_loc()
-    loc = sensor(mnt = None,grid = gri)
+    loc = sensor(grid = gri, mnt = None)
     lonlatalt = loc.forward(lig, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
@@ -142,26 +141,76 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-8))
 
 
+@pytest.mark.parametrize("col,lig,h", [(150.5,100,100.0)])
+@pytest.mark.unit_tests
+def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
+    """
+    Test direct localization coherence with grid and RPC
+    """
+    id_scene = 'P1BP--2018122638935449CP'
+    ___,gri = prepare_loc('ellipsoide',id_scene)
+    loc_grid = sensor(grid = gri)
+    #init des predicteurs
+    lonlatalt = loc_grid.forward(lig, col, h)
+
+    data_folder = test_path()
+    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+
+    fctrat = FonctRatD(fichier_dimap)
+
+    loc_rpc = sensor(rpc = fctrat)
+    lonlatalt_rpc = loc_rpc.forward(lig + 0.5, col + 0.5, h)
+
+    diff_lon = lonlatalt[0] - lonlatalt_rpc[0]
+    diff_lat = lonlatalt[1] - lonlatalt_rpc[1]
+    diff_alt = lonlatalt[2] - lonlatalt_rpc[2]
+    assert(diff_lon == pytest.approx(0.0, abs=1e-7))
+    assert(diff_lat == pytest.approx(0.0, abs=1e-7))
+    assert(diff_alt == pytest.approx(0.0, abs=1e-7))
+
+
 @pytest.mark.parametrize("index_x,index_y", [(10.5,20.5)])
 @pytest.mark.unit_tests
-def test_loc_dir_mnt(index_x,index_y):
+def test_sensor_loc_dir_mnt(index_x,index_y):
     """
     Test direct localization on DTM
     """
     mntbsq, gri = prepare_loc()
-    gri.init_pred_loc_inv()
+    loc = sensor(grid=gri, mnt=mntbsq)
+
 
     vect_index = [index_x, index_y]
     [lon,lat] = mntbsq.MntToTer(vect_index)
     print([lon,lat])
     alt = mntbsq.MakeAlti(index_x - 0.5,index_y - 0.5)
 
-    lig, col, valid = gri.fct_locinv([lon, lat, alt])
-
-    lonlath = gri.fct_locdir_mnt(lig,col,mntbsq)
+    lig, col, valid = loc.inverse(lon, lat, alt)
+    print("lig col ",lig,col)
+    lonlath = loc.forward_dtm(lig,col)
     assert(lon == pytest.approx(lonlath[0],abs=1e-8))
     assert(lat == pytest.approx(lonlath[1],abs=1e-8))
     assert(alt == pytest.approx(lonlath[2],abs=1e-4))
+
+@pytest.mark.parametrize("col,lig,h", [(50.5,100.5,100.0)])
+@pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.2170054518422,21.9590529453258,100.0)])
+@pytest.mark.unit_tests
+def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
+    """
+    Test direct localization at constant altitude
+    """
+    ___,gri = prepare_loc()
+    loc = sensor(grid = gri, mnt = None)
+    lonlatalt = loc.forward(lig, col, h)
+
+    diff_lon = lonlatalt[0] - valid_lon
+    diff_lat = lonlatalt[1] - valid_lat
+    diff_alt = lonlatalt[2] - valid_alt
+    print("direct localization at constant altitude lig : {} col {} alt {}".format(lig,col,h))
+    print("lon {} lat {} alt {} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
+    print('diff_lon {} diff_lat {} diff_alt {}'.format(diff_lon, diff_lat, diff_alt))
+    assert(valid_lon == pytest.approx(lonlatalt[0],abs=1e-12))
+    assert(valid_lat == pytest.approx(lonlatalt[1],abs=1e-12))
+    assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-8))
 
 @pytest.mark.parametrize("lig,col", [(50.5,10.0)])
 @pytest.mark.unit_tests
@@ -179,23 +228,48 @@ def test_loc_dir_mnt_opt(lig,col):
 @pytest.mark.parametrize("valid_lig,valid_col", [(50.5,10.0)])
 @pytest.mark.parametrize("lon,lat,alt", [(57.2167252772905,21.9587514585812,10.0)])
 @pytest.mark.unit_tests
-def test_loc_inv(lon,lat,alt,valid_col,valid_lig):
+def test_sensor_loc_inv(lon,lat,alt,valid_col,valid_lig):
     """
     Test inverse localization
     """
-    #init des predicteurs
+
     ___,gri = prepare_loc()
-    gri.init_pred_loc_inv()
 
-    #init des predicteurs
-
-    inv_lig,inv_col,valid = gri.fct_locinv([lon,lat,alt])
+    loc = sensor(grid=gri)
+    inv_lig,inv_col,valid = loc.inverse(lon,lat,alt)
 
     print("inverse localization  : lon {} lat {} alt {}".format(lon,lat,alt))
     print("lig {} col {}  ".format(inv_lig, inv_col))
     print('diff_lig {} diff_col {} '.format(inv_lig - valid_lig, inv_col - valid_col))   
     assert(inv_lig == pytest.approx(valid_lig,abs=1e-2))
-    assert(inv_col == pytest.approx(valid_col,abs=1e-2))     
+    assert(inv_col == pytest.approx(valid_col,abs=1e-2))
+
+
+@pytest.mark.parametrize("lon,lat,alt", [(2.12026631, 31.11245154,10.0)])
+@pytest.mark.unit_tests
+def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
+    """
+    Test direct localization coherence with grid and RPC
+    """
+    id_scene = 'P1BP--2018122638935449CP'
+    ___,gri = prepare_loc('ellipsoide',id_scene)
+    loc_grid = sensor(grid = gri)
+    #init des predicteurs
+    [row, col, valid] = loc_grid.inverse(lon, lat, alt)
+    data_folder = test_path()
+    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+
+    fctrat = FonctRatD(fichier_dimap)
+
+    loc_rpc = sensor(rpc = fctrat)
+    [row_rpc, col_rpc, valid] = loc_rpc.inverse(lon, lat, alt)
+    diff_row = row_rpc - row
+    diff_col = col_rpc - col
+    assert (diff_row == pytest.approx(0.5, abs=1e-2))
+    assert (diff_col == pytest.approx(0.5, abs=1e-2))
+
+
+
 
 @pytest.mark.parametrize("col_min_valid", [([4.15161251e-02, 1.95057636e-01, 1.10977819e+00, -8.35016563e-04,-3.50772271e-02, -9.46432481e-03])])
 @pytest.mark.parametrize("lig_min_valid", [([ 0.05440845,  1.26513831, -0.36737151, -0.00229532, -0.07459378, -0.02558954])])

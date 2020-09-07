@@ -24,7 +24,7 @@ import numpy as np
 from utils import test_path
 
 from shareloc.grid import grid, fct_coloc
-from shareloc.mnt import mnt
+from shareloc.dtm import DTM
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
 from shareloc.sensor import sensor
 
@@ -42,7 +42,7 @@ def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
     
     #chargement du mnt
     fic = os.path.join(data_folder,'MNT_extrait/mnt_extrait.c1')
-    mntbsq = mnt(fic)
+    mntbsq = DTM(fic)
     
     #chargement des grilles
     gld = os.path.join(data_folder,'grilles_gld_xH/{}_H1.hd'.format(id_scene))

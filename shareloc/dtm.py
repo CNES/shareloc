@@ -18,15 +18,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import numpy as np
 from shareloc.readwrite import lit_header_hdbabel, lit_grille_bsq
 import os
 
 #------------------------------------------------------------------------------
-class mnt:
-    def __init__(self,fichier_mnt, format_mnt = 'bsq'):
-        self.fic_mnt    = fichier_mnt
-        self.format     = format_mnt
+class DTM:
+    def __init__(self, dtm_filename, dtm_format ='bsq'):
+        self.dtm_file    = dtm_filename
+        self.format     = dtm_format
         self.Z          = None
         self.Zmin       = None
         self.Zmax       = None
@@ -64,12 +66,13 @@ class mnt:
 
     def charge(self):
         if self.format=='bsq':
-            hd_babel = lit_header_hdbabel(self.fic_mnt)
+            hd_babel = lit_header_hdbabel(self.dtm_file)
             for key in hd_babel:
                 setattr(self,key,hd_babel[key])
-            self.Z = lit_grille_bsq(self.fic_mnt,self.nl,self.nc,self.codage)
+            self.Z = lit_grille_bsq(self.dtm_file, self.nl, self.nc, self.codage)
         else:
             print("format de mnt non reconnu")
+
 
     def eq_plan(self,i,P):
         return self.a[i]*P[0] + self.b[i]*P[1] + self.c[i]*P[2] - self.d[i]

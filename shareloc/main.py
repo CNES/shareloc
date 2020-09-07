@@ -21,7 +21,7 @@
 
 import os.path as op
 from shareloc.gld_xh import fct_coloc, gld_xH
-from shareloc.mnt import mnt
+from shareloc.dtm import DTM
 import os
 
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     
     #chargement du mnt
     fic = op.join(data_folder,'MNT_extrait/mnt_extrait.c1')
-    mntbsq = mnt(fic)
+    mntbsq = DTM(fic)
     
     #chargement des grilles
     gld = op.join(data_folder,'grilles_gld_xH/P1BP--2017030824934340CP_H1.hd')

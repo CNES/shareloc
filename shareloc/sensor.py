@@ -33,7 +33,7 @@ class sensor:
         If grid and RPC are set grid model is used
         :param shareloc.grid grid: multi layer grid object
         :param shareloc.rpc rpc: rpc object
-        :param shareloc.mnt mnt: mnt model
+        :param shareloc.dtm mnt: mnt model
         """
         self.mnt = mnt
         self.grid = grid

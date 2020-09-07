@@ -42,14 +42,14 @@ def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
     
     #chargement du mnt
     fic = os.path.join(data_folder,'MNT_extrait/mnt_extrait.c1')
-    mntbsq = DTM(fic)
+    dtmbsq = DTM(fic)
     
     #chargement des grilles
     gld = os.path.join(data_folder,'grilles_gld_xH/{}_H1.hd'.format(id_scene))
     gri = grid(gld)
     
    
-    return mntbsq,gri
+    return dtmbsq,gri
 
 """
 calcul_gld3d -all -path_visee ./grilles_gld_xH -nom_visee P1BP--2017030824934340CP_H1 -type_visee LocalisateurGrille_Directe \
@@ -61,20 +61,20 @@ calcul_gld3d -all -path_visee ./grilles_gld_xH -nom_visee P1BP--2017030824934340
 @pytest.mark.parametrize("idxcol,idxlig", [(20,10)])
 @pytest.mark.parametrize("lig0,col0,paslig,pascol,nblig,nbcol", [(100.5,150.5,60,50,200,200)])
 @pytest.mark.unit_tests
-def test_gld_mnt(idxlig,idxcol,lig0,col0,paslig,pascol,nblig,nbcol):
+def test_gld_dtm(idxlig,idxcol,lig0,col0,paslig,pascol,nblig,nbcol):
     """
     Test loc direct grid on dtm function
     """
-    mntbsq,gri = prepare_loc()                  
+    dtmbsq,gri = prepare_loc()
 
-    gri_gld = gri.fct_gld_mnt(lig0, col0, paslig, pascol, nblig, nbcol, mntbsq)
+    gri_gld = gri.fct_gld_dtm(lig0, col0, paslig, pascol, nblig, nbcol, dtmbsq)
 
     lonlatalt = gri_gld[:,idxlig,idxcol]
 
     lig = lig0 + paslig * idxlig
     col = col0 + pascol * idxcol
 
-    valid_lonlatalt = gri.fct_locdir_mnt(lig, col, mntbsq)
+    valid_lonlatalt = gri.fct_locdir_dtm(lig, col, dtmbsq)
     print("lon {} lat {} alt {} ".format(lonlatalt[0], lonlatalt[1], lonlatalt[2]))
     print("valid lon {} lat {} alt {} ".format(valid_lonlatalt[0], valid_lonlatalt[1], valid_lonlatalt[2]))
     assert(lonlatalt == pytest.approx(valid_lonlatalt, abs=1e-12))
@@ -83,11 +83,11 @@ def test_gld_mnt(idxlig,idxcol,lig0,col0,paslig,pascol,nblig,nbcol):
 @pytest.mark.parametrize("col,lig", [(50.5,100.5)])
 @pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.21700176041541,21.959197148974,238.0)])
 @pytest.mark.unit_tests
-def test_loc_dir_check_cube_mnt(col,lig,valid_lon,valid_lat,valid_alt):
+def test_loc_dir_check_cube_dtm(col,lig,valid_lon,valid_lat,valid_alt):
     """
-    Test direct localization check mnt cube
+    Test direct localization check dtm cube
     """
-    mntbsq,gri = prepare_loc()
+    dtmbsq,gri = prepare_loc()
 
     visee = np.zeros((3, gri.nbalt))
     vislonlat = gri.fct_interp_visee_unitaire_gld(lig,col)
@@ -95,7 +95,7 @@ def test_loc_dir_check_cube_mnt(col,lig,valid_lon,valid_lat,valid_alt):
     visee[1,:] = vislonlat[1]
     visee[2,:] = gri.alts_down
     v = visee.T
-    (code1, code2, PointB, dH3D) = gri.checkCubeMNT(v,mntbsq)
+    (code1, code2, PointB, dH3D) = gri.checkCubeDTM(v,dtmbsq)
     assert(PointB[0] == pytest.approx(valid_lon,abs=1e-12))
     assert(PointB[1] == pytest.approx(valid_lat,abs=1e-12))
     assert(PointB[2] == pytest.approx(valid_alt,abs=1e-12))
@@ -123,7 +123,7 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     Test direct localization at constant altitude
     """
     ___,gri = prepare_loc()
-    loc = Sensor(grid = gri, mnt = None)
+    loc = Sensor(grid = gri, dtm = None)
     lonlatalt = loc.forward(lig, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
@@ -167,18 +167,18 @@ def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
 
 @pytest.mark.parametrize("index_x,index_y", [(10.5,20.5)])
 @pytest.mark.unit_tests
-def test_sensor_loc_dir_mnt(index_x,index_y):
+def test_sensor_loc_dir_dtm(index_x,index_y):
     """
     Test direct localization on DTM
     """
-    mntbsq, gri = prepare_loc()
-    loc = Sensor(grid=gri, mnt=mntbsq)
+    dtmbsq, gri = prepare_loc()
+    loc = Sensor(grid=gri, dtm=dtmbsq)
 
 
     vect_index = [index_x, index_y]
-    [lon,lat] = mntbsq.MntToTer(vect_index)
+    [lon,lat] = dtmbsq.DTMToTer(vect_index)
     print([lon,lat])
-    alt = mntbsq.MakeAlti(index_x - 0.5,index_y - 0.5)
+    alt = dtmbsq.MakeAlti(index_x - 0.5,index_y - 0.5)
 
     lig, col, valid = loc.inverse(lon, lat, alt)
     print("lig col ",lig,col)
@@ -195,7 +195,7 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     Test direct localization at constant altitude
     """
     ___,gri = prepare_loc()
-    loc = Sensor(grid = gri, mnt = None)
+    loc = Sensor(grid = gri, dtm = None)
     lonlatalt = loc.forward(lig, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
@@ -210,14 +210,14 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
 
 @pytest.mark.parametrize("lig,col", [(50.5,10.0)])
 @pytest.mark.unit_tests
-def test_loc_dir_mnt_opt(lig,col):
+def test_loc_dir_dtm_opt(lig,col):
     """
     Test direct localization on DTM
     """
-    mntbsq, gri = prepare_loc()
+    dtmbsq, gri = prepare_loc()
 
-    #gri.fct_gld_mnt
-    code = gri.fct_locdir_mntopt(lig,col,mntbsq)
+    #gri.fct_gld_dtm
+    code = gri.fct_locdir_dtmopt(lig,col,dtmbsq)
     assert(code == True)
 
 
@@ -300,7 +300,7 @@ def test_loc_intersection(lig,col,valid_lon,valid_lat,valid_alt):
     """
     Test direct localization intersection function
     """
-    mntbsq,gri = prepare_loc()
+    dtmbsq,gri = prepare_loc()
 
     visee = np.zeros((3, gri.nbalt))
     vislonlat = gri.fct_interp_visee_unitaire_gld(lig,col)
@@ -308,11 +308,11 @@ def test_loc_intersection(lig,col,valid_lon,valid_lat,valid_alt):
     visee[1,:] = vislonlat[1]
     visee[2,:] = gri.alts_down
     v = visee.T
-    (code1, code2, PointB, dH3D) = gri.checkCubeMNT(v,mntbsq)
-    (code3,code4,Point_mnt) = gri.intersection(v, PointB, dH3D, mntbsq)
-    assert(Point_mnt[0] == pytest.approx(valid_lon,abs=1e-12))
-    assert(Point_mnt[1] == pytest.approx(valid_lat,abs=1e-12))
-    assert(Point_mnt[2] == pytest.approx(valid_alt,abs=1e-12))
+    (code1, code2, PointB, dH3D) = gri.checkCubeDTM(v,dtmbsq)
+    (code3,code4,Point_dtm) = gri.intersection(v, PointB, dH3D, dtmbsq)
+    assert(Point_dtm[0] == pytest.approx(valid_lon,abs=1e-12))
+    assert(Point_dtm[1] == pytest.approx(valid_lat,abs=1e-12))
+    assert(Point_dtm[2] == pytest.approx(valid_alt,abs=1e-12))
 
 
 
@@ -363,10 +363,10 @@ def test_coloc(l0_src, c0_src,paslig_src,pascol_src,nblig_src,nbcol_src,lig,col)
     """
     Test coloc function
     """
-    mntbsq,gri = prepare_loc()
+    dtmbsq,gri = prepare_loc()
     gri.init_pred_loc_inv()
 
-    gricol = fct_coloc(gri, gri, mntbsq, l0_src, c0_src, paslig_src, pascol_src, nblig_src, nbcol_src)
+    gricol = fct_coloc(gri, gri, dtmbsq, l0_src, c0_src, paslig_src, pascol_src, nblig_src, nbcol_src)
 
     assert(gricol[0, lig, col] == pytest.approx(lig * paslig_src + l0_src,1e-6))
     assert(gricol[1, lig, col] == pytest.approx(col * pascol_src + c0_src, 1e-6))
@@ -374,16 +374,16 @@ def test_coloc(l0_src, c0_src,paslig_src,pascol_src,nblig_src,nbcol_src,lig,col)
 @pytest.mark.parametrize("index_x,index_y", [(10.5,20.5)])
 @pytest.mark.parametrize("valid_alt", [(198.0)])
 @pytest.mark.unit_tests
-def test_interp_mnt(index_x,index_y,valid_alt):
+def test_interp_dtm(index_x,index_y,valid_alt):
     """
     Test coloc function
     """
-    mntbsq, ___ = prepare_loc()
+    dtmbsq, ___ = prepare_loc()
 
     vect_index = [index_x, index_y]
-    coords = mntbsq.MntToTer(vect_index)
+    coords = dtmbsq.DTMToTer(vect_index)
     print(coords)
-    alti = mntbsq.MakeAlti(index_x - 0.5,index_y - 0.5)
+    alti = dtmbsq.MakeAlti(index_x - 0.5,index_y - 0.5)
     assert(alti == valid_alt)
 
 

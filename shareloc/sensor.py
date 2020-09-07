@@ -28,14 +28,14 @@ class Sensor:
     """ base class for localization function.
     Underlying model can be both multi layer localization grids or RPCs models
     """
-    def __init__(self, grid = None, rpc = None, mnt = None):
+    def __init__(self, grid = None, rpc = None, dtm = None):
         """
         If grid and RPC are set grid model is used
         :param shareloc.grid grid: multi layer grid object
         :param shareloc.rpc rpc: rpc object
-        :param shareloc.dtm mnt: mnt model
+        :param shareloc.dtm dtm: dtm model
         """
-        self.mnt = mnt
+        self.dtm = dtm
         self.grid = grid
         self.rpc = rpc
         self.use_rpc = False
@@ -68,13 +68,13 @@ class Sensor:
         :return coordinates : [lon,lat,h] (3D np.array)
         """
         if self.use_rpc == True:
-            print('forward dtm not yet impelemented for RPC model')
+            print('forward_dtm not yet impelemented for RPC model')
             return None
         else:
-            if self.mnt is not None:
-                return self.grid.fct_locdir_mnt(row,col, self.mnt)
+            if self.dtm is not None:
+                return self.grid.fct_locdir_dtm(row,col, self.dtm)
             else:
-                print('forward dtm needs a mnt')
+                print('forward_dtm needs a dtm')
                 return None
 
     def inverse(self,lon,lat,h):

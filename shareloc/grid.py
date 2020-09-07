@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 import numpy as np
-from shareloc.readwrite import  lit_hd_bsq
+from shareloc.readwrite import  read_bsq_hd
 from shareloc.math_utils import interpol_bilin
 
 
@@ -63,7 +63,7 @@ class grid:
             'repter':('REFERENTIEL TERRESTRE',str)}
 
             nom_hd      = self.fichier_in[:-4]+'1.hd'
-            dico_hd = lit_hd_bsq(nom_hd,dico_a_lire)
+            dico_hd = read_bsq_hd(nom_hd, dico_a_lire)
 
             for var in dico_hd:
                 setattr(self,var,dico_hd[var])
@@ -83,7 +83,7 @@ class grid:
                 gld_lon[i,:,:] = np.fromfile(nom_gri_lon,dtype=codage).reshape((self.nblig,self.nbcol))
                 gld_lat[i,:,:] = np.fromfile(nom_gri_lat,dtype=codage).reshape((self.nblig,self.nbcol))
 
-                dico_hd = lit_hd_bsq(nom_hd,{'index':('ALT INDEX',int),'alt':('ALTITUDE',float)})
+                dico_hd = read_bsq_hd(nom_hd, {'index':('ALT INDEX', int), 'alt':('ALTITUDE', float)})
                 self.index_alt[dico_hd['index']] = dico_hd['alt']
 
             self.gld_lon = gld_lon
@@ -96,30 +96,30 @@ class grid:
             print("format de mnt non reconnu")
 
 
-    def checkCubeMNT(self,Visee,mnt):
+    def checkCubeDTM(self,Visee,dtm):
         #Visee: (n,3):
         PointB = None
         dH3D = None
         (ui,vi,zi,hi) = ([],[],[],[])
-        ViseeMNT = mnt.TersToMnts(Visee)
+        ViseeDTM = dtm.TersToDTMs(Visee)
         # -----------------------------------------------------------------------
         # Nombre d'intersections valides trouvees
         nbi = 0
         # -----------------------------------------------------------------------
-        # On boucle sur les plans du cube MNT
+        # On boucle sur les plans du cube DTM
         for f in range(6):
             # -----------------------------------------------------------------------
             # Initialisation du sommet de la visee
-            sB = ViseeMNT[0,:]
+            sB = ViseeDTM[0,:]
             # -----------------------------------------------------------------------
             # Initialisation de la position par / au plan
-            #print mnt.plans[f,:-1]
-            #posB = (mnt.plans[f,:-1]*sB).sum() - mnt.d[f]
+            #print dtm.plans[f,:-1]
+            #posB = (dtm.plans[f,:-1]*sB).sum() - dtm.d[f]
             #print posB
-            posB = mnt.eq_plan(f,sB)
+            posB = dtm.eq_plan(f,sB)
             # -----------------------------------------------------------------------
             # On boucle sur les segments de la visee et on controle
-            # si on traverse ou pas la face courante f du cube MNT
+            # si on traverse ou pas la face courante f du cube DTM
             for p in range(self.nbalt):
                 # -----------------------------------------------------------------------
                 # Transfert du point B dans le point A
@@ -127,11 +127,11 @@ class grid:
                 sA = sB.copy()
                 # -----------------------------------------------------------------------
                 # Reinit du point B
-                sB = ViseeMNT[p,:] #dg on itere sur les differents points de la visee
+                sB = ViseeDTM[p,:] #dg on itere sur les differents points de la visee
                 #print sB
                 # -----------------------------------------------------------------------
                 # Initialisation de la position par / au plan
-                posB = mnt.eq_plan(f,sB)
+                posB = dtm.eq_plan(f,sB)
                 #print 'posAposB',posA,posB
                 # -----------------------------------------------------------------------
                 # Test d'intersection : posA et posB de signes opposes
@@ -168,20 +168,20 @@ class grid:
                         # . coordonn?e <u> (ligne)
                         # -----------------------------------------------------------------------
                         if (f < 2):
-                            ui.append( mnt.d[f] )
+                            ui.append( dtm.d[f] )
                         # -----------------------------------------------------------------------
                         else:
                             ui.append( cA * sA[0] + cB * sB[0])
                         # -----------------------------------------------------------------------
                         # . coordonnee <v> (colonne)
                         if (f > 1) and (f < 4):
-                            vi.append( mnt.d[f] )
+                            vi.append( dtm.d[f] )
                         else:
                             vi.append( cA * sA[1] + cB * sB[1] )
                         # -----------------------------------------------------------------------
                         # . coordonn?e <z> (altitude)
                         if (f > 3):
-                            zi.append( mnt.d[f] )
+                            zi.append( dtm.d[f] )
                         # -----------------------------------------------------------------------
                         else:
                             zi.append( cA * sA[2] + cB * sB[2] )
@@ -218,9 +218,9 @@ class grid:
         p = 0
         while (p < nbi):
             #test a l'interieur du cube
-            estSurCube = (ui[p] >= mnt.d[0]) and (ui[p] <= mnt.d[1]) and \
-                         (vi[p] >= mnt.d[2]) and (vi[p] <= mnt.d[3]) and \
-                         (zi[p] >= mnt.d[4]) and (zi[p] <= mnt.d[5])
+            estSurCube = (ui[p] >= dtm.d[0]) and (ui[p] <= dtm.d[1]) and \
+                         (vi[p] >= dtm.d[2]) and (vi[p] <= dtm.d[3]) and \
+                         (zi[p] >= dtm.d[4]) and (zi[p] <= dtm.d[5])
             if not(estSurCube):
                 # On translate tous les points suivants (on ecrase ce point non valide)
                 for q in range(p+1,nbi):
@@ -240,19 +240,19 @@ class grid:
         # Il ne reste que 2 points donc on traverse le cube
         # LAIG-FA-MAJA-2168-CNES: plus de filtrage sur les point identiques. Il peut y avoir un nombre depoints > 2
         # Initialisation du point courant
-        # Coordonnees MNT
-        PointMnt = np.zeros(3)
-        PointMnt[0] = ui[0]
-        PointMnt[1] = vi[0]
-        PointMnt[2] = zi[0]
-        #PointMnt est la premiere intersection avec le cube (lig, col)
+        # Coordonnees DTM
+        PointDTM = np.zeros(3)
+        PointDTM[0] = ui[0]
+        PointDTM[1] = vi[0]
+        PointDTM[2] = zi[0]
+        #PointDTM est la premiere intersection avec le cube (lig, col)
         # -----------------------------------------------------------------------
         # h dans gld 3D
         dH3D = hi[0]
         #dH3D correspond a l'index (non entier) d'interpolation en h
         # -----------------------------------------------------------------------
         # Coordonnees terrain
-        PointB = mnt.MntToTer(PointMnt)
+        PointB = dtm.DTMToTer(PointDTM)
         #PointB est le point Terreain (lon,lat)
         # -----------------------------------------------------------------------
         # Fin, retour
@@ -261,35 +261,35 @@ class grid:
 
 
     #----------------------------------------------------------------
-    def intersection(self,Visee, PointB, dH3D, mnt):
+    def intersection(self, Visee, PointB, dH3D, dtm):
         """
-        fonction d'intersection mnt
+        fonction d'intersection dtm
         (Visee, H3D, PointB, dH3D, PointR)
         """
-        ViseeMNT   = mnt.TersToMnts(Visee)
-        PointB_MNT = mnt.TerToMnt(PointB)
+        ViseeDTM   = dtm.TersToDTMs(Visee)
+        PointB_DTM = dtm.TerToDTM(PointB)
         PointR     = np.zeros(3)
         (npl,_)     = Visee.shape
         H3D = range(npl,-1,-1)
 
-        p1 = PointB_MNT.copy() #[p1[0],p1[1],p1[2]]
+        p1 = PointB_DTM.copy() #[p1[0],p1[1],p1[2]]
 
         dH3D_p1 = dH3D
 
-        nu = mnt.nl
-        nv = mnt.nc
+        nu = dtm.nl
+        nv = dtm.nc
 
         #1 - Initilialisation et tests prealables
-        #   1.1 - Test si le sommet est au-dessu du MNT
-        #       - Calcul de l'altitude du MNT ? la position du sommet
-        h1 = mnt.MakeAlti(p1[0], p1[1])
-        #       - Calcul de l'ecart d'altitude au MNT
+        #   1.1 - Test si le sommet est au-dessu du DTM
+        #       - Calcul de l'altitude du DTM ? la position du sommet
+        h1 = dtm.MakeAlti(p1[0], p1[1])
+        #       - Calcul de l'ecart d'altitude au DTM
         d1 = p1[2] - h1
 
-        #       - Test si le nouveau point haut est au dessus du MNT
+        #       - Test si le nouveau point haut est au dessus du DTM
         if (d1 < 0):
-        #       - Point situ? en dessous du MNT
-        #          . ceci signifie que la vis?e rentre dans le MNT par le c?t?
+        #       - Point situ? en dessous du DTM
+        #          . ceci signifie que la vis?e rentre dans le DTM par le c?t?
         #          . donc en dessous, pas de solution
             bTrouve = False
             return (True,bTrouve,PointR)
@@ -299,43 +299,43 @@ class grid:
         i0 = int(np.floor(dH3D_p1))
 
         #   1.3 - Initialisation du point de depart (dans p2)
-        p2      = PointB_MNT.copy()
+        p2      = PointB_DTM.copy()
         dH3D_p2 = dH3D
 
         #2. - Boucle sur les plans de grille
-        while (i0 < ViseeMNT.size - 1):
+        while (i0 < ViseeDTM.size - 1):
             #2.1 - Initialisation du sommet courant de la visee
-            u0 = ViseeMNT[i0][0]
-            v0 = ViseeMNT[i0][1]
-            z0 = ViseeMNT[i0][2]
-            z1 = ViseeMNT[i0 + 1][2]
+            u0 = ViseeDTM[i0][0]
+            v0 = ViseeDTM[i0][1]
+            z0 = ViseeDTM[i0][2]
+            z1 = ViseeDTM[i0 + 1][2]
 
-            #2.2 - Initialisation de la visee MNT
-            VM = ViseeMNT[i0 + 1] - ViseeMNT[i0]
+            #2.2 - Initialisation de la visee DTM
+            VM = ViseeDTM[i0 + 1] - ViseeDTM[i0]
 
             #2.3 - Test si visee verticale
             if (VM[0]==0 and VM[1]==0):
                 #2.3.1 - La vis?e est verticale :
-                #    - Calcul de l'altitude du MNT ? la position du sommet
+                #    - Calcul de l'altitude du DTM ? la position du sommet
                 h1 = self.MakeAlti(u0, v0)
 
-                #    Test si le plan suivant est en dessous du MNT
-                if (ViseeMNT[i0 + 1][2] <= h1):
+                #    Test si le plan suivant est en dessous du DTM
+                if (ViseeDTM[i0 + 1][2] <= h1):
                     #Init point de sortie
                     p1[0] = u0
                     p1[1] = v0
                     p1[2] = h1
                     bTrouve = True
-                    mnt.MntToTer(p1, PointR)
+                    dtm.DTMToTer(p1, PointR)
                     return (True,bTrouve,PointR)
                 else:
                     #Positionnement sur le sommet suivant
                     i0+=1
             else:
                 #2.3.2 - La visee n'est pas verticale :
-                #         elle va donc survoler le MNT
+                #         elle va donc survoler le DTM
                 #         . on peut donc poursuivre
-                #         . reste ? d?montrer que la vis?e se crashe sur le MNT...
+                #         . reste ? d?montrer que la vis?e se crashe sur le DTM...
                 #
                 # Initialisation du point de d?part
                 # Initialisation de son abscisse sur la vis?e
@@ -349,19 +349,19 @@ class grid:
                 if (a2 >= 1.):
                     a2 = 0.
 
-                # Initialisation de la premi?re maille MNT intersect?e
+                # Initialisation de la premi?re maille DTM intersect?e
                 #  - Initialisation des indices de la maille
                 uc = int(np.floor(p2[0]))
                 vc = int(np.floor(p2[1]))
 
                 # NB :    pr?caution avant de d?marrer :
                 #        . on se met du bon cote de la maille
-                #        . en principe, on ne doit pas sortir du MNT
-                # On rentre par le bas, la maille MNT est la precedente
+                #        . en principe, on ne doit pas sortir du DTM
+                # On rentre par le bas, la maille DTM est la precedente
                 if ((p2[0] == uc) and (VM[0] < 0)):
                     uc-=1
 
-                # On rentre par la gauche, la maille MNT est la precedente
+                # On rentre par la gauche, la maille DTM est la precedente
                 if ((p2[1] == vc) and (VM[1] < 0)):
                     vc-=1
 
@@ -373,8 +373,8 @@ class grid:
                 # Boucle de recherche iterative de la maille intersectee
                 while ((a2 < 1) and (uc > -1) and (uc < (nu - 1)) and (vc > -1) and (vc < (nv - 1))):
                     # - Altitudes min et max de la maille
-                    hi = mnt.Zmin_cell[uc,vc]
-                    hs = mnt.Zmax_cell[uc,vc]
+                    hi = dtm.Zmin_cell[uc, vc]
+                    hs = dtm.Zmax_cell[uc, vc]
 
                     # - Transfert : le point bas devient le point haut
                      #a1 = a2;
@@ -614,24 +614,24 @@ class grid:
                     # 5. Test d'intersection de la vis?e avec le cube
                     if (bIntersect):
                         # Il y a intersection entre la vis?e et le cube
-                        # 5.1 - Altitudes du MNT
-                        h1 = mnt.MakeAlti(p1[0], p1[1])
-                        h2 = mnt.MakeAlti(p2[0], p2[1])
+                        # 5.1 - Altitudes du DTM
+                        h1 = dtm.MakeAlti(p1[0], p1[1])
+                        h2 = dtm.MakeAlti(p2[0], p2[1])
 
-                        # 5.2 - Diff?rences d'altitude avec le MNT
+                        # 5.2 - Diff?rences d'altitude avec le DTM
                         d1 = p1[2] - h1
                         d2 = p2[2] - h2
 
-                        # 5.3 - Test d'intersection avec le MNT
+                        # 5.3 - Test d'intersection avec le DTM
                         if (d1 * d2 <= 0):
-                            # Il y a intersection entre la vis?e et le MNT
+                            # Il y a intersection entre la vis?e et le DTM
                             # 5.3.1 - Calcul de la solution approch?e
-                            d2 = 2 * mnt.TOL_Z # Init de d2 > TOL_Z
+                            d2 = 2 * dtm.TOL_Z # Init de d2 > TOL_Z
                             ua = p2[0]
                             va = p2[1]
                             za = h2
 
-                            while (abs(d2) > mnt.TOL_Z):
+                            while (abs(d2) > dtm.TOL_Z):
                                 # 5.3.1.1 - Coefficient d'interpolation lin?aire de h
                                 ch = (p1[2] - h1) / ((h2 - h1) - (p2[2] - p1[2]))
 
@@ -641,7 +641,7 @@ class grid:
                                 za = p1[2] + ch * (p2[2] - p1[2])
 
                                 # 5.3.1.3 - Altitude du point interpole
-                                zv = mnt.MakeAlti(ua, va)
+                                zv = dtm.MakeAlti(ua, va)
 
                                 # 5.3.1.4 - Ecart d'altitude au point interpole
                                 d2 = zv - za
@@ -668,18 +668,18 @@ class grid:
                             p1[2] = za
 
                             bTrouve = True
-                            PointR = mnt.MntToTer(p1)
+                            PointR = dtm.DTMToTer(p1)
                             return (True,bTrouve,PointR)
 
                 # Fin boucle sur les mailles
 
-                # Test si on est toujours dans le cube MNT
+                # Test si on est toujours dans le cube DTM
                 if (a2 >= 1):
                     # Changement de plan
                     i0+=1
 
                     # Chargement dans p2 du nouveau sommet
-                    p2 = ViseeMNT[i0].copy()
+                    p2 = ViseeDTM[i0].copy()
                     dH3D_p2 = H3D[i0].copy()
 
                 else:
@@ -714,28 +714,28 @@ class grid:
         P[1] = (dh*vlat[0] +(1-dh)*vlat[1])
         return P
 
-    def fct_locdir_mnt(self,lig,col, mnt):
-        """fonction de localisation sur mnt"""
+    def fct_locdir_dtm(self,lig,col, dtm):
+        """fonction de localisation sur dtm"""
         visee = np.zeros((3,self.nbalt))
         vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
         visee[0,:] = vislonlat[0]
         visee[1,:] = vislonlat[1]
         visee[2,:] = self.alts_down
         v = visee.T
-        (code1, code2, PointB, dH3D) = self.checkCubeMNT(v,mnt)
-        (code3,code4,Point_mnt) = self.intersection(v, PointB, dH3D,mnt)
-        return Point_mnt
+        (code1, code2, PointB, dH3D) = self.checkCubeDTM(v,dtm)
+        (code3,code4,Point_dtm) = self.intersection(v, PointB, dH3D,dtm)
+        return Point_dtm
 
-    def fct_locdir_mntopt(self,lig,col, mnt):
-        """fonction de localisation sur mnt"""
+    def fct_locdir_dtmopt(self,lig,col, dtm):
+        """fonction de localisation sur dtm"""
         visee = np.zeros((3,self.nbalt))
         vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
         visee[0,:] = vislonlat[0]
         visee[1,:] = vislonlat[1]
         visee[2,:] = self.alts_down
         v = visee.T
-        (code, code2, PointB, dH3D) = self.checkCubeMNT(v,mnt)
-        #(code,code4,Point_mnt) = self.intersection(v, PointB, dH3D,mnt)
+        (code, code2, PointB, dH3D) = self.checkCubeDTM(v,dtm)
+        #(code,code4,Point_dtm) = self.intersection(v, PointB, dH3D,dtm)
         return code
 
     def fct_interp_visee_unitaire_gld(self,lig,col):
@@ -770,11 +770,11 @@ class grid:
         return gld_lon,gld_lat
 
 
-    def fct_gld_mnt(self,lig0,col0,paslig,pascol,nblig,nbcol,mnt):
+    def fct_gld_dtm(self,lig0,col0,paslig,pascol,nblig,nbcol,dtm):
         """
-        fonction de calcul de grille de loc directe sur MNT
+        fonction de calcul de grille de loc directe sur DTM
         """
-        gldmnt = np.zeros((3,nblig,nbcol))
+        glddtm = np.zeros((3,nblig,nbcol))
         visee = np.zeros((3,self.nbalt))
         for i in range(nblig):
             for j in range(nbcol):
@@ -785,10 +785,10 @@ class grid:
                 visee[1,:] = vislonlat[1]
                 visee[2,:] = self.alts_down
                 v = visee.T
-                (code1, code2, PointB, dH3D) = self.checkCubeMNT(v,mnt)
-                (code3,code4,PointR) = self.intersection(v, PointB, dH3D,mnt)
-                gldmnt[:,i,j] = PointR
-        return gldmnt
+                (code1, code2, PointB, dH3D) = self.checkCubeDTM(v,dtm)
+                (code3,code4,PointR) = self.intersection(v, PointB, dH3D,dtm)
+                glddtm[:,i,j] = PointR
+        return glddtm
 
     def renvoie_indices_grilles_alt(self,alt):
         """renvoie les indices sup et inf des plans d'altitude encadrant une altitude
@@ -1060,7 +1060,7 @@ class grid:
 
     #-------------------------------------------------------------------------------
 
-def fct_coloc(gld_xH_src, gld_hX_dst, mnt, \
+def fct_coloc(gld_xH_src, gld_hX_dst, dtm, \
         l0_src, c0_src, paslig_src, pascol_src, nblig_src, nbcol_src):
 
     gricoloc = np.zeros((3,nblig_src,nbcol_src))
@@ -1069,7 +1069,7 @@ def fct_coloc(gld_xH_src, gld_hX_dst, mnt, \
         for c in range(nbcol_src):
             col = c0_src + pascol_src*c
 
-            Psol = gld_xH_src.fct_locdir_mnt(lig,col, mnt)
+            Psol = gld_xH_src.fct_locdir_dtm(lig,col, dtm)
             Pdst = gld_hX_dst.fct_locinv(Psol)
             gricoloc[:,l,c] = Pdst
     return gricoloc

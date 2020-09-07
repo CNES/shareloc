@@ -21,7 +21,7 @@
 
 
 import numpy as np
-from shareloc.readwrite import lit_header_hdbabel, lit_grille_bsq
+from shareloc.readwrite import read_hdbabel_header, read_bsq_grid
 import os
 
 #------------------------------------------------------------------------------
@@ -66,10 +66,10 @@ class DTM:
 
     def charge(self):
         if self.format=='bsq':
-            hd_babel = lit_header_hdbabel(self.dtm_file)
+            hd_babel = read_hdbabel_header(self.dtm_file)
             for key in hd_babel:
                 setattr(self,key,hd_babel[key])
-            self.Z = lit_grille_bsq(self.dtm_file, self.nl, self.nc, self.codage)
+            self.Z = read_bsq_grid(self.dtm_file, self.nl, self.nc, self.data_type)
         else:
             print("format de mnt non reconnu")
 
@@ -77,28 +77,28 @@ class DTM:
     def eq_plan(self,i,P):
         return self.a[i]*P[0] + self.b[i]*P[1] + self.c[i]*P[2] - self.d[i]
 
-    def TerToMnt(self,vectTer):
+    def TerToDTM(self,vectTer):
         #VectTer : (x, y, alt dans rep sol)
-        #VectMnt de taille (n,3) ou (3)
-        vectMnt = vectTer.copy()
-        vectMnt[0] = (vectTer[1] - self.y0) / self.py
-        vectMnt[1] = (vectTer[0] - self.x0) / self.px
-        return vectMnt
+        #VectDTM de taille (n,3) ou (3)
+        vectDTM = vectTer.copy()
+        vectDTM[0] = (vectTer[1] - self.y0) / self.py
+        vectDTM[1] = (vectTer[0] - self.x0) / self.px
+        return vectDTM
 
-    def TersToMnts(self,vectTers):
+    def TersToDTMs(self,vectTers):
         #VectTer : (x, y, alt dans rep sol)
-        #VectMnt de taille (n,3) ou (3)
-        vectMnts = vectTers.copy()
+        #VectDTM de taille (n,3) ou (3)
+        vectDTMs = vectTers.copy()
         for i,vectTer in enumerate(vectTers):
-            vectMnts[i,:] = self.TerToMnt(vectTer)
-        return vectMnts
+            vectDTMs[i,:] = self.TerToDTM(vectTer)
+        return vectDTMs
 
-    def MntToTer(self,vectMnt):
-        #VectMnt : (lig, col, alt dans grille MNT)
-        #VectMnt de taille (n,3) ou (3)
-        vectTer = vectMnt.copy()
-        vectTer[0] = self.x0 + self.px * vectMnt[1]
-        vectTer[1] = self.y0 + self.py * vectMnt[0]
+    def DTMToTer(self,vectDTM):
+        #VectDTM : (lig, col, alt dans grille MNT)
+        #VectDTM de taille (n,3) ou (3)
+        vectTer = vectDTM.copy()
+        vectTer[0] = self.x0 + self.px * vectDTM[1]
+        vectTer[1] = self.y0 + self.py * vectDTM[0]
         return vectTer
 
     def MakeAlti(self,dX,dY):

@@ -44,16 +44,16 @@ class grid:
         self.alts_down = []
         self.ligmax    = None
         self.colmax    = None
-        self.charge()
+        self.load()
 
-    def charge(self):
+    def load(self):
         """
-        Lit les grilleset les entetes et definit 2 "cubes" de donnees
+        header and grid loading function
+        2 data cubes are defined :
         - gld_lon : [alt,lig,col]
         - gld_lat : [alt,lig,col]
-        Les grilles bsq sont rangees de H0 a Hx, avec alt montante
-        Nous on les range en ordre descendant
-
+        bsq grids are stored by increasing altitude H0 ... Hx
+        internal structure is decreasing one
         """
         if self.format=='bsq':
 
@@ -93,7 +93,7 @@ class grid:
             self.colmax = self.col0 + self.pascol*(self.nbcol-1)
         else:
 
-            print("format de mnt non reconnu")
+            print("dtm format is not handled")
 
 
     def checkCubeDTM(self,Visee,dtm):
@@ -700,7 +700,7 @@ class grid:
         """fonction de localisation a altitude constante"""
         #faire une controle sur lig / col !!!!
         # 0.5 < lig < ligmax
-        (kh,kb) = self.renvoie_indices_grilles_alt(alt)
+        (kh,kb) = self.return_grid_index(alt)
         altbas  = self.alts_down[kb]
         althaut = self.alts_down[kh]
         dh = (alt - altbas)/(althaut - altbas)
@@ -790,7 +790,7 @@ class grid:
                 glddtm[:,i,j] = PointR
         return glddtm
 
-    def renvoie_indices_grilles_alt(self,alt):
+    def return_grid_index(self, alt):
         """renvoie les indices sup et inf des plans d'altitude encadrant une altitude
         Les grilles gld ne sont pas sensees etre a des hauteurs regulieres"""
         if alt > self.alts_down[0] :
@@ -813,7 +813,7 @@ class grid:
         fonction de calcul de grille de loc directe a altitude constante
         => a faire: controler les extrapolations
         """
-        (kh,kb) = self.renvoie_indices_grilles_alt(alt)
+        (kh,kb) = self.return_grid_index(alt)
         gldalt  = np.zeros((3,nblig,nbcol))
         altbas  = self.alts_down[kb]
         althaut = self.alts_down[kh]
@@ -974,7 +974,7 @@ class grid:
         dc = (col - self.col0)/self.pascol
         il = int(np.floor(dl))
         ic = int(np.floor(dc))
-        (kh,kb) = self.renvoie_indices_grilles_alt(alt)
+        (kh,kb) = self.return_grid_index(alt)
 
         lon_h00 = self.gld_lon[kh,il  ,ic]
         lon_h01 = self.gld_lon[kh,il  ,ic+1]

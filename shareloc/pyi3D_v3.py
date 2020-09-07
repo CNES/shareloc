@@ -1126,22 +1126,23 @@ class gld_xH:
                 imes +=1
 
         #Calcul des coeffcients
-        matAmin       = np.matrix(Amin)
-        matAmax       = np.matrix(Amax)
-        tAAmin        = matAmin.T*matAmin
-        tAAmax        = matAmax.T*matAmax
-        tAAmin_inv    = tAAmin.I
-        tAAmax_inv    = tAAmax.I
+        matAmin       = np.array(Amin)
+        matAmax       = np.array(Amax)
 
-        coef_col_min = tAAmin_inv*matAmin.T*Bcol
-        coef_lig_min = tAAmin_inv*matAmin.T*Blig
-        coef_col_max = tAAmax_inv*matAmax.T*Bcol
-        coef_lig_max = tAAmax_inv*matAmax.T*Blig
+        tAAmin        = matAmin.T@matAmin
+        tAAmax        = matAmax.T@matAmax
+        tAAmin_inv    = np.linalg.inv(tAAmin)
+        tAAmax_inv    = np.linalg.inv(tAAmax)
 
-        setattr(self,'pred_col_min',coef_col_min.A1)
-        setattr(self,'pred_lig_min',coef_lig_min.A1)
-        setattr(self,'pred_col_max',coef_col_max.A1)
-        setattr(self,'pred_lig_max',coef_lig_max.A1)
+        coef_col_min = tAAmin_inv@matAmin.T@Bcol
+        coef_lig_min = tAAmin_inv@matAmin.T@Blig
+        coef_col_max = tAAmax_inv@matAmax.T@Bcol
+        coef_lig_max = tAAmax_inv@matAmax.T@Blig
+
+        setattr(self,'pred_col_min',coef_col_min.flatten())
+        setattr(self,'pred_lig_min',coef_lig_min.flatten())
+        setattr(self,'pred_col_max',coef_col_max.flatten())
+        setattr(self,'pred_lig_max',coef_lig_max.flatten())
         setattr(self,'pred_ofset_scale_lon',  [lon_ofset , lon_scale])
         setattr(self,'pred_ofset_scale_lat',  [lat_ofset , lat_scale] )
         setattr(self,'pred_ofset_scale_lig',  [lig_ofset , lig_scale] )
@@ -1235,7 +1236,7 @@ class gld_xH:
         dlat_l = ((1-hx)*dlat_lb + (hx)*dlat_lh)*1e6
         det = dlon_c*dlat_l - dlon_l*dlat_c
         if abs(det) > 0.000000000001:
-            Matdp = np.matrix([[dlat_l,-dlon_l],[-dlat_c,dlon_c]])/det
+            Matdp = np.array([[dlat_l,-dlon_l],[-dlat_c,dlon_c]])/det
         else:
             print("determinant nul")
         return Matdp
@@ -1274,11 +1275,11 @@ class gld_xH:
                 dlon_microrad = (P[0] - lon)*deg2mrad
                 dlat_microrad = (P[1] - lat)*deg2mrad
                 erreur_m2 = Rtx*(dlat_microrad**2+(dlon_microrad*coslon)**2)
-                dsol = np.matrix([dlon_microrad,dlat_microrad]).T
+                dsol = np.array([dlon_microrad, dlat_microrad])
                 mat_dp = self.fct_loc_inv_mat_dp(lig_i,col_i,alt)
-                dimg = mat_dp*dsol
-                col_i += -dimg[0,0]
-                lig_i += -dimg[1,0]
+                dimg = mat_dp@dsol
+                col_i += -dimg[0]
+                lig_i += -dimg[1]
                 k +=1
                 point_valide = 1
         return (lig_i,col_i,point_valide)

@@ -27,9 +27,16 @@ This module contains the input/output for shareloc
 
 
 #------------------------------------------------------------------------------
-def read_hdbabel_header(fic_mnt_bsq):
-    path_header = op.dirname(fic_mnt_bsq)
-    name_header = op.basename(fic_mnt_bsq).split('.')[0]+'.hd_babel'
+def read_hdbabel_header(bsq_filename):
+    """
+    read bsq .hd_babel header
+    :param bsq_filename :  bsq filename with extension
+    :type  bsq_filename : str
+    :return hd babel header
+    :rtype dict
+    """
+    path_header = op.dirname(bsq_filename)
+    name_header = op.basename(bsq_filename).split('.')[0] + '.hd_babel'
     header = {}
     hd_babel = {}
     with open(op.join(path_header,name_header),'r') as f:
@@ -51,12 +58,31 @@ def read_hdbabel_header(fic_mnt_bsq):
 
 #------------------------------------------------------------------------------
 def read_bsq_grid(fic_bsq, nl, nc, data_type):
+    """
+    read bsq grid
+    :param fic_bsq :  bsq filename
+    :type  fic_bsq : str
+    :param nl :  line number
+    :type  nl : int
+    :param nc :  column number
+    :type  nc : int
+    :param data_type : data type of the array
+    :type  data_type : data-type
+    :return grid
+    :rtype np.array
+    """
     grid = np.fromfile(fic_bsq,dtype=data_type).reshape((nl,nc))
     return grid
 #------------------------------------------------------------------------------
 def read_bsq_hd(fic_hd, tag):
-    """balises est un dico
-    dico_out['nom'] = ('nom_bsq',type)
+    """
+    read bsq header
+    :param fic_hd :  header filename
+    :type  fic_hd : str
+    :param tag :  dict of tags to read
+    :type  tag : dict
+    :return header infos
+    :rtype dict
     """
     dico_out = {}
     with open(op.join(fic_hd),'r') as f:

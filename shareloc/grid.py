@@ -96,12 +96,12 @@ class grid:
             print("dtm format is not handled")
 
 
-    def checkCubeDTM(self,Visee,dtm):
-        #Visee: (n,3):
+    def checkCubeDTM(self,LOS,dtm):
+        #LOS: (n,3):
         PointB = None
         dH3D = None
         (ui,vi,zi,hi) = ([],[],[],[])
-        ViseeDTM = dtm.TersToDTMs(Visee)
+        LOSDTM = dtm.TersToDTMs(LOS)
         # -----------------------------------------------------------------------
         # Nombre d'intersections valides trouvees
         nbi = 0
@@ -110,7 +110,7 @@ class grid:
         for f in range(6):
             # -----------------------------------------------------------------------
             # Initialisation du sommet de la visee
-            sB = ViseeDTM[0,:]
+            sB = LOSDTM[0,:]
             # -----------------------------------------------------------------------
             # Initialisation de la position par / au plan
             #print dtm.plans[f,:-1]
@@ -127,7 +127,7 @@ class grid:
                 sA = sB.copy()
                 # -----------------------------------------------------------------------
                 # Reinit du point B
-                sB = ViseeDTM[p,:] #dg on itere sur les differents points de la visee
+                sB = LOSDTM[p,:] #dg on itere sur les differents points de la visee
                 #print sB
                 # -----------------------------------------------------------------------
                 # Initialisation de la position par / au plan
@@ -261,15 +261,15 @@ class grid:
 
 
     #----------------------------------------------------------------
-    def intersection(self, Visee, PointB, dH3D, dtm):
+    def intersection(self, LOS, PointB, dH3D, dtm):
         """
         fonction d'intersection dtm
-        (Visee, H3D, PointB, dH3D, PointR)
+        (LOS, H3D, PointB, dH3D, PointR)
         """
-        ViseeDTM   = dtm.TersToDTMs(Visee)
+        LOSDTM   = dtm.TersToDTMs(LOS)
         PointB_DTM = dtm.TerToDTM(PointB)
         PointR     = np.zeros(3)
-        (npl,_)     = Visee.shape
+        (npl,_)     = LOS.shape
         H3D = range(npl,-1,-1)
 
         p1 = PointB_DTM.copy() #[p1[0],p1[1],p1[2]]
@@ -303,15 +303,15 @@ class grid:
         dH3D_p2 = dH3D
 
         #2. - Boucle sur les plans de grille
-        while (i0 < ViseeDTM.size - 1):
+        while (i0 < LOSDTM.size - 1):
             #2.1 - Initialisation du sommet courant de la visee
-            u0 = ViseeDTM[i0][0]
-            v0 = ViseeDTM[i0][1]
-            z0 = ViseeDTM[i0][2]
-            z1 = ViseeDTM[i0 + 1][2]
+            u0 = LOSDTM[i0][0]
+            v0 = LOSDTM[i0][1]
+            z0 = LOSDTM[i0][2]
+            z1 = LOSDTM[i0 + 1][2]
 
             #2.2 - Initialisation de la visee DTM
-            VM = ViseeDTM[i0 + 1] - ViseeDTM[i0]
+            VM = LOSDTM[i0 + 1] - LOSDTM[i0]
 
             #2.3 - Test si visee verticale
             if (VM[0]==0 and VM[1]==0):
@@ -320,7 +320,7 @@ class grid:
                 h1 = self.MakeAlti(u0, v0)
 
                 #    Test si le plan suivant est en dessous du DTM
-                if (ViseeDTM[i0 + 1][2] <= h1):
+                if (LOSDTM[i0 + 1][2] <= h1):
                     #Init point de sortie
                     p1[0] = u0
                     p1[1] = v0
@@ -679,7 +679,7 @@ class grid:
                     i0+=1
 
                     # Chargement dans p2 du nouveau sommet
-                    p2 = ViseeDTM[i0].copy()
+                    p2 = LOSDTM[i0].copy()
                     dH3D_p2 = H3D[i0].copy()
 
                 else:

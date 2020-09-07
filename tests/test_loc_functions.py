@@ -98,26 +98,6 @@ def test_loc_dir_interp_visee_unitaire_gld(lig,col,valid_lon,valid_lat):
     assert (visee[1][1] == pytest.approx(valid_lat, abs=1e-12))
 
 
-@pytest.mark.parametrize("col,lig,h", [(50.5,100.5,100.0)])
-@pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.2170054518422,21.9590529453258,100.0)])
-@pytest.mark.unit_tests
-def test_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
-    """
-    Test direct localization at constant altitude
-    """
-
-    ___,gri = prepare_loc()
-    lonlatalt = gri.fct_locdir_h(lig, col, h)
-
-    diff_lon = lonlatalt[0] - valid_lon
-    diff_lat = lonlatalt[1] - valid_lat
-    diff_alt = lonlatalt[2] - valid_alt
-    print("direct localization at constant altitude lig : {} col {} alt {}".format(lig,col,h))
-    print("lon {} lat {} alt {} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
-    print('diff_lon {} diff_lat {} diff_alt {}'.format(diff_lon, diff_lat, diff_alt))
-    assert(valid_lon == pytest.approx(lonlatalt[0],abs=1e-12))
-    assert(valid_lat == pytest.approx(lonlatalt[1],abs=1e-12))
-    assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-8))
 
 @pytest.mark.parametrize("col,lig,h", [(50.5,100.5,100.0)])
 @pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.2170054518422,21.9590529453258,100.0)])

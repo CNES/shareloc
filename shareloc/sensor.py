@@ -24,7 +24,7 @@
 import numpy as np
 
 
-class sensor:
+class Sensor:
     """ base class for localization function.
     Underlying model can be both multi layer localization grids or RPCs models
     """

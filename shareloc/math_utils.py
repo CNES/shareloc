@@ -26,9 +26,16 @@ This module contains the mathematical functions for shareloc
 
 #------------------------------------------------------------------------------
 def interpol_bilin(mats,nl,nc,dl,dc):
-        """interpole bilineairement une matrice de taille (: , nl,nc)
-        au point l,c donnees en indices decimaux de mat
-        mats est une liste de mat a interpoler"""
+        """
+        bilinear interpolation on multi layer  matrix
+        :param mats: multi layer grid (: , nl,nc)
+        :param nl: line number of mats
+        :param nc: column number of mats
+        :param dl: position (line)
+        :param dc: position (column)
+        :return interpolated value on each layer
+        :rtype list
+        """
         if (dl < 0):
             i1 = 0
         elif (dl >= nl-1):
@@ -44,8 +51,7 @@ def interpol_bilin(mats,nl,nc,dl,dc):
         else:
             j1 = int(np.floor(dc))
         j2 = j1+1
-        #Coefficients d'interpolation bilineaire
-
+        #(u,v) are subpixel distance to interpolate along each axis
         u = dc - j1
         v = dl - i1
         #Altitude

@@ -22,9 +22,7 @@
 
 import numpy as np
 from shareloc.readwrite import read_hdbabel_header, read_bsq_grid
-import os
 
-#------------------------------------------------------------------------------
 class DTM:
     def __init__(self, dtm_filename, dtm_format ='bsq'):
         self.dtm_file    = dtm_filename

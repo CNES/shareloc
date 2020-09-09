@@ -27,9 +27,16 @@ from shareloc.math_utils import interpol_bilin
 class grid:
     """ multi H direct localization grid handling class 
     """
-    def __init__(self,fichier_gld_bsq, format_gri = 'bsq'):
-        self.fichier_in = fichier_gld_bsq
-        self.format    = format_gri
+    def __init__(self, grid_filename, grid_format ='bsq'):
+        """
+        Constructor
+        :param grid_filename: grid filename
+        :type grid_filename: string
+        :param grid_format: grid format (by default bsq)
+        :type grid_format: string
+        """
+        self.filename = grid_filename
+        self.format    = grid_format
         self.lig0      = None
         self.col0      = None
         self.nblig     = None
@@ -62,7 +69,7 @@ class grid:
             'col0':('COL0',float),'lig0':('LIG0',float),\
             'repter':('REFERENTIEL TERRESTRE',str)}
 
-            nom_hd      = self.fichier_in[:-4]+'1.hd'
+            nom_hd      = self.filename[:-4] + '1.hd'
             dico_hd = read_bsq_hd(nom_hd, dico_a_lire)
 
             for var in dico_hd:
@@ -76,9 +83,9 @@ class grid:
 
             for i in range(self.nbalt):
                 k = self.nbalt-i
-                nom_gri_lon = self.fichier_in[:-4]+str(k)+'.c1'
-                nom_gri_lat = self.fichier_in[:-4]+str(k)+'.c2'
-                nom_hd      = self.fichier_in[:-4]+str(k)+'.hd'
+                nom_gri_lon = self.filename[:-4] + str(k) + '.c1'
+                nom_gri_lat = self.filename[:-4] + str(k) + '.c2'
+                nom_hd      = self.filename[:-4] + str(k) + '.hd'
 
                 gld_lon[i,:,:] = np.fromfile(nom_gri_lon,dtype=codage).reshape((self.nblig,self.nbcol))
                 gld_lat[i,:,:] = np.fromfile(nom_gri_lat,dtype=codage).reshape((self.nblig,self.nbcol))

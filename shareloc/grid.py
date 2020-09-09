@@ -97,6 +97,15 @@ class grid:
 
 
     def checkCubeDTM(self,LOS,dtm):
+        """
+        DTM cube intersection
+        :param LOS :  line of sight
+        :type LOS : numpy.array
+        :param dtm : dtm model
+        :type dtm  : shareloc.dtm
+        :return intersection information (True,an intersection has been found ?, (lon,lat) of dtm position, altitude)
+        :rtype tuple (bool, bool, numpy.array, float)
+        """
         #LOS: (n,3):
         PointB = None
         dH3D = None
@@ -253,7 +262,7 @@ class grid:
         # -----------------------------------------------------------------------
         # Coordonnees terrain
         PointB = dtm.DTMToTer(PointDTM)
-        #PointB est le point Terreain (lon,lat)
+        #PointB est le point Terrain (lon,lat)
         # -----------------------------------------------------------------------
         # Fin, retour
         bTrouve = True
@@ -263,8 +272,17 @@ class grid:
     #----------------------------------------------------------------
     def intersection(self, LOS, PointB, dH3D, dtm):
         """
-        fonction d'intersection dtm
-        (LOS, H3D, PointB, dH3D, PointR)
+        DTM intersection
+        :param LOS :  line of sight
+        :type LOS : numpy.array
+        :param PointB :  position of intersection in DTM cube
+        :type PointB : numpy.array
+        :param dH3D :  altitude in DTM cube
+        :type dH3D : float
+        :param dtm : dtm model
+        :type dtm  : shareloc.dtm
+        :return intersection information (True,an intersection has been found ?, position of intersection)
+        :rtype tuple (bool, bool, numpy.array)
         """
         LOSDTM   = dtm.TersToDTMs(LOS)
         PointB_DTM = dtm.TerToDTM(PointB)
@@ -697,7 +715,17 @@ class grid:
         return (True,PointR)
 
     def fct_locdir_h(self,lig,col,alt):
-        """fonction de localisation a altitude constante"""
+        """
+        direct localization at constant altitude
+        :param lig :  line sensor position
+        :type lig : float
+        :param col :  column sensor position
+        :type col : float
+        :param alt :  altitude
+        :type alt : float
+        :return ground position (lon,lat,h)
+        :rtype numpy.array
+        """
         #faire une controle sur lig / col !!!!
         # 0.5 < lig < ligmax
         (kh,kb) = self.return_grid_index(alt)
@@ -715,7 +743,17 @@ class grid:
         return P
 
     def fct_locdir_dtm(self,lig,col, dtm):
-        """fonction de localisation sur dtm"""
+        """
+        direct localization on dtm
+        :param lig :  line sensor position
+        :type lig : float
+        :param col :  column sensor position
+        :type col : float
+        :param dtm : dtm model
+        :type dtm  : shareloc.dtm
+        :return ground position (lon,lat,h)
+        :rtype numpy.array
+        """
         visee = np.zeros((3,self.nbalt))
         vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
         visee[0,:] = vislonlat[0]
@@ -727,7 +765,17 @@ class grid:
         return Point_dtm
 
     def fct_locdir_dtmopt(self,lig,col, dtm):
-        """fonction de localisation sur dtm"""
+        """
+        direct localization on 3D cube dtm
+        :param lig :  line sensor position
+        :type lig : float
+        :param col :  column sensor position
+        :type col : float
+        :param dtm : dtm model
+        :type dtm  : shareloc.dtm
+        :return boolean true
+        :rtype bool
+        """
         visee = np.zeros((3,self.nbalt))
         vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
         visee[0,:] = vislonlat[0]
@@ -739,6 +787,15 @@ class grid:
         return code
 
     def fct_interp_visee_unitaire_gld(self,lig,col):
+        """
+        interpolate positions on multi h grid
+        :param lig :  line sensor position
+        :type lig : float
+        :param col :  column sensor position
+        :type col : float
+        :return interpolated positions
+        :rtype list
+        """
         dl = (lig - self.lig0)/self.paslig
         dc = (col - self.col0)/self.pascol
         mats =  [self.gld_lon,self.gld_lat]
@@ -746,7 +803,17 @@ class grid:
         return res
 
     def fct_interp_gld(self,nblig,nbcol,nbalt=None):
-        """renvoie un gld_xH ??"""
+        """
+        interpolate equally spaced grid (in altitude)
+        :param nblig :  grid nb lig
+        :type nblig : int
+        :param nbcol :  grid nb col
+        :type nbcol : int
+        :param nbalt :  grid nb alt, of None self.nbalt is used instead
+        :type nbalt : int
+        :return equally spaced grid
+        :rtype numpy.array
+        """
         if not nbalt:
             nbalt = self.nbalt
             list_alts = self.alts_down
@@ -770,16 +837,32 @@ class grid:
         return gld_lon,gld_lat
 
 
-    def fct_gld_dtm(self,lig0,col0,paslig,pascol,nblig,nbcol,dtm):
+    def fct_gld_dtm(self, lig0, col0, steplig, stepcol, nblig, nbcol, dtm):
         """
-        fonction de calcul de grille de loc directe sur DTM
+         direct localization  grid on dtm
+         :param lig0 :  grid origin (lig)
+         :type lig0 : int
+         :param col0 :  grid origin (col)
+         :type col0 : int
+         :param steplig :  grid step (lig)
+         :type steplig : int
+         :param stepcol :  grid step (col)
+         :type stepcol : int
+         :param nblig :  grid nb lig
+         :type nblig : int
+         :param nbcol :  grid nb col
+         :type nbcol : int
+         :param dtm : dtm model
+         :type dtm  : shareloc.dtm
+         :return direct localization grid
+         :rtype numpy.array
         """
         glddtm = np.zeros((3,nblig,nbcol))
         visee = np.zeros((3,self.nbalt))
         for i in range(nblig):
             for j in range(nbcol):
-                col = col0 + pascol*j
-                lig = lig0 + paslig*i
+                col = col0 + stepcol * j
+                lig = lig0 + steplig * i
                 vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
                 visee[0,:] = vislonlat[0]
                 visee[1,:] = vislonlat[1]
@@ -791,8 +874,13 @@ class grid:
         return glddtm
 
     def return_grid_index(self, alt):
-        """renvoie les indices sup et inf des plans d'altitude encadrant une altitude
-        Les grilles gld ne sont pas sensees etre a des hauteurs regulieres"""
+        """
+         return layer index enclosing a given altitude
+         :param alt :  altitude
+         :type alt : float
+         :return grid index (up,down)
+         :rtype tuple
+        """
         if alt > self.alts_down[0] :
             (indicehaut,indicebas) = (0,0)
         elif alt < self.alts_down[-1]:
@@ -810,9 +898,25 @@ class grid:
 
     def fct_gld_h(self,lig0,col0,paslig,pascol,nblig,nbcol,alt):
         """
-        fonction de calcul de grille de loc directe a altitude constante
-        => a faire: controler les extrapolations
+         direct localization  grid at constant altitude
+         :param lig0 :  grid origin (lig)
+         :type lig0 : int
+         :param col0 :  grid origin (col)
+         :type col0 : int
+         :param steplig :  grid step (lig)
+         :type steplig : int
+         :param stepcol :  grid step (col)
+         :type stepcol : int
+         :param nblig :  grid nb lig
+         :type nblig : int
+         :param nbcol :  grid nb col
+         :type nbcol : int
+         :param alt : altitude of the grid
+         :type alt  : float
+         :return direct localization grid
+         :rtype numpy.array
         """
+        "TODO: check extrapolations"
         (kh,kb) = self.return_grid_index(alt)
         gldalt  = np.zeros((3,nblig,nbcol))
         altbas  = self.alts_down[kb]
@@ -835,15 +939,21 @@ class grid:
         return gldalt
 
     def init_pred_loc_inv(self,nblig_pred=3,nbcol_pred=3):
-        """Initialise les polynomes de prediction de localisation inverse de toutes les barrettes de la pdv
-        Il s'agit de 4 polynomes calcules sur des grilles 5x5 a hmin et hmax sous
-        la forme:
+        """
+        initialize inverse localization polynomial predictor
+        it composed of 4 polynoms estimated on 5x5 grid at hmin and hmax :
+
         col_min = a0 + a1*lon + a2*lat + a3*lon**2 + a4*lat**2 + a5*lon*lat
         lig_min = b0 + b1*lon + b2*lat + b3*lon**2 + b4*lat**2 + b5*lon*lat
         col_max = a0 + a1*lon + a2*lat + a3*lon**2 + a4*lat**2 + a5*lon*lat
         lig_max = b0 + b1*lon + b2*lat + b3*lon**2 + b4*lat**2 + b5*lon*lat
-        Les coefficients sont determines par moindres carres sur des grandeurs normalisees -1 et 1
+        least squarred method is used to calculate coefficients, which are noramlized in [-1,1]
+        :param nblig_pred :  predictor nb lig (3 by default)
+        :type nblig_pred : int
+        :param nbcol_pred :  predictor nb col (3 by default)
+        :type nbcol_pred : int
         """
+        "why 5x5 grid ?"
         nb_alt     = 2
         nb_coeff   = 6
         nb_mes     = nbcol_pred*nblig_pred
@@ -921,13 +1031,20 @@ class grid:
         setattr(self,'pred_ofset_scale_lat',  [lat_ofset , lat_scale] )
         setattr(self,'pred_ofset_scale_lig',  [lig_ofset , lig_scale] )
         setattr(self,'pred_ofset_scale_col',  [col_ofset , col_scale] )
-        code_return = 0
-        return code_return
 
     #-------------------------------------------------------------------------------------------------------------------------
-    def fct_locinv_pred(self,lon,lat,alt=0):
-        """Cette fonction evalue le polynome predicteur en un point et fait
-        l'interporpolation altimetrique"""
+    def fct_locinv_pred(self,lon,lat,alt=0.0):
+        """
+        evaluate inverse localization predictor at a given geographic position
+        :param lon : longitude
+        :type lon : float
+        :param lat : latitude
+        :type lat : float
+        :param alt : altitude (0.0 by default)
+        :type alt : float
+        :return sensor position (lig,col, is extrapolated)
+        :rtype tuple (float,float,boolean)
+        """
         seuil_extrapol = 20.0
         extrapol = False
         altmin = self.alts_down[-1]
@@ -962,14 +1079,23 @@ class grid:
 
     #-------------------------------------------------------------------------------------------------------------------------
     def fct_loc_inv_mat_dp(self,lig,col,alt=0):
-        """calcul de la matrice de derivee partielles permettant de passer d'une
-        variation sol a une variation en coordonnees images.
-        Renvoie la matrice M telle que
+        """
+        calculate partial derivative at a given geographic position
+        it gives the matrix to apply to get sensor shifts from geographic ones
+        it returns M matrix :
         [dcol,dlig]T = M x [dlon,dlat]T
-        dlon/dlas sont en microrad
-        Ce calcul se fait sur les noeuds de la grille initiale
-        Cette matrice est necessaire pour l'inversion de la loc directe lors du processus iteratif de loc inverse"""
-
+        dlon/dlat in microrad
+        M is calculated on each node of grid
+        M is necessary for direct localization inversion in iterative inverse loc
+        :param lon : longitude
+        :type lon : float
+        :param lat : latitude
+        :type lat : float
+        :param alt : altitude (0.0 by default)
+        :type alt : float
+        :return matrix
+        :rtype numpy.array
+        """
         dl = (lig - self.lig0)/self.paslig
         dc = (col - self.col0)/self.pascol
         il = int(np.floor(dl))
@@ -1012,20 +1138,25 @@ class grid:
         if abs(det) > 0.000000000001:
             Matdp = np.matrix([[dlat_l,-dlon_l],[-dlat_c,dlon_c]])/det
         else:
-            print("determinant nul")
+            print("num determinantl")
         return Matdp
     #-------------------------------------------------------------------------------------------------------------------------
     def fct_locinv(self,P,nb_iterations = 15):
-        """Fonction de localisation inverse
-        - calcul de la prediction col_0,lig_0
-        - calcul de la loc directe lon_0, lat_0
-        Puis processus iteratif:
-        - calcul de l'erreur au sol dlon et dlat
-        - calcul de la correction dcol dlig correspondante
-        - calcul de la loc directe lon_i, lat_i
-
-        P de taille [lon, lat, alt]
-        si P de taille 2, alt = 0
+        """
+        inverse localization at a given geographic position
+        First initialize position,
+        * apply inverse predictor lon,lat,at ->  col_0,lig_0
+        * direct loc col_0,lig_0 -> lon_0, lat_0
+        Then iterative process:
+        * calculate geographic error dlon,dlat
+        * calculate senor correction dlon,dlat -> dcol,dlig
+        * apply direct localization  -> lon_i,lat_i
+        :param P : longitude,latitude(,altitude)
+        :type P: list
+        :param nb_iterations : max number of iterations (15 by default)
+        :type nb_iterations : int
+        :return sensor position (lig,col, is_valid)
+        :rtype tuple (float,float,boolean)
         """
         (lon,lat) = (P[0],P[1])
         try:
@@ -1060,17 +1191,37 @@ class grid:
 
     #-------------------------------------------------------------------------------
 
-def fct_coloc(gld_xH_src, gld_hX_dst, dtm, \
-        l0_src, c0_src, paslig_src, pascol_src, nblig_src, nbcol_src):
-
+def fct_coloc(gld_xH_src, gld_xH_dst, dtm, \
+              l0_src, c0_src, steplig_src, stepcol_src, nblig_src, nbcol_src):
+    """
+    colocalization grid on dtm
+    localization on dtm from src grid, then inverse localization in right grid
+    :param gld_xH_src : source grid
+    :type gld_xH_src : shareloc.grid
+    :param gld_xH_dst : destination grid
+    :type gld_xH_dst : shareloc.grid
+     :param l0_src :  grid origin (lig)
+     :type l0_src : int
+     :param c0_src :  grid origin (col)
+     :type c0_src : int
+     :param steplig_src :  grid step (lig)
+     :type steplig_src : int
+     :param stepcol_src :  grid step (col)
+     :type stepcol_src : int
+     :param nblig_src :  grid nb lig
+     :type nblig_src : int
+     :param nbcol_src :  grid nb col
+     :type nbcol_src : int
+     :return colocalization grid
+     :rtype numpy.array
+    """
     gricoloc = np.zeros((3,nblig_src,nbcol_src))
     for l in range(nblig_src):
-        lig = l0_src + paslig_src*l
+        lig = l0_src + steplig_src * l
         for c in range(nbcol_src):
-            col = c0_src + pascol_src*c
-
+            col = c0_src + stepcol_src * c
             Psol = gld_xH_src.fct_locdir_dtm(lig,col, dtm)
-            Pdst = gld_hX_dst.fct_locinv(Psol)
+            Pdst = gld_xH_dst.fct_locinv(Psol)
             gricoloc[:,l,c] = Pdst
     return gricoloc
 

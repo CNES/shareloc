@@ -307,7 +307,7 @@ class grid:
         #1 - Initilialisation et tests prealables
         #   1.1 - Test si le sommet est au-dessu du DTM
         #       - Calcul de l'altitude du DTM ? la position du sommet
-        h1 = dtm.MakeAlti(p1[0], p1[1])
+        h1 = dtm.Interpolate(p1[0], p1[1])
         #       - Calcul de l'ecart d'altitude au DTM
         d1 = p1[2] - h1
 
@@ -342,7 +342,7 @@ class grid:
             if (VM[0]==0 and VM[1]==0):
                 #2.3.1 - La vis?e est verticale :
                 #    - Calcul de l'altitude du DTM ? la position du sommet
-                h1 = self.MakeAlti(u0, v0)
+                h1 = self.Interpolate(u0, v0)
 
                 #    Test si le plan suivant est en dessous du DTM
                 if (LOSDTM[i0 + 1][2] <= h1):
@@ -640,8 +640,8 @@ class grid:
                     if (bIntersect):
                         # Il y a intersection entre la vis?e et le cube
                         # 5.1 - Altitudes du DTM
-                        h1 = dtm.MakeAlti(p1[0], p1[1])
-                        h2 = dtm.MakeAlti(p2[0], p2[1])
+                        h1 = dtm.Interpolate(p1[0], p1[1])
+                        h2 = dtm.Interpolate(p2[0], p2[1])
 
                         # 5.2 - Diff?rences d'altitude avec le DTM
                         d1 = p1[2] - h1
@@ -666,7 +666,7 @@ class grid:
                                 za = p1[2] + ch * (p2[2] - p1[2])
 
                                 # 5.3.1.3 - Altitude du point interpole
-                                zv = dtm.MakeAlti(ua, va)
+                                zv = dtm.Interpolate(ua, va)
 
                                 # 5.3.1.4 - Ecart d'altitude au point interpole
                                 d2 = zv - za

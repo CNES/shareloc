@@ -24,7 +24,18 @@ import numpy as np
 from shareloc.readwrite import read_hdbabel_header, read_bsq_grid
 
 class DTM:
+    """ DTM class dedicated
+     works only with BSQ file format
+     we work in cell convention [0,0] is the first cell center (not [0.5,0.5])
+    """
     def __init__(self, dtm_filename, dtm_format ='bsq'):
+        """
+        Constructor
+        :param dtm_filename: dtm filename
+        :type dtm_filename: string
+        :param dtm_format: grid format (by default bsq)
+        :type dtm_format: string
+        """
         self.dtm_file    = dtm_filename
         self.format     = dtm_format
         self.Z          = None
@@ -45,7 +56,7 @@ class DTM:
         self.TOL_Z      = 0.0001
 
         #lecture mnt
-        self.charge()
+        self.load()
         self.InitMinMax()
         self.Zmax    = self.Z.max()
         self.Zmin    = self.Z.min()
@@ -62,56 +73,83 @@ class DTM:
                             [0.0,0.0,1.0,self.Zmin],
                             [0.0,0.0,1.0,self.Zmax]])
 
-    def charge(self):
+    def load(self):
+        """
+        load DTM infos
+        """
         if self.format=='bsq':
             hd_babel = read_hdbabel_header(self.dtm_file)
             for key in hd_babel:
                 setattr(self,key,hd_babel[key])
             self.Z = read_bsq_grid(self.dtm_file, self.nl, self.nc, self.data_type)
         else:
-            print("format de mnt non reconnu")
+            print("dtm format not handled")
 
 
     def eq_plan(self,i,P):
+        """
+        return evaluation of equation on a plane on DTM cube
+        :param i: face index
+        :type i: int
+        :param P: position
+        :type P : numpy.array (1x3)
+        :return evaluation on the plan
+        :rtype float
+        """
         return self.a[i]*P[0] + self.b[i]*P[1] + self.c[i]*P[2] - self.d[i]
 
-    def TerToDTM(self,vectTer):
-        #VectTer : (x, y, alt dans rep sol)
-        #VectDTM de taille (n,3) ou (3)
-        vectDTM = vectTer.copy()
-        vectDTM[0] = (vectTer[1] - self.y0) / self.py
-        vectDTM[1] = (vectTer[0] - self.x0) / self.px
+    def TerToDTM(self, vect_ter):
+        """
+        terrain to index conversion
+        :param vect_ter: terrain coordinate
+        :type vect_ter: array (1x2 or 1x3) if dimension is 3 , last coordinate is unchanged (alt)
+        :return index coordinates
+        :rtype array (1x2 or 1x3)
+        """
+        vectDTM = vect_ter.copy()
+        vectDTM[0] = (vect_ter[1] - self.y0) / self.py
+        vectDTM[1] = (vect_ter[0] - self.x0) / self.px
         return vectDTM
 
-    def TersToDTMs(self,vectTers):
-        #VectTer : (x, y, alt dans rep sol)
-        #VectDTM de taille (n,3) ou (3)
-        vectDTMs = vectTers.copy()
-        for i,vectTer in enumerate(vectTers):
+    def TersToDTMs(self, vect_ters):
+        """
+        terrain to index conversion
+        :param vect_ters: terrain coordinates
+        :type vect_ters: array (nx2 or nx3) if dimension is 3 , last coordinates is iuchanged (alt)
+        :return index coordinates
+        :rtype array (nx2 or nx3)
+        """
+        vectDTMs = vect_ters.copy()
+        for i,vectTer in enumerate(vect_ters):
             vectDTMs[i,:] = self.TerToDTM(vectTer)
         return vectDTMs
 
-    def DTMToTer(self,vectDTM):
-        #VectDTM : (lig, col, alt dans grille MNT)
-        #VectDTM de taille (n,3) ou (3)
-        vectTer = vectDTM.copy()
-        vectTer[0] = self.x0 + self.px * vectDTM[1]
-        vectTer[1] = self.y0 + self.py * vectDTM[0]
+    def DTMToTer(self, vect_dtm):
+        """
+        index to terrain conversion
+        :param vect_dtm: index coordinate
+        :type vect_dtm: array (1x2 or 1x3) if dimension is 3 , last coordinate is unchanged (alt)
+        :return terrain coordinates
+        :rtype array (1x2 or 1x3)
+        """
+        vectTer = vect_dtm.copy()
+        vectTer[0] = self.x0 + self.px * vect_dtm[1]
+        vectTer[1] = self.y0 + self.py * vect_dtm[0]
         return vectTer
 
-    def MakeAlti(self,dX,dY):
+    def Interpolate(self, dX, dY):
         """
-        Indices des noeuds de la maille incluant le point
-        Remarque : Si le point est en fin de MNT, on prend l'avant dernier point du MNT comme reference
-                   pour pouvoir calculer son altitude avec des coefficients d'interpolation (1,1)
-                   plutot que de segmentation faulter avec des coefficients d'interpolation (0,0)
-        On va meme blinder plus que ca d'une maniere generale : si les coordonnees dX, dY debordent du MNT
-        On "clipe" l'indice i1 pour qu'il rentre dans l'intervalle [0, _nl -2]
-        On "clipe" l'indice j1 pour qu'il rentre dans l'intervalle [0, _nc -2]
-
-        Attention on est en convention "cellule" : [0,0] est le centre de la première cellules (pas [0.5,0.5])
+        interpolate altitude
+        if interpolation is done outside DTM the penultimate index is used (or first if d is negative).
+        :param dX: cell position X
+        :type dX: float
+        :param dX: cell position X
+        :type dX: float
+        :return interpolated altitude
+        :rtype float
         """
 
+        "index clipping in [0, _nl -2]"
         if (dX < 0):
             i1 = 0
         elif (dX >= self.nl-1):
@@ -121,6 +159,7 @@ class DTM:
 
         i2 = i1+1
 
+        "index clipping in [0, _nc -2]"
         if (dY < 0):
             j1 = 0
         elif (dY >= self.nc-1):
@@ -139,7 +178,9 @@ class DTM:
         return alt
 
     def InitMinMax(self):
-        #Generation des altitudes inf et sup de chaque maille du MNT
+        """
+        initialize min/max at each dtm cell
+        """
         NC = self.nc-1
         NL = self.nl-1
 
@@ -185,4 +226,3 @@ class DTM:
                 i_altmax = np.ceil(dAltMax)
                 self.Zmin_cell[i,j] = i_altmin
                 self.Zmax_cell[i,j] = i_altmax
-        return True

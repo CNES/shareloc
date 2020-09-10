@@ -84,6 +84,7 @@ class Sensor:
         :param lon : longitude
         :param h : altitude
         :return coordinates : [row,col,valid] (2D np.array), valid == 1 if coordinates is valid
+        :rtype numpy.array
         """
         if self.use_rpc == True:
             print('use rpc')

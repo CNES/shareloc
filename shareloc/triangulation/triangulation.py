@@ -20,15 +20,23 @@
 #
 
 
-def triangulation_sensor(los_array):
+def sensor_triangulation(los_array):
     """
-    Constructor
-    :param grid_filename: grid filename
-    :type grid_filename: string
-    :param grid_format: grid format (by default bsq)
-    :type grid_format: string
+    triangulation in sensor geometry
     """
 
 
     intersections = None
     return intersections
+
+
+
+def epipolar_triangulation(matches, matches_type, geometrical_model_left,geometrical_model_right,grid_left,grid_right):
+    """
+    epipolar triangulation
+    """
+
+
+    intersections_ecef = None
+    intersections_wgs84 = None
+    return intersections_ecef,intersections_wgs84

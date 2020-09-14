@@ -26,7 +26,7 @@ from utils import test_path
 from shareloc.grid import grid, fct_coloc
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
-from shareloc.sensor import Sensor
+from shareloc.localization import Localization
 
 
 def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
@@ -123,7 +123,7 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     Test direct localization at constant altitude
     """
     ___,gri = prepare_loc()
-    loc = Sensor(grid = gri, dtm = None)
+    loc = Localization(grid = gri, dtm = None)
     lonlatalt = loc.forward(lig, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
@@ -145,7 +145,7 @@ def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
     """
     id_scene = 'P1BP--2018122638935449CP'
     ___,gri = prepare_loc('ellipsoide',id_scene)
-    loc_grid = Sensor(grid = gri)
+    loc_grid = Localization(grid = gri)
     #init des predicteurs
     lonlatalt = loc_grid.forward(lig, col, h)
 
@@ -154,7 +154,7 @@ def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
 
     fctrat = FonctRatD(fichier_dimap)
 
-    loc_rpc = Sensor(rpc = fctrat)
+    loc_rpc = Localization(rpc = fctrat)
     lonlatalt_rpc = loc_rpc.forward(lig + 0.5, col + 0.5, h)
 
     diff_lon = lonlatalt[0] - lonlatalt_rpc[0]
@@ -172,7 +172,7 @@ def test_sensor_loc_dir_dtm(index_x,index_y):
     Test direct localization on DTM
     """
     dtmbsq, gri = prepare_loc()
-    loc = Sensor(grid=gri, dtm=dtmbsq)
+    loc = Localization(grid=gri, dtm=dtmbsq)
 
 
     vect_index = [index_x, index_y]
@@ -195,7 +195,7 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     Test direct localization at constant altitude
     """
     ___,gri = prepare_loc()
-    loc = Sensor(grid = gri, dtm = None)
+    loc = Localization(grid = gri, dtm = None)
     lonlatalt = loc.forward(lig, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
@@ -231,7 +231,7 @@ def test_sensor_loc_inv(lon,lat,alt,valid_col,valid_lig):
 
     ___,gri = prepare_loc()
 
-    loc = Sensor(grid=gri)
+    loc = Localization(grid=gri)
     inv_lig,inv_col,valid = loc.inverse(lon,lat,alt)
 
     print("inverse localization  : lon {} lat {} alt {}".format(lon,lat,alt))
@@ -249,7 +249,7 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     """
     id_scene = 'P1BP--2018122638935449CP'
     ___,gri = prepare_loc('ellipsoide',id_scene)
-    loc_grid = Sensor(grid = gri)
+    loc_grid = Localization(grid = gri)
     #init des predicteurs
     [row, col, valid] = loc_grid.inverse(lon, lat, alt)
     data_folder = test_path()
@@ -257,7 +257,7 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
 
     fctrat = FonctRatD(fichier_dimap)
 
-    loc_rpc = Sensor(rpc = fctrat)
+    loc_rpc = Localization(rpc = fctrat)
     [row_rpc, col_rpc, valid] = loc_rpc.inverse(lon, lat, alt)
     diff_row = row_rpc - row
     diff_col = col_rpc - col

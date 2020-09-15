@@ -124,7 +124,7 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     """
     ___,gri = prepare_loc()
     loc = Localization(grid = gri, dtm = None)
-    lonlatalt = loc.forward(lig, col, h)
+    lonlatalt = loc.direct(lig, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
     diff_lat = lonlatalt[1] - valid_lat
@@ -147,7 +147,7 @@ def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
     ___,gri = prepare_loc('ellipsoide',id_scene)
     loc_grid = Localization(grid = gri)
     #init des predicteurs
-    lonlatalt = loc_grid.forward(lig, col, h)
+    lonlatalt = loc_grid.direct(lig, col, h)
 
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
@@ -155,7 +155,7 @@ def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
     fctrat = FonctRatD(fichier_dimap)
 
     loc_rpc = Localization(rpc = fctrat)
-    lonlatalt_rpc = loc_rpc.forward(lig + 0.5, col + 0.5, h)
+    lonlatalt_rpc = loc_rpc.direct(lig + 0.5, col + 0.5, h)
 
     diff_lon = lonlatalt[0] - lonlatalt_rpc[0]
     diff_lat = lonlatalt[1] - lonlatalt_rpc[1]
@@ -182,7 +182,7 @@ def test_sensor_loc_dir_dtm(index_x,index_y):
 
     lig, col, valid = loc.inverse(lon, lat, alt)
     print("lig col ",lig,col)
-    lonlath = loc.forward_dtm(lig,col)
+    lonlath = loc.direct_dtm(lig, col)
     assert(lon == pytest.approx(lonlath[0],abs=1e-8))
     assert(lat == pytest.approx(lonlath[1],abs=1e-8))
     assert(alt == pytest.approx(lonlath[2],abs=1e-4))
@@ -196,7 +196,7 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     """
     ___,gri = prepare_loc()
     loc = Localization(grid = gri, dtm = None)
-    lonlatalt = loc.forward(lig, col, h)
+    lonlatalt = loc.direct(lig, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
     diff_lat = lonlatalt[1] - valid_lat

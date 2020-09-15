@@ -43,9 +43,9 @@ class Localization:
             self.use_rpc = True
 
 
-    def forward(self, row, col, h):
+    def direct(self, row, col, h):
         """
-        forward localization
+        direct localization
         :param row :  sensor row
         :param col : sensor col
         :param h: altitude
@@ -60,7 +60,7 @@ class Localization:
         else:
             return self.grid.fct_locdir_h(row,col,h)
 
-    def forward_dtm(self, row, col):
+    def direct_dtm(self, row, col):
         """
         forward localization on dtm
         :param row : sensor row

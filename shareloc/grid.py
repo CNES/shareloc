@@ -588,8 +588,8 @@ def coloc(gld_xH_src, gld_xH_dst, dtm, \
         lig = l0_src + steplig_src * l
         for c in range(nbcol_src):
             col = c0_src + stepcol_src * c
-            Psol = gld_xH_src.fct_locdir_dtm(lig,col, dtm)
-            Pdst = gld_xH_dst.fct_locinv(Psol)
+            Psol = gld_xH_src.direct_loc_dtm(lig,col, dtm)
+            Pdst = gld_xH_dst.inverse_loc(Psol)
             gricoloc[:,l,c] = Pdst
     return gricoloc
 

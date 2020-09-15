@@ -58,7 +58,7 @@ class Localization:
             coord[2] = h
             return coord
         else:
-            return self.grid.fct_locdir_h(row,col,h)
+            return self.grid.direct_loc_h(row,col,h)
 
     def direct_dtm(self, row, col):
         """
@@ -72,7 +72,7 @@ class Localization:
             return None
         else:
             if self.dtm is not None:
-                return self.grid.fct_locdir_dtm(row,col, self.dtm)
+                return self.grid.direct_loc_dtm(row,col, self.dtm)
             else:
                 print('forward_dtm needs a dtm')
                 return None
@@ -92,8 +92,8 @@ class Localization:
             return row,col,1
         else:
             if not hasattr(self.grid, 'pred_ofset_scale_lon'):
-                self.grid.init_pred_loc_inv()
-            return self.grid.fct_locinv([lon,lat,h])
+                self.grid.estimate_inverse_loc_predictor()
+            return self.grid.inverse_loc([lon,lat,h])
 
 
 

@@ -208,18 +208,6 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     assert(valid_lat == pytest.approx(lonlatalt[1],abs=1e-12))
     assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-8))
 
-@pytest.mark.parametrize("lig,col", [(50.5,10.0)])
-@pytest.mark.unit_tests
-def test_loc_dir_dtm_opt(lig,col):
-    """
-    Test direct localization on DTM
-    """
-    dtmbsq, gri = prepare_loc()
-
-    #gri.fct_gld_dtm
-    code = gri.fct_locdir_dtmopt(lig,col,dtmbsq)
-    assert(code == True)
-
 
 @pytest.mark.parametrize("valid_lig,valid_col", [(50.5,10.0)])
 @pytest.mark.parametrize("lon,lat,alt", [(57.2167252772905,21.9587514585812,10.0)])

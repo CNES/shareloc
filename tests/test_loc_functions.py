@@ -313,8 +313,8 @@ def test_loc_dir_loc_inv(lig, col, h):
     ___,gri = prepare_loc()
     #init des predicteurs
     gri.estimate_inverse_loc_predictor()
-    lonlatalt = gri.direct_loc_h(lig, col, h)
-    inv_lig,inv_col,valid = gri.inverse_loc(lonlatalt)
+    (lon,lat,alt) = gri.direct_loc_h(lig, col, h)
+    inv_lig,inv_col,valid = gri.inverse_loc(lon,lat,alt)
 
     print('lig {} col {} valid {}'.format(inv_lig, inv_col, valid))
     assert(lig == pytest.approx(inv_lig,abs=1e-2))
@@ -337,7 +337,7 @@ def test_loc_dir_loc_inv_rpc(lig, col, h):
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
     fctrat = FonctRatD(fichier_dimap)
-    (inv_col, inv_lig) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    (inv_lig, inv_col,__) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
     print('lig {} col {}'.format(inv_lig, inv_col))
 
     assert(lig == pytest.approx(inv_lig - 0.5, abs=1e-2))

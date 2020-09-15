@@ -509,7 +509,7 @@ class grid:
             print("nul determinant")
         return Matdp
     #-------------------------------------------------------------------------------------------------------------------------
-    def inverse_loc(self, P, nb_iterations = 15):
+    def inverse_loc(self, lon,lat,alt = 0.0, nb_iterations = 15):
         """
         inverse localization at a given geographic position
         First initialize position,
@@ -519,18 +519,18 @@ class grid:
         * calculate geographic error dlon,dlat
         * calculate senor correction dlon,dlat -> dcol,dlig
         * apply direct localization  -> lon_i,lat_i
-        :param P : longitude,latitude(,altitude)
-        :type P: list
+        :param lon : longitude
+        :type lon: float
+        :param lat : latitude
+        :type lat: float
+        :param alt : altitude
+        :type alt: float
         :param nb_iterations : max number of iterations (15 by default)
         :type nb_iterations : int
         :return sensor position (lig,col, is_valid)
         :rtype tuple (float,float,boolean)
         """
-        (lon,lat) = (P[0],P[1])
-        try:
-            alt = P[2]
-        except:
-            alt = 0
+
 
         deg2mrad = np.deg2rad(1.0)*1e6
         k=0
@@ -588,8 +588,8 @@ def coloc(gld_xH_src, gld_xH_dst, dtm, \
         lig = l0_src + steplig_src * l
         for c in range(nbcol_src):
             col = c0_src + stepcol_src * c
-            Psol = gld_xH_src.direct_loc_dtm(lig,col, dtm)
-            Pdst = gld_xH_dst.inverse_loc(Psol)
+            (lon,lat,alt) = gld_xH_src.direct_loc_dtm(lig,col, dtm)
+            Pdst = gld_xH_dst.inverse_loc(lon,lat,alt)
             gricoloc[:,l,c] = Pdst
     return gricoloc
 

@@ -36,11 +36,14 @@ class Localization:
         :param shareloc.dtm dtm: dtm model
         """
         self.dtm = dtm
-        self.grid = grid
-        self.rpc = rpc
         self.use_rpc = False
-        if self.rpc is not None and self.grid is None:
+        if rpc is not None and grid is None:
             self.use_rpc = True
+            self.model = rpc
+        elif grid is not None:
+            self.model = grid
+        else:
+            raise Exception("a geometric model must be given")
 
 
     def direct(self, row, col, h):
@@ -51,14 +54,8 @@ class Localization:
         :param h: altitude
         :return coordinates : [lon,lat,h] (3D np.array)
         """
-        if self.use_rpc == True:
-            print('use rpc')
-            coord = np.zeros(3)
-            coord[0:2] = self.rpc.direct_loc_h(col,row, h)
-            coord[2] = h
-            return coord
-        else:
-            return self.grid.direct_loc_h(row,col,h)
+
+        return self.model.direct_loc_h(row,col,h)
 
     def direct_dtm(self, row, col):
         """
@@ -72,9 +69,9 @@ class Localization:
             return None
         else:
             if self.dtm is not None:
-                return self.grid.direct_loc_dtm(row,col, self.dtm)
+                return self.model.direct_loc_dtm(row,col, self.dtm)
             else:
-                print('forward_dtm needs a dtm')
+                print('direct_loc_dtm needs a dtm')
                 return None
 
     def inverse(self,lon,lat,h):
@@ -86,14 +83,10 @@ class Localization:
         :return coordinates : [row,col,valid] (2D np.array), valid == 1 if coordinates is valid
         :rtype numpy.array
         """
-        if self.use_rpc == True:
-            print('use rpc')
-            [col, row] = self.rpc.inverse_loc(lon,lat,h)
-            return row,col,1
-        else:
-            if not hasattr(self.grid, 'pred_ofset_scale_lon'):
-                self.grid.estimate_inverse_loc_predictor()
-            return self.grid.inverse_loc([lon,lat,h])
+
+        if self.use_rpc == False and not hasattr(self.model, 'pred_ofset_scale_lon'):
+            self.model.estimate_inverse_loc_predictor()
+        return self.model.inverse_loc(lon,lat,h)
 
 
 

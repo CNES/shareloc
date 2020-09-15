@@ -315,7 +315,7 @@ class FonctRatD:
 			self.Num_LIG	= coeff_PY_i
 			self.Den_LIG	= coeff_QY_i
 
-	def direct_loc_h(self,col,lig, alt):
+	def direct_loc_h(self,lig,col, alt):
 		if self.Num_X:
 			Xnorm = (col - self.offset_COL)/self.scale_COL
 			Ynorm = (lig - self.offset_LIG)/self.scale_LIG
@@ -337,7 +337,7 @@ class FonctRatD:
 		else:
 			print("les coefficient directs n'ont pas ete definis")
 			(Xout,Yout) = (None,None)
-		return (Xout,Yout)
+		return (Xout,Yout, alt)
 
 	def direct_loc_grid_h(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
 		gri_lon = zeros((nblig,nbcol))
@@ -374,7 +374,7 @@ class FonctRatD:
 		else:
 			print("!!!!! les coefficient inverses n'ont pas ete definis")
 			(Cout,Lout) = (None,None)
-		return (Cout,Lout)
+		return (Lout,Cout, True)
 
 
 class FonctRatD_simple:
@@ -432,7 +432,7 @@ class FonctRatD_simple:
 		self.Den_Y		= Klat[20::]
 
 
-	def direct_loc_h(self,col,lig, alt):
+	def direct_loc_h(self,lig,col, alt):
 		if self.Num_X:
 			Xnorm = (col - self.offset_COL)/self.scale_COL
 			Ynorm = (lig - self.offset_LIG)/self.scale_LIG
@@ -490,4 +490,4 @@ class FonctRatD_simple:
 		else:
 			print("!!!!! les coefficient inverses n'ont pas ete definis")
 			(Cout,Lout) = (None,None)
-		return (Cout,Lout)
+		return (Lout,Cout, True)

@@ -102,7 +102,7 @@ class grid:
 
             print("dtm format is not handled")
 
-    def fct_locdir_h(self,lig,col,alt):
+    def direct_loc_h(self, lig, col, alt):
         """
         direct localization at constant altitude
         :param lig :  line sensor position
@@ -130,7 +130,7 @@ class grid:
         P[1] = (dh*vlat[0] +(1-dh)*vlat[1])
         return P
 
-    def fct_locdir_dtm(self,lig,col, dtm):
+    def direct_loc_dtm(self, lig, col, dtm):
         """
         direct localization on dtm
         :param lig :  line sensor position
@@ -143,7 +143,7 @@ class grid:
         :rtype numpy.array
         """
         visee = np.zeros((3,self.nbalt))
-        vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
+        vislonlat = self.interpolate_grid_in_plani(lig, col)
         visee[0,:] = vislonlat[0]
         visee[1,:] = vislonlat[1]
         visee[2,:] = self.alts_down
@@ -152,29 +152,8 @@ class grid:
         (code3,code4,Point_dtm) = dtm.intersection(v, PointB, dH3D)
         return Point_dtm
 
-    def fct_locdir_dtmopt(self,lig,col, dtm):
-        """
-        direct localization on 3D cube dtm
-        :param lig :  line sensor position
-        :type lig : float
-        :param col :  column sensor position
-        :type col : float
-        :param dtm : dtm model
-        :type dtm  : shareloc.dtm
-        :return boolean true
-        :rtype bool
-        """
-        visee = np.zeros((3,self.nbalt))
-        vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
-        visee[0,:] = vislonlat[0]
-        visee[1,:] = vislonlat[1]
-        visee[2,:] = self.alts_down
-        v = visee.T
-        (code, code2, PointB, dH3D) = dtm.checkCubeDTM(v)
-        #(code,code4,Point_dtm) = self.intersection(v, PointB, dH3D,dtm)
-        return code
 
-    def fct_interp_visee_unitaire_gld(self,lig,col):
+    def interpolate_grid_in_plani(self, lig, col):
         """
         interpolate positions on multi h grid
         :param lig :  line sensor position
@@ -190,7 +169,7 @@ class grid:
         res = interpol_bilin(mats,self.nblig,self.nbcol,dl,dc)
         return res
 
-    def fct_interp_gld(self,nblig,nbcol,nbalt=None):
+    def interpolate_grid_in_altitude(self, nblig, nbcol, nbalt=None):
         """
         interpolate equally spaced grid (in altitude)
         :param nblig :  grid nb lig
@@ -219,13 +198,13 @@ class grid:
 
         for k,alt in enumerate(list_alts):
 
-            res = self.fct_gld_h(self.lig0,self.col0,paslig,pascol,nblig,nbcol,alt)
+            res = self.direct_loc_grid_h(self.lig0, self.col0, paslig, pascol, nblig, nbcol, alt)
             gld_lon[k] = res[0]
             gld_lat[k] = res[1]
         return gld_lon,gld_lat
 
 
-    def fct_gld_dtm(self, lig0, col0, steplig, stepcol, nblig, nbcol, dtm):
+    def direct_loc_grid_dtm(self, lig0, col0, steplig, stepcol, nblig, nbcol, dtm):
         """
          direct localization  grid on dtm
          :param lig0 :  grid origin (lig)
@@ -251,7 +230,7 @@ class grid:
             for j in range(nbcol):
                 col = col0 + stepcol * j
                 lig = lig0 + steplig * i
-                vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
+                vislonlat = self.interpolate_grid_in_plani(lig, col)
                 visee[0,:] = vislonlat[0]
                 visee[1,:] = vislonlat[1]
                 visee[2,:] = self.alts_down
@@ -284,7 +263,7 @@ class grid:
         return (indicehaut,indicebas)
 
 
-    def fct_gld_h(self,lig0,col0,paslig,pascol,nblig,nbcol,alt):
+    def direct_loc_grid_h(self, lig0, col0, paslig, pascol, nblig, nbcol, alt):
         """
          direct localization  grid at constant altitude
          :param lig0 :  grid origin (lig)
@@ -326,7 +305,7 @@ class grid:
                 gldalt[:,i,j] = P
         return gldalt
 
-    def init_pred_loc_inv(self,nblig_pred=3,nbcol_pred=3):
+    def estimate_inverse_loc_predictor(self, nblig_pred=3, nbcol_pred=3):
         """
         initialize inverse localization polynomial predictor
         it composed of 4 polynoms estimated on 5x5 grid at hmin and hmax :
@@ -349,7 +328,7 @@ class grid:
         col_norm    = np.linspace(-1.0,1.0,nbcol_pred)
         lig_norm    = np.linspace(-1.0,1.0,nblig_pred)
         gcol_norm, glig_norm = np.meshgrid(col_norm,lig_norm)
-        glon,glat = self.fct_interp_gld(nblig_pred,nbcol_pred,nb_alt)
+        glon,glat = self.interpolate_grid_in_altitude(nblig_pred, nbcol_pred, nb_alt)
 
         #normalisation des variables
         (glon_min,glon_max) = (glon.min(),glon.max())
@@ -422,7 +401,7 @@ class grid:
         setattr(self,'pred_ofset_scale_col',  [col_ofset , col_scale] )
 
     #-------------------------------------------------------------------------------------------------------------------------
-    def fct_locinv_pred(self,lon,lat,alt=0.0):
+    def inverse_loc_predictor(self, lon, lat, alt=0.0):
         """
         evaluate inverse localization predictor at a given geographic position
         :param lon : longitude
@@ -467,7 +446,7 @@ class grid:
         return (lig,col,extrapol)
 
     #-------------------------------------------------------------------------------------------------------------------------
-    def fct_loc_inv_mat_dp(self,lig,col,alt=0):
+    def inverse_partial_derivative(self, lig, col, alt=0):
         """
         calculate partial derivative at a given geographic position
         it gives the matrix to apply to get sensor shifts from geographic ones
@@ -530,7 +509,7 @@ class grid:
             print("nul determinant")
         return Matdp
     #-------------------------------------------------------------------------------------------------------------------------
-    def fct_locinv(self,P,nb_iterations = 15):
+    def inverse_loc(self, P, nb_iterations = 15):
         """
         inverse localization at a given geographic position
         First initialize position,
@@ -557,7 +536,7 @@ class grid:
         k=0
         coslon = np.cos(np.deg2rad(lat))
         Rtx = 1e-12*6378000**2
-        (lig_i,col_i,extrapol) = self.fct_locinv_pred(lon,lat,alt)
+        (lig_i,col_i,extrapol) = self.inverse_loc_predictor(lon, lat, alt)
         erreur_m2    = 10.0
         point_valide = 0
         if not extrapol:
@@ -565,12 +544,12 @@ class grid:
             #while erreur > seuil:1mm
             while (erreur_m2 > 1e-6) and (k < nb_iterations):
                 #print k,lig_i,col_i
-                P = self.fct_locdir_h(lig_i,col_i,alt)
+                P = self.direct_loc_h(lig_i, col_i, alt)
                 dlon_microrad = (P[0] - lon)*deg2mrad
                 dlat_microrad = (P[1] - lat)*deg2mrad
                 erreur_m2 = Rtx*(dlat_microrad**2+(dlon_microrad*coslon)**2)
                 dsol = np.array([dlon_microrad, dlat_microrad])
-                mat_dp = self.fct_loc_inv_mat_dp(lig_i,col_i,alt)
+                mat_dp = self.inverse_partial_derivative(lig_i, col_i, alt)
                 dimg = mat_dp@dsol
                 col_i += -dimg[0]
                 lig_i += -dimg[1]
@@ -580,8 +559,8 @@ class grid:
 
     #-------------------------------------------------------------------------------
 
-def fct_coloc(gld_xH_src, gld_xH_dst, dtm, \
-              l0_src, c0_src, steplig_src, stepcol_src, nblig_src, nbcol_src):
+def coloc(gld_xH_src, gld_xH_dst, dtm, \
+          l0_src, c0_src, steplig_src, stepcol_src, nblig_src, nbcol_src):
     """
     colocalization grid on dtm
     localization on dtm from src grid, then inverse localization in right grid

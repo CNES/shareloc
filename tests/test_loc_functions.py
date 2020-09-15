@@ -23,7 +23,7 @@ import pytest
 import numpy as np
 from utils import test_path
 
-from shareloc.grid import grid, fct_coloc
+from shareloc.grid import grid, coloc
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
 from shareloc.localization import Localization
@@ -67,14 +67,14 @@ def test_gld_dtm(idxlig,idxcol,lig0,col0,paslig,pascol,nblig,nbcol):
     """
     dtmbsq,gri = prepare_loc()
 
-    gri_gld = gri.fct_gld_dtm(lig0, col0, paslig, pascol, nblig, nbcol, dtmbsq)
+    gri_gld = gri.direct_loc_grid_dtm(lig0, col0, paslig, pascol, nblig, nbcol, dtmbsq)
 
     lonlatalt = gri_gld[:,idxlig,idxcol]
 
     lig = lig0 + paslig * idxlig
     col = col0 + pascol * idxcol
 
-    valid_lonlatalt = gri.fct_locdir_dtm(lig, col, dtmbsq)
+    valid_lonlatalt = gri.direct_loc_dtm(lig, col, dtmbsq)
     print("lon {} lat {} alt {} ".format(lonlatalt[0], lonlatalt[1], lonlatalt[2]))
     print("valid lon {} lat {} alt {} ".format(valid_lonlatalt[0], valid_lonlatalt[1], valid_lonlatalt[2]))
     assert(lonlatalt == pytest.approx(valid_lonlatalt, abs=1e-12))
@@ -90,7 +90,7 @@ def test_loc_dir_check_cube_dtm(col,lig,valid_lon,valid_lat,valid_alt):
     dtmbsq,gri = prepare_loc()
 
     visee = np.zeros((3, gri.nbalt))
-    vislonlat = gri.fct_interp_visee_unitaire_gld(lig,col)
+    vislonlat = gri.interpolate_grid_in_plani(lig, col)
     visee[0,:] = vislonlat[0]
     visee[1,:] = vislonlat[1]
     visee[2,:] = gri.alts_down
@@ -108,7 +108,7 @@ def test_loc_dir_interp_visee_unitaire_gld(lig,col,valid_lon,valid_lat):
     Test los interpolation
     """
     ___, gri = prepare_loc()
-    visee = gri.fct_interp_visee_unitaire_gld(lig,col)
+    visee = gri.interpolate_grid_in_plani(lig, col)
     print(visee)
     assert (visee[0][1] == pytest.approx(valid_lon,abs=1e-12))
     assert (visee[1][1] == pytest.approx(valid_lat, abs=1e-12))
@@ -282,7 +282,7 @@ def test_pred_loc_inv(col_min_valid, lig_min_valid,col_max_valid,lig_max_valid,v
     """
     #init des predicteurs
     ___,gri = prepare_loc()
-    gri.init_pred_loc_inv()
+    gri.estimate_inverse_loc_predictor()
 
     assert (gri.pred_col_min.flatten() == pytest.approx(col_min_valid, abs=1e-6))
     assert (gri.pred_lig_min.flatten() == pytest.approx(lig_min_valid, abs=1e-6))
@@ -303,7 +303,7 @@ def test_loc_intersection(lig,col,valid_lon,valid_lat,valid_alt):
     dtmbsq,gri = prepare_loc()
 
     visee = np.zeros((3, gri.nbalt))
-    vislonlat = gri.fct_interp_visee_unitaire_gld(lig,col)
+    vislonlat = gri.interpolate_grid_in_plani(lig, col)
     visee[0,:] = vislonlat[0]
     visee[1,:] = vislonlat[1]
     visee[2,:] = gri.alts_down
@@ -324,9 +324,9 @@ def test_loc_dir_loc_inv(lig, col, h):
     """
     ___,gri = prepare_loc()
     #init des predicteurs
-    gri.init_pred_loc_inv()
-    lonlatalt = gri.fct_locdir_h(lig, col, h)
-    inv_lig,inv_col,valid = gri.fct_locinv(lonlatalt)
+    gri.estimate_inverse_loc_predictor()
+    lonlatalt = gri.direct_loc_h(lig, col, h)
+    inv_lig,inv_col,valid = gri.inverse_loc(lonlatalt)
 
     print('lig {} col {} valid {}'.format(inv_lig, inv_col, valid))
     assert(lig == pytest.approx(inv_lig,abs=1e-2))
@@ -342,8 +342,8 @@ def test_loc_dir_loc_inv_rpc(lig, col, h):
     id_scene = 'P1BP--2018122638935449CP'
     ___,gri = prepare_loc('ellipsoide',id_scene)
     #init des predicteurs
-    gri.init_pred_loc_inv()
-    lonlatalt = gri.fct_locdir_h(lig, col, h)
+    gri.estimate_inverse_loc_predictor()
+    lonlatalt = gri.direct_loc_h(lig, col, h)
 
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
@@ -364,9 +364,9 @@ def test_coloc(l0_src, c0_src,paslig_src,pascol_src,nblig_src,nbcol_src,lig,col)
     Test coloc function
     """
     dtmbsq,gri = prepare_loc()
-    gri.init_pred_loc_inv()
+    gri.estimate_inverse_loc_predictor()
 
-    gricol = fct_coloc(gri, gri, dtmbsq, l0_src, c0_src, paslig_src, pascol_src, nblig_src, nbcol_src)
+    gricol = coloc(gri, gri, dtmbsq, l0_src, c0_src, paslig_src, pascol_src, nblig_src, nbcol_src)
 
     assert(gricol[0, lig, col] == pytest.approx(lig * paslig_src + l0_src,1e-6))
     assert(gricol[1, lig, col] == pytest.approx(col * pascol_src + c0_src, 1e-6))

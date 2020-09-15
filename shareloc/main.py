@@ -56,7 +56,7 @@ if __name__ == '__main__':
     gri = gld_xH(gld)
     
     #init des predicteurs
-    gri.init_pred_loc_inv()
+    gri.estimate_inverse_loc_predictor()
     #
     start_time = time.time()
     gricol = fct_coloc(gri, gri, mntbsq,0.5, 0.5, 10, 100, 20, 20)

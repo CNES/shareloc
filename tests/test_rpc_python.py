@@ -34,10 +34,10 @@ def test_rpc_eucl(col,lig,alt):
 
     fctrat = FonctRatD(fichier_direct_euclide, fichier_inverse_euclide)
 
-    (lon,lat) = fctrat.evalue_loc_d(col,lig,alt)
+    (lon,lat) = fctrat.direct_loc_h(col,lig,alt)
     print (lon,lat)
 
-    (col_ar,lig_ar) = fctrat.evalue_loc_i(lon,lat,alt)
+    (col_ar,lig_ar) = fctrat.inverse_loc(lon,lat,alt)
     print (col_ar,lig_ar)
     assert(col_ar == pytest.approx(col,1e-2))
     assert(lig_ar == pytest.approx(lig,1e-2))
@@ -50,10 +50,10 @@ def test_rpc_phrdimap(col,lig,alt):
 
     fctrat = FonctRatD(fichier_dimap)
 
-    (lon,lat) = fctrat.evalue_loc_d(col,lig,alt)
+    (lon,lat) = fctrat.direct_loc_h(col,lig,alt)
     print (lon,lat)
 
-    (col_ar,lig_ar) = fctrat.evalue_loc_i(lon,lat,alt)
+    (col_ar,lig_ar) = fctrat.inverse_loc(lon,lat,alt)
     print (col_ar,lig_ar)
     assert(col_ar == pytest.approx(col,1e-2))
     assert(lig_ar == pytest.approx(lig,1e-2))

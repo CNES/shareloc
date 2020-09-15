@@ -315,7 +315,7 @@ class FonctRatD:
 			self.Num_LIG	= coeff_PY_i
 			self.Den_LIG	= coeff_QY_i
 
-	def evalue_loc_d(self,col,lig, alt):
+	def direct_loc_h(self,col,lig, alt):
 		if self.Num_X:
 			Xnorm = (col - self.offset_COL)/self.scale_COL
 			Ynorm = (lig - self.offset_LIG)/self.scale_LIG
@@ -339,7 +339,7 @@ class FonctRatD:
 			(Xout,Yout) = (None,None)
 		return (Xout,Yout)
 
-	def calcule_gld(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
+	def direct_loc_grid_h(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
 		gri_lon = zeros((nblig,nbcol))
 		gri_lat = zeros((nblig,nbcol))
 		for c in range(int(nbcol)):
@@ -349,7 +349,7 @@ class FonctRatD:
 				(gri_lon[l,c],gri_lat[l,c]) = self.evalue_loc_d(col,lig,alt)
 		return (gri_lon,gri_lat)
 
-	def evalue_loc_i(self,lon,lat, alt):
+	def inverse_loc(self,lon,lat, alt):
 		if self.Num_COL:
 			Xnorm = (lon - self.offset_X)/self.scale_X
 			Ynorm = (lat - self.offset_Y)/self.scale_Y
@@ -432,7 +432,7 @@ class FonctRatD_simple:
 		self.Den_Y		= Klat[20::]
 
 
-	def evalue_loc_d(self,col,lig, alt):
+	def direct_loc_h(self,col,lig, alt):
 		if self.Num_X:
 			Xnorm = (col - self.offset_COL)/self.scale_COL
 			Ynorm = (lig - self.offset_LIG)/self.scale_LIG
@@ -456,7 +456,7 @@ class FonctRatD_simple:
 			(Xout,Yout) = (None,None)
 		return (Xout,Yout)
 
-	def calcule_gld(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
+	def direct_loc_grid_h(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
 		gri_lon = zeros((nblig,nbcol))
 		gri_lat = zeros((nblig,nbcol))
 		for c in range(int(nbcol)):
@@ -466,7 +466,7 @@ class FonctRatD_simple:
 				(gri_lon[l,c],gri_lat[l,c]) = self.evalue_loc_d(col,lig,alt)
 		return (gri_lon,gri_lat)
 
-	def evalue_loc_i(self,lon,lat, alt):
+	def inverse_loc(self,lon,lat, alt):
 		if self.Num_COL != None:
 			Xnorm = (lon - self.offset_X)/self.scale_X
 			Ynorm = (lat - self.offset_Y)/self.scale_Y

@@ -54,7 +54,7 @@ class Localization:
         if self.use_rpc == True:
             print('use rpc')
             coord = np.zeros(3)
-            coord[0:2] = self.rpc.evalue_loc_d(col,row, h)
+            coord[0:2] = self.rpc.direct_loc_h(col,row, h)
             coord[2] = h
             return coord
         else:
@@ -88,7 +88,7 @@ class Localization:
         """
         if self.use_rpc == True:
             print('use rpc')
-            [col, row] = self.rpc.evalue_loc_i(lon,lat,h)
+            [col, row] = self.rpc.inverse_loc(lon,lat,h)
             return row,col,1
         else:
             if not hasattr(self.grid, 'pred_ofset_scale_lon'):

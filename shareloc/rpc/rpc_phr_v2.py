@@ -56,6 +56,7 @@ class FonctRatD:
 		self.Den_COL	= None
 		self.Num_LIG	= None
 		self.Den_LIG	= None
+		self.type 		= 'rpc'
 
 		ordre_monomes_LAI = \
 				[[0,0,0],[1,0,0],[0,1,0],\

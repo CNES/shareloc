@@ -52,6 +52,7 @@ class grid:
         self.ligmax    = None
         self.colmax    = None
         self.load()
+        self.type = 'multi H grid'
 
     def load(self):
         """

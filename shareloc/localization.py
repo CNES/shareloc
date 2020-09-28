@@ -28,22 +28,17 @@ class Localization:
     """ base class for localization function.
     Underlying model can be both multi layer localization grids or RPCs models
     """
-    def __init__(self, grid = None, rpc = None, dtm = None):
+    def __init__(self, model, dtm = None):
         """
-        If grid and RPC are set grid model is used
-        :param shareloc.grid grid: multi layer grid object
-        :param shareloc.rpc rpc: rpc object
-        :param shareloc.dtm dtm: dtm model
+        constructor
+        :param model : geometric model
+        :type model  : shareloc.grid or  shareloc.rpc
+        :param dtm  : dtm (optional)
+        :type dtm  : shareloc.dtm
         """
         self.dtm = dtm
-        self.use_rpc = False
-        if rpc is not None and grid is None:
-            self.use_rpc = True
-            self.model = rpc
-        elif grid is not None:
-            self.model = grid
-        else:
-            raise Exception("a geometric model must be given")
+        self.use_rpc = model.type is 'rpc'
+        self.model = model
 
 
     def direct(self, row, col, h):

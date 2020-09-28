@@ -178,7 +178,7 @@ class FonctRatD:
 			if not self.scale_LIG:
 				self.scale_LIG = scale_LIG_d
 			elif self.scale_LIG != scale_LIG_d:
-				pprint(message.format("scale_LIG"))
+				print(message.format("scale_LIG"))
 
 			if not self.offset_ALT:
 				self.offset_ALT = offset_ALT_d
@@ -339,6 +339,23 @@ class FonctRatD:
 			print("les coefficient directs n'ont pas ete definis")
 			(Xout,Yout) = (None,None)
 		return (Xout,Yout, alt)
+
+	def direct_loc_dtm(self, lig, col, dtm):
+		"""
+        direct localization on dtm
+        :param lig :  line sensor position
+        :type lig : float
+        :param col :  column sensor position
+        :type col : float
+        :param dtm : dtm model
+        :type dtm  : shareloc.dtm
+        :return ground position (lon,lat,h)
+        :rtype numpy.array
+        """
+		print("direct localization not yet impelemented for RPC model")
+		return None
+
+
 
 	def direct_loc_grid_h(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
 		gri_lon = zeros((nblig,nbcol))

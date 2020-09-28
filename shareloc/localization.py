@@ -41,33 +41,24 @@ class Localization:
         self.model = model
 
 
-    def direct(self, row, col, h):
+    def direct(self, row, col, h = None):
         """
         direct localization
         :param row :  sensor row
+        :type row : float
         :param col : sensor col
-        :param h: altitude
+        :type col : float
+        :param h: altitude, if none DTM is used
+        :type h : float
         :return coordinates : [lon,lat,h] (3D np.array)
         """
 
-        return self.model.direct_loc_h(row,col,h)
-
-    def direct_dtm(self, row, col):
-        """
-        forward localization on dtm
-        :param row : sensor row
-        :param col : sensor col
-        :return coordinates : [lon,lat,h] (3D np.array)
-        """
-        if self.use_rpc == True:
-            print('forward_dtm not yet impelemented for RPC model')
-            return None
+        if h is not None:
+            return self.model.direct_loc_h(row,col,h)
+        elif self.dtm is not None:
+            return self.model.direct_loc_dtm(row,col, self.dtm)
         else:
-            if self.dtm is not None:
-                return self.model.direct_loc_dtm(row,col, self.dtm)
-            else:
-                print('direct_loc_dtm needs a dtm')
-                return None
+            return self.model.direct_loc_h(row, col, 0.0)
 
     def inverse(self,lon,lat,h):
         """

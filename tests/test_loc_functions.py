@@ -182,7 +182,7 @@ def test_sensor_loc_dir_dtm(index_x,index_y):
 
     lig, col, valid = loc.inverse(lon, lat, alt)
     print("lig col ",lig,col)
-    lonlath = loc.direct_dtm(lig, col)
+    lonlath = loc.direct(lig, col)
     assert(lon == pytest.approx(lonlath[0],abs=1e-8))
     assert(lat == pytest.approx(lonlath[1],abs=1e-8))
     assert(alt == pytest.approx(lonlath[2],abs=1e-4))

@@ -61,4 +61,3 @@ def interpol_bilin(mats,nl,nc,dl,dc):
                    (1-u)*v*mat[:,i2,j1]     + u*v*mat[:,i2,j2]
             matis.append(mati)
         return matis
-

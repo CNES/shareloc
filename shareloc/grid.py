@@ -22,7 +22,6 @@ import numpy as np
 from shareloc.readwrite import  read_bsq_hd
 from shareloc.math_utils import interpol_bilin
 
-
 #-------------------------------------------------------------------------------
 class grid:
     """ multi H direct localization grid handling class 
@@ -151,6 +150,26 @@ class grid:
         (code1, code2, PointB, dH3D) = dtm.checkCubeDTM(v)
         (code3,code4,Point_dtm) = dtm.intersection(v, PointB, dH3D)
         return Point_dtm
+
+    def los_extrema(self,lig,col,alt_min,alt_max):
+        """
+        compute los extrema
+        :param lig :  line sensor position
+        :type lig : float
+        :param col :  column sensor position
+        :type col : float
+        :param alt_min : los alt min
+        :type alt_min  : float
+        :param alt_max : los alt max
+        :type alt_max : float
+        :return los extrema
+        :rtype numpy.array (2x3)
+        """
+        los_edges = np.zeros([2,3])
+        los_edges[0,:] = self.fct_locdir_h(lig,col,alt_max)
+        los_edges[1,:] = self.fct_locdir_h(lig,col,alt_min)
+        return los_edges
+
 
     def fct_locdir_dtmopt(self,lig,col, dtm):
         """

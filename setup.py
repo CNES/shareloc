@@ -19,7 +19,7 @@ REQUIRES_PYTHON = '>=3.6.0'
 VERSION = '0.1.0'
 EMAIL = 'TBD'
 LICENSE = 'TBD'
-REQUIREMENTS = ['numpy','gdal']
+REQUIREMENTS = ['numpy','gdal','rasterio']
 DESCRIPTION = '''
 ShareLoc API
 '''

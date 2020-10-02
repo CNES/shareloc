@@ -112,7 +112,31 @@ def los_triangulation(left_los,right_los):
 def epipolar_triangulation(matches, matches_type, geometrical_model_left,geometrical_model_right,grid_left,grid_right,left_min_max,right_min_max):
     """
     epipolar triangulation
+
+    :param matches :  matches
+    :type matches :
+    :param matches_type :  'disp' or 'sift'
+    :type matches_type : str
+    :param geometrical_model_left : left image geometrical model
+    :type geometrical_model_left : shareloc.grid or shareloc.rpc
+    :param geometrical_model_right : right image geometrical model
+    :type geometrical_model_right : shareloc.grid or shareloc.rpc
+    :param grid_left : left rectification grid filename
+    :type grid_left : str
+    :param grid_right : right rectification grid filename
+    :type grid_right : str
+    :param left_min_max : left min/max for los creation
+    :type left_min_max : list
+    :param right_min_max : right min/max for los creation
+    :type right_min_max : list
+    :return intersections in cartesian crs
+    :rtype numpy.array
     """
+
+    # retrieve point matches in sensor geometry
+
+
+    # triangulate positions in sensor geometry
 
 
     intersections_ecef = None

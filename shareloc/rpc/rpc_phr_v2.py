@@ -39,8 +39,8 @@ class FonctRatD:
 
 		self.offset_COL	= None
 		self.scale_COL	= None
-		self.offset_LIG	= None
-		self.scale_LIG	= None
+		self.offset_ROW	= None
+		self.scale_ROW	= None
 		self.offset_ALT	= None
 		self.scale_ALT	= None
 		self.offset_X	= None
@@ -54,8 +54,8 @@ class FonctRatD:
 		self.Den_Y		= None
 		self.Num_COL	= None
 		self.Den_COL	= None
-		self.Num_LIG	= None
-		self.Den_LIG	= None
+		self.Num_ROW	= None
+		self.Den_ROW	= None
 		self.type 		= 'rpc'
 
 		ordre_monomes_LAI = \
@@ -76,7 +76,7 @@ class FonctRatD:
 			coeff_LON = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_LON')[0].firstChild.data.split()]
 			coeff_LAT = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_LAT')[0].firstChild.data.split()]
 			coeff_COL = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_COL')[0].firstChild.data.split()]
-			coeff_LIG = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_ROW')[0].firstChild.data.split()]
+			coeff_ROW = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_ROW')[0].firstChild.data.split()]
 
 			A_lon = float(RFM_Validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('A')[0].firstChild.data)
 			B_lon = float(RFM_Validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('B')[0].firstChild.data)
@@ -92,8 +92,8 @@ class FonctRatD:
 
 			self.offset_COL	= B_col
 			self.scale_COL	= A_col
-			self.offset_LIG	= B_row
-			self.scale_LIG	= A_row
+			self.offset_ROW	= B_row
+			self.scale_ROW	= A_row
 			self.offset_ALT	= B_alt
 			self.scale_ALT	= A_alt
 			self.offset_X	= B_lon
@@ -107,8 +107,8 @@ class FonctRatD:
 			self.Den_Y		= coeff_LAT[20::]
 			self.Num_COL	= coeff_COL[0:20]
 			self.Den_COL	= coeff_COL[20::]
-			self.Num_LIG	= coeff_LIG[0:20]
-			self.Den_LIG	= coeff_LIG[20::]
+			self.Num_ROW	= coeff_ROW[0:20]
+			self.Den_ROW	= coeff_ROW[20::]
 
 
 
@@ -145,7 +145,7 @@ class FonctRatD:
 					(offset_COL_d,scale_COL_d) = (float(lsplit[4]),float(lsplit[5]))
 				if l.startswith('>>\tYIN_OFFSET'):
 					lsplit = l.split()
-					(offset_LIG_d,scale_LIG_d) = (float(lsplit[4]),float(lsplit[5]))
+					(offset_ROW_d,scale_ROW_d) = (float(lsplit[4]),float(lsplit[5]))
 				if l.startswith('>>\tZIN_OFFSET'):
 					lsplit = l.split()
 					(offset_ALT_d,scale_ALT_d) = (float(lsplit[4]),float(lsplit[5]))
@@ -170,15 +170,15 @@ class FonctRatD:
 			elif self.scale_COL != scale_COL_d:
 				print(message.format("scale_COL"))
 
-			if not self.offset_LIG:
-				self.offset_LIG = offset_LIG_d
-			elif self.offset_LIG != offset_LIG_d:
-				print(message.format("offset_LIG"))
+			if not self.offset_ROW:
+				self.offset_ROW = offset_ROW_d
+			elif self.offset_ROW != offset_ROW_d:
+				print(message.format("offset_ROW"))
 
-			if not self.scale_LIG:
-				self.scale_LIG = scale_LIG_d
-			elif self.scale_LIG != scale_LIG_d:
-				print(message.format("scale_LIG"))
+			if not self.scale_ROW:
+				self.scale_ROW = scale_ROW_d
+			elif self.scale_ROW != scale_ROW_d:
+				print(message.format("scale_ROW"))
 
 			if not self.offset_ALT:
 				self.offset_ALT = offset_ALT_d
@@ -256,7 +256,7 @@ class FonctRatD:
 					(offset_COL_i,scale_COL_i) = (float(lsplit[4]),float(lsplit[5]))
 				if l.startswith('>>\tYOUT_OFFSET'):
 					lsplit = l.split()
-					(offset_LIG_i,scale_LIG_i) = (float(lsplit[4]),float(lsplit[5]))
+					(offset_ROW_i,scale_ROW_i) = (float(lsplit[4]),float(lsplit[5]))
 
 			if type_fic != 'I':
 				print("!!!!! le fichier euclide inverse est inconherent (le sens est marque Direct)")
@@ -271,15 +271,15 @@ class FonctRatD:
 			elif self.scale_COL != scale_COL_i:
 				print(message.format("scale_COL"))
 
-			if not self.offset_LIG:
-				self.offset_LIG = offset_LIG_i
-			elif self.offset_LIG != offset_LIG_i:
-				print(message.format("offset_LIG"))
+			if not self.offset_ROW:
+				self.offset_ROW = offset_ROW_i
+			elif self.offset_ROW != offset_ROW_i:
+				print(message.format("offset_ROW"))
 
-			if not self.scale_LIG:
-				self.scale_LIG = scale_LIG_i
-			elif self.scale_LIG != scale_LIG_i:
-				print(message.format("scale_LIG"))
+			if not self.scale_ROW:
+				self.scale_ROW = scale_ROW_i
+			elif self.scale_ROW != scale_ROW_i:
+				print(message.format("scale_ROW"))
 
 			if not self.offset_ALT:
 				self.offset_ALT = offset_ALT_i
@@ -313,13 +313,13 @@ class FonctRatD:
 
 			self.Num_COL	= coeff_PX_i
 			self.Den_COL	= coeff_QX_i
-			self.Num_LIG	= coeff_PY_i
-			self.Den_LIG	= coeff_QY_i
+			self.Num_ROW	= coeff_PY_i
+			self.Den_ROW	= coeff_QY_i
 
 	def direct_loc_h(self,lig,col, alt):
 		if self.Num_X:
 			Xnorm = (col - self.offset_COL)/self.scale_COL
-			Ynorm = (lig - self.offset_LIG)/self.scale_LIG
+			Ynorm = (lig - self.offset_ROW)/self.scale_ROW
 			Znorm = (alt - self.offset_ALT)/self.scale_ALT
 
 			message =  "!!!!! l'evaluation au point est extrapolee en {} {} {}"
@@ -340,11 +340,11 @@ class FonctRatD:
 			(Xout,Yout) = (None,None)
 		return (Xout,Yout, alt)
 
-	def direct_loc_dtm(self, lig, col, dtm):
+	def direct_loc_dtm(self, row, col, dtm):
 		"""
         direct localization on dtm
-        :param lig :  line sensor position
-        :type lig : float
+        :param row :  line sensor position
+        :type row : float
         :param col :  column sensor position
         :type col : float
         :param dtm : dtm model
@@ -357,14 +357,14 @@ class FonctRatD:
 
 
 
-	def direct_loc_grid_h(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
-		gri_lon = zeros((nblig,nbcol))
-		gri_lat = zeros((nblig,nbcol))
+	def direct_loc_grid_h(self,c0,l0,pascol,pasrow,nbcol,nbrow, alt):
+		gri_lon = zeros((nbrow,nbcol))
+		gri_lat = zeros((nbrow,nbcol))
 		for c in range(int(nbcol)):
 			col = c0 + pascol*c
-			for l in range(int(nblig)):
-				lig = l0 + paslig*l
-				(gri_lon[l,c],gri_lat[l,c]) = self.evalue_loc_d(col,lig,alt)
+			for l in range(int(nbrow)):
+				row = l0 + pasrow*l
+				(gri_lon[l,c],gri_lat[l,c]) = self.evalue_loc_d(col,row,alt)
 		return (gri_lon,gri_lat)
 
 	def inverse_loc(self,lon,lat, alt):
@@ -388,7 +388,7 @@ class FonctRatD:
 				Znorm**int(self.Monomes[i][2]) for i in range(self.Monomes.__len__())])
 
 			Cout = dot(array(self.Num_COL),monomes)/dot(array(self.Den_COL),monomes)*self.scale_COL+self.offset_COL
-			Lout = dot(array(self.Num_LIG),monomes)/dot(array(self.Den_LIG),monomes)*self.scale_LIG+self.offset_LIG
+			Lout = dot(array(self.Num_ROW),monomes)/dot(array(self.Den_ROW),monomes)*self.scale_ROW+self.offset_ROW
 		else:
 			print("!!!!! les coefficient inverses n'ont pas ete definis")
 			(Cout,Lout) = (None,None)
@@ -400,8 +400,8 @@ class FonctRatD_simple:
 
 		self.offset_COL	= None
 		self.scale_COL	= None
-		self.offset_LIG	= None
-		self.scale_LIG	= None
+		self.offset_ROW	= None
+		self.scale_ROW	= None
 		self.offset_ALT	= None
 		self.scale_ALT	= None
 		self.offset_X	= None
@@ -415,8 +415,8 @@ class FonctRatD_simple:
 		self.Den_Y		= None
 		self.Num_COL	= None
 		self.Den_COL	= None
-		self.Num_LIG	= None
-		self.Den_LIG	= None
+		self.Num_ROW	= None
+		self.Den_ROW	= None
 
 		ordre_monomes_LAI = \
 				[[0,0,0],[1,0,0],[0,1,0],\
@@ -431,8 +431,8 @@ class FonctRatD_simple:
 
 		self.offset_COL	= B_col
 		self.scale_COL	= A_col
-		self.offset_LIG	= B_row
-		self.scale_LIG	= A_row
+		self.offset_ROW	= B_row
+		self.scale_ROW	= A_row
 		self.offset_ALT	= B_alt
 		self.scale_ALT	= A_alt
 		self.offset_X	= B_lon
@@ -442,25 +442,25 @@ class FonctRatD_simple:
 
 		self.Num_COL	= Kc[0:20]
 		self.Den_COL	= Kc[20::]
-		self.Num_LIG	= Kl[0:20]
-		self.Den_LIG	= Kl[20::]
+		self.Num_ROW	= Kl[0:20]
+		self.Den_ROW	= Kl[20::]
 		self.Num_X		= Klon[0:20]
 		self.Den_X		= Klon[20::]
 		self.Num_Y		= Klat[0:20]
 		self.Den_Y		= Klat[20::]
 
 
-	def direct_loc_h(self,lig,col, alt):
+	def direct_loc_h(self,row,col, alt):
 		if self.Num_X:
 			Xnorm = (col - self.offset_COL)/self.scale_COL
-			Ynorm = (lig - self.offset_LIG)/self.scale_LIG
+			Ynorm = (row - self.offset_ROW)/self.scale_ROW
 			Znorm = (alt - self.offset_ALT)/self.scale_ALT
 
 			message = "!!!!! l'evaluation au point est extrapolee en {} {} {}"
 			if abs(Xnorm)> 1.001 :
 				print(message.format("colonne", Xnorm, col))
 			if abs(Ynorm)> 1.001 :
-				print(message.format("ligne", Ynorm, lig))
+				print(message.format("ligne", Ynorm, row))
 			if abs(Znorm)> 1.001 :
 				print(message.format("altitude", Znorm, alt))
 
@@ -474,14 +474,14 @@ class FonctRatD_simple:
 			(Xout,Yout) = (None,None)
 		return (Xout,Yout)
 
-	def direct_loc_grid_h(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
-		gri_lon = zeros((nblig,nbcol))
-		gri_lat = zeros((nblig,nbcol))
+	def direct_loc_grid_h(self,c0,l0,pascol,pasrow,nbcol,nbrow, alt):
+		gri_lon = zeros((nbrow,nbcol))
+		gri_lat = zeros((nbrow,nbcol))
 		for c in range(int(nbcol)):
 			col = c0 + pascol*c
-			for l in range(int(nblig)):
-				lig = l0 + paslig*l
-				(gri_lon[l,c],gri_lat[l,c]) = self.evalue_loc_d(col,lig,alt)
+			for l in range(int(nbrow)):
+				row = l0 + pasrow*l
+				(gri_lon[l,c],gri_lat[l,c]) = self.evalue_loc_d(col,row,alt)
 		return (gri_lon,gri_lat)
 
 	def inverse_loc(self,lon,lat, alt):
@@ -504,7 +504,7 @@ class FonctRatD_simple:
 				Znorm**int(self.Monomes[i][2]) for i in range(self.Monomes.__len__())])
 
 			Cout = dot(array(self.Num_COL),monomes)/dot(array(self.Den_COL),monomes)*self.scale_COL+self.offset_COL
-			Lout = dot(array(self.Num_LIG),monomes)/dot(array(self.Den_LIG),monomes)*self.scale_LIG+self.offset_LIG
+			Lout = dot(array(self.Num_ROW),monomes)/dot(array(self.Den_ROW),monomes)*self.scale_ROW+self.offset_ROW
 		else:
 			print("!!!!! les coefficient inverses n'ont pas ete definis")
 			(Cout,Lout) = (None,None)

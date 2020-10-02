@@ -25,8 +25,8 @@ from utils import test_path
 
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
 
-@pytest.mark.parametrize("col,lig,alt", [(600,200,125)])
-def test_rpc_eucl(col,lig,alt):
+@pytest.mark.parametrize("col,row,alt", [(600,200,125)])
+def test_rpc_eucl(col,row,alt):
     data_folder = test_path()
 
     fichier_direct_euclide = os.path.join(data_folder,'rpc/rpc_dir.euc')
@@ -34,26 +34,26 @@ def test_rpc_eucl(col,lig,alt):
 
     fctrat = FonctRatD(fichier_direct_euclide, fichier_inverse_euclide)
 
-    (lon,lat, alt) = fctrat.direct_loc_h(lig, col, alt)
+    (lon,lat, alt) = fctrat.direct_loc_h(row, col, alt)
     print (lon,lat)
 
-    (lig_ar,col_ar,__) = fctrat.inverse_loc(lon,lat,alt)
-    print (col_ar,lig_ar)
+    (row_ar,col_ar,__) = fctrat.inverse_loc(lon,lat,alt)
+    print (col_ar,row_ar)
     assert(col_ar == pytest.approx(col,1e-2))
-    assert(lig_ar == pytest.approx(lig,1e-2))
+    assert(row_ar == pytest.approx(row,1e-2))
 
-@pytest.mark.parametrize("col,lig,alt", [(600,200,125)])
-def test_rpc_phrdimap(col,lig,alt):
+@pytest.mark.parametrize("col,row,alt", [(600,200,125)])
+def test_rpc_phrdimap(col,row,alt):
     data_folder = test_path()
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
     fctrat = FonctRatD(fichier_dimap)
 
-    (lon,lat,alt) = fctrat.direct_loc_h(lig,col,alt)
+    (lon,lat,alt) = fctrat.direct_loc_h(row,col,alt)
     print (lon,lat)
 
-    (lig_ar,col_ar,__) = fctrat.inverse_loc(lon,lat,alt)
-    print (col_ar,lig_ar)
+    (row_ar,col_ar,__) = fctrat.inverse_loc(lon,lat,alt)
+    print (col_ar,row_ar)
     assert(col_ar == pytest.approx(col,1e-2))
-    assert(lig_ar == pytest.approx(lig,1e-2))
+    assert(row_ar == pytest.approx(row,1e-2))

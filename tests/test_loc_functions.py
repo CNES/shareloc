@@ -58,39 +58,39 @@ calcul_gld3d -all -path_visee ./grilles_gld_xH -nom_visee P1BP--2017030824934340
 """
 
 
-@pytest.mark.parametrize("idxcol,idxlig", [(20,10)])
-@pytest.mark.parametrize("lig0,col0,paslig,pascol,nblig,nbcol", [(100.5,150.5,60,50,200,200)])
+@pytest.mark.parametrize("idxcol,idxrow", [(20,10)])
+@pytest.mark.parametrize("row0,col0,steprow,stepcol,nbrow,nbcol", [(100.5,150.5,60,50,200,200)])
 @pytest.mark.unit_tests
-def test_gld_dtm(idxlig,idxcol,lig0,col0,paslig,pascol,nblig,nbcol):
+def test_gld_dtm(idxrow,idxcol,row0,col0,steprow,stepcol,nbrow,nbcol):
     """
     Test loc direct grid on dtm function
     """
     dtmbsq,gri = prepare_loc()
 
-    gri_gld = gri.direct_loc_grid_dtm(lig0, col0, paslig, pascol, nblig, nbcol, dtmbsq)
+    gri_gld = gri.direct_loc_grid_dtm(row0, col0, steprow, stepcol, nbrow, nbcol, dtmbsq)
 
-    lonlatalt = gri_gld[:,idxlig,idxcol]
+    lonlatalt = gri_gld[:,idxrow,idxcol]
 
-    lig = lig0 + paslig * idxlig
-    col = col0 + pascol * idxcol
+    row = row0 + steprow * idxrow
+    col = col0 + stepcol * idxcol
 
-    valid_lonlatalt = gri.direct_loc_dtm(lig, col, dtmbsq)
+    valid_lonlatalt = gri.direct_loc_dtm(row, col, dtmbsq)
     print("lon {} lat {} alt {} ".format(lonlatalt[0], lonlatalt[1], lonlatalt[2]))
     print("valid lon {} lat {} alt {} ".format(valid_lonlatalt[0], valid_lonlatalt[1], valid_lonlatalt[2]))
     assert(lonlatalt == pytest.approx(valid_lonlatalt, abs=1e-12))
 
 
-@pytest.mark.parametrize("col,lig", [(50.5,100.5)])
+@pytest.mark.parametrize("col,row", [(50.5,100.5)])
 @pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.21700176041541,21.959197148974,238.0)])
 @pytest.mark.unit_tests
-def test_loc_dir_check_cube_dtm(col,lig,valid_lon,valid_lat,valid_alt):
+def test_loc_dir_check_cube_dtm(col,row,valid_lon,valid_lat,valid_alt):
     """
     Test direct localization check dtm cube
     """
     dtmbsq,gri = prepare_loc()
 
     visee = np.zeros((3, gri.nbalt))
-    vislonlat = gri.interpolate_grid_in_plani(lig, col)
+    vislonlat = gri.interpolate_grid_in_plani(row, col)
     visee[0,:] = vislonlat[0]
     visee[1,:] = vislonlat[1]
     visee[2,:] = gri.alts_down
@@ -100,36 +100,36 @@ def test_loc_dir_check_cube_dtm(col,lig,valid_lon,valid_lat,valid_alt):
     assert(PointB[1] == pytest.approx(valid_lat,abs=1e-12))
     assert(PointB[2] == pytest.approx(valid_alt,abs=1e-12))
 
-@pytest.mark.parametrize("col,lig", [(50.5,100.5)])
+@pytest.mark.parametrize("col,row", [(50.5,100.5)])
 @pytest.mark.parametrize("valid_lon,valid_lat", [(57.2169100597702,21.96277930762832)])
 @pytest.mark.unit_tests
-def test_loc_dir_interp_visee_unitaire_gld(lig,col,valid_lon,valid_lat):
+def test_loc_dir_interp_visee_unitaire_gld(row,col,valid_lon,valid_lat):
     """
     Test los interpolation
     """
     ___, gri = prepare_loc()
-    visee = gri.interpolate_grid_in_plani(lig, col)
+    visee = gri.interpolate_grid_in_plani(row, col)
     print(visee)
     assert (visee[0][1] == pytest.approx(valid_lon,abs=1e-12))
     assert (visee[1][1] == pytest.approx(valid_lat, abs=1e-12))
 
 
 
-@pytest.mark.parametrize("col,lig,h", [(50.5,100.5,100.0)])
+@pytest.mark.parametrize("col,row,h", [(50.5,100.5,100.0)])
 @pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.2170054518422,21.9590529453258,100.0)])
 @pytest.mark.unit_tests
-def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
+def test_sensor_loc_dir_h(col,row,h,valid_lon,valid_lat,valid_alt):
     """
     Test direct localization at constant altitude
     """
     ___,gri = prepare_loc()
     loc = Localization(gri, dtm = None)
-    lonlatalt = loc.direct(lig, col, h)
+    lonlatalt = loc.direct(row, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
     diff_lat = lonlatalt[1] - valid_lat
     diff_alt = lonlatalt[2] - valid_alt
-    print("direct localization at constant altitude lig : {} col {} alt {}".format(lig,col,h))
+    print("direct localization at constant altitude row : {} col {} alt {}".format(row,col,h))
     print("lon {} lat {} alt {} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
     print('diff_lon {} diff_lat {} diff_alt {}'.format(diff_lon, diff_lat, diff_alt))
     assert(valid_lon == pytest.approx(lonlatalt[0],abs=1e-12))
@@ -137,9 +137,9 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-8))
 
 
-@pytest.mark.parametrize("col,lig,h", [(150.5,100,100.0)])
+@pytest.mark.parametrize("col,row,h", [(150.5,100,100.0)])
 @pytest.mark.unit_tests
-def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
+def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     """
     Test direct localization coherence with grid and RPC
     """
@@ -147,7 +147,7 @@ def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
     ___,gri = prepare_loc('ellipsoide',id_scene)
     loc_grid = Localization(gri)
     #init des predicteurs
-    lonlatalt = loc_grid.direct(lig, col, h)
+    lonlatalt = loc_grid.direct(row, col, h)
 
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
@@ -155,7 +155,7 @@ def test_sensor_loc_dir_vs_loc_rpc(lig, col, h):
     fctrat = FonctRatD(fichier_dimap)
 
     loc_rpc = Localization(fctrat)
-    lonlatalt_rpc = loc_rpc.direct(lig + 0.5, col + 0.5, h)
+    lonlatalt_rpc = loc_rpc.direct(row + 0.5, col + 0.5, h)
 
     diff_lon = lonlatalt[0] - lonlatalt_rpc[0]
     diff_lat = lonlatalt[1] - lonlatalt_rpc[1]
@@ -180,28 +180,28 @@ def test_sensor_loc_dir_dtm(index_x,index_y):
     print([lon,lat])
     alt = dtmbsq.Interpolate(index_x - 0.5, index_y - 0.5)
 
-    lig, col, valid = loc.inverse(lon, lat, alt)
-    print("lig col ",lig,col)
-    lonlath = loc.direct(lig, col)
+    row, col, valid = loc.inverse(lon, lat, alt)
+    print("row col ",row,col)
+    lonlath = loc.direct(row, col)
     assert(lon == pytest.approx(lonlath[0],abs=1e-8))
     assert(lat == pytest.approx(lonlath[1],abs=1e-8))
     assert(alt == pytest.approx(lonlath[2],abs=1e-4))
 
-@pytest.mark.parametrize("col,lig,h", [(50.5,100.5,100.0)])
+@pytest.mark.parametrize("col,row,h", [(50.5,100.5,100.0)])
 @pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.2170054518422,21.9590529453258,100.0)])
 @pytest.mark.unit_tests
-def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
+def test_sensor_loc_dir_h(col,row,h,valid_lon,valid_lat,valid_alt):
     """
     Test direct localization at constant altitude
     """
     ___,gri = prepare_loc()
     loc = Localization(gri, dtm = None)
-    lonlatalt = loc.direct(lig, col, h)
+    lonlatalt = loc.direct(row, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
     diff_lat = lonlatalt[1] - valid_lat
     diff_alt = lonlatalt[2] - valid_alt
-    print("direct localization at constant altitude lig : {} col {} alt {}".format(lig,col,h))
+    print("direct localization at constant altitude row : {} col {} alt {}".format(row,col,h))
     print("lon {} lat {} alt {} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
     print('diff_lon {} diff_lat {} diff_alt {}'.format(diff_lon, diff_lat, diff_alt))
     assert(valid_lon == pytest.approx(lonlatalt[0],abs=1e-12))
@@ -209,10 +209,10 @@ def test_sensor_loc_dir_h(col,lig,h,valid_lon,valid_lat,valid_alt):
     assert(valid_alt == pytest.approx(lonlatalt[2],abs=1e-8))
 
 
-@pytest.mark.parametrize("valid_lig,valid_col", [(50.5,10.0)])
+@pytest.mark.parametrize("valid_row,valid_col", [(50.5,10.0)])
 @pytest.mark.parametrize("lon,lat,alt", [(57.2167252772905,21.9587514585812,10.0)])
 @pytest.mark.unit_tests
-def test_sensor_loc_inv(lon,lat,alt,valid_col,valid_lig):
+def test_sensor_loc_inv(lon,lat,alt,valid_col,valid_row):
     """
     Test inverse localization
     """
@@ -220,12 +220,12 @@ def test_sensor_loc_inv(lon,lat,alt,valid_col,valid_lig):
     ___,gri = prepare_loc()
 
     loc = Localization(gri)
-    inv_lig,inv_col,valid = loc.inverse(lon,lat,alt)
+    inv_row,inv_col,valid = loc.inverse(lon,lat,alt)
 
     print("inverse localization  : lon {} lat {} alt {}".format(lon,lat,alt))
-    print("lig {} col {}  ".format(inv_lig, inv_col))
-    print('diff_lig {} diff_col {} '.format(inv_lig - valid_lig, inv_col - valid_col))   
-    assert(inv_lig == pytest.approx(valid_lig,abs=1e-2))
+    print("row {} col {}  ".format(inv_row, inv_col))
+    print('diff_row {} diff_col {} '.format(inv_row - valid_row, inv_col - valid_col))
+    assert(inv_row == pytest.approx(valid_row,abs=1e-2))
     assert(inv_col == pytest.approx(valid_col,abs=1e-2))
 
 
@@ -256,15 +256,15 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
 
 
 @pytest.mark.parametrize("col_min_valid", [([4.15161251e-02, 1.95057636e-01, 1.10977819e+00, -8.35016563e-04,-3.50772271e-02, -9.46432481e-03])])
-@pytest.mark.parametrize("lig_min_valid", [([ 0.05440845,  1.26513831, -0.36737151, -0.00229532, -0.07459378, -0.02558954])])
+@pytest.mark.parametrize("row_min_valid", [([ 0.05440845,  1.26513831, -0.36737151, -0.00229532, -0.07459378, -0.02558954])])
 @pytest.mark.parametrize("col_max_valid", [([1.76451389e-02, 2.05533045e-01, 1.11758291e+00, -9.50086076e-04,-3.59923603e-02, -1.03291594e-02])])
-@pytest.mark.parametrize("lig_max_valid", [([0.07565692, 1.27499912, -0.36677813, -0.00252395, -0.07539624, -0.0270914])])
+@pytest.mark.parametrize("row_max_valid", [([0.07565692, 1.27499912, -0.36677813, -0.00252395, -0.07539624, -0.0270914])])
 @pytest.mark.parametrize("valid_offset_lon",[([57.37295223744326, 0.15660032225072484])])
 @pytest.mark.parametrize("valid_offset_lat",[([22.066877016445275, 0.14641205050748773])])
-@pytest.mark.parametrize("valid_offset_lig",[([24913.0, 24912.5])])
+@pytest.mark.parametrize("valid_offset_row",[([24913.0, 24912.5])])
 @pytest.mark.parametrize("valid_offset_col",[([19975.5, 19975.0])])
 @pytest.mark.unit_tests
-def test_pred_loc_inv(col_min_valid, lig_min_valid,col_max_valid,lig_max_valid,valid_offset_lon,valid_offset_lat,valid_offset_lig,valid_offset_col):
+def test_pred_loc_inv(col_min_valid, row_min_valid,col_max_valid,row_max_valid,valid_offset_lon,valid_offset_lat,valid_offset_row,valid_offset_col):
     """
     Test inverse localization
     """
@@ -273,25 +273,25 @@ def test_pred_loc_inv(col_min_valid, lig_min_valid,col_max_valid,lig_max_valid,v
     gri.estimate_inverse_loc_predictor()
 
     assert (gri.pred_col_min.flatten() == pytest.approx(col_min_valid, abs=1e-6))
-    assert (gri.pred_lig_min.flatten() == pytest.approx(lig_min_valid, abs=1e-6))
+    assert (gri.pred_row_min.flatten() == pytest.approx(row_min_valid, abs=1e-6))
     assert (gri.pred_col_max.flatten() == pytest.approx(col_max_valid, abs=1e-6))
-    assert (gri.pred_lig_max.flatten() == pytest.approx(lig_max_valid, abs=1e-6))
+    assert (gri.pred_row_max.flatten() == pytest.approx(row_max_valid, abs=1e-6))
     assert(gri.pred_ofset_scale_lon == pytest.approx(valid_offset_lon, abs=1e-12))
     assert(gri.pred_ofset_scale_lat == pytest.approx(valid_offset_lat, abs=1e-12))
-    assert(gri.pred_ofset_scale_lig == pytest.approx(valid_offset_lig, abs=1e-6))
+    assert(gri.pred_ofset_scale_row == pytest.approx(valid_offset_row, abs=1e-6))
     assert(gri.pred_ofset_scale_col == pytest.approx(valid_offset_col, abs=1e-6))
 
-@pytest.mark.parametrize("col,lig", [(50.5,100.5)])
+@pytest.mark.parametrize("col,row", [(50.5,100.5)])
 @pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.21700367698209,21.95912227930429,166.351227229112)])
 @pytest.mark.unit_tests
-def test_loc_intersection(lig,col,valid_lon,valid_lat,valid_alt):
+def test_loc_intersection(row,col,valid_lon,valid_lat,valid_alt):
     """
     Test direct localization intersection function
     """
     dtmbsq,gri = prepare_loc()
 
     visee = np.zeros((3, gri.nbalt))
-    vislonlat = gri.interpolate_grid_in_plani(lig, col)
+    vislonlat = gri.interpolate_grid_in_plani(row, col)
     visee[0,:] = vislonlat[0]
     visee[1,:] = vislonlat[1]
     visee[2,:] = gri.alts_down
@@ -304,26 +304,26 @@ def test_loc_intersection(lig,col,valid_lon,valid_lat,valid_alt):
 
 
 
-@pytest.mark.parametrize("col,lig,h", [(20.5,150.5,10.0)])
+@pytest.mark.parametrize("col,row,h", [(20.5,150.5,10.0)])
 @pytest.mark.unit_tests
-def test_loc_dir_loc_inv(lig, col, h):
+def test_loc_dir_loc_inv(row, col, h):
     """
     Test direct localization followed by inverse one
     """
     ___,gri = prepare_loc()
     #init des predicteurs
     gri.estimate_inverse_loc_predictor()
-    (lon,lat,alt) = gri.direct_loc_h(lig, col, h)
-    inv_lig,inv_col,valid = gri.inverse_loc(lon,lat,alt)
+    (lon,lat,alt) = gri.direct_loc_h(row, col, h)
+    inv_row,inv_col,valid = gri.inverse_loc(lon,lat,alt)
 
-    print('lig {} col {} valid {}'.format(inv_lig, inv_col, valid))
-    assert(lig == pytest.approx(inv_lig,abs=1e-2))
+    print('row {} col {} valid {}'.format(inv_row, inv_col, valid))
+    assert(row == pytest.approx(inv_row,abs=1e-2))
     assert(col == pytest.approx(inv_col,abs=1e-2))
     assert(valid == 1)
 
-@pytest.mark.parametrize("col,lig,h", [(150.5,20.5,10.0)])
+@pytest.mark.parametrize("col,row,h", [(150.5,20.5,10.0)])
 @pytest.mark.unit_tests
-def test_loc_dir_loc_inv_rpc(lig, col, h):
+def test_loc_dir_loc_inv_rpc(row, col, h):
     """
     Test direct localization followed by inverse one
     """
@@ -331,33 +331,33 @@ def test_loc_dir_loc_inv_rpc(lig, col, h):
     ___,gri = prepare_loc('ellipsoide',id_scene)
     #init des predicteurs
     gri.estimate_inverse_loc_predictor()
-    lonlatalt = gri.direct_loc_h(lig, col, h)
+    lonlatalt = gri.direct_loc_h(row, col, h)
 
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
     fctrat = FonctRatD(fichier_dimap)
-    (inv_lig, inv_col,__) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
-    print('lig {} col {}'.format(inv_lig, inv_col))
+    (inv_row, inv_col,__) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    print('row {} col {}'.format(inv_row, inv_col))
 
-    assert(lig == pytest.approx(inv_lig - 0.5, abs=1e-2))
+    assert(row == pytest.approx(inv_row - 0.5, abs=1e-2))
     assert(col == pytest.approx(inv_col - 0.5, abs=1e-2))
 
 
-@pytest.mark.parametrize("l0_src,c0_src, paslig_src, pascol_src,nblig_src,nbcol_src", [(0.5,1.5,10,100,20, 20)])
-@pytest.mark.parametrize("col,lig", [(1,3)])
+@pytest.mark.parametrize("l0_src,c0_src, steprow_src, stepcol_src,nbrow_src,nbcol_src", [(0.5,1.5,10,100,20, 20)])
+@pytest.mark.parametrize("col,row", [(1,3)])
 @pytest.mark.unit_tests
-def test_coloc(l0_src, c0_src,paslig_src,pascol_src,nblig_src,nbcol_src,lig,col):
+def test_coloc(l0_src, c0_src,steprow_src,stepcol_src,nbrow_src,nbcol_src,row,col):
     """
     Test coloc function
     """
     dtmbsq,gri = prepare_loc()
     gri.estimate_inverse_loc_predictor()
 
-    gricol = coloc(gri, gri, dtmbsq, l0_src, c0_src, paslig_src, pascol_src, nblig_src, nbcol_src)
+    gricol = coloc(gri, gri, dtmbsq, l0_src, c0_src, steprow_src, stepcol_src, nbrow_src, nbcol_src)
 
-    assert(gricol[0, lig, col] == pytest.approx(lig * paslig_src + l0_src,1e-6))
-    assert(gricol[1, lig, col] == pytest.approx(col * pascol_src + c0_src, 1e-6))
+    assert(gricol[0, row, col] == pytest.approx(row * steprow_src + l0_src,1e-6))
+    assert(gricol[1, row, col] == pytest.approx(col * stepcol_src + c0_src, 1e-6))
 
 @pytest.mark.parametrize("index_x,index_y", [(10.5,20.5)])
 @pytest.mark.parametrize("valid_alt", [(198.0)])

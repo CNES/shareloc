@@ -64,22 +64,6 @@ def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right
     return intersections_ecef,intersections_wgs84
 
 
-def id_minus_vivit(sis,vis):
-    """
-     calculate
-     .. math::
-        I-\\hat v_i \\hat v_i^\\top) s_i\\right`
-
-     :param sis :  los head
-     :type sis : np.array
-     :param vis :  los normalized vector
-     :type vis : np.array
-     :return  first element is I - v*vT , second element is (I - v*vT) * s
-     :rtype (numpy.array 3x3,numpy,array 3x1)
-     """
-    id_vivit = np.eye(3) - (np.dot(vis,vis.transpose()))
-    return id_vivit, np.dot(id_vivit , sis)
-
 def los_triangulation(left_los,right_los):
     """
     los triangulation
@@ -91,22 +75,23 @@ def los_triangulation(left_los,right_los):
     :return intersections in cartesian crs
     :rtype numpy.array
     """
-    points = np.zeros([left_los.los_nb,3])
-    for index in range(left_los.los_nb):
-        left_sis = left_los.sis[index,:].reshape(3,1)
-        left_vis = left_los.vis[index, :].reshape(3,1)
-        right_sis = right_los.sis[index,:].reshape(3,1)
-        right_vis = right_los.vis[index, :].reshape(3,1)
-        inv_cumul = np.zeros([3,3])
-        sec_cumul = np.zeros([3,1])
-        inv, sec = id_minus_vivit(left_sis,left_vis)
-        inv_cumul += inv
-        sec_cumul  += sec
-        inv, sec = id_minus_vivit(right_sis,right_vis)
-        inv_cumul += inv
-        sec_cumul  += sec
-        points[index,:] = np.dot(np.linalg.inv(inv_cumul) , sec_cumul).transpose()
-    return points
+    vis = np.dstack((left_los.vis, right_los.vis))
+    vis = np.swapaxes(vis,1,2)
+
+
+    sis = np.dstack((left_los.sis, right_los.sis))
+    sis = np.swapaxes(sis, 1, 2)
+
+    vivi = vis[..., :, np.newaxis] * vis[..., np.newaxis, :]
+    id_vivi = np.eye(3) - vivi
+    sum_id_vivi = np.nansum(id_vivi, axis=-3)
+
+    id_vivi_si = np.nansum(id_vivi * sis[..., np.newaxis, :], axis=-1)
+    sum_id_vivi_si = np.nansum(id_vivi_si, axis=-2)
+
+    inv_sum_id_vivi = np.linalg.inv(sum_id_vivi)
+    intersection = np.nansum(inv_sum_id_vivi * sum_id_vivi_si[..., np.newaxis, :], axis=-1)
+    return intersection
 
 
 def epipolar_triangulation(matches, matches_type, geometrical_model_left,geometrical_model_right,grid_left,grid_right,left_min_max,right_min_max):

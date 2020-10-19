@@ -47,36 +47,30 @@ class rectification_grid:
         last_x = ori_x + step_x * dataset.width
         last_y = ori_y + step_y * dataset.height
 
-        self.lig_dep = dataset.read(2)
+        #transform dep to positions
+        self.row_dep = dataset.read(2)
         self.col_dep = dataset.read(1)
-        epipolar_shape =  self.lig_dep.shape
+        epipolar_shape =  self.row_dep.shape
         x = np.arange(ori_x, last_x, step_x)
         y = np.arange(ori_y, last_y, step_y)
-
-        #transform dep to positions
         self.grid_x, self.grid_y = np.mgrid[ori_y:last_y:step_y, ori_x:last_x:step_x]
-        self.lig_positions = self.lig_dep + self.grid_x
+        self.points = (x,y)
+        self.row_positions = self.row_dep + self.grid_x
         self.col_positions = self.col_dep + self.grid_y
 
-        self.interp_lig = interpolate.interp2d(x, y, self.lig_positions, kind='linear')
-        self.interp_col = interpolate.interp2d(x, y, self.col_positions, kind='linear')
-
-
-    def interpolate_regular(self,lig,col):
-        interp_lig = self.interp_lig(lig,col)
-        interp_col = self.interp_col(lig,col)
-        coord = np.stack((interp_lig,interp_col), axis = 2)
-        return coord
-
     def interpolate(self, positions):
+        """
+        interpolate position
+        :param positions : positons to interpolate : array  Nx2 [row,col]
+        :type positions: np.array
+        :return interpolated positions : array  Nx2 [row,col]
+        :rtype  np.array
+        """
         #interp with grid data
-        points = np.stack((self.grid_x.flatten(),self.grid_y.flatten())).transpose()
-        xi = np.stack((self.lig_positions, self.col_positions), axis=2)
-        values = np.reshape(xi, (-1, 2))
-        interp_data = interpolate.griddata(points, values, positions, method='linear')
-        return interp_data
+        interp_row = interpolate.interpn(self.points, self.row_positions, positions, method='linear')
+        interp_col = interpolate.interpn(self.points, self.col_positions, positions, method='linear')
+        interp_pos = np.stack((interp_row,interp_col)).transpose()
+        return interp_pos
 
-    def interpolate_point_list(self,point_list):
-        return None
 
     #gridata

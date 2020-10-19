@@ -27,8 +27,9 @@ from shareloc.rectification.rectification_grid import rectification_grid
 
 
     
-
-def test_rectification_grid_interpolation_regular():
+@pytest.mark.parametrize("row,col", [(15,0)])
+@pytest.mark.unit_tests
+def test_rectification_grid_interpolation_one_point(row,col):
     """
     Test interpolation on rectification grid
     """
@@ -36,14 +37,12 @@ def test_rectification_grid_interpolation_regular():
     grid_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_right))
 
     rectif_grid = rectification_grid(grid_filename)
-    lig = np.arange(15, 1000, 10)
-    col = np.arange(15, 1000, 10)
     #value at position [15,15]
-    value_lig = np.sum(rectif_grid.lig_dep[0:2,0:2]) / 4.0 + 15.0
-    value_col = np.sum(rectif_grid.col_dep[0:2,0:2]) / 4.0 + 15.0
-    coords = rectif_grid.interpolate_regular(lig,col)
-    assert(value_col == pytest.approx(coords[0,0,1],abs=1e-4))
-    assert(value_lig == pytest.approx(coords[0,0,0],abs=1e-4))
+    value_row = np.sum(rectif_grid.row_positions[0:2,0]) / 2.0
+    value_col = np.sum(rectif_grid.col_positions[0:2,0]) / 2.0
+    coords = rectif_grid.interpolate((row,col))
+    assert(value_col == pytest.approx(coords[0,1],abs=1e-4))
+    assert(value_row == pytest.approx(coords[0,0],abs=1e-4))
 
 
 @pytest.mark.unit_tests
@@ -57,15 +56,13 @@ def test_rectification_grid_interpolation():
     rectif_grid = rectification_grid(grid_filename)
     #value at position [15,15]
 
-    bary_diag_lig = rectif_grid.lig_dep[0,0] + rectif_grid.lig_dep[1,1]
-    bary_diag_lig = bary_diag_lig / 2.0 + 15.0
-    bary_diag_col = rectif_grid.col_dep[0,0] + rectif_grid.col_dep[1,1]
-    bary_diag_col = bary_diag_col / 2.0 + 15.0
-
-    grid_y_out, grid_x_out = np.mgrid[15:60:15, 15:60:15]
-    sensor_positions = np.stack((grid_x_out, grid_y_out), axis=2)
+    value_row = np.sum(rectif_grid.row_positions[0:2,0:2]) / 4.0
+    value_col = np.sum(rectif_grid.col_positions[0:2,0:2]) / 4.0
+    sensor_positions = np.zeros((2,2))
+    sensor_positions[0,:] = [15.0,15.0]
+    sensor_positions[1,:] = [0.0,0.0]
     coords = rectif_grid.interpolate(sensor_positions)
-    assert(bary_diag_col == pytest.approx(coords[0,0,1],abs=1e-4))
-    assert(bary_diag_lig == pytest.approx(coords[0,0,0],abs=1e-4))
+    assert(value_col == pytest.approx(coords[0,1],abs=1e-4))
+    assert(value_row == pytest.approx(coords[0,0],abs=1e-4))
 
 

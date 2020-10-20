@@ -103,12 +103,14 @@ def transform_disp_to_matches(disp):
 
 
 
-def epipolar_triangulation(matches, matches_type, geometrical_model_left,geometrical_model_right,grid_left,grid_right,left_min_max = None,right_min_max = None):
+def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,geometrical_model_right,grid_left,grid_right,left_min_max = None,right_min_max = None):
     """
     epipolar triangulation
 
     :param matches :  matches
     :type matches :
+    :param mask :  mask
+    :type mask :
     :param matches_type :  'disp' or 'sift'
     :type matches_type : str
     :param geometrical_model_left : left image geometrical model

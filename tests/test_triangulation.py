@@ -102,7 +102,7 @@ def test_epi_triangulation(lig, col, h):
 
     print("matches {}".format(matches[1:10,0:2]))
 
-    point_ecef, point_wgs84 = epipolar_triangulation(matches,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
+    point_ecef, point_wgs84 = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
 
     print(point_wgs84[1:10,:])
 

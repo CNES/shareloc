@@ -57,3 +57,20 @@ def test_rpc_phrdimap(col,lig,alt):
     print (col_ar,lig_ar)
     assert(col_ar == pytest.approx(col,1e-2))
     assert(lig_ar == pytest.approx(lig,1e-2))
+
+
+@pytest.mark.parametrize("col,lig,alt", [(600,200,125)])
+def test_rpc_direct_inverse_iterative(col,lig,alt):
+    data_folder = test_path()
+    id_scene = 'P1BP--2018122638935449CP'
+    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+
+    fctrat = FonctRatD(fichier_dimap)
+
+    #(col,lig,alt)=(100,1000,400)
+    (x0,y0) = fctrat.evalue_loc_d(col,lig,alt)
+    (x_inv,y_inv) = fctrat.evalue_loc_d_par_inversion_rpc_i(col,lig,alt)
+    #print("comparaison loc directe RPC / loc inverse RPC iterative""")
+    #"""Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
+    assert (x0==pytest.approx(x_inv, 5.0/111111000))
+    assert (y0==pytest.approx(y_inv, 5.0/111111000))

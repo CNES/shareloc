@@ -25,30 +25,32 @@ from shareloc.proj_utils import coordinates_conversion
 class LOS:
     """ line of sight class
     """
-    def __init__(self, sensor_positions, geometrical_model, alt_min = 0.0 , alt_max = 4000.0):
+    def __init__(self, sensor_positions, geometrical_model, alt_min_max  = None):
         """
         Constructor
         :param sensor_positions: sensor_positions
         :type sensor_positions: numpy array (Nx2)
         :param geometrical_model: geometrical model
         :type geometrical_model: shareloc.grid or shareloc..rpc.rpc
-        :param alt_min: min altitude to compute los
-        :type alt_min: float
+        :param alt_min_max: min/max  altitude to compute los, if None model min/max will be used
+        :type alt_min_max : list
 
         """
-        self.alt_min = alt_min
-        self.alt_max = alt_max
+
         self.geometrical_model = geometrical_model
         self.sensors_positions = sensor_positions
-        self.los_creation()
+        self.los_creation(alt_min_max)
 
-    def los_creation(self):
+    def los_creation(self,alt_min_max):
         """
         create los from extrema : los starting point, and normalized viewing vector
-
+        :param alt_min_max: min/max  altitude to compute los, if None model min/max will be used
+        :type alt_min_max : list
         """
 
         self.los_nb = self.sensors_positions.shape[0]
+        if(alt_min_max is None):
+            (alt_min,alt_max) = self.geometrical_model.get_alt_min_max()
 
         # los construction right
 
@@ -56,8 +58,7 @@ class LOS:
         for index in range(self.los_nb):
             [lig, col] = self.sensors_positions[index, :]
             los_extrema[2 * index:2 * index + 2, :] = self.geometrical_model.los_extrema(lig, col,
-                                                                                              self.alt_min,
-                                                                                              self.alt_max)
+                                                                                              alt_min, alt_max)
 
         in_crs = 4326
         out_crs = 4978

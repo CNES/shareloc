@@ -76,7 +76,7 @@ def test_triangulation(lig, col, h):
     point_ecef, point_wgs84 = sensor_triangulation(matches,gri_left,gri_right)
     assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
     assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))
-    assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=2e-3))
+    assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
     #assert(col == pytest.approx(inv_col,abs=1e-2))
     #assert(valid == 1)
 

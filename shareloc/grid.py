@@ -101,6 +101,15 @@ class grid:
 
             print("dtm format is not handled")
 
+    def get_alt_min_max(self):
+        """
+        returns altitudes min and max layers
+        :return alt_min,lat_max
+        :rtype list
+        """
+        return [self.alts_down[-1], self.alts_down[0]]
+
+
     def fct_locdir_h(self,lig,col,alt):
         """
         direct localization at constant altitude

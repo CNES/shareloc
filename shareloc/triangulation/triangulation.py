@@ -20,11 +20,11 @@
 #
 
 import numpy as np
-from shareloc.rectification import rectification_grid
+from shareloc.rectification.rectification_grid import rectification_grid
 from shareloc.proj_utils import coordinates_conversion
 from shareloc.los import LOS
 
-def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right,left_min_max = [0.0, 4000.0],right_min_max = [0.0, 4000.0]):
+def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right,left_min_max = None,right_min_max = None):
     """
     triangulation in sensor geometry
 
@@ -41,18 +41,18 @@ def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right
     :type geometrical_model_left : shareloc.grid or shareloc.rpc
     :param geometrical_model_right : right image geometrical model
     :type geometrical_model_right : shareloc.grid or shareloc.rpc
-    :param left_min_max : left min/max for los creation
+    :param left_min_max : left min/max for los creation, if None model min/max will be used
     :type left_min_max : list
-    :param right_min_max : right min/max for los creation
+    :param right_min_max : right min/max for los creation, if None model min/max will be used
     :type right_min_max : list
     :return intersections in cartesian crs and intersections in wgs84 crs
     :rtype (numpy.array,numpy,array)
     """
     #los construction
     matches_left = matches[:,0:2]
-    left_los = LOS(matches_left, geometrical_model_left, left_min_max[0], left_min_max[1])
+    left_los = LOS(matches_left, geometrical_model_left, left_min_max)
     matches_right = matches[:, 2:4]
-    right_los = LOS(matches_right, geometrical_model_right, right_min_max[0], right_min_max[1])
+    right_los = LOS(matches_right, geometrical_model_right, right_min_max)
 
     #los conversion
     #los intersection
@@ -103,7 +103,7 @@ def transform_disp_to_matches(disp):
 
 
 
-def epipolar_triangulation(matches, matches_type, geometrical_model_left,geometrical_model_right,grid_left,grid_right,left_min_max = [0.0, 4000.0],right_min_max = [0.0, 4000.0]):
+def epipolar_triangulation(matches, matches_type, geometrical_model_left,geometrical_model_right,grid_left,grid_right,left_min_max = None,right_min_max = None):
     """
     epipolar triangulation
 
@@ -119,9 +119,9 @@ def epipolar_triangulation(matches, matches_type, geometrical_model_left,geometr
     :type grid_left : str
     :param grid_right : right rectification grid filename
     :type grid_right : str
-    :param left_min_max : left min/max for los creation
+    :param left_min_max : left min/max for los creation, if None model min/max will be used
     :type left_min_max : list
-    :param right_min_max : right min/max for los creation
+    :param right_min_max : right min/max for los creation, if None model min/max will be used
     :type right_min_max : list
     :return intersections in cartesian crs
     :rtype numpy.array
@@ -149,13 +149,9 @@ def epipolar_triangulation(matches, matches_type, geometrical_model_left,geometr
     matches_sensor_left = rectif_grid_left.interpolate(epi_pos_left)
     matches_sensor_right = rectif_grid_right\
         .interpolate(epi_pos_right)
-    matches_sensor = [matches_sensor_left,matches_sensor_right]
+    matches_sensor = np.concatenate((matches_sensor_left,matches_sensor_right),axis = 1)
 
 
     # triangulate positions in sensor geometry
-    [intersections_ecef,intersections_wgs84] = sensor_triangulation(matches_sensor, geometrical_model_left,
+    return sensor_triangulation(matches_sensor, geometrical_model_left,
                                                                     geometrical_model_right, left_min_max, right_min_max)
-
-    intersections_ecef = None
-    intersections_wgs84 = None
-    return intersections_ecef,intersections_wgs84

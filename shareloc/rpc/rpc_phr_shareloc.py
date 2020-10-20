@@ -1,7 +1,8 @@
 from xml.dom import minidom
 from numpy import array, dot, zeros, sqrt
 from os.path import basename
-
+from tests.utils import test_path
+import os
 
 def renvoie_linesep(txt_liste_lines):
     """Renvoie le separateur de ligne d'un texte sous forme de liste de lignes
@@ -153,59 +154,59 @@ class FonctRatD:
                 if l.startswith('>>\tYOUT_OFFSET'):
                     lsplit = l.split()
                     (offset_Y_d,scale_Y_d) = (float(lsplit[4]),float(lsplit[5]))
-            if type_fic <> 'D':
-                print "le fichier euclide direct est inconherent (le sens est marque Inverse)"
+            if type_fic != 'D':
+                print("le fichier euclide direct est inconherent (le sens est marque Inverse")
 
 
             if not self.offset_COL:
                 self.offset_COL = offset_COL_d
-            elif self.offset_COL <> offset_COL_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_COL differents"
+            elif self.offset_COL != offset_COL_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_COL differents")
 
             if not self.scale_COL:
                 self.scale_COL = scale_COL_d
-            elif self.scale_COL <> scale_COL_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_COL differents"
+            elif self.scale_COL != scale_COL_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_COL differents")
 
             if not self.offset_LIG:
                 self.offset_LIG = offset_LIG_d
-            elif self.offset_LIG <> offset_LIG_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_LIG differents"
+            elif self.offset_LIG != offset_LIG_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_LIG differents")
 
             if not self.scale_LIG:
                 self.scale_LIG = scale_LIG_d
-            elif self.scale_LIG <> scale_LIG_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_LIG differents"
+            elif self.scale_LIG != scale_LIG_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_LIG differents")
 
             if not self.offset_ALT:
                 self.offset_ALT = offset_ALT_d
-            elif self.offset_ALT <> offset_ALT_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_ALT differents"
+            elif self.offset_ALT != offset_ALT_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_ALT differents")
 
             if not self.scale_ALT:
                 self.scale_ALT = scale_ALT_d
-            elif self.scale_ALT <> scale_ALT_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_ALT differents"
+            elif self.scale_ALT != scale_ALT_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_ALT differents")
 
             if not self.offset_X:
                 self.offset_X = offset_X_d
-            elif self.offset_X <> offset_X_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_X differents"
+            elif self.offset_X != offset_X_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_X differents")
 
             if not self.scale_X:
                 self.scale_X = scale_X_d
-            elif self.scale_X <> scale_X_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_X differents"
+            elif self.scale_X != scale_X_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_X differents")
 
             if not self.offset_Y:
                 self.offset_Y = offset_Y_d
-            elif self.offset_Y <> offset_Y_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_Y differents"
+            elif self.offset_Y != offset_Y_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_Y differents")
 
             if not self.scale_Y:
                 self.scale_Y = scale_Y_d
-            elif self.scale_Y <> scale_Y_d:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_Y differents"
+            elif self.scale_Y != scale_Y_d:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_Y differents")
 
             self.Num_X    = coeff_PX_d
             self.Den_X    = coeff_QX_d
@@ -255,58 +256,58 @@ class FonctRatD:
                     lsplit = l.split()
                     (offset_LIG_i,scale_LIG_i) = (float(lsplit[4]),float(lsplit[5]))
 
-            if type_fic <> 'I':
-                print "!!!!! le fichier euclide inverse est inconherent (le sens est marque Direct)"
+            if type_fic != 'I':
+                print("!!!!! le fichier euclide inverse est inconherent (le sens est marque Direct)")
 
             if not self.offset_COL:
                 self.offset_COL = offset_COL_i
-            elif self.offset_COL <> offset_COL_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_COL differents"
+            elif self.offset_COL != offset_COL_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_COL differents")
 
             if not self.scale_COL:
                 self.scale_COL = scale_COL_i
-            elif self.scale_COL <> scale_COL_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_COL differents"
+            elif self.scale_COL != scale_COL_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_COL differents")
 
             if not self.offset_LIG:
                 self.offset_LIG = offset_LIG_i
-            elif self.offset_LIG <> offset_LIG_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_LIG differents"
+            elif self.offset_LIG != offset_LIG_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_LIG differents")
 
             if not self.scale_LIG:
                 self.scale_LIG = scale_LIG_i
-            elif self.scale_LIG <> scale_LIG_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_LIG differents"
+            elif self.scale_LIG != scale_LIG_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_LIG differents")
 
             if not self.offset_ALT:
                 self.offset_ALT = offset_ALT_i
-            elif self.offset_ALT <> offset_ALT_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_ALT differents"
+            elif self.offset_ALT != offset_ALT_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_ALT differents")
 
             if not self.scale_ALT:
                 self.scale_ALT = scale_ALT_i
-            elif self.scale_ALT <> scale_ALT_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_ALT differents"
+            elif self.scale_ALT != scale_ALT_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_ALT differents")
 
             if not self.offset_X:
                 self.offset_X = offset_X_i
-            elif self.offset_X <> offset_X_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_X differents"
+            elif self.offset_X != offset_X_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_X differents")
 
             if not self.scale_X:
                 self.scale_X = scale_X_i
-            elif self.scale_X <> scale_X_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_X differents"
+            elif self.scale_X != scale_X_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_X differents")
 
             if not self.offset_Y:
                 self.offset_Y = offset_Y_i
-            elif self.offset_Y <> offset_Y_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car offset_Y differents"
+            elif self.offset_Y != offset_Y_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car offset_Y differents")
 
             if not self.scale_Y:
                 self.scale_Y = scale_Y_i
-            elif self.scale_Y <> scale_Y_i:
-                print "!!!!! les fichiers directs et inverses sont incoherents car scale_Y differents"
+            elif self.scale_Y != scale_Y_i:
+                print("!!!!! les fichiers directs et inverses sont incoherents car scale_Y differents")
 
             self.Num_COL    = coeff_PX_i
             self.Den_COL    = coeff_QX_i
@@ -369,11 +370,11 @@ class FonctRatD:
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
 
             if abs(Xnorm)> self.lim_extrapol :
-                print "!!!!! l'evaluation au point est extrapolee en colonne ",Xnorm,col
+                print("!!!!! l'evaluation au point est extrapolee en colonne ",Xnorm,col)
             if abs(Ynorm)> self.lim_extrapol :
-                print "!!!!! l'evaluation au point est extrapolee en ligne ",Ynorm,lig
+                print("!!!!! l'evaluation au point est extrapolee en ligne ",Ynorm,lig)
             if abs(Znorm)> self.lim_extrapol :
-                print "!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt
+                print("!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt)
 
             monomes = array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
                  Ynorm**int(self.Monomes[i][2])*\
@@ -382,7 +383,7 @@ class FonctRatD:
             Xout = dot(array(self.Num_X),monomes)/dot(array(self.Den_X),monomes)*self.scale_X+self.offset_X
             Yout = dot(array(self.Num_Y),monomes)/dot(array(self.Den_Y),monomes)*self.scale_Y+self.offset_Y
         else:
-            print "les coefficient directs n'ont pas ete definis"
+            print("les coefficient directs n'ont pas ete definis")
             (Xout,Yout) = (None,None)
         return (Xout,Yout)
 
@@ -406,11 +407,11 @@ class FonctRatD:
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
 
             if abs(Xnorm)> self.lim_extrapol :
-                print "!!!!! l'evaluation au point est extrapolee en longitude ",Xnorm,lon
+                print("!!!!! l'evaluation au point est extrapolee en longitude ",Xnorm,lon)
             if abs(Ynorm)> self.lim_extrapol :
-                print "!!!!! l'evaluation au point est extrapolee en latitude ",Ynorm,lat
+                print("!!!!! l'evaluation au point est extrapolee en latitude ",Ynorm,lat)
             if abs(Znorm)> self.lim_extrapol :
-                print "!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt
+                print("!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt)
 
             monomes = array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
                 Ynorm**int(self.Monomes[i][2])*\
@@ -419,7 +420,7 @@ class FonctRatD:
             Cout = dot(array(self.Num_COL),monomes)/dot(array(self.Den_COL),monomes)*self.scale_COL+self.offset_COL
             Lout = dot(array(self.Num_LIG),monomes)/dot(array(self.Den_LIG),monomes)*self.scale_LIG+self.offset_LIG
         else:
-            print "!!!!! les coefficient inverses n'ont pas ete definis"
+            print("!!!!! les coefficient inverses n'ont pas ete definis")
             (Cout,Lout) = (None,None)
         return (Cout,Lout)
 
@@ -450,21 +451,25 @@ class FonctRatD:
                 dl = lig - l
                 k+=1
         else:
-            print "!!!!! les coefficient inverses n'ont pas ete definis"
+            print("!!!!! les coefficient inverses n'ont pas ete definis")
             (X,Y) = (None,None)
         return(X,Y)
 
 if __name__=='__main__':
-    rpc =FonctRatD('PHRDIMAP.XML')
+    data_folder = test_path()
+    id_scene = 'P1BP--2018122638935449CP'
+    fichier_dimap = os.path.join(data_folder, 'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+
+    rpc =FonctRatD(fichier_dimap)
     (col,lig,alt)=(100,1000,400)
     (x0,y0) = rpc.evalue_loc_d(col,lig,alt)
     (ci,li) = rpc.evalue_loc_i(x0,y0,alt)
     (x_rpc,y_rpc) = rpc.evalue_loc_d(ci,li,alt)
     (x_inv,y_inv) = rpc.evalue_loc_d_par_inversion_rpc_i(col,lig,alt)
-    print "comparaison loc directe RPC / loc inverse RPC iterative"""
+    print("comparaison loc directe RPC / loc inverse RPC iterative""")
     """Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
-    print "erreur en mm", x0,x_inv,(x0-x_inv)*111111000
-    print "erreur en mm", y0,y_inv,(y0-y_inv)*111111000
-    print "comparaison loc directe RPC / loc inverse RPC """
-    print "erreur en mm", x0,x_rpc,(x0-x_rpc)*111111000
-    print "erreur en mm", y0,y_rpc,(y0-y_rpc)*111111000
+    print("erreur en mm", x0,x_inv,(x0-x_inv)*111111000)
+    print("erreur en mm", y0,y_inv,(y0-y_inv)*111111000)
+    print("comparaison loc directe RPC / loc inverse RPC """)
+    print("erreur en mm", x0,x_rpc,(x0-x_rpc)*111111000)
+    print("erreur en mm", y0,y_rpc,(y0-y_rpc)*111111000)

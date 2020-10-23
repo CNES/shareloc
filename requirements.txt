@@ -2,3 +2,5 @@ numpy>=1.17.0
 scipy
 gdal
 rasterio
+xarray
+netCDF4==1.5.3

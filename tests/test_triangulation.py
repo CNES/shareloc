@@ -22,10 +22,13 @@ import os
 import pytest
 import numpy as np
 from utils import test_path
+import xarray as xr
+
+import time
 
 from shareloc.grid import grid, fct_coloc
 from shareloc.dtm import DTM
-from shareloc.triangulation.triangulation import sensor_triangulation, epipolar_triangulation
+from shareloc.triangulation.triangulation import sensor_triangulation, epipolar_triangulation, transform_disp_to_matches
 from shareloc.rectification.rectification_grid import rectification_grid
 
 def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
@@ -55,7 +58,7 @@ def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
 @pytest.mark.unit_tests
 def test_sensor_triangulation(lig, col, h):
     """
-    Test direct localization followed by inverse one for phr couple
+    Test sensor triangulation
     """
     id_scene_right = "P1BP--2017092838319324CP"
     ___,gri_right = prepare_loc('ellipsoide',id_scene_right)
@@ -80,11 +83,11 @@ def test_sensor_triangulation(lig, col, h):
 
 
 
-@pytest.mark.parametrize("col,lig,h", [(1000.5,1500.5,10.0)])
+
 @pytest.mark.unit_tests
-def test_epi_triangulation(lig, col, h):
+def test_epi_triangulation_sift():
     """
-    Test direct localization followed by inverse one for phr couple
+    Test epipolar triangulation
     """
     id_scene_right = "P1BP--2017092838319324CP"
     ___,gri_right = prepare_loc('ellipsoide',id_scene_right)
@@ -105,6 +108,44 @@ def test_epi_triangulation(lig, col, h):
     point_ecef, point_wgs84 = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
 
     print(point_wgs84[1:10,:])
+
+    #assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
+    #assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))
+    ##assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
+    #assert(col == pytest.approx(inv_col,abs=1e-2))
+    #assert(valid == 1)
+
+
+
+@pytest.mark.unit_tests
+def test_epi_triangulation_disp():
+    """
+     Test epipolar triangulation
+    """
+    id_scene_right = "P1BP--2017092838319324CP"
+    ___, gri_right = prepare_loc('ellipsoide', id_scene_right)
+    id_scene_left = "P1BP--2017092838284574CP"
+    ___, gri_left = prepare_loc('ellipsoide', id_scene_left)
+
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
+                                      "grid_{}.tif".format(id_scene_left))
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
+                                       "grid_{}.tif".format(id_scene_right))
+
+
+    disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disparity-crop.nc")
+    disp = xr.load_dataset(disp_filename)
+
+    point_ecef, point_wgs84 = epipolar_triangulation(disp, None, 'disp', gri_left, gri_right, grid_left_filename,
+                                                   grid_right_filename)
+    array_shape = disp.disp.values.shape
+    array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1],3))
+    pc_dataset = xr.Dataset({'pc_wgs84': (['row', 'col','coords'], array_epi_wgs84)},
+                          coords={'row': disp.coords['row'], 'col': disp.coords['col'], 'coords' : np.arange(3).astype(np.uint8)})
+    disp = xr.merge((disp, pc_dataset))
+    #point_ecef, point_wgs84 = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
+
+    #print(point_wgs84[1:10,:])
 
     #assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
     #assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))

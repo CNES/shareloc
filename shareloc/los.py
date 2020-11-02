@@ -56,8 +56,8 @@ class LOS:
 
         los_extrema = np.zeros([2 * self.los_nb, 3])
         for index in range(self.los_nb):
-            [lig, col] = self.sensors_positions[index, :]
-            los_extrema[2 * index:2 * index + 2, :] = self.geometrical_model.los_extrema(lig, col,
+            [col, row] = self.sensors_positions[index, :]
+            los_extrema[2 * index:2 * index + 2, :] = self.geometrical_model.los_extrema(row, col,
                                                                                               alt_min, alt_max)
 
         in_crs = 4326

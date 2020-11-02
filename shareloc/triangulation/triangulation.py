@@ -103,15 +103,17 @@ def transform_disp_to_matches(disp,mask = None):
 
 
     col,row  = np.meshgrid(disp.col,disp.row)
+
     roi = disp.roi
     ori_col = roi[0]
     ori_row = roi[1]
     col = col + ori_col
     row = row + ori_row
     disp_array = disp.disp.values
-    epi_left_pos  = np.hstack((col.flatten(),row.flatten()))
-    epi_right_pos = np.hstack((col.flatten() + disp_array.flatten(),row.flatten()))
-    return (epi_left_pos,epi_right_pos)
+    epi_left_pos  = np.vstack((col.flatten(),row.flatten()))
+
+    epi_right_pos = np.vstack((col.flatten() + disp_array.flatten(),row.flatten()))
+    return (epi_left_pos.transpose(),epi_right_pos.transpose())
 
 
 
@@ -161,12 +163,16 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
     rectif_grid_left = rectification_grid(grid_left)
     rectif_grid_right = rectification_grid(grid_right)
     #interpolate_right
+    #print("epi  left 0 {}".format(epi_pos_left[0,:]))
+    #print("epi right 0 {}".format(epi_pos_right[0,:]))
     matches_sensor_left = rectif_grid_left.interpolate(epi_pos_left)
     matches_sensor_right = rectif_grid_right\
         .interpolate(epi_pos_right)
+    #print("epi  left 0 {} sensor 0 {}".format(epi_pos_left[0,:], matches_sensor_left[0,:]))
+    #print("epi right 0 {} sensor 0 {}".format(epi_pos_right[0,:], matches_sensor_right[0,:]))
     matches_sensor = np.concatenate((matches_sensor_left,matches_sensor_right),axis = 1)
-    print("matches shape {}".format(matches_sensor.shape))
-
+    #print("matches shape {}".format(matches_sensor.shape))
+    #print("matches  {}".format(matches_sensor[0,:]))
     # triangulate positions in sensor geometry
-    return sensor_triangulation(matches_sensor[0:250000,:], geometrical_model_left,
+    return sensor_triangulation(matches_sensor, geometrical_model_left,
                                                                     geometrical_model_right, left_min_max, right_min_max)

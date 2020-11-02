@@ -40,9 +40,9 @@ def test_rectification_grid_interpolation_one_point(row,col):
     #value at position [15,15]
     value_row = np.sum(rectif_grid.row_positions[0:2,0]) / 2.0
     value_col = np.sum(rectif_grid.col_positions[0:2,0]) / 2.0
-    coords = rectif_grid.interpolate((row,col))
-    assert(value_col == pytest.approx(coords[0,1],abs=1e-4))
-    assert(value_row == pytest.approx(coords[0,0],abs=1e-4))
+    coords = rectif_grid.interpolate((col,row))
+    assert(value_row == pytest.approx(coords[0,1],abs=1e-4))
+    assert(value_col == pytest.approx(coords[0,0],abs=1e-4))
 
 
 @pytest.mark.unit_tests

@@ -48,28 +48,29 @@ class rectification_grid:
         last_y = ori_y + step_y * dataset.height
 
         #transform dep to positions
-        self.row_dep = dataset.read(2)
-        self.col_dep = dataset.read(1)
+        self.row_dep = dataset.read(2).transpose()
+        self.col_dep = dataset.read(1).transpose()
         epipolar_shape =  self.row_dep.shape
         x = np.arange(ori_x, last_x, step_x)
         y = np.arange(ori_y, last_y, step_y)
-        self.grid_x, self.grid_y = np.mgrid[ori_y:last_y:step_y, ori_x:last_x:step_x]
+        self.grid_y, self.grid_x = np.mgrid[ori_x:last_x:step_x, ori_y:last_y:step_y]
         self.points = (x,y)
         self.row_positions = self.row_dep + self.grid_x
         self.col_positions = self.col_dep + self.grid_y
 
+
     def interpolate(self, positions):
         """
         interpolate position
-        :param positions : positons to interpolate : array  Nx2 [row,col]
+        :param positions : positons to interpolate : array  Nx2 [col,rox]
         :type positions: np.array
-        :return interpolated positions : array  Nx2 [row,col]
+        :return interpolated positions : array  Nx2 [col,row]
         :rtype  np.array
         """
         #interp with grid data
         interp_row = interpolate.interpn(self.points, self.row_positions, positions, method='linear')
         interp_col = interpolate.interpn(self.points, self.col_positions, positions, method='linear')
-        interp_pos = np.stack((interp_row,interp_col)).transpose()
+        interp_pos = np.stack((interp_col,interp_row)).transpose()
         return interp_pos
 
 

@@ -24,7 +24,8 @@ from shareloc.rectification.rectification_grid import rectification_grid
 from shareloc.proj_utils import coordinates_conversion
 from shareloc.los import LOS
 
-def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right,left_min_max = None,right_min_max = None):
+def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right,left_min_max = None,
+                         right_min_max = None, residues = False):
     """
     triangulation in sensor geometry
 
@@ -45,8 +46,10 @@ def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right
     :type left_min_max : list
     :param right_min_max : right min/max for los creation, if None model min/max will be used
     :type right_min_max : list
-    :return intersections in cartesian crs and intersections in wgs84 crs
-    :rtype (numpy.array,numpy,array)
+    :param residues : calculates residues (distance in meters)
+    :type residues : boolean
+    :return intersections in cartesian crs, intersections in wgs84 crs and optionnaly residues
+    :rtype (numpy.array,numpy,array,numpy.array)
     """
     #los construction
     matches_left = matches[:,0:2]
@@ -61,8 +64,31 @@ def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right
     out_crs = 4326
     intersections_wgs84 = coordinates_conversion(intersections_ecef, in_crs, out_crs)
     #refine matches
+    intersections_residues = None
+    if residues is True:
+        intersections_residues = distance_point_los(left_los,intersections_ecef)
+        intersections_residues = intersections_residues * 2.0
+    return intersections_ecef,intersections_wgs84, intersections_residues
 
-    return intersections_ecef,intersections_wgs84
+
+def distance_point_los(los, points):
+    """
+    distance between points and los
+    norm of cross prodcut between vector defined by los sis and point and los vis
+
+    :param los :  line of sight
+    :type los : shareloc.los
+    :param points :  3D points
+    :type points : numpy.array
+    :return distance
+    :rtype numpy.array
+    """
+    # norm(BA vect u)/norm(u)
+
+    vis = los.vis
+    vect_sis_p = points - los.sis
+    dist = np.linalg.norm(np.cross(vect_sis_p, vis), axis = 1)
+    return dist
 
 
 def los_triangulation(left_los,right_los):
@@ -118,7 +144,8 @@ def transform_disp_to_matches(disp,mask = None):
 
 
 
-def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,geometrical_model_right,grid_left,grid_right,left_min_max = None,right_min_max = None):
+def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,geometrical_model_right,
+                           grid_left,grid_right,left_min_max = None,right_min_max = None,residues = False):
     """
     epipolar triangulation
 
@@ -140,6 +167,8 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
     :type left_min_max : list
     :param right_min_max : right min/max for los creation, if None model min/max will be used
     :type right_min_max : list
+    :param residues : calculates residues (distance in meters)
+    :type residues : boolean
     :return intersections in cartesian crs
     :rtype numpy.array
     """
@@ -175,4 +204,4 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
     #print("matches  {}".format(matches_sensor[0,:]))
     # triangulate positions in sensor geometry
     return sensor_triangulation(matches_sensor, geometrical_model_left,
-                                                                    geometrical_model_right, left_min_max, right_min_max)
+                                                                geometrical_model_right, left_min_max, right_min_max,  residues)

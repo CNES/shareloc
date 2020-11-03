@@ -55,7 +55,7 @@ class FonctRatD:
         self.Den_COL    = None
         self.Num_LIG    = None
         self.Den_LIG    = None
-
+        self.type = 'rpc'
         self.lim_extrapol = 1.0001
         #chaque mononome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
         ordre_monomes_LAI = \
@@ -380,12 +380,30 @@ class FonctRatD:
 
         return (DCdx,DCdy,DLdx,DLdy)
 
-    def evalue_loc_d(self,col,lig, alt):
+
+    def direct_loc_dtm(self, row, col, dtm):
+        """
+        direct localization on dtm
+        :param row :  line sensor position
+        :type row : float
+        :param col :  column sensor position
+        :type col : float
+        :param dtm : dtm model
+        :type dtm  : shareloc.dtm
+        :return ground position (lon,lat,h)
+        :rtype numpy.array
+        """
+        print("direct localization not yet impelemented for RPC model")
+        return None
+
+
+
+    def direct_loc_h(self,row,col, alt):
         """evalue loc directe par application du RPC direct"""
 
         if self.Num_X:
             Xnorm = (col - self.offset_COL)/self.scale_COL
-            Ynorm = (lig - self.offset_LIG)/self.scale_LIG
+            Ynorm = (row - self.offset_LIG)/self.scale_LIG
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
 
             if abs(Xnorm)> self.lim_extrapol :
@@ -403,22 +421,41 @@ class FonctRatD:
             Yout = dot(array(self.Num_Y),monomes)/dot(array(self.Den_Y),monomes)*self.scale_Y+self.offset_Y
         else:
             print("les coefficient directs n'ont pas ete definis")
-            (Xout,Yout) = (None,None)
-        return (Xout,Yout)
+            (Xout,Yout, alt) = (None,None,None)
+        return (Xout,Yout, alt)
 
-    def calcule_gld(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
-        """calcule une grille de loc directe a partir des RPC directs"""
-        gri_lon = zeros((nblig,nbcol))
-        gri_lat = zeros((nblig,nbcol))
+
+    def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
+        """calcule une grille de loc directe a partir des RPC directs
+         direct localization  grid at constant altitude
+         :param row0 :  grid origin (row)
+         :type row0 : int
+         :param col0 :  grid origin (col)
+         :type col0 : int
+         :param steprow :  grid step (row)
+         :type steprow : int
+         :param stepcol :  grid step (col)
+         :type stepcol : int
+         :param nbrow :  grid nb row
+         :type nbrow : int
+         :param nbcol :  grid nb col
+         :type nbcol : int
+         :param alt : altitude of the grid
+         :type alt  : float
+         :return direct localization grid
+         :rtype numpy.array
+        """
+        gri_lon = zeros((nbrow,nbcol))
+        gri_lat = zeros((nbrow,nbcol))
         for c in range(int(nbcol)):
-            col = c0 + pascol*c
-            for l in range(int(nblig)):
-                lig = l0 + paslig*l
-                (gri_lon[l,c],gri_lat[l,c]) = self.evalue_loc_d(col,lig,alt)
+            col = col0 + stepcol*c
+            for l in range(int(nbrow)):
+                row = row0 + steprow*l
+                (gri_lon[l,c],gri_lat[l,c],__) = self.direct_loc_h(row,col,alt)
         return (gri_lon,gri_lat)
 
 
-    def evalue_loc_i(self,lon,lat, alt):
+    def inverse_loc(self,lon,lat, alt):
         """evalue loc inverse par application du RPC direct"""
         if self.Num_COL:
             Xnorm = (lon - self.offset_X)/self.scale_X
@@ -441,22 +478,22 @@ class FonctRatD:
         else:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
             (Cout,Lout) = (None,None)
-        return (Cout,Lout)
+        return (Lout,Cout, True)
 
-    def evalue_loc_d_par_inversion_rpc_i(self,col,lig,alt,nb_iter_max=10):
+    def direct_loc_inverse_iterative(self,row,col,alt,nb_iter_max=10):
         """evalue loc inverse par inversion du RPC inverse        """
         if self.Num_COL:
             #calcul d'une sol approchee: en prend le milieu de la scene
             X = self.offset_X
             Y = self.offset_Y
-            (c0,l0) = self.evalue_loc_i(X,Y,alt)
+            (l0,c0, __) = self.inverse_loc(X,Y,alt)
 
             #precision en pixels
             eps = 1e-6
 
             k=0
             dc = col - c0
-            dl = lig - l0
+            dl = row - l0
             while abs(dc)>eps and abs(dl)>eps and k<nb_iter_max:
                 #evaluer deriv partielles
                 (Cdx,Cdy,Ldx,Ldy) = self.calcule_derivees_inv(X,Y,alt)
@@ -465,127 +502,11 @@ class FonctRatD:
                 dY = (-Ldx*dc + Cdx*dl)/det
                 X += dX
                 Y += dY
-                (c,l) = self.evalue_loc_i(X,Y,alt)
+                (l,c, __) = self.inverse_loc(X,Y,alt)
                 dc = col - c
-                dl = lig - l
+                dl = row - l
                 k+=1
         else:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
             (X,Y) = (None,None)
         return(X,Y)
-
-class FonctRatD_simple:
-	def __init__(self,Kc,Kl,Klon,Klat,B_col,A_col,B_row,A_row,B_lon,A_lon,B_lat,A_lat,B_alt,A_alt):
-
-		self.offset_COL	= None
-		self.scale_COL	= None
-		self.offset_LIG	= None
-		self.scale_LIG	= None
-		self.offset_ALT	= None
-		self.scale_ALT	= None
-		self.offset_X	= None
-		self.scale_X	= None
-		self.offset_Y	= None
-		self.scale_Y	= None
-		self.Monomes	= None
-		self.Num_X		= None
-		self.Den_X		= None
-		self.Num_Y		= None
-		self.Den_Y		= None
-		self.Num_COL	= None
-		self.Den_COL	= None
-		self.Num_LIG	= None
-		self.Den_LIG	= None
-
-		ordre_monomes_LAI = \
-				[[0,0,0],[1,0,0],[0,1,0],\
-				[0,0,1],[1,1,0],[1,0,1],\
-				[0,1,1],[2,0,0],[0,2,0],\
-				[0,0,2],[1,1,1],[3,0,0],\
-				[1,2,0],[1,0,2],[2,1,0],\
-				[0,3,0],[0,1,2],[2,0,1],\
-				[0,2,1],[0,0,3]]
-
-		self.Monomes	= ordre_monomes_LAI
-
-		self.offset_COL	= B_col
-		self.scale_COL	= A_col
-		self.offset_LIG	= B_row
-		self.scale_LIG	= A_row
-		self.offset_ALT	= B_alt
-		self.scale_ALT	= A_alt
-		self.offset_X	= B_lon
-		self.scale_X	= A_lon
-		self.offset_Y	= B_lat
-		self.scale_Y	= A_lat
-
-		self.Num_COL	= Kc[0:20]
-		self.Den_COL	= Kc[20::]
-		self.Num_LIG	= Kl[0:20]
-		self.Den_LIG	= Kl[20::]
-		self.Num_X		= Klon[0:20]
-		self.Den_X		= Klon[20::]
-		self.Num_Y		= Klat[0:20]
-		self.Den_Y		= Klat[20::]
-
-
-	def evalue_loc_d(self,col,lig, alt):
-		if self.Num_X:
-			Xnorm = (col - self.offset_COL)/self.scale_COL
-			Ynorm = (lig - self.offset_LIG)/self.scale_LIG
-			Znorm = (alt - self.offset_ALT)/self.scale_ALT
-
-			message = "!!!!! l'evaluation au point est extrapolee en {} {} {}"
-			if abs(Xnorm)> 1.001 :
-				print(message.format("colonne", Xnorm, col))
-			if abs(Ynorm)> 1.001 :
-				print(message.format("ligne", Ynorm, lig))
-			if abs(Znorm)> 1.001 :
-				print(message.format("altitude", Znorm, alt))
-
-			monomes = array([Xnorm**int(self.Monomes[i][0])*\
-				Ynorm**int(self.Monomes[i][1])*\
-				Znorm**int(self.Monomes[i][2]) for i in range(self.Monomes.__len__())])
-			Xout = dot(array(self.Num_X),monomes)/dot(array(self.Den_X),monomes)*self.scale_X+self.offset_X
-			Yout = dot(array(self.Num_Y),monomes)/dot(array(self.Den_Y),monomes)*self.scale_Y+self.offset_Y
-		else:
-			print("les coefficient directs n'ont pas ete definis")
-			(Xout,Yout) = (None,None)
-		return (Xout,Yout)
-
-	def calcule_gld(self,c0,l0,pascol,paslig,nbcol,nblig, alt):
-		gri_lon = zeros((nblig,nbcol))
-		gri_lat = zeros((nblig,nbcol))
-		for c in range(int(nbcol)):
-			col = c0 + pascol*c
-			for l in range(int(nblig)):
-				lig = l0 + paslig*l
-				(gri_lon[l,c],gri_lat[l,c]) = self.evalue_loc_d(col,lig,alt)
-		return (gri_lon,gri_lat)
-
-	def evalue_loc_i(self,lon,lat, alt):
-		if self.Num_COL != None:
-			Xnorm = (lon - self.offset_X)/self.scale_X
-			Ynorm = (lat - self.offset_Y)/self.scale_Y
-			Znorm = (alt - self.offset_ALT)/self.scale_ALT
-
-			message = "!!!!! l'evaluation au point est extrapolee en {} {} {}"
-			if abs(Xnorm)> 1.001 :
-				print(message.format("longitude", Xnorm, lon))
-			if abs(Ynorm)> 1.001 :
-				print(message.format("latitude", Ynorm, lat))
-			if abs(Znorm)> 1.001 :
-				print(message.format("altitude", Znorm, alt))
-
-
-			monomes = array([Xnorm**int(self.Monomes[i][0])*\
-				Ynorm**int(self.Monomes[i][1])*\
-				Znorm**int(self.Monomes[i][2]) for i in range(self.Monomes.__len__())])
-
-			Cout = dot(array(self.Num_COL),monomes)/dot(array(self.Den_COL),monomes)*self.scale_COL+self.offset_COL
-			Lout = dot(array(self.Num_LIG),monomes)/dot(array(self.Den_LIG),monomes)*self.scale_LIG+self.offset_LIG
-		else:
-			print("!!!!! les coefficient inverses n'ont pas ete definis")
-			(Cout,Lout) = (None,None)
-		return (Cout,Lout)
-

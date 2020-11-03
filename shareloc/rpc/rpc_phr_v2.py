@@ -510,3 +510,30 @@ class FonctRatD:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
             (X,Y) = (None,None)
         return(X,Y)
+
+    def get_alt_min_max(self):
+        """
+        returns altitudes min and max layers
+        :return alt_min,lat_max
+        :rtype list
+        """
+        return [self.offset_ALT - self.scale_ALT / 2.0, self.offset_ALT + self.scale_ALT / 2.0]
+
+    def los_extrema(self, row, col, alt_min, alt_max):
+        """
+        compute los extrema
+        :param row  :  line sensor position
+        :type row  : float
+        :param col :  column sensor position
+        :type col : float
+        :param alt_min : los alt min
+        :type alt_min  : float
+        :param alt_max : los alt max
+        :type alt_max : float
+        :return los extrema
+        :rtype numpy.array (2x3)
+        """
+        los_edges = np.zeros([2, 3])
+        los_edges[0, :] = self.direct_loc_h(row, col, alt_max)
+        los_edges[1, :] = self.direct_loc_h(row, col, alt_min)
+        return los_edges

@@ -91,3 +91,12 @@ def test_rpc_direct_inverse_iterative(col,row,alt):
     (lon_iter,lat_iter) = fctrat.direct_loc_inverse_iterative(row_inv,col_inv,alt)
     assert (lon==lon_iter)
     assert (lat==lat_iter)
+
+def test_rpc_minmax():
+    data_folder = test_path()
+    id_scene = 'P1BP--2018122638935449CP'
+    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+    fctrat = FonctRatD(fichier_dimap)
+    (h_min,h_max) = fctrat.get_alt_min_max()
+    assert (h_min == 532.5)
+    assert (h_max == 617.5)

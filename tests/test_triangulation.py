@@ -29,7 +29,8 @@ import time
 from shareloc.localization import Localization
 from shareloc.grid import grid, fct_coloc
 from shareloc.dtm import DTM
-from shareloc.triangulation.triangulation import sensor_triangulation, epipolar_triangulation, transform_disp_to_matches
+from shareloc.triangulation.triangulation import distance_point_los,sensor_triangulation
+from shareloc.triangulation.triangulation import epipolar_triangulation, transform_disp_to_matches
 from shareloc.rectification.rectification_grid import rectification_grid
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
 
@@ -80,15 +81,30 @@ def test_sensor_triangulation(lig, col, h):
     matches[0,:] = [col,lig,inv_col,inv_lig]
     #matches[1,:] = [lig + 10, col + 5, inv_lig + 12, inv_col + 7]
 
-    point_ecef, point_wgs84 = sensor_triangulation(matches,gri_left,gri_right)
+    point_ecef, point_wgs84, distance  = sensor_triangulation(matches,gri_left,gri_right, residues = True)
+    print(distance)
     assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
     assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))
     assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
     #assert(col == pytest.approx(inv_col,abs=1e-2))
     #assert(valid == 1)
 
+@pytest.mark.unit_tests
+def test_triangulation_residues():
 
+    class simulatedLOS:
+        """ line of sight class
+        """
 
+        def __init__(self):
+            self.sis=np.array([[100.0, 10.0, 200.0],[100.0, 10.0, 200.0]])
+            self.vis=np.array([[0.0, 1., 0.0],[0.0, 1., 0.0] ])
+    los = simulatedLOS()
+
+    distance = 10.0
+    point = los.sis + 100.0 * los.vis + distance* np.array([[0.0, 0.0, 1.0],[0.0, 0.0, 1.0]])
+    residue = distance_point_los(los, point)
+    assert (distance == pytest.approx(residue, abs=1e-9))
 
 @pytest.mark.unit_tests
 def test_epi_triangulation_sift():

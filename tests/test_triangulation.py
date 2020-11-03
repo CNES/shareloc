@@ -60,9 +60,9 @@ def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
     return dtmbsq,gri
 
     
-@pytest.mark.parametrize("col,lig,h", [(1000.5,1500.5,10.0)])
+@pytest.mark.parametrize("col,row,h", [(1000.5,1500.5,10.0)])
 @pytest.mark.unit_tests
-def test_sensor_triangulation(lig, col, h):
+def test_sensor_triangulation(row, col, h):
     """
     Test sensor triangulation
     """
@@ -72,21 +72,21 @@ def test_sensor_triangulation(lig, col, h):
     ___, gri_left = prepare_loc('ellipsoide',id_scene_left)
     #init des predicteurs
     gri_right.init_pred_loc_inv()
-    lonlatalt = gri_left.fct_locdir_h(lig, col, h)
+    lonlatalt = gri_left.fct_locdir_h(row, col, h)
 
-    inv_lig,inv_col,valid = gri_right.fct_locinv(lonlatalt)
+    inv_row,inv_col,valid = gri_right.fct_locinv(lonlatalt)
 
 
     matches = np.zeros([1,4])
-    matches[0,:] = [col,lig,inv_col,inv_lig]
+    matches[0,:] = [col,row,inv_col,inv_row]
     #matches[1,:] = [lig + 10, col + 5, inv_lig + 12, inv_col + 7]
 
     point_ecef, point_wgs84, distance  = sensor_triangulation(matches,gri_left,gri_right, residues = True)
-    print(distance)
+
     assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
     assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))
     assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
-    #assert(col == pytest.approx(inv_col,abs=1e-2))
+    assert(distance == pytest.approx(0.0,abs=1e-3))
     #assert(valid == 1)
 
 @pytest.mark.unit_tests

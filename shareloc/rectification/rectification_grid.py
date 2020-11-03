@@ -48,9 +48,10 @@ class rectification_grid:
         last_y = ori_y + step_y * dataset.height
 
         #transform dep to positions
-        self.row_dep = dataset.read(2).transpose()
-        self.col_dep = dataset.read(1).transpose()
-        epipolar_shape =  self.row_dep.shape
+        self.row_dep = dataset.read(2)
+        self.col_dep = dataset.read(1)
+
+        #TODO change notations
         x = np.arange(ori_x, last_x, step_x)
         y = np.arange(ori_y, last_y, step_y)
         self.grid_y, self.grid_x = np.mgrid[ori_x:last_x:step_x, ori_y:last_y:step_y]
@@ -62,7 +63,7 @@ class rectification_grid:
     def interpolate(self, positions):
         """
         interpolate position
-        :param positions : positons to interpolate : array  Nx2 [col,rox]
+        :param positions : positions to interpolate : array  Nx2 [col,rox]
         :type positions: np.array
         :return interpolated positions : array  Nx2 [col,row]
         :rtype  np.array

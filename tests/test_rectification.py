@@ -38,8 +38,8 @@ def test_rectification_grid_interpolation_one_point(row,col):
 
     rectif_grid = rectification_grid(grid_filename)
     #value at position [15,15]
-    value_row = np.sum(rectif_grid.row_positions[0:2,0]) / 2.0
-    value_col = np.sum(rectif_grid.col_positions[0:2,0]) / 2.0
+    value_row = np.sum(rectif_grid.row_positions[0,0:2]) / 2.0
+    value_col = np.sum(rectif_grid.col_positions[0,0:2]) / 2.0
     coords = rectif_grid.interpolate((col,row))
     assert(value_row == pytest.approx(coords[0,1],abs=1e-4))
     assert(value_col == pytest.approx(coords[0,0],abs=1e-4))
@@ -62,7 +62,7 @@ def test_rectification_grid_interpolation():
     sensor_positions[0,:] = [15.0,15.0]
     sensor_positions[1,:] = [0.0,0.0]
     coords = rectif_grid.interpolate(sensor_positions)
-    assert(value_col == pytest.approx(coords[0,1],abs=1e-4))
-    assert(value_row == pytest.approx(coords[0,0],abs=1e-4))
+    assert(value_col == pytest.approx(coords[0,0],abs=1e-4))
+    assert(value_row == pytest.approx(coords[0,1],abs=1e-4))
 
 

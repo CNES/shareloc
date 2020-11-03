@@ -41,10 +41,10 @@ def read_hdbabel_header(bsq_filename):
     hd_babel = {}
     with open(op.join(path_header,name_header),'r') as f:
         txt_header = f.readlines()
-    for lig_header in txt_header:
-        if lig_header.startswith('>>'):
-            ligsplit = lig_header.split('\t')
-            header[ligsplit[1]] = ligsplit[2]
+    for row_header in txt_header:
+        if row_header.startswith('>>'):
+            rowsplit = row_header.split('\t')
+            header[rowsplit[1]] = rowsplit[2]
 
     hd_babel['x0'] = float(header['LON_REF'])
     hd_babel['y0'] = float(header['LAT_REF'])

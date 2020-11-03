@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 
 import time
 from shareloc.localization import Localization
-from shareloc.grid import grid, fct_coloc
+from shareloc.grid import grid
 from shareloc.dtm import DTM
 from shareloc.triangulation.triangulation import distance_point_los,sensor_triangulation
 from shareloc.triangulation.triangulation import epipolar_triangulation, transform_disp_to_matches
@@ -71,10 +71,10 @@ def test_sensor_triangulation(row, col, h):
     id_scene_left = "P1BP--2017092838284574CP"
     ___, gri_left = prepare_loc('ellipsoide',id_scene_left)
     #init des predicteurs
-    gri_right.init_pred_loc_inv()
-    lonlatalt = gri_left.fct_locdir_h(row, col, h)
+    gri_right.estimate_inverse_loc_predictor()
+    lonlatalt = gri_left.direct_loc_h(row, col, h)
 
-    inv_row,inv_col,valid = gri_right.fct_locinv(lonlatalt)
+    inv_row,inv_col,valid = gri_right.inverse_loc(lonlatalt[0],lonlatalt[1],lonlatalt[2])
 
 
     matches = np.zeros([1,4])

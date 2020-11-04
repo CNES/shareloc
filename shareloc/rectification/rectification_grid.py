@@ -48,8 +48,8 @@ class rectification_grid:
         last_y = ori_y + step_y * dataset.height
 
         #transform dep to positions
-        self.row_dep = dataset.read(2)
-        self.col_dep = dataset.read(1)
+        self.row_dep = dataset.read(2).transpose()
+        self.col_dep = dataset.read(1).transpose()
 
         #TODO change notations
         x = np.arange(ori_x, last_x, step_x)

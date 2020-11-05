@@ -33,28 +33,75 @@ def renvoie_linesep(txt_liste_lines):
 		line_sep = '\n'
 	return line_sep
 
-class FonctRatD:
-    def __init__(self,fichier_dimap_or_euclide_d,fichier_euclide_i=''):
 
-        self.offset_COL    = None
-        self.scale_COL    = None
-        self.offset_LIG    = None
-        self.scale_LIG    = None
-        self.offset_ALT    = None
-        self.scale_ALT    = None
-        self.offset_X    = None
-        self.scale_X    = None
-        self.offset_Y    = None
-        self.scale_Y    = None
-        self.Monomes    = None
-        self.Num_X        = None
-        self.Den_X        = None
-        self.Num_Y        = None
-        self.Den_Y        = None
-        self.Num_COL    = None
-        self.Den_COL    = None
-        self.Num_LIG    = None
-        self.Den_LIG    = None
+def read_eucl_file(eucl_file):
+    """
+    read euclidium file and parse it
+    :param eucl_file : euclidium file
+    :type eucl_file : str
+    :return parsed file
+    :rtype dict
+    """
+    parsed_file = dict()
+    with open(eucl_file, 'r') as fid:
+        txt = fid.readlines()
+
+    lsep = renvoie_linesep(txt)
+
+    ind_debut_PX = txt.index('>>\tCOEFF POLYNOME PXOUT' + lsep)
+    ind_debut_QX = txt.index('>>\tCOEFF POLYNOME QXOUT' + lsep)
+    ind_debut_PY = txt.index('>>\tCOEFF POLYNOME PYOUT' + lsep)
+    ind_debut_QY = txt.index('>>\tCOEFF POLYNOME QYOUT' + lsep)
+
+    coeff_PX_str = txt[ind_debut_PX + 1:ind_debut_PX + 21]
+    coeff_QX_str = txt[ind_debut_QX + 1:ind_debut_QX + 21]
+    coeff_PY_str = txt[ind_debut_PY + 1:ind_debut_PY + 21]
+    coeff_QY_str = txt[ind_debut_QY + 1:ind_debut_QY + 21]
+
+    parsed_file['coeff_PX'] = [float(coeff.split()[1]) for coeff in coeff_PX_str]
+    parsed_file['coeff_QX'] = [float(coeff.split()[1]) for coeff in coeff_QX_str]
+    parsed_file['coeff_PY'] = [float(coeff.split()[1]) for coeff in coeff_PY_str]
+    parsed_file['coeff_QY'] = [float(coeff.split()[1]) for coeff in coeff_QY_str]
+
+    # list [offset , scale]
+    normalisation_coeff = dict()
+    for l in txt:
+        if l.startswith('>>\tTYPE_OBJET'):
+            if l.split()[-1].endswith('Inverse'):
+                parsed_file['type_fic'] = 'I'
+            if l.split()[-1].endswith('Directe'):
+                parsed_file['type_fic'] = 'D'
+        if l.startswith('>>\tXIN_OFFSET'):
+            lsplit = l.split()
+            normalisation_coeff['X'] = [float(lsplit[4]), float(lsplit[5])]
+        if l.startswith('>>\tYIN_OFFSET'):
+            lsplit = l.split()
+            normalisation_coeff['Y'] = [float(lsplit[4]), float(lsplit[5])]
+        if l.startswith('>>\tZIN_OFFSET'):
+            lsplit = l.split()
+            normalisation_coeff['ALT'] = [float(lsplit[4]), float(lsplit[5])]
+        if l.startswith('>>\tXOUT_OFFSET'):
+            lsplit = l.split()
+            normalisation_coeff['COL'] = [float(lsplit[4]), float(lsplit[5])]
+        if l.startswith('>>\tYOUT_OFFSET'):
+            lsplit = l.split()
+            normalisation_coeff['LIG'] = [float(lsplit[4]), float(lsplit[5])]
+    parsed_file['normalisation_coeffs'] = normalisation_coeff
+    return parsed_file
+
+
+def check_coeff_consistency(dict1, dict2):
+    for key, value in dict1.items() :
+        if dict2[key] != value:
+            print("normalisation coeffs are different between"
+                  " direct en inverse one : {} : {} {}".format(key,value,dict2[key]))
+
+
+class FonctRatD:
+    def __init__(self,rpc_params):
+        for a, b in rpc_params.items():
+            setattr(self, a, b)
+
         self.type = 'rpc'
         self.lim_extrapol = 1.0001
         #chaque mononome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
@@ -89,249 +136,101 @@ class FonctRatD:
                  [3,0,2,0],[1,0,0,2],[0,2,0,1],\
                  [2,0,1,1],[0,0,0,3]]
 
-        if basename(fichier_dimap_or_euclide_d).endswith('XML'.upper()):
-            xmldoc= minidom.parse(fichier_dimap_or_euclide_d)
-            GLOBAL_RFM    = xmldoc.getElementsByTagName('Global_RFM')
-            RFM_Validity     = xmldoc.getElementsByTagName('RFM_Validity')
-            coeff_LON = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_LON')[0].firstChild.data.split()]
-            coeff_LAT = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_LAT')[0].firstChild.data.split()]
-            coeff_COL = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_COL')[0].firstChild.data.split()]
-            coeff_LIG = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_ROW')[0].firstChild.data.split()]
+    @classmethod
+    def from_dimap(cls, dimap_filepath):
+        """ load from dimap """
 
-            A_lon = float(RFM_Validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('A')[0].firstChild.data)
-            B_lon = float(RFM_Validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('B')[0].firstChild.data)
-            A_lat = float(RFM_Validity[0].getElementsByTagName('Lat')[0].getElementsByTagName('A')[0].firstChild.data)
-            B_lat = float(RFM_Validity[0].getElementsByTagName('Lat')[0].getElementsByTagName('B')[0].firstChild.data)
-            A_alt = float(RFM_Validity[0].getElementsByTagName('Alt')[0].getElementsByTagName('A')[0].firstChild.data)
-            B_alt = float(RFM_Validity[0].getElementsByTagName('Alt')[0].getElementsByTagName('B')[0].firstChild.data)
-            A_col = float(RFM_Validity[0].getElementsByTagName('Col')[0].getElementsByTagName('A')[0].firstChild.data)
-            B_col = float(RFM_Validity[0].getElementsByTagName('Col')[0].getElementsByTagName('B')[0].firstChild.data)
-            A_row = float(RFM_Validity[0].getElementsByTagName('Row')[0].getElementsByTagName('A')[0].firstChild.data)
-            B_row = float(RFM_Validity[0].getElementsByTagName('Row')[0].getElementsByTagName('B')[0].firstChild.data)
+        rpc_params = dict()
+        rpc_params['driver_type'] = 'dimapV1'
+        if not basename(dimap_filepath).endswith('XML'.upper()):
+            raise ValueError("dimap must ends with .xml")
+
+        xmldoc= minidom.parse(dimap_filepath)
+        #TODO check dimap version
+
+        GLOBAL_RFM    = xmldoc.getElementsByTagName('Global_RFM')
+        RFM_Validity     = xmldoc.getElementsByTagName('RFM_Validity')
+        coeff_LON = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_LON')[0].firstChild.data.split()]
+        coeff_LAT = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_LAT')[0].firstChild.data.split()]
+        coeff_COL = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_COL')[0].firstChild.data.split()]
+        coeff_LIG = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_ROW')[0].firstChild.data.split()]
+
+        A_lon = float(RFM_Validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('A')[0].firstChild.data)
+        B_lon = float(RFM_Validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('B')[0].firstChild.data)
+        A_lat = float(RFM_Validity[0].getElementsByTagName('Lat')[0].getElementsByTagName('A')[0].firstChild.data)
+        B_lat = float(RFM_Validity[0].getElementsByTagName('Lat')[0].getElementsByTagName('B')[0].firstChild.data)
+        A_alt = float(RFM_Validity[0].getElementsByTagName('Alt')[0].getElementsByTagName('A')[0].firstChild.data)
+        B_alt = float(RFM_Validity[0].getElementsByTagName('Alt')[0].getElementsByTagName('B')[0].firstChild.data)
+        A_col = float(RFM_Validity[0].getElementsByTagName('Col')[0].getElementsByTagName('A')[0].firstChild.data)
+        B_col = float(RFM_Validity[0].getElementsByTagName('Col')[0].getElementsByTagName('B')[0].firstChild.data)
+        A_row = float(RFM_Validity[0].getElementsByTagName('Row')[0].getElementsByTagName('A')[0].firstChild.data)
+        B_row = float(RFM_Validity[0].getElementsByTagName('Row')[0].getElementsByTagName('B')[0].firstChild.data)
 
 
-            self.offset_COL    = B_col
-            self.scale_COL    = A_col
-            self.offset_LIG    = B_row
-            self.scale_LIG    = A_row
-            self.offset_ALT    = B_alt
-            self.scale_ALT    = A_alt
-            self.offset_X    = B_lon
-            self.scale_X    = A_lon
-            self.offset_Y    = B_lat
-            self.scale_Y    = A_lat
-            self.Num_X      = coeff_LON[0:20]
-            self.Den_X      = coeff_LON[20::]
-            self.Num_Y      = coeff_LAT[0:20]
-            self.Den_Y      = coeff_LAT[20::]
-            self.Num_COL    = coeff_COL[0:20]
-            self.Den_COL    = coeff_COL[20::]
-            self.Num_LIG    = coeff_LIG[0:20]
-            self.Den_LIG    = coeff_LIG[20::]
+        rpc_params['offset_COL']    = B_col
+        rpc_params['scale_COL']    = A_col
+        rpc_params['offset_LIG']    = B_row
+        rpc_params['scale_LIG']    = A_row
+        rpc_params['offset_ALT']    = B_alt
+        rpc_params['scale_ALT']    = A_alt
+        rpc_params['offset_X']    = B_lon
+        rpc_params['scale_X']    = A_lon
+        rpc_params['offset_Y']    = B_lat
+        rpc_params['scale_Y']    = A_lat
+        rpc_params['Num_X']    = coeff_LON[0:20]
+        rpc_params['Den_X']    = coeff_LON[20::]
+        rpc_params['Num_Y']    = coeff_LAT[0:20]
+        rpc_params['Den_Y']    = coeff_LAT[20::]
+        rpc_params['Num_COL']    = coeff_COL[0:20]
+        rpc_params['Den_COL']    = coeff_COL[20::]
+        rpc_params['Num_LIG']    = coeff_LIG[0:20]
+        rpc_params['Den_LIG']    = coeff_LIG[20::]
+        return cls(rpc_params)
 
+    @classmethod
+    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None):
+        """ load from euclidium """
+
+        rpc_params = dict()
+        rpc_params['driver_type'] = 'euclidium'
+
+        #lecture fichier euclide
+        inverse_coeffs = read_eucl_file(inverse_euclidium_coeff)
+
+        if inverse_coeffs['type_fic'] != 'I':
+            print("inverse euclidium file is of {} type".format(inverse_coeffs['type_fic']))
+
+        rpc_params['Num_COL'] = inverse_coeffs['coeff_PX']
+        rpc_params['Den_COL'] = inverse_coeffs['coeff_QX']
+        rpc_params['Num_LIG'] = inverse_coeffs['coeff_PY']
+        rpc_params['Den_LIG'] = inverse_coeffs['coeff_QY']
+
+        rpc_params['normalisation_coeffs'] = inverse_coeffs['normalisation_coeffs']
+        for key, value in inverse_coeffs['normalisation_coeffs'].items():
+            rpc_params['offset_' + key] = value[0]
+            rpc_params['scale_' + key] = value[1]
+
+        if direct_euclidium_coeff is not None :
+            direct_coeffs = read_eucl_file(direct_euclidium_coeff)
+            if direct_coeffs['type_fic'] != 'D':
+                print("direct euclidium file is of {} type".format(direct_coeffs['type_fic']))
+
+            check_coeff_consistency(inverse_coeffs['normalisation_coeffs'], direct_coeffs['normalisation_coeffs'])
+            rpc_params['Num_X'] = direct_coeffs['coeff_PX']
+            rpc_params['Den_X'] = direct_coeffs['coeff_QX']
+            rpc_params['Num_Y'] = direct_coeffs['coeff_PY']
+            rpc_params['Den_Y'] = direct_coeffs['coeff_QY']
         else:
-            #lecture fichier euclide
-            fid = open(fichier_dimap_or_euclide_d,'r')
-            txt = fid.readlines()
-            fid.close()
-            lsep = renvoie_linesep(txt)
-
-            ind_debut_PX = txt.index('>>\tCOEFF POLYNOME PXOUT'+lsep)
-            ind_debut_QX = txt.index('>>\tCOEFF POLYNOME QXOUT'+lsep)
-            ind_debut_PY = txt.index('>>\tCOEFF POLYNOME PYOUT'+lsep)
-            ind_debut_QY = txt.index('>>\tCOEFF POLYNOME QYOUT'+lsep)
+            rpc_params['Num_X'] = None
+            rpc_params['Den_X'] = None
+            rpc_params['Num_Y'] = None
+            rpc_params['Den_Y'] = None
+        print(rpc_params)
+        return cls(rpc_params)
 
 
-            coeff_PX_str = txt[ind_debut_PX+1:ind_debut_PX+21]
-            coeff_QX_str = txt[ind_debut_QX+1:ind_debut_QX+21]
-            coeff_PY_str = txt[ind_debut_PY+1:ind_debut_PY+21]
-            coeff_QY_str = txt[ind_debut_QY+1:ind_debut_QY+21]
-
-            coeff_PX_d = [float(coeff.split()[1]) for coeff in coeff_PX_str]
-            coeff_QX_d = [float(coeff.split()[1]) for coeff in coeff_QX_str]
-            coeff_PY_d = [float(coeff.split()[1]) for coeff in coeff_PY_str]
-            coeff_QY_d = [float(coeff.split()[1]) for coeff in coeff_QY_str]
-
-            for l in txt:
-                if l.startswith('>>\tTYPE_OBJET'):
-                    if l.split()[-1].endswith('Inverse'):
-                        type_fic = 'I'
-                    if l.split()[-1].endswith('Directe'):
-                        type_fic = 'D'
-                if l.startswith('>>\tXIN_OFFSET'):
-                    lsplit = l.split()
-                    (offset_COL_d,scale_COL_d) = (float(lsplit[4]),float(lsplit[5]))
-                if l.startswith('>>\tYIN_OFFSET'):
-                    lsplit = l.split()
-                    (offset_LIG_d,scale_LIG_d) = (float(lsplit[4]),float(lsplit[5]))
-                if l.startswith('>>\tZIN_OFFSET'):
-                    lsplit = l.split()
-                    (offset_ALT_d,scale_ALT_d) = (float(lsplit[4]),float(lsplit[5]))
-                if l.startswith('>>\tXOUT_OFFSET'):
-                    lsplit = l.split()
-                    (offset_X_d,scale_X_d) = (float(lsplit[4]),float(lsplit[5]))
-                if l.startswith('>>\tYOUT_OFFSET'):
-                    lsplit = l.split()
-                    (offset_Y_d,scale_Y_d) = (float(lsplit[4]),float(lsplit[5]))
-            if type_fic != 'D':
-                print("le fichier euclide direct est inconherent (le sens est marque Inverse")
 
 
-            if not self.offset_COL:
-                self.offset_COL = offset_COL_d
-            elif self.offset_COL != offset_COL_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_COL differents")
-
-            if not self.scale_COL:
-                self.scale_COL = scale_COL_d
-            elif self.scale_COL != scale_COL_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_COL differents")
-
-            if not self.offset_LIG:
-                self.offset_LIG = offset_LIG_d
-            elif self.offset_LIG != offset_LIG_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_LIG differents")
-
-            if not self.scale_LIG:
-                self.scale_LIG = scale_LIG_d
-            elif self.scale_LIG != scale_LIG_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_LIG differents")
-
-            if not self.offset_ALT:
-                self.offset_ALT = offset_ALT_d
-            elif self.offset_ALT != offset_ALT_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_ALT differents")
-
-            if not self.scale_ALT:
-                self.scale_ALT = scale_ALT_d
-            elif self.scale_ALT != scale_ALT_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_ALT differents")
-
-            if not self.offset_X:
-                self.offset_X = offset_X_d
-            elif self.offset_X != offset_X_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_X differents")
-
-            if not self.scale_X:
-                self.scale_X = scale_X_d
-            elif self.scale_X != scale_X_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_X differents")
-
-            if not self.offset_Y:
-                self.offset_Y = offset_Y_d
-            elif self.offset_Y != offset_Y_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_Y differents")
-
-            if not self.scale_Y:
-                self.scale_Y = scale_Y_d
-            elif self.scale_Y != scale_Y_d:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_Y differents")
-
-            self.Num_X    = coeff_PX_d
-            self.Den_X    = coeff_QX_d
-            self.Num_Y    = coeff_PY_d
-            self.Den_Y    = coeff_QY_d
-
-        if fichier_euclide_i:
-            fid = open(fichier_euclide_i,'r')
-            txt = fid.readlines()
-            fid.close()
-            lsep = renvoie_linesep(txt)
-
-            ind_debut_PX = txt.index('>>\tCOEFF POLYNOME PXOUT'+lsep)
-            ind_debut_QX = txt.index('>>\tCOEFF POLYNOME QXOUT'+lsep)
-            ind_debut_PY = txt.index('>>\tCOEFF POLYNOME PYOUT'+lsep)
-            ind_debut_QY = txt.index('>>\tCOEFF POLYNOME QYOUT'+lsep)
-
-            coeff_PX_str = txt[ind_debut_PX+1:ind_debut_PX+21]
-            coeff_QX_str = txt[ind_debut_QX+1:ind_debut_QX+21]
-            coeff_PY_str = txt[ind_debut_PY+1:ind_debut_PY+21]
-            coeff_QY_str = txt[ind_debut_QY+1:ind_debut_QY+21]
-
-            coeff_PX_i = [float(coeff.split()[1]) for coeff in coeff_PX_str]
-            coeff_QX_i = [float(coeff.split()[1]) for coeff in coeff_QX_str]
-            coeff_PY_i = [float(coeff.split()[1]) for coeff in coeff_PY_str]
-            coeff_QY_i = [float(coeff.split()[1]) for coeff in coeff_QY_str]
-
-            for l in txt:
-                if l.startswith('>>\tTYPE_OBJET'):
-                    if l.split()[-1].endswith('Inverse'):
-                        type_fic = 'I'
-                    if l.split()[-1].endswith('Directe'):
-                        type_fic = 'D'
-                if l.startswith('>>\tXIN_OFFSET'):
-                    lsplit = l.split()
-                    (offset_X_i,scale_X_i) = (float(lsplit[4]),float(lsplit[5]))
-                if l.startswith('>>\tYIN_OFFSET'):
-                    lsplit = l.split()
-                    (offset_Y_i,scale_Y_i) = (float(lsplit[4]),float(lsplit[5]))
-                if l.startswith('>>\tZIN_OFFSET'):
-                    lsplit = l.split()
-                    (offset_ALT_i,scale_ALT_i) = (float(lsplit[4]),float(lsplit[5]))
-                if l.startswith('>>\tXOUT_OFFSET'):
-                    lsplit = l.split()
-                    (offset_COL_i,scale_COL_i) = (float(lsplit[4]),float(lsplit[5]))
-                if l.startswith('>>\tYOUT_OFFSET'):
-                    lsplit = l.split()
-                    (offset_LIG_i,scale_LIG_i) = (float(lsplit[4]),float(lsplit[5]))
-
-            if type_fic != 'I':
-                print("!!!!! le fichier euclide inverse est inconherent (le sens est marque Direct)")
-
-            if not self.offset_COL:
-                self.offset_COL = offset_COL_i
-            elif self.offset_COL != offset_COL_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_COL differents")
-
-            if not self.scale_COL:
-                self.scale_COL = scale_COL_i
-            elif self.scale_COL != scale_COL_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_COL differents")
-
-            if not self.offset_LIG:
-                self.offset_LIG = offset_LIG_i
-            elif self.offset_LIG != offset_LIG_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_LIG differents")
-
-            if not self.scale_LIG:
-                self.scale_LIG = scale_LIG_i
-            elif self.scale_LIG != scale_LIG_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_LIG differents")
-
-            if not self.offset_ALT:
-                self.offset_ALT = offset_ALT_i
-            elif self.offset_ALT != offset_ALT_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_ALT differents")
-
-            if not self.scale_ALT:
-                self.scale_ALT = scale_ALT_i
-            elif self.scale_ALT != scale_ALT_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_ALT differents")
-
-            if not self.offset_X:
-                self.offset_X = offset_X_i
-            elif self.offset_X != offset_X_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_X differents")
-
-            if not self.scale_X:
-                self.scale_X = scale_X_i
-            elif self.scale_X != scale_X_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_X differents")
-
-            if not self.offset_Y:
-                self.offset_Y = offset_Y_i
-            elif self.offset_Y != offset_Y_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car offset_Y differents")
-
-            if not self.scale_Y:
-                self.scale_Y = scale_Y_i
-            elif self.scale_Y != scale_Y_i:
-                print("!!!!! les fichiers directs et inverses sont incoherents car scale_Y differents")
-
-            self.Num_COL    = coeff_PX_i
-            self.Den_COL    = coeff_QX_i
-            self.Num_LIG    = coeff_PY_i
-            self.Den_LIG    = coeff_QY_i
 
     def calcule_derivees_inv(self,lon,lat,alt):
         """ calcul analytiques des derivees partielles de la loc inverse
@@ -409,7 +308,7 @@ class FonctRatD:
             if abs(Xnorm)> self.lim_extrapol :
                 print("!!!!! l'evaluation au point est extrapolee en colonne ",Xnorm,col)
             if abs(Ynorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en ligne ",Ynorm,lig)
+                print("!!!!! l'evaluation au point est extrapolee en ligne ",Ynorm,row)
             if abs(Znorm)> self.lim_extrapol :
                 print("!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt)
 

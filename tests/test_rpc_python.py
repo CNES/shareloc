@@ -32,7 +32,7 @@ def test_rpc_eucl(col,row,alt):
     fichier_direct_euclide = os.path.join(data_folder,'rpc/rpc_dir.euc')
     fichier_inverse_euclide =  os.path.join(data_folder,'rpc/rpc_inv.euc')
 
-    fctrat = FonctRatD(fichier_direct_euclide, fichier_inverse_euclide)
+    fctrat = FonctRatD.from_euclidium(fichier_inverse_euclide, fichier_direct_euclide)
 
     (lon,lat, alt) = fctrat.direct_loc_h(row, col, alt)
     print (lon,lat)
@@ -48,7 +48,7 @@ def test_rpc_phrdimap(col,row,alt):
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD(fichier_dimap)
+    fctrat = FonctRatD.from_dimap(fichier_dimap)
 
     (lon,lat,alt) = fctrat.direct_loc_h(row,col,alt)
     print (lon,lat)
@@ -66,7 +66,7 @@ def test_rpc_direct_inverse_iterative_vs_direct(col,row,alt):
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD(fichier_dimap)
+    fctrat = FonctRatD.from_dimap(fichier_dimap)
 
     #(col,lig,alt)=(100,1000,400)
     (x0,y0, __) = fctrat.direct_loc_h(row,col,alt)
@@ -84,7 +84,7 @@ def test_rpc_direct_inverse_iterative(col,row,alt):
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD(fichier_dimap)
+    fctrat = FonctRatD.from_dimap(fichier_dimap)
 
     (lon,lat,__) = fctrat.direct_loc_h(row,col,alt)
     (row_inv, col_inv,__) = fctrat.inverse_loc(lon, lat, alt)

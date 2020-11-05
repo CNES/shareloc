@@ -20,7 +20,7 @@
 #
 
 from xml.dom import minidom
-from numpy import array, dot, zeros, sqrt
+from numpy import array, dot, zeros, sqrt, nan
 from os.path import basename
 
 def renvoie_linesep(txt_liste_lines):
@@ -39,8 +39,8 @@ def identify_dimap(xml_file):
     parse xml file to identify dimap and its version
     :param xml_file : dimap rpc file
     :type xml_file : str
-    :return dimap info : is_dimap, dimap_version
-    :rtype (boolean,str)
+    :return dimap info : dimap_version and None if not an dimap file
+    :rtype str
     """
     try :
         xmldoc = minidom.parse(xml_file)
@@ -48,9 +48,34 @@ def identify_dimap(xml_file):
         mtd_format = mtd[0].getElementsByTagName('METADATA_FORMAT')[0].firstChild.data
         is_dimap = mtd_format == 'DIMAP_PHR'
         version = mtd[0].getElementsByTagName('METADATA_PROFILE')[0].attributes.items()[0][1]
-        return is_dimap,version
+        return version
     except:
-        return None,None
+        return None
+
+def identify_ossim_kwl(ossim_kwl_file):
+    """
+    parse geom file to identify if it is an ossim model
+    :param ossim_kwl_file : ossim keyword list file
+    :type ossim_kwl_file : str
+    :return ossim kwl info : ossimmodel or not if not an ossim kwl file
+    :rtype str
+    """
+    try :
+        with open(ossim_kwl_file) as f:
+            content = f.readlines()
+
+        geom_dict = dict()
+        for line in content:
+            (key, val) = line.split(': ')
+            geom_dict[key] = val.rstrip()
+        if 'type' in geom_dict.keys():
+            if geom_dict['type'].strip().startswith('ossim') :
+                return geom_dict['type'].strip()
+            else:
+                return None
+    except:
+        return None
+
 
 def read_eucl_file(eucl_file):
     """
@@ -217,6 +242,61 @@ class FonctRatD:
         rpc_params['Den_LIG']    = coeff_LIG[20::]
         return cls(rpc_params)
 
+
+
+    @classmethod
+    def from_ossim_kwl(cls, ossim_kwl_filename):
+
+        rpc_params = dict()
+        #OSSIM keyword list
+        rpc_params['driver_type'] = 'ossim_kwl'
+
+
+        with open(ossim_kwl_filename) as f:
+            content = f.readlines()
+
+        geom_dict = dict()
+        for line in content:
+            (key, val) = line.split(': ')
+            geom_dict[key] = val.rstrip()
+
+        rpc_params['Den_LIG']= [nan] * 20
+        rpc_params['Num_LIG'] = [nan] * 20
+        rpc_params['Den_COL']= [nan] * 20
+        rpc_params['Num_COL'] = [nan] * 20
+        for index in range(0, 20):
+            axis = "line"
+            num_den = "den"
+            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            rpc_params['Den_LIG'][index] = float(geom_dict[key])
+            num_den = "num"
+            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            rpc_params['Num_LIG'][index] = float(geom_dict[key])
+            axis = "samp"
+            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            rpc_params['Num_COL'][index] = float(geom_dict[key])
+            num_den = "den"
+            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            rpc_params['Den_COL'][index] = float(geom_dict[key])
+        rpc_params['offset_COL']    = float(geom_dict["samp_off"])
+        rpc_params['scale_COL']    = float(geom_dict["samp_scale"])
+        rpc_params['offset_LIG']    = float(geom_dict["line_off"])
+        rpc_params['scale_LIG']    = float(geom_dict["line_scale"])
+        rpc_params['offset_ALT']    = float(geom_dict["height_off"])
+        rpc_params['scale_ALT']    = float(geom_dict["height_scale"])
+        rpc_params['offset_X']    = float(geom_dict["long_off"])
+        rpc_params['scale_X']    = float(geom_dict["long_scale"])
+        rpc_params['offset_Y']    = float(geom_dict["lat_off"])
+        rpc_params['scale_Y']    = float(geom_dict["lat_scale"])
+        #inverse coeff are not defined
+        rpc_params['Num_X'] = None
+        rpc_params['Den_X'] = None
+        rpc_params['Num_Y'] = None
+        rpc_params['Den_Y'] = None
+        return cls(rpc_params)
+
+
+
     @classmethod
     def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None):
         """ load from euclidium """
@@ -255,17 +335,20 @@ class FonctRatD:
             rpc_params['Den_X'] = None
             rpc_params['Num_Y'] = None
             rpc_params['Den_Y'] = None
-        print(rpc_params)
         return cls(rpc_params)
 
     @classmethod
     def from_any(cls, primary_file, secondary_file=None):
         if basename(primary_file).endswith('XML'.upper()):
-           is_dimap, dimap_version = identify_dimap(primary_file)
-           if is_dimap and float(dimap_version)<2.0 :
-            return cls.from_dimap_v1(primary_file)
+           dimap_version = identify_dimap(primary_file)
+           if dimap_version is not None :
+            if float(dimap_version)<2.0 :
+                return cls.from_dimap_v1(primary_file)
         else:
-           return cls.from_euclidium(primary_file, secondary_file)
+            ossim_model = identify_ossim_kwl(primary_file)
+            if ossim_model is not None:
+                    return cls.from_ossim_kwl(primary_file)
+        return cls.from_euclidium(primary_file, secondary_file)
 
 
 

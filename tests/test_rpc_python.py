@@ -23,7 +23,7 @@ import os
 import pytest
 from utils import test_path
 
-from shareloc.rpc.rpc_phr_v2 import FonctRatD
+from shareloc.rpc.rpc_phr_v2 import FonctRatD, identify_dimap
 
 
 
@@ -35,15 +35,21 @@ def test_rpc_drivers():
     fichier_inverse_euclide =  os.path.join(data_folder,'rpc/rpc_inv.euc')
 
     fctrat_eucl = FonctRatD.from_any(fichier_inverse_euclide, fichier_direct_euclide)
-    assert(fctrat_eucl.driver_type == 'euclidium')
+
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat_dimap = FonctRatD.from_dimap(fichier_dimap)
-    assert (fctrat_dimap.driver_type == 'dimapV1')
+    fctrat_dimap = FonctRatD.from_dimap_v1(fichier_dimap)
+    assert (fctrat_eucl.driver_type == 'euclidium')
+    assert (fctrat_dimap.driver_type == 'dimap_v1.4')
 
-
-
+def test_identify_dimap():
+    data_folder = test_path()
+    id_scene = 'P1BP--2018122638935449CP'
+    fichier_dimap = os.path.join(data_folder, 'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+    is_dimap, dimap_version =  identify_dimap(fichier_dimap)
+    assert (is_dimap == True)
+    assert (dimap_version == '1.4')
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])
 def test_rpc_eucl(col,row,alt):
@@ -68,7 +74,7 @@ def test_rpc_phrdimap(col,row,alt):
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD.from_dimap(fichier_dimap)
+    fctrat = FonctRatD.from_dimap_v1(fichier_dimap)
 
     (lon,lat,alt) = fctrat.direct_loc_h(row,col,alt)
     print (lon,lat)
@@ -86,7 +92,7 @@ def test_rpc_direct_inverse_iterative_vs_direct(col,row,alt):
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD.from_dimap(fichier_dimap)
+    fctrat = FonctRatD.from_dimap_v1(fichier_dimap)
 
     #(col,lig,alt)=(100,1000,400)
     (x0,y0, __) = fctrat.direct_loc_h(row,col,alt)
@@ -104,7 +110,7 @@ def test_rpc_direct_inverse_iterative(col,row,alt):
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD.from_dimap(fichier_dimap)
+    fctrat = FonctRatD.from_dimap_v1(fichier_dimap)
 
     (lon,lat,__) = fctrat.direct_loc_h(row,col,alt)
     (row_inv, col_inv,__) = fctrat.inverse_loc(lon, lat, alt)

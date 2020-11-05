@@ -34,6 +34,24 @@ def renvoie_linesep(txt_liste_lines):
 	return line_sep
 
 
+def identify_dimap(xml_file):
+    """
+    parse xml file to identify dimap and its version
+    :param xml_file : dimap rpc file
+    :type xml_file : str
+    :return dimap info : is_dimap, dimap_version
+    :rtype (boolean,str)
+    """
+    try :
+        xmldoc = minidom.parse(xml_file)
+        mtd = xmldoc.getElementsByTagName('Metadata_Identification')
+        mtd_format = mtd[0].getElementsByTagName('METADATA_FORMAT')[0].firstChild.data
+        is_dimap = mtd_format == 'DIMAP_PHR'
+        version = mtd[0].getElementsByTagName('METADATA_PROFILE')[0].attributes.items()[0][1]
+        return is_dimap,version
+    except:
+        return None,None
+
 def read_eucl_file(eucl_file):
     """
     read euclidium file and parse it
@@ -145,16 +163,20 @@ class FonctRatD:
                  [2,0,1,1],[0,0,0,3]]
 
     @classmethod
-    def from_dimap(cls, dimap_filepath):
+    def from_dimap_v1(cls, dimap_filepath):
         """ load from dimap """
 
         rpc_params = dict()
-        rpc_params['driver_type'] = 'dimapV1'
+
         if not basename(dimap_filepath).endswith('XML'.upper()):
             raise ValueError("dimap must ends with .xml")
 
+
         xmldoc= minidom.parse(dimap_filepath)
-        #TODO check dimap version
+
+        mtd = xmldoc.getElementsByTagName('Metadata_Identification')
+        version = mtd[0].getElementsByTagName('METADATA_PROFILE')[0].attributes.items()[0][1]
+        rpc_params['driver_type'] = 'dimap_v' + version
 
         GLOBAL_RFM    = xmldoc.getElementsByTagName('Global_RFM')
         RFM_Validity     = xmldoc.getElementsByTagName('RFM_Validity')
@@ -239,7 +261,9 @@ class FonctRatD:
     @classmethod
     def from_any(cls, primary_file, secondary_file=None):
         if basename(primary_file).endswith('XML'.upper()):
-           return cls.from_dimap(primary_file)
+           is_dimap, dimap_version = identify_dimap(primary_file)
+           if is_dimap and float(dimap_version)<2.0 :
+            return cls.from_dimap_v1(primary_file)
         else:
            return cls.from_euclidium(primary_file, secondary_file)
 

@@ -91,6 +91,14 @@ def read_eucl_file(eucl_file):
 
 
 def check_coeff_consistency(dict1, dict2):
+    """
+    print an error message inf normalisations coeff are not consistent
+    :param dict1 : normalisation coeffs 1
+    :type dict1 : dict
+    :param dict2 : normalisation coeffs 2
+    :type dict2 : dict
+
+    """
     for key, value in dict1.items() :
         if dict2[key] != value:
             print("normalisation coeffs are different between"
@@ -228,7 +236,12 @@ class FonctRatD:
         print(rpc_params)
         return cls(rpc_params)
 
-
+    @classmethod
+    def from_any(cls, primary_file, secondary_file=None):
+        if basename(primary_file).endswith('XML'.upper()):
+           return cls.from_dimap(primary_file)
+        else:
+           return cls.from_euclidium(primary_file, secondary_file)
 
 
 

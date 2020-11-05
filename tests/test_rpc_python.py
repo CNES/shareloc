@@ -25,6 +25,26 @@ from utils import test_path
 
 from shareloc.rpc.rpc_phr_v2 import FonctRatD
 
+
+
+
+def test_rpc_drivers():
+    data_folder = test_path()
+
+    fichier_direct_euclide = os.path.join(data_folder,'rpc/rpc_dir.euc')
+    fichier_inverse_euclide =  os.path.join(data_folder,'rpc/rpc_inv.euc')
+
+    fctrat_eucl = FonctRatD.from_any(fichier_inverse_euclide, fichier_direct_euclide)
+    assert(fctrat_eucl.driver_type == 'euclidium')
+    id_scene = 'P1BP--2018122638935449CP'
+    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+
+    fctrat_dimap = FonctRatD.from_dimap(fichier_dimap)
+    assert (fctrat_dimap.driver_type == 'dimapV1')
+
+
+
+
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])
 def test_rpc_eucl(col,row,alt):
     data_folder = test_path()

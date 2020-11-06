@@ -116,19 +116,35 @@ def read_eucl_file(eucl_file):
                 parsed_file['type_fic'] = 'D'
         if l.startswith('>>\tXIN_OFFSET'):
             lsplit = l.split()
-            normalisation_coeff['X'] = [float(lsplit[4]), float(lsplit[5])]
+            if parsed_file['type_fic'] == 'I':
+                param ='X'
+            else:
+                param = 'COL'
+            normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
         if l.startswith('>>\tYIN_OFFSET'):
+            if parsed_file['type_fic'] == 'I':
+                param ='Y'
+            else:
+                param = 'LIG'
             lsplit = l.split()
-            normalisation_coeff['Y'] = [float(lsplit[4]), float(lsplit[5])]
+            normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
         if l.startswith('>>\tZIN_OFFSET'):
             lsplit = l.split()
             normalisation_coeff['ALT'] = [float(lsplit[4]), float(lsplit[5])]
         if l.startswith('>>\tXOUT_OFFSET'):
             lsplit = l.split()
-            normalisation_coeff['COL'] = [float(lsplit[4]), float(lsplit[5])]
+            if parsed_file['type_fic'] == 'D':
+                param ='X'
+            else:
+                param = 'COL'
+            normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
         if l.startswith('>>\tYOUT_OFFSET'):
             lsplit = l.split()
-            normalisation_coeff['LIG'] = [float(lsplit[4]), float(lsplit[5])]
+            if parsed_file['type_fic'] == 'D':
+                param ='Y'
+            else:
+                param = 'LIG'
+            normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
     parsed_file['normalisation_coeffs'] = normalisation_coeff
     return parsed_file
 
@@ -278,9 +294,9 @@ class FonctRatD:
             num_den = "den"
             key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
             rpc_params['Den_COL'][index] = float(geom_dict[key])
-        rpc_params['offset_COL']    = float(geom_dict["samp_off"])
+        rpc_params['offset_COL']    = float(geom_dict["samp_off"]) + 0.5
         rpc_params['scale_COL']    = float(geom_dict["samp_scale"])
-        rpc_params['offset_LIG']    = float(geom_dict["line_off"])
+        rpc_params['offset_LIG']    = float(geom_dict["line_off"]) + 0.5
         rpc_params['scale_LIG']    = float(geom_dict["line_scale"])
         rpc_params['offset_ALT']    = float(geom_dict["height_off"])
         rpc_params['scale_ALT']    = float(geom_dict["height_scale"])

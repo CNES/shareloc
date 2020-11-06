@@ -76,24 +76,18 @@ def test_rpc_ossim_kwl(lon,lat,alt):
     assert(col == pytest.approx(100, abs = 1e-2))
     assert(row == pytest.approx(200, abs = 1e-2))
 
-
-
-@pytest.mark.parametrize("col,row,alt", [(600,200,125)])
-def test_rpc_eucl(col,row,alt):
+@pytest.mark.parametrize("lon,lat,alt", [(7.048662660737769592,43.72774839443545858,0.0)])
+def test_rpc_eucl(lon,lat,alt):
     data_folder = test_path()
+    id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
+    file_inverse = os.path.join(data_folder, 'rpc/{}_inv.txt'.format(id_scene))
+    fctrat_eucl = FonctRatD.from_euclidium(file_inverse)
+    print("{} {} {}".format(lon,lat,alt))
+    (row,col,__) = fctrat_eucl.inverse_loc(lon,lat,alt)
+    print("col {} row {}".format(col,row))
+    assert(col == pytest.approx(98.94, abs = 1e-2))
+    assert(row == pytest.approx(200.43, abs = 1e-2))
 
-    file_direct_euclide = os.path.join(data_folder,'rpc/rpc_dir.euc')
-    file_inverse_euclide =  os.path.join(data_folder,'rpc/rpc_inv.euc')
-
-    fctrat = FonctRatD.from_euclidium(file_inverse_euclide, file_direct_euclide)
-
-    (lon,lat, alt) = fctrat.direct_loc_h(row, col, alt)
-    print (lon,lat)
-
-    (row_ar,col_ar,__) = fctrat.inverse_loc(lon,lat,alt)
-    print (col_ar,row_ar)
-    assert(col_ar == pytest.approx(col,abs = 1e-2))
-    assert(row_ar == pytest.approx(row,abs = 1e-2))
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])
 def test_rpc_phrdimap(col,row,alt):

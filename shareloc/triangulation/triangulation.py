@@ -46,7 +46,7 @@ def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right
     :type left_min_max : list
     :param right_min_max : right min/max for los creation, if None model min/max will be used
     :type right_min_max : list
-    :param residues : calculates residues (distance in meters)
+    :param residues : calculates residues (distance in meters between los and 3D points)
     :type residues : boolean
     :return intersections in cartesian crs, intersections in wgs84 crs and optionnaly residues
     :rtype (numpy.array,numpy,array,numpy.array)
@@ -67,7 +67,6 @@ def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right
     intersections_residues = None
     if residues is True:
         intersections_residues = distance_point_los(left_los,intersections_ecef)
-        intersections_residues = intersections_residues * 2.0
     return intersections_ecef,intersections_wgs84, intersections_residues
 
 

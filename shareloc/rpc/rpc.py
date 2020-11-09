@@ -164,7 +164,7 @@ def check_coeff_consistency(dict1, dict2):
                   " direct en inverse one : {} : {} {}".format(key,value,dict2[key]))
 
 
-class FonctRatD:
+class RPC:
     def __init__(self,rpc_params):
         for a, b in rpc_params.items():
             setattr(self, a, b)

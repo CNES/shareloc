@@ -25,7 +25,7 @@ from utils import test_path
 
 from shareloc.grid import grid, coloc
 from shareloc.dtm import DTM
-from shareloc.rpc.rpc_phr_v2 import FonctRatD
+from shareloc.rpc.rpc import RPC
 from shareloc.localization import Localization
 
 
@@ -152,7 +152,7 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD.from_any(fichier_dimap)
+    fctrat = RPC.from_any(fichier_dimap)
 
     loc_rpc = Localization(fctrat)
     lonlatalt_rpc = loc_rpc.direct(row + 0.5, col + 0.5, h)
@@ -243,7 +243,7 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD.from_any(fichier_dimap)
+    fctrat = RPC.from_any(fichier_dimap)
 
     loc_rpc = Localization(fctrat)
     [row_rpc, col_rpc, valid] = loc_rpc.inverse(lon, lat, alt)
@@ -336,7 +336,7 @@ def test_loc_dir_loc_inv_rpc(row, col, h):
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = FonctRatD.from_any(fichier_dimap)
+    fctrat = RPC.from_any(fichier_dimap)
     (inv_row, inv_col,__) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
     print('row {} col {}'.format(inv_row, inv_col))
 

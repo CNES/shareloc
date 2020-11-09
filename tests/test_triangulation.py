@@ -138,8 +138,8 @@ def test_epi_triangulation_sift():
 
     matches_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.npy")
     matches = np.load(matches_filename)
-    print(matches.shape)
-    fname = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.tif")
+    #print(matches.shape)
+    #fname = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.tif")
     #with rio.open(fname, 'w', height=matches.shape[0], width=matches.shape[1], count=1, driver='GTiff', dtype=matches.dtype) as dst:
     #    dst.write_band(1, matches)
     #print("matches {}".format(matches[1:10,0:2]))

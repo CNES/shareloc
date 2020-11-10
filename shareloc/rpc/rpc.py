@@ -455,8 +455,8 @@ class RPC:
             Xout = dot(array(self.Num_X),monomes)/dot(array(self.Den_X),monomes)*self.scale_X+self.offset_X
             Yout = dot(array(self.Num_Y),monomes)/dot(array(self.Den_Y),monomes)*self.scale_Y+self.offset_Y
         else:
-            print("les coefficient directs n'ont pas ete definis")
-            (Xout,Yout, alt) = (None,None,None)
+
+            (Xout,Yout, alt) = self.direct_loc_inverse_iterative(row, col, alt)
         return (Xout,Yout, alt)
 
 
@@ -543,5 +543,32 @@ class RPC:
                 k+=1
         else:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
-            (X,Y) = (None,None)
-        return(X,Y)
+            (X,Y) = (None,None, None)
+        return(X,Y, alt)
+
+    def get_alt_min_max(self):
+        """
+        returns altitudes min and max layers
+        :return alt_min,lat_max
+        :rtype list
+        """
+        return [self.offset_ALT - self.scale_ALT / 2.0, self.offset_ALT + self.scale_ALT / 2.0]
+
+    def los_extrema(self, row, col, alt_min, alt_max):
+        """
+        compute los extrema
+        :param row  :  line sensor position
+        :type row  : float
+        :param col :  column sensor position
+        :type col : float
+        :param alt_min : los alt min
+        :type alt_min  : float
+        :param alt_max : los alt max
+        :type alt_max : float
+        :return los extrema
+        :rtype numpy.array (2x3)
+        """
+        los_edges = zeros([2, 3])
+        los_edges[0, :] = self.direct_loc_h(row, col, alt_max)
+        los_edges[1, :] = self.direct_loc_h(row, col, alt_min)
+        return los_edges

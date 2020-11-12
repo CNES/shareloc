@@ -66,10 +66,15 @@ def interpol_bilin_vectorized(mats,nl,nc,dl,dc):
         """
         bilinear interpolation on multi points and layer  matrix
         :param mats: multi layer grid (: , nl,nc)
+        :type mats : list
         :param nl: line number of mats
+        :type nl : int
         :param nc: column number of mats
+        :type nc : int
         :param dl: position (line)
+        :type dl: 1D numpy.ndarray, dtype=float64
         :param dc: position (column)
+        :type dc: 1D numpy.ndarray, dtype=float64
         :return interpolated value on each layer
         :rtype list
         """

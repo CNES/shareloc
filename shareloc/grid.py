@@ -114,41 +114,13 @@ class grid:
         """
         direct localization at constant altitude
         :param row :  line sensor position
-        :type row : float
+        :type row : float or 1D numpy.ndarray dtype=float64
         :param col :  column sensor position
-        :type col : float
+        :type col : float or 1D numpy.ndarray dtype=float64
         :param alt :  altitude
         :type alt : float
         :return ground position (lon,lat,h)
-        :rtype numpy.array
-        """
-        #faire une controle sur row / col !!!!
-        # 0.5 < row < rowmax
-        (kh,kb) = self.return_grid_index(alt)
-        altbas  = self.alts_down[kb]
-        althaut = self.alts_down[kh]
-        dh = (alt - altbas)/(althaut - altbas)
-        mats =  [self.gld_lon[kh:kb+1,:,:],self.gld_lat[kh:kb+1,:,:]]
-        P     = np.zeros(3)
-        P[2] = alt
-        dl = (row - self.row0)/self.steprow
-        dc = (col - self.col0)/self.stepcol
-        [vlon,vlat] = interpol_bilin(mats,self.nbrow,self.nbcol,dl,dc)
-        P[0] = (dh*vlon[0] +(1-dh)*vlon[1])
-        P[1] = (dh*vlat[0] +(1-dh)*vlat[1])
-        return P
-
-    def direct_loc_h_vectorized(self, row, col, alt):
-        """
-        direct localization at constant altitude on multiple points
-        :param row :  line sensor position
-        :type row : 1D numpy array, dtype=float64
-        :param col :  column sensor position
-        :type col : 1D numpy array, dtype=float64
-        :param alt :  altitude
-        :type alt : float
-        :return ground position (number of points, lon,lat,h)
-        :rtype 3D numpy.array
+        :rtype numpy.ndarray
         """
         #faire une controle sur row / col !!!!
         # 0.5 < row < rowmax
@@ -158,15 +130,22 @@ class grid:
         dh = (alt - altbas)/(althaut - altbas)
         mats =  [self.gld_lon[kh:kb+1,:,:],self.gld_lat[kh:kb+1,:,:]]
 
-        P = np.zeros((col.size, 3))
-        P[:, 2] = alt
-        dl = (row - self.row0)/self.steprow
-        dc = (col - self.col0)/self.stepcol
-        print('dl', dl.shape)
-        [vlon,vlat] = interpol_bilin_vectorized(mats,self.nbrow,self.nbcol,dl,dc)
-
-        P[:, 0] = (dh*vlon[0, :] +(1-dh)*vlon[1, :])
-        P[:, 1]  = (dh*vlat[0, :] +(1-dh)*vlat[1, :])
+        if isinstance(row,(list,np.ndarray)):
+            P = np.zeros((col.size, 3))
+            P[:, 2] = alt
+            dl = (row - self.row0)/self.steprow
+            dc = (col - self.col0)/self.stepcol
+            [vlon,vlat] = interpol_bilin_vectorized(mats,self.nbrow,self.nbcol,dl,dc)
+            P[:, 0] = (dh*vlon[0, :] +(1-dh)*vlon[1, :])
+            P[:, 1]  = (dh*vlat[0, :] +(1-dh)*vlat[1, :])
+        else:
+            P = np.zeros(3)
+            P[2] = alt
+            dl = np.array([(row - self.row0)/self.steprow])
+            dc = np.array([(col - self.col0)/self.stepcol])
+            [vlon,vlat] = interpol_bilin_vectorized(mats,self.nbrow,self.nbcol,dl,dc)
+            P[0] = (dh*vlon[0] +(1-dh)*vlon[1])
+            P[1] = (dh*vlat[0] +(1-dh)*vlat[1])
         return P
 
     def direct_loc_dtm(self, row, col, dtm):

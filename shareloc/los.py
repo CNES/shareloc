@@ -55,8 +55,8 @@ class LOS:
         # los construction right
         los_extrema = np.zeros([2 * self.los_nb, 3])
         list_col, list_row = (self.sensors_positions[:, 0], self.sensors_positions[:, 1])
-        los_extrema[np.arange(0, 2 *self.los_nb, 2), :] = self.geometrical_model.direct_loc_h_vectorized(list_row, list_col, alt_max)
-        los_extrema[np.arange(1, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h_vectorized(list_row, list_col, alt_min)
+        los_extrema[np.arange(0, 2 *self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(list_row, list_col, alt_max)
+        los_extrema[np.arange(1, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(list_row, list_col, alt_min)
 
         in_crs = 4326
         out_crs = 4978

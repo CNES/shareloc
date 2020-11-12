@@ -23,7 +23,6 @@ import pytest
 import numpy as np
 from utils import test_path
 import xarray as xr
-import matplotlib.pyplot as plt
 
 import time
 from shareloc.localization import Localization
@@ -280,5 +279,4 @@ def test_epi_triangulation_disp():
     ##assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
     #assert(col == pytest.approx(inv_col,abs=1e-2))
     #assert(valid == 1)
-
 

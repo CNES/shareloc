@@ -20,7 +20,7 @@
 #
 import numpy as np
 from shareloc.readwrite import  read_bsq_hd
-from shareloc.math_utils import interpol_bilin
+from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 
 #-------------------------------------------------------------------------------
 class grid:
@@ -136,6 +136,37 @@ class grid:
         [vlon,vlat] = interpol_bilin(mats,self.nbrow,self.nbcol,dl,dc)
         P[0] = (dh*vlon[0] +(1-dh)*vlon[1])
         P[1] = (dh*vlat[0] +(1-dh)*vlat[1])
+        return P
+
+    def direct_loc_h_vectorized(self, row, col, alt):
+        """
+        direct localization at constant altitude on multiple points
+        :param row :  line sensor position
+        :type row : 1D numpy array, dtype=float64
+        :param col :  column sensor position
+        :type col : 1D numpy array, dtype=float64
+        :param alt :  altitude
+        :type alt : float
+        :return ground position (number of points, lon,lat,h)
+        :rtype 3D numpy.array
+        """
+        #faire une controle sur row / col !!!!
+        # 0.5 < row < rowmax
+        (kh,kb) = self.return_grid_index(alt)
+        altbas  = self.alts_down[kb]
+        althaut = self.alts_down[kh]
+        dh = (alt - altbas)/(althaut - altbas)
+        mats =  [self.gld_lon[kh:kb+1,:,:],self.gld_lat[kh:kb+1,:,:]]
+
+        P = np.zeros((col.size, 3))
+        P[:, 2] = alt
+        dl = (row - self.row0)/self.steprow
+        dc = (col - self.col0)/self.stepcol
+        print('dl', dl.shape)
+        [vlon,vlat] = interpol_bilin_vectorized(mats,self.nbrow,self.nbcol,dl,dc)
+
+        P[:, 0] = (dh*vlon[0, :] +(1-dh)*vlon[1, :])
+        P[:, 1]  = (dh*vlat[0, :] +(1-dh)*vlat[1, :])
         return P
 
     def direct_loc_dtm(self, row, col, dtm):

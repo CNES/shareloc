@@ -263,7 +263,20 @@ def plot_diff(cloud,array_epi_ecef):
     print(" diff z {} {} {}".format(mean_z,min_z,max_z))
 
 
-
+def create_dataset(disp,point_wgs84,point_ecef,residuals):
+    array_shape = disp.disp.values.shape
+    array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1], 3))
+    array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
+    array_residuals = residuals.reshape((array_shape[0], array_shape[1]))
+    pc_dataset = xr.Dataset({'pc_wgs84_x': (['row', 'col'], array_epi_wgs84[:, :, 0]),
+                             'pc_wgs84_y': (['row', 'col'], array_epi_wgs84[:, :, 1]),
+                             'pc_wgs84_z': (['row', 'col'], array_epi_wgs84[:, :, 2]),
+                             'pc_ecef_x': (['row', 'col'], array_epi_ecef[:, :, 0]),
+                             'pc_ecef_y': (['row', 'col'], array_epi_ecef[:, :, 1]),
+                             'pc_ecef_z': (['row', 'col'], array_epi_ecef[:, :, 2]),
+                             'residues': (['row', 'col'], array_residuals)},
+                            coords={'row': disp.coords['row'], 'col': disp.coords['col'] })
+    return pc_dataset
 
 @pytest.mark.unit_tests
 def test_epi_triangulation_disp_rpc():
@@ -293,17 +306,11 @@ def test_epi_triangulation_disp_rpc():
 
     point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, 'disp', geom_model_left, geom_model_right, grid_left_filename,
                                                    grid_right_filename, residues = True)
-    array_shape = disp.disp.values.shape
-    array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1],3))
-    array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
-    array_residuals = residuals.reshape((array_shape[0], array_shape[1]))
-    pc_dataset = xr.Dataset({'pc_wgs84': (['row', 'col','coords'], array_epi_wgs84),
-                            'pc_ecef':  (['row', 'col','coords'], array_epi_ecef),
-                             'residues': (['row', 'col'], array_residuals)},
-                          coords={'row': disp.coords['row'], 'col': disp.coords['col'], 'coords' : np.arange(3).astype(np.uint8)})
+
+    pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
-    #out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation.nc")
-    #disp.to_netcdf(out_disp_filename)
+    out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation_rpc.nc")
+    disp.to_netcdf(out_disp_filename)
 
     #open cloud
     cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
@@ -327,7 +334,7 @@ def test_epi_triangulation_disp_rpc():
 
 
 @pytest.mark.unit_tests
-def test_epi_triangulation_disp():
+def test_epi_triangulation_disp_grid():
     """
      Test epipolar triangulation
     """
@@ -343,30 +350,27 @@ def test_epi_triangulation_disp():
     #                                   "grid_{}.tif".format(id_scene_right))
 
     grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid_uncorrected.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid.tif")
 
     disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disparity-crop.nc")
     disp = xr.load_dataset(disp_filename)
 
+    start = time.time()
     point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, 'disp', gri_left, gri_right, grid_left_filename,
                                                    grid_right_filename, residues = True)
-    array_shape = disp.disp.values.shape
-    array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1],3))
-    array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
-    array_residuals = residuals.reshape((array_shape[0], array_shape[1]))
-    pc_dataset = xr.Dataset({'pc_wgs84': (['row', 'col','coords'], array_epi_wgs84),
-                            'pc_ecef':  (['row', 'col','coords'], array_epi_ecef),
-                             'residues': (['row', 'col'], array_residuals)},
-                          coords={'row': disp.coords['row'], 'col': disp.coords['col'], 'coords' : np.arange(3).astype(np.uint8)})
+    end = time.time()
+    print("elapsed time {}".format(end - start))
+    pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
-    out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation_uncorrected.nc")
+    out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation.nc")
     disp.to_netcdf(out_disp_filename)
 
     #open cloud
     cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
     cloud = xr.load_dataset(cloud_filename)
-
-    #plot_diff(cloud, array_epi_ecef)
+    array_shape = disp.disp.values.shape
+    array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
+    plot_diff(cloud, array_epi_ecef)
 
     #print(point_ecef.shape)
     #point_ecef, point_wgs84 = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
@@ -380,3 +384,43 @@ def test_epi_triangulation_disp():
     #assert(valid == 1)
 
 
+
+
+@pytest.mark.unit_tests
+def test_epi_triangulation_disp_grid_masked():
+    """
+     Test epipolar triangulation
+    """
+    id_scene_left = "P1BP--2017092838284574CP"
+    id_scene_right = "P1BP--2017092838319324CP"
+    ___, gri_right = prepare_loc('ellipsoide', id_scene_right)
+
+    ___, gri_left = prepare_loc('ellipsoide', id_scene_left)
+
+    #grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
+    #                                  "grid_{}.tif".format(id_scene_left))
+    #grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
+    #                                   "grid_{}.tif".format(id_scene_right))
+
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid.tif")
+
+    disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disparity-crop.nc")
+    disp = xr.load_dataset(disp_filename)
+    mask_array = disp.msk.values
+    start = time.time()
+    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, mask_array, 'disp', gri_left, gri_right, grid_left_filename,
+                                                   grid_right_filename, residues = True)
+    end = time.time()
+    print("elapsed time {}".format(end - start))
+    pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
+    disp = xr.merge((disp, pc_dataset))
+    out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation_masked.nc")
+    disp.to_netcdf(out_disp_filename)
+
+    #open cloud
+    cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
+    cloud = xr.load_dataset(cloud_filename)
+    array_shape = disp.disp.values.shape
+    array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
+    plot_diff(cloud, array_epi_ecef)

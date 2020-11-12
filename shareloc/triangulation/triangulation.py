@@ -135,10 +135,17 @@ def transform_disp_to_matches(disp,mask = None):
     col = col + ori_col
     row = row + ori_row
     disp_array = disp.disp.values
+    if mask is not None:
+        values_ok = mask == 0
+        col = col[values_ok]
+        row = row[values_ok]
+        disp_array = disp_array[values_ok]
+    else:
+        values_ok = np.full_like(disp_array, True, dtype=bool)
     epi_left_pos  = np.vstack((col.flatten(),row.flatten()))
 
     epi_right_pos = np.vstack((col.flatten() + disp_array.flatten(),row.flatten()))
-    return (epi_left_pos.transpose(),epi_right_pos.transpose())
+    return (epi_left_pos.transpose(),epi_right_pos.transpose(),values_ok.flatten())
 
 
 
@@ -179,7 +186,7 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
         epi_pos_right= matches[:,2:4]
     elif matches_type is 'disp':
         print('disp')
-        [epi_pos_left, epi_pos_right] = transform_disp_to_matches(matches,mask)
+        [epi_pos_left, epi_pos_right, values_ok] = transform_disp_to_matches(matches,mask)
         #epi_pos_left = matches[:,0:2]
         #epi_disp_right= matches[:,2:4]
 
@@ -202,5 +209,14 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
     #print("matches shape {}".format(matches_sensor.shape))
     #print("matches  {}".format(matches_sensor[0,:]))
     # triangulate positions in sensor geometry
-    return sensor_triangulation(matches_sensor, geometrical_model_left,
+    [intersections_ecef, intersections_wgs84, intersections_residues] = sensor_triangulation(matches_sensor, geometrical_model_left,
                                                                 geometrical_model_right, left_min_max, right_min_max,  residues)
+
+    tab_size = values_ok.shape[0]
+    intersections_ecef_masked = np.zeros((tab_size,3))
+    intersections_wgs84_masked = np.zeros((tab_size, 3))
+    intersections_residues_masked = np.zeros((tab_size, 1))
+    intersections_ecef_masked[values_ok,:] = intersections_ecef
+    intersections_wgs84_masked[values_ok, :] = intersections_wgs84
+    intersections_residues_masked[values_ok,0] = intersections_residues
+    return intersections_ecef_masked, intersections_wgs84_masked, intersections_residues_masked

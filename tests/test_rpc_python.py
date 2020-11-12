@@ -121,7 +121,7 @@ def test_rpc_direct_inverse_iterative_vs_direct(col,row,alt):
 
     #(col,lig,alt)=(100,1000,400)
     (x0,y0, __) = fctrat.direct_loc_h(row,col,alt)
-    (x_inv,y_inv) = fctrat.direct_loc_inverse_iterative(row,col,alt)
+    (x_inv,y_inv,__) = fctrat.direct_loc_inverse_iterative(row,col,alt)
     #print("comparaison loc directe RPC / loc inverse RPC iterative""")
     #"""Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
     assert (x0==pytest.approx(x_inv, abs = 10.0/111111000))
@@ -139,7 +139,7 @@ def test_rpc_direct_inverse_iterative(col,row,alt):
 
     (lon,lat,__) = fctrat.direct_loc_h(row,col,alt)
     (row_inv, col_inv,__) = fctrat.inverse_loc(lon, lat, alt)
-    (lon_iter,lat_iter) = fctrat.direct_loc_inverse_iterative(row_inv,col_inv,alt)
+    (lon_iter,lat_iter,__) = fctrat.direct_loc_inverse_iterative(row_inv,col_inv,alt)
     assert (lon==lon_iter)
     assert (lat==lat_iter)
 
@@ -147,7 +147,7 @@ def test_rpc_minmax():
     data_folder = test_path()
     id_scene = 'P1BP--2018122638935449CP'
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
-    fctrat = FonctRatD(fichier_dimap)
+    fctrat = RPC.from_any(fichier_dimap)
     (h_min,h_max) = fctrat.get_alt_min_max()
     assert (h_min == 532.5)
     assert (h_max == 617.5)

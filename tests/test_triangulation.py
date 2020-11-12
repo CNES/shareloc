@@ -23,7 +23,7 @@ import pytest
 import numpy as np
 from utils import test_path
 import xarray as xr
-import matplotlib.pyplot as plt
+
 
 import time
 from shareloc.localization import Localization
@@ -262,14 +262,6 @@ def plot_diff(cloud,array_epi_ecef):
     max_z = np.max(diff_z)
     print(" diff z {} {} {}".format(mean_z,min_z,max_z))
 
-    print(ecef_x[0, 255] - array_epi_ecef[0, 255, 0])
-    print(ecef_y[0, 255] - array_epi_ecef[0, 255, 1])
-    print(ecef_z[0, 255] - array_epi_ecef[0, 255, 2])
-
-
-    print(ecef_x[255, 0] - array_epi_ecef[255, 0, 0])
-    print(ecef_y[255, 0] - array_epi_ecef[255, 0, 1])
-    print(ecef_z[255, 0] - array_epi_ecef[255, 0, 2])
 
 
 
@@ -317,7 +309,7 @@ def test_epi_triangulation_disp_rpc():
     cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
     cloud = xr.load_dataset(cloud_filename)
 
-    plot_diff(cloud, array_epi_ecef)
+    #plot_diff(cloud, array_epi_ecef)
 
     #print(point_ecef.shape)
     #point_ecef, point_wgs84 = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
@@ -374,7 +366,7 @@ def test_epi_triangulation_disp():
     cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
     cloud = xr.load_dataset(cloud_filename)
 
-    plot_diff(cloud, array_epi_ecef)
+    #plot_diff(cloud, array_epi_ecef)
 
     #print(point_ecef.shape)
     #point_ecef, point_wgs84 = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)

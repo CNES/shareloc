@@ -20,7 +20,7 @@
 #
 import numpy as np
 from shareloc.readwrite import  read_bsq_hd
-from shareloc.math_utils import interpol_bilin
+from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 
 #-------------------------------------------------------------------------------
 class grid:
@@ -114,13 +114,13 @@ class grid:
         """
         direct localization at constant altitude
         :param row :  line sensor position
-        :type row : float
+        :type row : float or 1D numpy.ndarray dtype=float64
         :param col :  column sensor position
-        :type col : float
+        :type col : float or 1D numpy.ndarray dtype=float64
         :param alt :  altitude
         :type alt : float
         :return ground position (lon,lat,h)
-        :rtype numpy.array
+        :rtype numpy.ndarray
         """
         #faire une controle sur row / col !!!!
         # 0.5 < row < rowmax
@@ -129,13 +129,23 @@ class grid:
         althaut = self.alts_down[kh]
         dh = (alt - altbas)/(althaut - altbas)
         mats =  [self.gld_lon[kh:kb+1,:,:],self.gld_lat[kh:kb+1,:,:]]
-        P     = np.zeros(3)
-        P[2] = alt
-        dl = (row - self.row0)/self.steprow
-        dc = (col - self.col0)/self.stepcol
-        [vlon,vlat] = interpol_bilin(mats,self.nbrow,self.nbcol,dl,dc)
-        P[0] = (dh*vlon[0] +(1-dh)*vlon[1])
-        P[1] = (dh*vlat[0] +(1-dh)*vlat[1])
+
+        if isinstance(row,(list,np.ndarray)):
+            P = np.zeros((col.size, 3))
+            P[:, 2] = alt
+            dl = (row - self.row0)/self.steprow
+            dc = (col - self.col0)/self.stepcol
+            [vlon,vlat] = interpol_bilin_vectorized(mats,self.nbrow,self.nbcol,dl,dc)
+            P[:, 0] = (dh*vlon[0, :] +(1-dh)*vlon[1, :])
+            P[:, 1]  = (dh*vlat[0, :] +(1-dh)*vlat[1, :])
+        else:
+            P = np.zeros(3)
+            P[2] = alt
+            dl = np.array([(row - self.row0)/self.steprow])
+            dc = np.array([(col - self.col0)/self.stepcol])
+            [vlon,vlat] = interpol_bilin_vectorized(mats,self.nbrow,self.nbcol,dl,dc)
+            P[0] = (dh*vlon[0] +(1-dh)*vlon[1])
+            P[1] = (dh*vlat[0] +(1-dh)*vlat[1])
         return P
 
     def direct_loc_dtm(self, row, col, dtm):

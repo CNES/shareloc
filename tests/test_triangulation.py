@@ -24,7 +24,6 @@ import numpy as np
 from utils import test_path
 import xarray as xr
 
-
 import time
 from shareloc.localization import Localization
 from shareloc.grid import grid
@@ -382,7 +381,6 @@ def test_epi_triangulation_disp_grid():
     ##assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
     #assert(col == pytest.approx(inv_col,abs=1e-2))
     #assert(valid == 1)
-
 
 
 

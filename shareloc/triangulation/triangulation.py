@@ -136,7 +136,7 @@ def transform_disp_to_matches(disp,mask = None):
     row = row + ori_row
     disp_array = disp.disp.values
     if mask is not None:
-        values_ok = mask == 0
+        values_ok = mask > 0
         col = col[values_ok]
         row = row[values_ok]
         disp_array = disp_array[values_ok]

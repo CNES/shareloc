@@ -20,8 +20,9 @@
 #
 
 from xml.dom import minidom
-from numpy import array, dot, zeros, sqrt, nan
+from numpy import array, dot, zeros, sqrt, nan, ndarray
 from os.path import basename
+
 
 def renvoie_linesep(txt_liste_lines):
 	"""Renvoie le separateur de ligne d'un texte sous forme de liste de lignes
@@ -434,30 +435,73 @@ class RPC:
 
 
     def direct_loc_h(self,row,col, alt):
-        """evalue loc directe par application du RPC direct"""
+        """
+        direct localization at constant altitude
+        :param row :  line sensor position
+        :type row : float or 1D numpy.ndarray dtype=float64
+        :param col :  column sensor position
+        :type col : float or 1D numpy.ndarray dtype=float64
+        :param alt :  altitude
+        :type alt : float
+        :return ground position (lon,lat,h)
+        :rtype numpy.ndarray
+        """
 
         if self.Num_X:
-            Xnorm = (col - self.offset_COL)/self.scale_COL
-            Ynorm = (row - self.offset_LIG)/self.scale_LIG
-            Znorm = (alt - self.offset_ALT)/self.scale_ALT
+            if isinstance(row, (list, ndarray)):
+                P = zeros((col.size, 3))
+                P[:, 2] = alt
+                for i in range(col.size):
+                    Xnorm = (col[i] - self.offset_COL) / self.scale_COL
+                    Ynorm = (row[i] - self.offset_LIG) / self.scale_LIG
+                    Znorm = (alt - self.offset_ALT) / self.scale_ALT
 
-            if abs(Xnorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en colonne ",Xnorm,col)
-            if abs(Ynorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en ligne ",Ynorm,row)
-            if abs(Znorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt)
+                    if abs(Xnorm) > self.lim_extrapol:
+                        print("!!!!! l'evaluation au point est extrapolee en colonne ", Xnorm, col[i])
+                    if abs(Ynorm) > self.lim_extrapol:
+                        print("!!!!! l'evaluation au point est extrapolee en ligne ", Ynorm, row[i])
+                    if abs(Znorm) > self.lim_extrapol:
+                        print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt[i])
 
-            monomes = array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
-                 Ynorm**int(self.Monomes[i][2])*\
-                 Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
+                    monomes = array([self.Monomes[i][0] * Xnorm ** int(self.Monomes[i][1]) * \
+                                     Ynorm ** int(self.Monomes[i][2]) * \
+                                     Znorm ** int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
 
-            Xout = dot(array(self.Num_X),monomes)/dot(array(self.Den_X),monomes)*self.scale_X+self.offset_X
-            Yout = dot(array(self.Num_Y),monomes)/dot(array(self.Den_Y),monomes)*self.scale_Y+self.offset_Y
+                    P[0] = dot(array(self.Num_X), monomes) / dot(array(self.Den_X),
+                                                                 monomes) * self.scale_X + self.offset_X
+                    P[1] = dot(array(self.Num_Y), monomes) / dot(array(self.Den_Y),
+                                                                 monomes) * self.scale_Y + self.offset_Y
+                    P[2] = alt
+            else:
+                P = zeros(3)
+                Xnorm = (col - self.offset_COL)/self.scale_COL
+                Ynorm = (row - self.offset_LIG)/self.scale_LIG
+                Znorm = (alt - self.offset_ALT)/self.scale_ALT
+
+                if abs(Xnorm)> self.lim_extrapol :
+                    print("!!!!! l'evaluation au point est extrapolee en colonne ",Xnorm,col)
+                if abs(Ynorm)> self.lim_extrapol :
+                    print("!!!!! l'evaluation au point est extrapolee en ligne ",Ynorm,row)
+                if abs(Znorm)> self.lim_extrapol :
+                    print("!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt)
+
+                monomes = array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
+                     Ynorm**int(self.Monomes[i][2])*\
+                     Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
+
+                P[0] = dot(array(self.Num_X),monomes)/dot(array(self.Den_X),monomes)*self.scale_X+self.offset_X
+                P[1] = dot(array(self.Num_Y),monomes)/dot(array(self.Den_Y),monomes)*self.scale_Y+self.offset_Y
+                P[2] = alt
         else:
-
-            (Xout,Yout, alt) = self.direct_loc_inverse_iterative(row, col, alt)
-        return (Xout,Yout, alt)
+            if isinstance(row,(list,ndarray)):
+                P = zeros((col.size, 3))
+                P[:, 2] = alt
+                for i in range(col.size):
+                    (P[i,0], P[i,1], P[i,2]) = self.direct_loc_inverse_iterative(row[i], col[i], alt)
+            else:
+                P = zeros(3)
+                (P[0], P[1],P[2]) = self.direct_loc_inverse_iterative(row, col, alt)
+        return P
 
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):

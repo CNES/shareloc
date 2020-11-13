@@ -63,7 +63,7 @@ class rectification_grid:
     def interpolate(self, positions):
         """
         interpolate position
-        :param positions : positions to interpolate : array  Nx2 [col,rox]
+        :param positions : positions to interpolate : array  Nx2 [col,row]
         :type positions: np.array
         :return interpolated positions : array  Nx2 [col,row]
         :rtype  np.array

@@ -184,6 +184,7 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
         print('sift')
         epi_pos_left = matches[:,0:2]
         epi_pos_right= matches[:,2:4]
+        values_ok = np.full((matches.shape[0]), True, dtype=bool)
     elif matches_type is 'disp':
         print('disp')
         [epi_pos_left, epi_pos_right, values_ok] = transform_disp_to_matches(matches,mask)

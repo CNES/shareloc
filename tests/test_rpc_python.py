@@ -138,17 +138,18 @@ def test_rpc_direct_inverse_iterative_vs_direct_multiple_points():
 
     (col,row,alt)=(np.array([600, 610]), np.array([200, 210]), np.array([125]))
     P0 = fctrat.direct_loc_h(row,col,alt)
-    P1 = fctrat.direct_loc_inverse_iterative(row,col,alt)
+    (rowinv,colinv,__) = fctrat.inverse_loc(P0[:,0],P0[:,1],alt)
+    P1 = fctrat.direct_loc_inverse_iterative(rowinv,colinv,alt)
 
     #print("comparaison loc directe RPC / loc inverse RPC iterative""")
     #"""Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
     #Point error col = 600, row = 200
-    assert (P0[0, 0]==pytest.approx(P1[0][0], abs = 10.0/111111000))
-    assert (P0[0, 1]==pytest.approx(P1[1][0], abs =10.0/111111000))
+    assert (P0[0, 0]==P1[0][0])
+    assert (P0[0, 1]==P1[1][0])
 
     # Point error col = 601, row = 201
-    assert (P0[1, 0]==pytest.approx(P1[0][1], abs = 10.0/111111000))
-    assert (P0[1, 1]==pytest.approx(P1[1][1], abs =10.0/111111000))
+    assert (P0[1, 0]==P1[0][1])
+    assert (P0[1, 1]==P1[1][1])
 
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])

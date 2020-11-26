@@ -240,26 +240,30 @@ def test_epi_triangulation_sift_distance():
 
     point_ecef, point_wgs84, residuals = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename, residues = True)
 
-def plot_diff(cloud,array_epi_ecef):
+def stats_diff(cloud,array_epi_ecef):
     ecef_x = cloud.x.values
     ecef_y = cloud.y.values
     ecef_z = cloud.z.values
-    diff_x = ecef_x - array_epi_ecef[:,:,0]
-    diff_y = ecef_y - array_epi_ecef[:, :, 1]
-    diff_z = ecef_z - array_epi_ecef[:, :, 2]
+    diff_x = abs(ecef_x - array_epi_ecef[:,:,0])
+    diff_y = abs(ecef_y - array_epi_ecef[:, :, 1])
+    diff_z = abs(ecef_z - array_epi_ecef[:, :, 2])
 
+    stats = np.zeros([3,3])
     mean_x = np.mean(diff_x)
     min_x = np.min(diff_x)
     max_x = np.max(diff_x)
-    print(" diff x {} {} {}".format(mean_x,min_x,max_x))
+    stats[0,:] = [mean_x,min_x,max_x]
+
     mean_y = np.mean(diff_y)
     min_y = np.min(diff_y)
     max_y = np.max(diff_y)
-    print(" diff y {} {} {}".format(mean_y,min_y,max_y))
+    stats[1,:] = [mean_y,min_y,max_y]
     mean_z = np.mean(diff_z)
     min_z= np.min(diff_z)
     max_z = np.max(diff_z)
-    print(" diff z {} {} {}".format(mean_z,min_z,max_z))
+    stats[2,:] = [mean_z,min_z,max_z]
+    return stats
+
 
 
 def create_dataset(disp,point_wgs84,point_ecef,residuals):
@@ -303,9 +307,11 @@ def test_epi_triangulation_disp_rpc():
     disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disparity-crop.nc")
     disp = xr.load_dataset(disp_filename)
 
+    start = time.time()
     point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, 'disp', geom_model_left, geom_model_right, grid_left_filename,
                                                    grid_right_filename, residues = True)
-
+    end = time.time()
+    print("elapsed time {}".format(end - start))
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
     out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation_rpc.nc")
@@ -314,19 +320,16 @@ def test_epi_triangulation_disp_rpc():
     #open cloud
     cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
     cloud = xr.load_dataset(cloud_filename)
+    array_shape = disp.disp.values.shape
+    array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
+    stats = stats_diff(cloud, array_epi_ecef)
+    #1492 first non masked index
+    index = 1492
+    assert(point_ecef[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-3))
+    assert(point_ecef[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=1e-3))
+    assert(point_ecef[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=1e-3))
+    assert (stats[:,2] == pytest.approx([0,0,0], abs=6e-4))
 
-    #plot_diff(cloud, array_epi_ecef)
-
-    #print(point_ecef.shape)
-    #point_ecef, point_wgs84 = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
-
-    #print(point_wgs84[1:10,:])
-
-    #assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
-    #assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))
-    ##assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
-    #assert(col == pytest.approx(inv_col,abs=1e-2))
-    #assert(valid == 1)
 
 
 
@@ -369,18 +372,15 @@ def test_epi_triangulation_disp_grid():
     cloud = xr.load_dataset(cloud_filename)
     array_shape = disp.disp.values.shape
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
-    plot_diff(cloud, array_epi_ecef)
 
-    #print(point_ecef.shape)
-    #point_ecef, point_wgs84 = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
+    stats = stats_diff(cloud, array_epi_ecef)
+    #1492 first non masked index
+    index = 1492
+    assert(point_ecef[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-3))
+    assert(point_ecef[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=0.6))
+    assert(point_ecef[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=0.6))
+    assert (stats[:,2] == pytest.approx([0,0,0], abs=0.6))
 
-    #print(point_wgs84[1:10,:])
-
-    #assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
-    #assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))
-    ##assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
-    #assert(col == pytest.approx(inv_col,abs=1e-2))
-    #assert(valid == 1)
 
 
 
@@ -411,14 +411,8 @@ def test_epi_triangulation_disp_grid_masked():
                                                    grid_right_filename, residues = True)
     end = time.time()
     print("elapsed time {}".format(end - start))
-    pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
-    disp = xr.merge((disp, pc_dataset))
-    out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation_masked.nc")
-    disp.to_netcdf(out_disp_filename)
-
-    #open cloud
-    cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
-    cloud = xr.load_dataset(cloud_filename)
-    array_shape = disp.disp.values.shape
-    array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
-    plot_diff(cloud, array_epi_ecef)
+    #pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
+    #disp = xr.merge((disp, pc_dataset))
+    #out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation_masked.nc")
+    #disp.to_netcdf(out_disp_filename)
+    assert (np.array_equal(point_ecef[0,:],[0,0,0]))

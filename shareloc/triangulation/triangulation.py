@@ -120,11 +120,17 @@ def los_triangulation(left_los,right_los):
     return intersection
 
 
-def transform_disp_to_matches(disp,mask = None):
-    "transform disparity map to matches"
+def transform_disp_to_matches(disp, mask = None):
+    """
+    transform disparity map to matches
 
-    #create meshgrid starting from origin
-
+    :param disp :  dispartiy xarray
+    :type disp : xarray
+    :param mask :  mask
+    :type mask : numpy.array
+    :return epipolar matches and logical non masked values
+    :rtype list of numpy.arrray
+    """
 
 
     col,row  = np.meshgrid(disp.col,disp.row)

@@ -588,9 +588,9 @@ class RPC:
             Y = np.repeat(Y, dc.size)
 
             # while the required precision is not achieved
-            while np.max(abs(dc)) > eps and np.max(abs(dl)) > eps and k < nb_iter_max:
+            while (np.max(abs(dc)) > eps or np.max(abs(dl)) > eps) and k < nb_iter_max:
                 # list of points that require another iteration
-                iter_ = np.where((abs(dc) > eps) & (abs(dl) > eps))[0]
+                iter_ = np.where((abs(dc) > eps) | (abs(dl) > eps))[0]
 
                 # partial derivatives
                 (Cdx, Cdy, Ldx, Ldy) = self.calcule_derivees_inv(X[iter_], Y[iter_], alt)

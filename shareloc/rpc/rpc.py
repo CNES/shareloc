@@ -206,10 +206,10 @@ class RPC:
                  [2,0,1,1],[0,0,0,3]]
 
     @classmethod
-    def from_dimap_v1(cls, dimap_filepath, TopLeftConvention=False):
+    def from_dimap_v1(cls, dimap_filepath, topleftconvention=False):
         """ load from dimap 
-        :param TopLeftConvention  : [0,0] position
-	:param TopLeftConvention  : boolean 
+        :param topleftconvention  : [0,0] position
+	:param topleftconvention  : boolean 
         If False : [0,0] is at the center of the Top Left pixel 
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
@@ -264,7 +264,7 @@ class RPC:
         rpc_params['Num_LIG']    = coeff_LIG[0:20]
         rpc_params['Den_LIG']    = coeff_LIG[20::]
         #If top left convention, 0.5 pixel shift added on col/row offsets
-        if TopLeftConvention is True:
+        if topleftconvention:
             rpc_params['offset_COL'] += 0.5
             rpc_params['offset_LIG'] += 0.5
         return cls(rpc_params)
@@ -272,10 +272,10 @@ class RPC:
 
 
     @classmethod
-    def from_ossim_kwl(cls, ossim_kwl_filename, TopLeftConvention=False):
+    def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=False):
         """ Load from a geom file
-        :param TopLeftConvention  : [0,0] position
-	:param TopLeftConvention  : boolean 
+        :param topleftconvention  : [0,0] position
+	:param topleftconvention  : boolean 
         If False : [0,0] is at the center of the Top Left pixel 
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
@@ -327,7 +327,7 @@ class RPC:
         rpc_params['Num_Y'] = None
         rpc_params['Den_Y'] = None
         #If top left convention, 0.5 pixel shift added on col/row offsets
-        if TopLeftConvention is True:
+        if topleftconvention:
             rpc_params['offset_COL'] += 0.5
             rpc_params['offset_LIG'] += 0.5
 
@@ -336,10 +336,10 @@ class RPC:
 
 
     @classmethod
-    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None, TopLeftConvention=False):
+    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None, topleftconvention=False):
         """ load from euclidium
-        :param TopLeftConvention  : [0,0] position
-	:param TopLeftConvention  : boolean 
+        :param topleftconvention  : [0,0] position
+	:param topleftconvention  : boolean 
         If False : [0,0] is at the center of the Top Left pixel 
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
@@ -380,25 +380,25 @@ class RPC:
             rpc_params['Den_Y'] = None
 
         #If top left convention, 0.5 pixel shift added on col/row offsets
-        if TopLeftConvention is True:
+        if topleftconvention:
             rpc_params['offset_COL'] += 0.5
             rpc_params['offset_LIG'] += 0.5
 			
         return cls(rpc_params)
 
     @classmethod
-    def from_any(cls, primary_file, secondary_file=None, TopLeftConvention=False):
+    def from_any(cls, primary_file, secondary_file=None, topleftconvention=False):
 
         if basename(primary_file).endswith('XML'.upper()):
            dimap_version = identify_dimap(primary_file)
            if dimap_version is not None :
             if float(dimap_version)<2.0 :
-                return cls.from_dimap_v1(primary_file, TopLeftConvention)
+                return cls.from_dimap_v1(primary_file, topleftconvention)
         else:
             ossim_model = identify_ossim_kwl(primary_file)
             if ossim_model is not None:
-                    return cls.from_ossim_kwl(primary_file, TopLeftConvention)
-        return cls.from_euclidium(primary_file, secondary_file, TopLeftConvention)
+                    return cls.from_ossim_kwl(primary_file, topleftconvention)
+        return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
 
 
 

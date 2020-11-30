@@ -72,7 +72,7 @@ def test_identify_dimap():
 def test_rpc_ossim_kwl(id_scene,lon,lat,alt,row_vt,col_vt):
     data_folder = test_path()
     file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
-    fctrat_geom = RPC.from_any(file_geom)
+    fctrat_geom = RPC.from_any(file_geom, TopLeftConvention=True)
     print("{} {} {}".format(lon,lat,alt))
     (row,col,__) = fctrat_geom.inverse_loc(lon,lat,alt)
     print("col {} row {}".format(col,row))

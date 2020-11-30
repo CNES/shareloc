@@ -161,10 +161,10 @@ def test_epi_triangulation_sift_rpc():
     data_folder = test_path()
     id_scene = 'PHR1B_P_201709281038045_SEN_PRG_FC_178608-001'
     file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
-    geom_model_left = RPC.from_any(file_geom)
+    geom_model_left = RPC.from_any(file_geom, TopLeftConvention=True)
     id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
     file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
-    geom_model_right = RPC.from_any(file_geom)
+    geom_model_right = RPC.from_any(file_geom, TopLeftConvention=True)
 
     #row = 10.0
     #col = 1000.0
@@ -289,10 +289,10 @@ def test_epi_triangulation_disp_rpc():
     data_folder = test_path()
     id_scene = 'PHR1B_P_201709281038045_SEN_PRG_FC_178608-001'
     file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
-    geom_model_left = RPC.from_any(file_geom)
+    geom_model_left = RPC.from_any(file_geom, TopLeftConvention=True)
     id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
     file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
-    geom_model_right = RPC.from_any(file_geom)
+    geom_model_right = RPC.from_any(file_geom, TopLeftConvention=True)
 
 
 

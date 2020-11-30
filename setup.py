@@ -23,6 +23,9 @@ VERSION = '0.1.0'
 EMAIL = 'TBD'
 LICENSE = 'TBD'
 REQUIREMENTS = ['numpy','gdal','rasterio','xarray','netCDF4']
+REQUIREMENTS_EXTRA = {'dev': ['pytest',
+                            'pylint',
+                            'pre-commit']}
 DESCRIPTION = '''
 ShareLoc API
 '''
@@ -44,10 +47,5 @@ setup(
     long_description=DESCRIPTION,
     install_requires=REQUIREMENTS,
     python_requires=REQUIRES_PYTHON,
-    packages=find_packages())
-
-
-
-
-
-
+    extras_require=REQUIREMENTS_EXTRA,
+    python_requires=REQUIRES_PYTHON)

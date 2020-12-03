@@ -6,7 +6,7 @@
 #    or
 #      ``pip install shareloc``
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from subprocess import check_output
 from codecs import open
 
@@ -40,7 +40,8 @@ setup(
     license=LICENSE,
     long_description=DESCRIPTION,
     install_requires=REQUIREMENTS,
-    python_requires=REQUIRES_PYTHON)
+    python_requires=REQUIRES_PYTHON,
+    packages=find_packages())
 
 
 

@@ -20,7 +20,6 @@
 #
 
 from xml.dom import minidom
-from numpy import array, dot, zeros, sqrt, nan, ndarray
 from os.path import basename
 import numpy as np
 
@@ -293,10 +292,10 @@ class RPC:
             (key, val) = line.split(': ')
             geom_dict[key] = val.rstrip()
 
-        rpc_params['Den_LIG']= [nan] * 20
-        rpc_params['Num_LIG'] = [nan] * 20
-        rpc_params['Den_COL']= [nan] * 20
-        rpc_params['Num_COL'] = [nan] * 20
+        rpc_params['Den_LIG']= [np.nan] * 20
+        rpc_params['Num_LIG'] = [np.nan] * 20
+        rpc_params['Den_COL']= [np.nan] * 20
+        rpc_params['Num_COL'] = [np.nan] * 20
         for index in range(0, 20):
             axis = "line"
             num_den = "den"
@@ -412,34 +411,34 @@ class RPC:
             Xnorm = (lon - self.offset_X)/self.scale_X
             Ynorm = (lat - self.offset_Y)/self.scale_Y
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
-            monomes = array([self.Monomes[i][0]*\
+            monomes = np.array([self.Monomes[i][0]*\
                  Xnorm**int(self.Monomes[i][1])*\
                  Ynorm**int(self.Monomes[i][2])*\
                  Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
-            NumDC = dot(array(self.Num_COL),monomes)
-            DenDC = dot(array(self.Den_COL),monomes)
-            NumDL = dot(array(self.Num_LIG),monomes)
-            DenDL = dot(array(self.Den_LIG),monomes)
+            NumDC = np.dot(np.array(self.Num_COL),monomes)
+            DenDC = np.dot(np.array(self.Den_COL),monomes)
+            NumDL = np.dot(np.array(self.Num_LIG),monomes)
+            DenDL = np.dot(np.array(self.Den_LIG),monomes)
 
-            monomes_deriv_x = array([self.monomes_deriv_1[i][0]*\
+            monomes_deriv_x = np.array([self.monomes_deriv_1[i][0]*\
                 Xnorm**int(self.monomes_deriv_1[i][1])*\
                 Ynorm**int(self.monomes_deriv_1[i][2])*\
                 Znorm**int(self.monomes_deriv_1[i][3]) for i in range(self.monomes_deriv_1.__len__())])
 
-            monomes_deriv_y = array([self.monomes_deriv_2[i][0]*\
+            monomes_deriv_y = np.array([self.monomes_deriv_2[i][0]*\
                 Xnorm**int(self.monomes_deriv_2[i][1])*\
                 Ynorm**int(self.monomes_deriv_2[i][2])*\
                 Znorm**int(self.monomes_deriv_2[i][3]) for i in range(self.monomes_deriv_2.__len__())])
 
-            NumDCdx = dot(array(self.Num_COL),monomes_deriv_x)
-            DenDCdx = dot(array(self.Den_COL),monomes_deriv_x)
-            NumDLdx = dot(array(self.Num_LIG),monomes_deriv_x)
-            DenDLdx = dot(array(self.Den_LIG),monomes_deriv_x)
+            NumDCdx = np.dot(np.array(self.Num_COL),monomes_deriv_x)
+            DenDCdx = np.dot(np.array(self.Den_COL),monomes_deriv_x)
+            NumDLdx = np.dot(np.array(self.Num_LIG),monomes_deriv_x)
+            DenDLdx = np.dot(np.array(self.Den_LIG),monomes_deriv_x)
 
-            NumDCdy = dot(array(self.Num_COL),monomes_deriv_y)
-            DenDCdy = dot(array(self.Den_COL),monomes_deriv_y)
-            NumDLdy = dot(array(self.Num_LIG),monomes_deriv_y)
-            DenDLdy = dot(array(self.Den_LIG),monomes_deriv_y)
+            NumDCdy = np.dot(np.array(self.Num_COL),monomes_deriv_y)
+            DenDCdy = np.dot(np.array(self.Den_COL),monomes_deriv_y)
+            NumDLdy = np.dot(np.array(self.Num_LIG),monomes_deriv_y)
+            DenDLdy = np.dot(np.array(self.Den_LIG),monomes_deriv_y)
 
             #derive (u/v)' = (u'v - v'u)/(v*v)
             DCdx = self.scale_COL/self.scale_X*(NumDCdx*DenDC - DenDCdx*NumDC)/DenDC**2
@@ -484,7 +483,7 @@ class RPC:
         # Direct localization using direct RPC
         if self.Num_X:
             # ground position
-            P = zeros((col.size, 3))
+            P = np.zeros((col.size, 3))
 
             Xnorm = (col - self.offset_COL)/self.scale_COL
             Ynorm = (row - self.offset_LIG)/self.scale_LIG
@@ -497,18 +496,18 @@ class RPC:
             if abs(Znorm) > self.lim_extrapol :
                 print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
 
-            monomes = array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
+            monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
                  Ynorm**int(self.Monomes[i][2])*\
                  Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
 
-            P[:, 0] = dot(array(self.Num_X), monomes)/dot(array(self.Den_X), monomes)*self.scale_X+self.offset_X
-            P[:, 1] = dot(array(self.Num_Y), monomes)/dot(array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
+            P[:, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*self.scale_X+self.offset_X
+            P[:, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
             P[:, 2] = alt
 
         # Direct localization using inverse RPC
         else:
             # ground position
-            P = zeros((col.size, 3))
+            P = np.zeros((col.size, 3))
             P[:, 2] = alt
             (P[:, 0], P[:, 1], P[:, 2]) = self.direct_loc_inverse_iterative(row, col, alt)
 
@@ -534,8 +533,8 @@ class RPC:
          :return direct localization grid
          :rtype numpy.array
         """
-        gri_lon = zeros((nbrow,nbcol))
-        gri_lat = zeros((nbrow,nbcol))
+        gri_lon = np.zeros((nbrow,nbcol))
+        gri_lat = np.zeros((nbrow,nbcol))
         for c in range(int(nbcol)):
             col = col0 + stepcol*c
             for l in range(int(nbrow)):
@@ -557,7 +556,7 @@ class RPC:
         :rtype numpy.ndarray
         """
         if self.Num_COL:
-            if not isinstance(lon, (list, ndarray)):
+            if not isinstance(lon, (list, np.ndarray)):
                 lon = np.array([lon])
                 lat = np.array([lat])
 
@@ -572,12 +571,12 @@ class RPC:
             if abs(Znorm) > self.lim_extrapol:
                 print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
 
-            monomes = array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
+            monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
                 Ynorm**int(self.Monomes[i][2])*\
                 Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
 
-            Cout = dot(array(self.Num_COL), monomes)/dot(array(self.Den_COL), monomes)*self.scale_COL+self.offset_COL
-            Lout = dot(array(self.Num_LIG), monomes)/dot(array(self.Den_LIG), monomes)*self.scale_LIG+self.offset_LIG
+            Cout = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*self.scale_COL+self.offset_COL
+            Lout = np.dot(np.array(self.Num_LIG), monomes)/np.dot(np.array(self.Den_LIG), monomes)*self.scale_LIG+self.offset_LIG
         else:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
             (Cout, Lout) = (None, None)
@@ -598,7 +597,7 @@ class RPC:
         """
         if self.Num_COL:
 
-            if not isinstance(row, (list, ndarray)):
+            if not isinstance(row, (list, np.ndarray)):
                 col = np.array([col])
                 row = np.array([row])
 
@@ -671,7 +670,7 @@ class RPC:
         :return los extrema
         :rtype numpy.array (2x3)
         """
-        los_edges = zeros([2, 3])
+        los_edges = np.zeros([2, 3])
         los_edges[0, :] = self.direct_loc_h(row, col, alt_max)
         los_edges[1, :] = self.direct_loc_h(row, col, alt_min)
         return los_edges

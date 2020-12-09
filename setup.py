@@ -5,10 +5,13 @@
 #      ``python setup.py install``
 #    or
 #      ``pip install shareloc``
+"""
+This module contains the required libraries and softwares allowing to execute the software,
+and setup elements to configure and identify the software.
+"""
 
+from codecs import open as copen
 from setuptools import setup, find_packages
-from subprocess import check_output
-from codecs import open
 
 # Meta-data.
 NAME = 'shareloc'
@@ -26,8 +29,8 @@ ShareLoc API
 
 
 def readme():
-    with open('readme.md', "r", "utf-8") as f:
-        return f.read()
+    with copen('readme.md', 'r', 'utf-8') as fstream:
+        return fstream.read()
 
 # Setup
 setup(

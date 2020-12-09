@@ -68,11 +68,9 @@ class rectification_grid:
         :return interpolated positions : array  Nx2 [col,row]
         :rtype  np.array
         """
-        #interp with grid data
-        interp_row = interpolate.interpn(self.points, self.row_positions, positions, method='linear')
-        interp_col = interpolate.interpn(self.points, self.col_positions, positions, method='linear')
+        # TODO: interpn to be replaced by math_utils.interpol_bilin_vectorized
+        interp_row = interpolate.interpn(self.points, self.row_positions, positions, method='linear', bounds_error=False, fill_value=None)
+        interp_col = interpolate.interpn(self.points, self.col_positions, positions, method='linear', bounds_error=False, fill_value=None)
         interp_pos = np.stack((interp_col,interp_row)).transpose()
         return interp_pos
 
-
-    #gridata

@@ -134,12 +134,6 @@ def transform_disp_to_matches(disp, mask = None):
 
 
     col,row  = np.meshgrid(disp.col,disp.row)
-
-    roi = disp.roi
-    ori_col = roi[0]
-    ori_row = roi[1]
-    col = col + ori_col
-    row = row + ori_row
     disp_array = disp.disp.values
     if mask is not None:
         values_ok = mask > 0

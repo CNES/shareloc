@@ -600,6 +600,16 @@ class RPC:
             if not isinstance(row, (list, np.ndarray)):
                 col = np.array([col])
                 row = np.array([row])
+            filter_nan = np.logical_not(np.logical_or(np.isnan(col),np.isnan(row)))
+            long_out = np.full(row.size,np.nan)
+            lat_out = np.full(row.size, np.nan)
+
+            row=row[filter_nan]
+            col=col[filter_nan]
+
+            # if all coord contains Nan then return
+            if not np.any(filter_nan):
+                return long_out, lat_out, alt
 
             # inverse localization starting from the center of the scene
             X = np.array([self.offset_X])
@@ -609,7 +619,7 @@ class RPC:
             # desired precision in pixels
             eps = 1e-6
 
-            k = 0
+            iteration = 0
             # computing the residue between the sensor positions and those estimated by the inverse localization
             dc = col - c0
             dl = row - l0
@@ -617,9 +627,8 @@ class RPC:
             # ground coordinates (latitude and longitude) of each point
             X = np.repeat(X, dc.size)
             Y = np.repeat(Y, dc.size)
-
             # while the required precision is not achieved
-            while (np.max(abs(dc)) > eps or np.max(abs(dl)) > eps) and k < nb_iter_max:
+            while (np.max(abs(dc)) > eps or np.max(abs(dl)) > eps) and iteration < nb_iter_max:
                 # list of points that require another iteration
                 iter_ = np.where((abs(dc) > eps) | (abs(dl) > eps))[0]
 
@@ -640,13 +649,15 @@ class RPC:
                 # updating the residue between the sensor positions and those estimated by the inverse localization
                 dc[iter_] = col[iter_] - c
                 dl[iter_] = row[iter_] - l
-                k += 1
+                iteration += 1
+            long_out[filter_nan] = X
+            lat_out[filter_nan] = Y
 
         else:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
-            (X, Y) = (None, None, None)
+            (long_out, lat_out) = (None, None)
 
-        return X, Y, alt
+        return long_out, lat_out, alt
 
     def get_alt_min_max(self):
         """

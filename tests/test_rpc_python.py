@@ -166,6 +166,29 @@ def test_rpc_direct_iterative_nan():
     assert (P0[0][0]==P1[0])
     assert (P0[0][1]==P1[1])
 
+def test_rpc_direct_iterative_nan():
+    # comparasion between tabs en tab containing Nan cf. issue #46
+    data_folder = test_path()
+    id_scene = 'P1BP--2018122638935449CP'
+    file_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+
+    fctrat = RPC.from_dimap_v1(file_dimap)
+
+
+    (col,row,alt)=(np.array([600, np.nan]), np.array([200, 210]), np.array([125]))
+    direct_loc_tab = fctrat.direct_loc_inverse_iterative(row,col,alt)
+    direct_loc_one_value = fctrat.direct_loc_inverse_iterative(row[0], col[0], alt)
+
+    (col,row,alt)=(np.array([np.nan, np.nan]), np.array([np.nan, np.nan]), np.array([125]))
+    direct_loc_nan = fctrat.direct_loc_inverse_iterative(row,col,alt)
+    assert(np.all(np.isnan(direct_loc_nan[0])))
+    assert(np.all(np.isnan(direct_loc_nan[1])))
+
+    #Point error col = 600, row = 200
+    assert (direct_loc_tab[0][0]==direct_loc_one_value[0][0])
+    assert (direct_loc_tab[1][0]==direct_loc_one_value[1][0])
+
+
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])
 def test_rpc_direct_inverse_iterative(col,row,alt):

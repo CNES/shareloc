@@ -582,7 +582,7 @@ class RPC:
             (Cout, Lout) = (None, None)
         return Lout, Cout, True
 
-    def direct_loc_inverse_iterative(self, row, col, alt, nb_iter_max=10):
+    def direct_loc_inverse_iterative(self, row, col, alt, nb_iter_max=10, fill_nan = True):
         """
         Iterative direct localization using inverse RPC
 
@@ -592,8 +592,13 @@ class RPC:
         :type col : float or 1D numpy.ndarray dtype=float64
         :param alt :  altitude
         :type alt : float
-        :param nb_iter_max:
+        :param nb_iter_max: max number of iteration
+        :type alt : int
+        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
         :return: ground position (lon,lat,h)
+        :rtype list of numpy.array
         """
         if self.Num_COL:
 
@@ -601,13 +606,21 @@ class RPC:
                 col = np.array([col])
                 row = np.array([row])
             filter_nan = np.logical_not(np.logical_or(np.isnan(col),np.isnan(row)))
-            long_out = np.full(row.size,np.nan)
-            lat_out = np.full(row.size, np.nan)
+
+            if fill_nan:
+                lon_nan_value = self.offset_X
+                lat_nan_value = self.offset_Y
+            else:
+                lon_nan_value = np.nan
+                lat_nan_value = np.nan
+            long_out = np.full(row.size,lon_nan_value)
+            lat_out = np.full(row.size, lat_nan_value)
 
             row=row[filter_nan]
             col=col[filter_nan]
 
-            # if all coord contains Nan then return
+            # if all coord
+            #  contains Nan then return
             if not np.any(filter_nan):
                 return long_out, lat_out, alt
 

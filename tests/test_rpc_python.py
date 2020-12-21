@@ -178,16 +178,16 @@ def test_rpc_direct_iterative_nan():
     (col,row,alt)=(np.array([600, np.nan]), np.array([200, 210]), np.array([125]))
     direct_loc_tab = fctrat.direct_loc_inverse_iterative(row,col,alt)
     direct_loc_one_value = fctrat.direct_loc_inverse_iterative(row[0], col[0], alt)
-
     (col,row,alt)=(np.array([np.nan, np.nan]), np.array([np.nan, np.nan]), np.array([125]))
-    direct_loc_nan = fctrat.direct_loc_inverse_iterative(row,col,alt)
+    direct_loc_nan = fctrat.direct_loc_inverse_iterative(row,col,alt,10,False)
     assert(np.all(np.isnan(direct_loc_nan[0])))
     assert(np.all(np.isnan(direct_loc_nan[1])))
 
     #Point error col = 600, row = 200
     assert (direct_loc_tab[0][0]==direct_loc_one_value[0][0])
     assert (direct_loc_tab[1][0]==direct_loc_one_value[1][0])
-
+    assert (direct_loc_tab[0][1]==fctrat.offset_X)
+    assert (direct_loc_tab[1][1]==fctrat.offset_Y)
 
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])

@@ -240,13 +240,13 @@ def test_epi_triangulation_sift_distance():
 
     point_ecef, point_wgs84, residuals = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename, residues = True)
 
-def stats_diff(cloud,array_epi_ecef):
-    ecef_x = cloud.x.values
-    ecef_y = cloud.y.values
-    ecef_z = cloud.z.values
-    diff_x = abs(ecef_x - array_epi_ecef[:,:,0])
-    diff_y = abs(ecef_y - array_epi_ecef[:, :, 1])
-    diff_z = abs(ecef_z - array_epi_ecef[:, :, 2])
+def stats_diff(cloud,array_epi):
+    coords_x = cloud.x.values
+    coords_y = cloud.y.values
+    coords_z = cloud.z.values
+    diff_x = abs(coords_x - array_epi[:,:,0])
+    diff_y = abs(coords_y - array_epi[:, :, 1])
+    diff_z = abs(coords_z - array_epi[:, :, 2])
 
     stats = np.zeros([3,3])
     mean_x = np.mean(diff_x)
@@ -323,7 +323,7 @@ def test_epi_triangulation_disp_rpc():
     array_shape = disp.disp.values.shape
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
     stats = stats_diff(cloud, array_epi_ecef)
-    #1492 first non masked index
+    print(stats)
     index = 1492
     assert(point_ecef[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-3))
     assert(point_ecef[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=1e-3))
@@ -331,6 +331,42 @@ def test_epi_triangulation_disp_rpc():
     assert (stats[:,2] == pytest.approx([0,0,0], abs=6e-4))
 
 
+@pytest.mark.unit_tests
+def test_epi_triangulation_disp_rpc_roi():
+    """
+     Test epipolar triangulation
+    """
+    data_folder = test_path()
+    file_geom = os.path.join(data_folder, 'rpc/phr_ventoux/left_image.geom')
+    geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
+    file_geom = os.path.join(data_folder, 'rpc/phr_ventoux/right_image.geom')
+    geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
+
+
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid_ventoux.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid_ventoux.tif")
+
+    disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disp1_ref.nc")
+    disp = xr.load_dataset(disp_filename)
+
+    start = time.time()
+    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, 'disp', geom_model_left, geom_model_right, grid_left_filename,
+                                                   grid_right_filename, residues = True)
+    end = time.time()
+    pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
+
+    #open cloud
+    cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "triangulation1_ref.nc")
+    cloud = xr.load_dataset(cloud_filename)
+    array_shape = disp.disp.values.shape
+    array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1], 3))
+    stats = stats_diff(cloud, array_epi_wgs84)
+    #1492 first non masked index
+    index = 100
+    assert(point_wgs84[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-8))
+    assert(point_wgs84[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=1e-8))
+    assert(point_wgs84[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=1e-3))
+    assert (stats[:,2] == pytest.approx([0,0,0], abs=6e-4))
 
 
 

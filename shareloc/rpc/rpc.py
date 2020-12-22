@@ -256,12 +256,19 @@ class RPC:
         rpc_params['Den_COL']    = coeff_COL[20::]
         rpc_params['Num_LIG']    = coeff_LIG[0:20]
         rpc_params['Den_LIG']    = coeff_LIG[20::]
+
+        rpc_params['offset_COL'] -= 1.5
+        rpc_params['offset_LIG'] -= 1.5
+        #If top left convention, 0.5 pixel shift added on col/row offsets
+        if topleftconvention:
+            rpc_params['offset_COL'] += 0.5
+            rpc_params['offset_LIG'] += 0.5
         return cls(rpc_params)
 
 
 
     @classmethod
-    def from_ossim_kwl(cls, ossim_kwl_filename):
+    def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=False):
 
         rpc_params = dict()
         #OSSIM keyword list
@@ -314,7 +321,7 @@ class RPC:
 
 
     @classmethod
-    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None):
+    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None, topleftconvention=False):
         """ load from euclidium """
 
         rpc_params = dict()
@@ -351,6 +358,15 @@ class RPC:
             rpc_params['Den_X'] = None
             rpc_params['Num_Y'] = None
             rpc_params['Den_Y'] = None
+
+        rpc_params['offset_COL'] -= 1
+        rpc_params['offset_LIG'] -= 1
+        #If top left convention, 0.5 pixel shift added on col/row offsets
+
+        if topleftconvention:
+            rpc_params['offset_COL'] += 0.5
+            rpc_params['offset_LIG'] += 0.5
+
         return cls(rpc_params)
 
     @classmethod

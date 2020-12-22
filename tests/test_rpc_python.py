@@ -64,29 +64,33 @@ def test_identify_dimap():
     dimap_version =  identify_dimap(file_dimap)
     assert (dimap_version == '1.4')
 
-@pytest.mark.parametrize("lon,lat,alt", [(7.048662660737769592,43.72774839443545858,0.0)])
-def test_rpc_ossim_kwl(lon,lat,alt):
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0)])
+def test_rpc_ossim_kwl(id_scene,lon,lat,alt,row_vt,col_vt):
     data_folder = test_path()
-    id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
     file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
     fctrat_geom = RPC.from_any(file_geom)
     print("{} {} {}".format(lon,lat,alt))
     (row,col,__) = fctrat_geom.inverse_loc(lon,lat,alt)
     print("col {} row {}".format(col,row))
-    assert(col == pytest.approx(100, abs = 1e-2))
-    assert(row == pytest.approx(200, abs = 1e-2))
+    assert(col == pytest.approx(col_vt, abs = 1e-2))
+    assert(row == pytest.approx(row_vt, abs = 1e-2))
 
-@pytest.mark.parametrize("lon,lat,alt", [(7.048662660737769592,43.72774839443545858,0.0)])
-def test_rpc_eucl(lon,lat,alt):
+
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0)])
+def test_rpc_eucl(id_scene,lon,lat,alt,row_vt,col_vt):
     data_folder = test_path()
-    id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
     file_inverse = os.path.join(data_folder, 'rpc/{}_inv.txt'.format(id_scene))
-    fctrat_eucl = RPC.from_euclidium(file_inverse)
+    fctrat_eucl = RPC.from_euclidium(file_inverse, topleftconvention=True)
     print("{} {} {}".format(lon,lat,alt))
     (row,col,__) = fctrat_eucl.inverse_loc(lon,lat,alt)
     print("col {} row {}".format(col,row))
-    assert(col == pytest.approx(98.94, abs = 1e-2))
-    assert(row == pytest.approx(200.43, abs = 1e-2))
+    assert(col == pytest.approx(col_vt, abs = 1e-2))
+    assert(row == pytest.approx(row_vt, abs = 1e-2))
+
 
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])
@@ -95,7 +99,7 @@ def test_rpc_phrdimap(col,row,alt):
     id_scene = 'P1BP--2018122638935449CP'
     file_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = RPC.from_dimap_v1(file_dimap)
+    fctrat = RPC.from_dimap(file_dimap)
 
     (lon,lat,alt) = fctrat.direct_loc_h(row,col,alt)
     print (lon,lat)

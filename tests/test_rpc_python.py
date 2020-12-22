@@ -66,7 +66,8 @@ def test_identify_dimap():
     assert (dimap_version == '1.4')
 
 @pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001',
-                                                                  7.048662660737769592,43.72774839443545858,0.0,100.0,200.0),
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0),
                                         ('PHR1B_P_201709281038045_SEN_PRG_FC_178608-001',
                                          7.11526088296757386331137240632,43.684281179313565246502548689,850.0,10121.0657,10235.9310)])
 def test_rpc_ossim_kwl(id_scene,lon,lat,alt,row_vt,col_vt):
@@ -90,8 +91,8 @@ def test_rpc_eucl(lon,lat,alt):
     print("{} {} {}".format(lon,lat,alt))
     (row,col,__) = fctrat_eucl.inverse_loc(lon,lat,alt)
     print("col {} row {}".format(col,row))
-    assert(col == pytest.approx(98.94, abs = 1e-2))
-    assert(row == pytest.approx(200.43, abs = 1e-2))
+    assert(col == pytest.approx(100.5, abs = 1e-2))
+    assert(row == pytest.approx(200.5, abs = 1e-2))
 
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])

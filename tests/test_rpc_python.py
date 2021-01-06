@@ -161,8 +161,8 @@ def test_rpc_direct_iterative_nan():
     fctrat = RPC.from_dimap_v1(file_dimap)
 
     (col,row,alt)=(np.array([600, np.nan]), np.array([200, 210]), np.array([125]))
-    P0 = fctrat.direct_loc_inverse_iterative(row,col,alt)
-    P1 = fctrat.direct_loc_inverse_iterative(row[0], col[0], alt)
+    P0 = fctrat.direct_loc_inverse_iterative(row,col,alt, fill_nan = True)
+    P1 = fctrat.direct_loc_inverse_iterative(row[0], col[0], alt,fill_nan = True)
     #Point error col = 600, row = 200
     assert (P0[0][0]==P1[0])
     assert (P0[0][1]==P1[1])
@@ -177,8 +177,8 @@ def test_rpc_direct_iterative_nan():
 
 
     (col,row,alt)=(np.array([600, np.nan]), np.array([200, 210]), np.array([125]))
-    direct_loc_tab = fctrat.direct_loc_inverse_iterative(row,col,alt)
-    direct_loc_one_value = fctrat.direct_loc_inverse_iterative(row[0], col[0], alt)
+    direct_loc_tab = fctrat.direct_loc_inverse_iterative(row,col,alt, fill_nan = True)
+    direct_loc_one_value = fctrat.direct_loc_inverse_iterative(row[0], col[0], alt, fill_nan = True)
     (col,row,alt)=(np.array([np.nan, np.nan]), np.array([np.nan, np.nan]), np.array([125]))
     direct_loc_nan = fctrat.direct_loc_inverse_iterative(row,col,alt,10,False)
     assert(np.all(np.isnan(direct_loc_nan[0])))

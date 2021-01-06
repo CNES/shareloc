@@ -509,7 +509,7 @@ class RPC:
             # ground position
             P = np.zeros((col.size, 3))
             P[:, 2] = alt
-            (P[:, 0], P[:, 1], P[:, 2]) = self.direct_loc_inverse_iterative(row, col, alt)
+            (P[:, 0], P[:, 1], P[:, 2]) = self.direct_loc_inverse_iterative(row, col, alt, fill_nan = True)
 
         return np.squeeze(P)
 
@@ -582,7 +582,7 @@ class RPC:
             (Cout, Lout) = (None, None)
         return Lout, Cout, True
 
-    def direct_loc_inverse_iterative(self, row, col, alt, nb_iter_max=10, fill_nan = True):
+    def direct_loc_inverse_iterative(self, row, col, alt, nb_iter_max=10, fill_nan = False):
         """
         Iterative direct localization using inverse RPC
 

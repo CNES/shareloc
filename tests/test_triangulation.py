@@ -351,7 +351,7 @@ def test_epi_triangulation_disp_rpc_roi():
 
     start = time.time()
     point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, 'disp', geom_model_left, geom_model_right, grid_left_filename,
-                                                   grid_right_filename, residues = True)
+                                                   grid_right_filename, residues = True, fill_nan = True)
     end = time.time()
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
 

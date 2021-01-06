@@ -25,7 +25,7 @@ from shareloc.proj_utils import coordinates_conversion
 class LOS:
     """ line of sight class
     """
-    def __init__(self, sensor_positions, geometrical_model, alt_min_max  = None):
+    def __init__(self, sensor_positions, geometrical_model, alt_min_max  = None, fill_nan = False):
         """
         Constructor
         :param sensor_positions: sensor_positions
@@ -34,14 +34,16 @@ class LOS:
         :type geometrical_model: shareloc.grid or shareloc.rpc.rpc
         :param alt_min_max: min/max  altitude to compute los, if None model min/max will be used
         :type alt_min_max : list
-
+        :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
         """
 
         self.geometrical_model = geometrical_model
         self.sensors_positions = sensor_positions
-        self.los_creation(alt_min_max)
+        self.los_creation(alt_min_max, fill_nan)
 
-    def los_creation(self, alt_min_max):
+    def los_creation(self, alt_min_max, fill_nan = False):
         """
         create los from extrema : los starting point, and normalized viewing vector
         :param alt_min_max: min/max  altitude to compute los, if None model min/max will be used
@@ -55,8 +57,10 @@ class LOS:
         # los construction right
         los_extrema = np.zeros([2 * self.los_nb, 3])
         list_col, list_row = (self.sensors_positions[:, 0], self.sensors_positions[:, 1])
-        los_extrema[np.arange(0, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(list_row, list_col, alt_max, fill_nan = True)
-        los_extrema[np.arange(1, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(list_row, list_col, alt_min, fill_nan = True)
+        los_extrema[np.arange(0, 2 * self.los_nb, 2), :] = \
+            self.geometrical_model.direct_loc_h(list_row, list_col, alt_max, fill_nan)
+        los_extrema[np.arange(1, 2 * self.los_nb, 2), :] = \
+            self.geometrical_model.direct_loc_h(list_row, list_col, alt_min, fill_nan)
 
         in_crs = 4326
         out_crs = 4978

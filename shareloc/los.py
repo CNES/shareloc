@@ -31,7 +31,7 @@ class LOS:
         :param sensor_positions: sensor_positions
         :type sensor_positions: numpy array (Nx2)
         :param geometrical_model: geometrical model
-        :type geometrical_model: shareloc.grid or shareloc..rpc.rpc
+        :type geometrical_model: shareloc.grid or shareloc.rpc.rpc
         :param alt_min_max: min/max  altitude to compute los, if None model min/max will be used
         :type alt_min_max : list
 
@@ -41,7 +41,7 @@ class LOS:
         self.sensors_positions = sensor_positions
         self.los_creation(alt_min_max)
 
-    def los_creation(self,alt_min_max):
+    def los_creation(self, alt_min_max):
         """
         create los from extrema : los starting point, and normalized viewing vector
         :param alt_min_max: min/max  altitude to compute los, if None model min/max will be used
@@ -55,8 +55,8 @@ class LOS:
         # los construction right
         los_extrema = np.zeros([2 * self.los_nb, 3])
         list_col, list_row = (self.sensors_positions[:, 0], self.sensors_positions[:, 1])
-        los_extrema[np.arange(0, 2 *self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(list_row, list_col, alt_max)
-        los_extrema[np.arange(1, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(list_row, list_col, alt_min)
+        los_extrema[np.arange(0, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(list_row, list_col, alt_max, fill_nan = True)
+        los_extrema[np.arange(1, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(list_row, list_col, alt_min, fill_nan = True)
 
         in_crs = 4326
         out_crs = 4978

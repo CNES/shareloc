@@ -461,10 +461,10 @@ class RPC:
         :return ground position (lon,lat,h)
         :rtype numpy.array
         """
-        print("direct localization not yet impelemented for RPC model")
+        print("direct localization not yet implemented for RPC model")
         return None
 
-    def direct_loc_h(self,row,col, alt):
+    def direct_loc_h(self,row,col,alt,fill_nan = False):
         """
         direct localization at constant altitude
         :param row :  line sensor position
@@ -472,7 +472,9 @@ class RPC:
         :param col :  column sensor position
         :type col : float or 1D numpy.ndarray dtype=float64
         :param alt :  altitude
-        :type alt : float
+        :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
         :return ground position (lon,lat,h)
         :rtype numpy.ndarray
         """
@@ -480,10 +482,15 @@ class RPC:
             col = np.array([col])
             row = np.array([row])
 
+        P = np.zeros((col.size, 3))
+        filter_nan, P[:,0], P[:,1] = self.filter_coordinates(row, col, fill_nan)
+        row = row[filter_nan]
+        col = col[filter_nan]
+
         # Direct localization using direct RPC
         if self.Num_X:
             # ground position
-            P = np.zeros((col.size, 3))
+
 
             Xnorm = (col - self.offset_COL)/self.scale_COL
             Ynorm = (row - self.offset_LIG)/self.scale_LIG
@@ -500,17 +507,12 @@ class RPC:
                  Ynorm**int(self.Monomes[i][2])*\
                  Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
 
-            P[:, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*self.scale_X+self.offset_X
-            P[:, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
-            P[:, 2] = alt
-
+            P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*self.scale_X+self.offset_X
+            P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
         # Direct localization using inverse RPC
         else:
-            # ground position
-            P = np.zeros((col.size, 3))
-            P[:, 2] = alt
-            (P[:, 0], P[:, 1], P[:, 2]) = self.direct_loc_inverse_iterative(row, col, alt, fill_nan = True)
-
+            (P[filter_nan, 0], P[filter_nan, 1], P[filter_nan, 2]) = self.direct_loc_inverse_iterative(row, col, alt, 10, fill_nan)
+        P[:, 2] = alt
         return np.squeeze(P)
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
@@ -707,7 +709,7 @@ class RPC:
         """
         return [self.offset_ALT - self.scale_ALT / 2.0, self.offset_ALT + self.scale_ALT / 2.0]
 
-    def los_extrema(self, row, col, alt_min, alt_max):
+    def los_extrema(self, row, col, alt_min, alt_max, fill_nan = False):
         """
         compute los extrema
         :param row  :  line sensor position
@@ -722,6 +724,6 @@ class RPC:
         :rtype numpy.array (2x3)
         """
         los_edges = np.zeros([2, 3])
-        los_edges[0, :] = self.direct_loc_h(row, col, alt_max)
-        los_edges[1, :] = self.direct_loc_h(row, col, alt_min)
+        los_edges[0, :] = self.direct_loc_h(row, col, alt_max, fill_nan)
+        los_edges[1, :] = self.direct_loc_h(row, col, alt_min, fill_nan)
         return los_edges

@@ -110,7 +110,7 @@ class grid:
         """
         return [self.alts_down[-1], self.alts_down[0]]
 
-    def direct_loc_h(self, row, col, alt):
+    def direct_loc_h(self, row, col, alt, fill_nan = False):
         """
         direct localization at constant altitude
         :param row :  line sensor position
@@ -119,6 +119,9 @@ class grid:
         :type col : float or 1D numpy.ndarray dtype=float64
         :param alt :  altitude
         :type alt : float
+        :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
         :return ground position (lon,lat,h)
         :rtype numpy.ndarray
         """

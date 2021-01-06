@@ -582,6 +582,42 @@ class RPC:
             (Cout, Lout) = (None, None)
         return Lout, Cout, True
 
+    def filter_coordinates(self, first_coord, second_coord, fill_nan = False, direction = 'direct'):
+        """
+        Filter nan input values
+
+        :param first_coord :  first coordinate
+        :type first_coord : 1D numpy.ndarray dtype=float64
+        :param second_coord :  second coordinate
+        :type second_coord : 1D numpy.ndarray dtype=float64
+        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
+        :param direction :  direct or inverse localisation
+        :type direction : str in ('direct', 'inverse')
+        :return: filtered coordinates
+        :rtype list of numpy.array (index of nan, first filtered, second filtered)
+        """
+        filter_nan = np.logical_not(np.logical_or(np.isnan(first_coord), np.isnan(second_coord)))
+
+        if fill_nan:
+            if direction == 'direct':
+                out_x_nan_value = self.offset_X
+                out_y_nan_value = self.offset_Y
+            else:
+                out_x_nan_value = self.offset_COL
+                out_y_nan_value = self.offset_LIG
+        else:
+            out_x_nan_value = np.nan
+            out_y_nan_value = np.nan
+
+        x_out = np.full(second_coord.size, out_x_nan_value)
+        y_out = np.full(second_coord.size, out_y_nan_value)
+
+        return filter_nan, x_out, y_out
+
+
+
     def direct_loc_inverse_iterative(self, row, col, alt, nb_iter_max=10, fill_nan = False):
         """
         Iterative direct localization using inverse RPC
@@ -605,17 +641,8 @@ class RPC:
             if not isinstance(row, (list, np.ndarray)):
                 col = np.array([col])
                 row = np.array([row])
-            filter_nan = np.logical_not(np.logical_or(np.isnan(col),np.isnan(row)))
 
-            if fill_nan:
-                lon_nan_value = self.offset_X
-                lat_nan_value = self.offset_Y
-            else:
-                lon_nan_value = np.nan
-                lat_nan_value = np.nan
-            long_out = np.full(row.size,lon_nan_value)
-            lat_out = np.full(row.size, lat_nan_value)
-
+            filter_nan, long_out, lat_out = self.filter_coordinates(row, col, fill_nan)
             row=row[filter_nan]
             col=col[filter_nan]
 

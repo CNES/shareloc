@@ -84,7 +84,7 @@ def test_sensor_triangulation(row, col, h):
 
     assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
     assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))
-    assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=6e-3))
+    assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=8e-3))
     assert(distance == pytest.approx(0.0,abs=1e-3))
     #assert(valid == 1)
 
@@ -412,12 +412,10 @@ def test_epi_triangulation_disp_grid():
     stats = stats_diff(cloud, array_epi_ecef)
     #1492 first non masked index
     index = 1492
-    assert(point_ecef[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-3))
-    assert(point_ecef[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=0.6))
+    assert(point_ecef[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-1))
+    assert(point_ecef[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=0.3))
     assert(point_ecef[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=0.6))
-    assert (stats[:,2] == pytest.approx([0,0,0], abs=0.6))
-
-
+    assert (stats[:,2] == pytest.approx([0,0,0], abs=0.5))
 
 
 @pytest.mark.unit_tests

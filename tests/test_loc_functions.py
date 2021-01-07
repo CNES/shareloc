@@ -244,14 +244,15 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = RPC.from_any(fichier_dimap)
+    fctrat = RPC.from_any(fichier_dimap,topleftconvention=True)
 
     loc_rpc = Localization(fctrat)
     [row_rpc, col_rpc, valid] = loc_rpc.inverse(lon, lat, alt)
     diff_row = row_rpc - row
     diff_col = col_rpc - col
-    assert (diff_row == pytest.approx(-1, abs=1e-2))
-    assert (diff_col == pytest.approx(-1, abs=1e-2))
+    # delta vt 0.5 pixel shift between physical model and rpc OTB
+    assert (diff_row == pytest.approx(-0.5, abs=1e-2))
+    assert (diff_col == pytest.approx(-0.5, abs=1e-2))
 
 
 
@@ -322,27 +323,28 @@ def test_loc_dir_loc_inv(row, col, h):
     assert(col == pytest.approx(inv_col,abs=1e-2))
     assert(valid == 1)
 
-@pytest.mark.parametrize("col,row,h", [(150.5,20.5,10.0)])
+#delta vt 0.5 pixel shift between physical model and rpc OTB
+@pytest.mark.parametrize("id_scene, rpc, col,row, h, delta_vt", [('P1BP--2018122638935449CP', 'PHRDIMAP_P1BP--2018122638935449CP.XML' ,150.5,20.5,10.0,0.5),
+                                                                 ('P1BP--2017092838284574CP', 'RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML' ,150.5,20.5,10.0,0.5)])
 @pytest.mark.unit_tests
-def test_loc_dir_loc_inv_rpc(row, col, h):
+def test_loc_dir_loc_inv_rpc(id_scene, rpc, row, col, h, delta_vt):
     """
     Test direct localization followed by inverse one
     """
-    id_scene = 'P1BP--2018122638935449CP'
     ___,gri = prepare_loc('ellipsoide',id_scene)
     #init des predicteurs
     gri.estimate_inverse_loc_predictor()
     lonlatalt = gri.direct_loc_h(row, col, h)
 
     data_folder = test_path()
-    fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+    fichier_dimap = os.path.join(data_folder,'rpc', rpc)
 
-    fctrat = RPC.from_any(fichier_dimap)
+    fctrat = RPC.from_any(fichier_dimap, topleftconvention = True)
     (inv_row, inv_col,__) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
     print('row {} col {}'.format(inv_row, inv_col))
 
-    assert(row == pytest.approx(inv_row + 1, abs=1e-2))
-    assert(col == pytest.approx(inv_col + 1, abs=1e-2))
+    assert(row == pytest.approx(inv_row + delta_vt, abs=1e-2))
+    assert(col == pytest.approx(inv_col + delta_vt, abs=1e-2))
 
 
 @pytest.mark.parametrize("l0_src,c0_src, steprow_src, stepcol_src,nbrow_src,nbcol_src", [(0.5,1.5,10,100,20, 20)])

@@ -167,7 +167,6 @@ def check_coeff_consistency(dict1, dict2):
             print("normalisation coeffs are different between"
                   " direct en inverse one : {} : {} {}".format(key,value,dict2[key]))
 
-
 class RPC:
     def __init__(self,rpc_params):
         for a, b in rpc_params.items():
@@ -495,6 +494,8 @@ class RPC:
            if dimap_version is not None :
             if float(dimap_version)<2.0 :
                 return cls.from_dimap_v1(primary_file, topleftconvention)
+            else:
+                return cls.from_dimap_v2(primary_file, topleftconvention)
         else:
             ossim_model = identify_ossim_kwl(primary_file)
             if ossim_model is not None:

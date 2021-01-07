@@ -47,8 +47,11 @@ def identify_dimap(xml_file):
         xmldoc = minidom.parse(xml_file)
         mtd = xmldoc.getElementsByTagName('Metadata_Identification')
         mtd_format = mtd[0].getElementsByTagName('METADATA_FORMAT')[0].firstChild.data
-        is_dimap = mtd_format == 'DIMAP_PHR'
-        version = mtd[0].getElementsByTagName('METADATA_PROFILE')[0].attributes.items()[0][1]
+        if mtd_format == 'DIMAP_PHR':
+            version_tag = 'METADATA_PROFILE'
+        else:
+            version_tag = 'METADATA_FORMAT'
+        version = mtd[0].getElementsByTagName(version_tag)[0].attributes.items()[0][1]
         return version
     except:
         return None
@@ -205,14 +208,107 @@ class RPC:
                  [2,0,1,1],[0,0,0,3]]
 
     @classmethod
-    def from_dimap_v1(cls, dimap_filepath, topleftconvention=False):
-        """ load from dimap 
+    def from_dimap(cls, dimap_filepath, topleftconvention=False):
+        """ load from dimap
+        param dimap_filepath  : dimap xml file
+    	:type dimap_filepath  : str
         :param topleftconvention  : [0,0] position
-        :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel 
+    	:type topleftconvention  : boolean
+        If False : [0,0] is at the center of the Top Left pixel
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
+        dimap_version = identify_dimap(dimap_filepath)
+        print('***',dimap_version)
+        if identify_dimap(dimap_filepath) is not None:
+            if float(dimap_version) < 2.0:
+                return cls.from_dimap_v1(dimap_filepath, topleftconvention)
+            else:
+                print('v2')
+                return cls.from_dimap_v2(dimap_filepath, topleftconvention)
+        else:
+            ValueError("can''t read dimap file")
+
+            return None
+
+    @classmethod
+    def from_dimap_v2(cls, dimap_filepath, topleftconvention=False):
+        """ load from dimap  v2
+        :param dimap_filepath  : dimap xml file
+    	:type dimap_filepath  : str
+        :param topleftconvention  : [0,0] position
+    	:type topleftconvention  : boolean
+        If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
 
+        rpc_params = dict()
+
+        if not basename(dimap_filepath).endswith('XML'.upper()):
+            raise ValueError("dimap must ends with .xml")
+
+        xmldoc = minidom.parse(dimap_filepath)
+
+        mtd = xmldoc.getElementsByTagName('Metadata_Identification')
+        version = mtd[0].getElementsByTagName('METADATA_FORMAT')[0].attributes.items()[0][1]
+        rpc_params['driver_type'] = 'dimap_v' + version
+        GLOBAL_RFM    = xmldoc.getElementsByTagName('Global_RFM')[0]
+        direct_coeffs = GLOBAL_RFM.getElementsByTagName('Direct_Model')[0]
+        rpc_params['Num_X'] = [float(direct_coeffs.getElementsByTagName('SAMP_NUM_COEFF_{}'.
+                                                                          format(index))[0].firstChild.data)
+                for index in range(1,21)]
+        rpc_params['Den_X'] = [float(direct_coeffs.getElementsByTagName('SAMP_DEN_COEFF_{}'.
+                                                                          format(index))[0].firstChild.data)
+                for index in range(1,21)]
+        rpc_params['Num_Y'] = [float(direct_coeffs.getElementsByTagName('LINE_NUM_COEFF_{}'.
+                                                                          format(index))[0].firstChild.data)
+                for index in range(1,21)]
+        rpc_params['Den_Y'] = [float(direct_coeffs.getElementsByTagName('LINE_DEN_COEFF_{}'.
+                                                                          format(index))[0].firstChild.data)
+                for index in range(1,21)]
+        inverse_coeffs = GLOBAL_RFM.getElementsByTagName('Inverse_Model')[0]
+        rpc_params['Num_COL'] = [float(inverse_coeffs.getElementsByTagName('SAMP_NUM_COEFF_{}'.
+                                                                          format(index))[0].firstChild.data)
+                for index in range(1,21)]
+        rpc_params['Den_COL'] = [float(inverse_coeffs.getElementsByTagName('SAMP_DEN_COEFF_{}'.
+                                                                          format(index))[0].firstChild.data)
+                for index in range(1,21)]
+        rpc_params['Num_LIG'] = [float(inverse_coeffs.getElementsByTagName('LINE_NUM_COEFF_{}'.
+                                                                          format(index))[0].firstChild.data)
+                for index in range(1,21)]
+        rpc_params['Den_LIG'] = [float(inverse_coeffs.getElementsByTagName('LINE_DEN_COEFF_{}'.
+                                                                          format(index))[0].firstChild.data)
+                for index in range(1,21)]
+        normalisation_coeffs = GLOBAL_RFM.getElementsByTagName('RFM_Validity')[0]
+        rpc_params['offset_COL']    = float(normalisation_coeffs.getElementsByTagName('SAMP_OFF')[0].firstChild.data)
+        rpc_params['scale_COL']    = float(normalisation_coeffs.getElementsByTagName('SAMP_SCALE')[0].firstChild.data)
+        rpc_params['offset_LIG']    = float(normalisation_coeffs.getElementsByTagName('LINE_OFF')[0].firstChild.data)
+        rpc_params['scale_LIG']    = float(normalisation_coeffs.getElementsByTagName('LINE_SCALE')[0].firstChild.data)
+        rpc_params['offset_ALT']    = float(normalisation_coeffs.getElementsByTagName('HEIGHT_OFF')[0].firstChild.data)
+        rpc_params['scale_ALT']    = float(normalisation_coeffs.getElementsByTagName('HEIGHT_SCALE')[0].firstChild.data)
+        rpc_params['offset_X']    = float(normalisation_coeffs.getElementsByTagName('LONG_OFF')[0].firstChild.data)
+        rpc_params['scale_X']    = float(normalisation_coeffs.getElementsByTagName('LONG_SCALE')[0].firstChild.data)
+        rpc_params['offset_Y']    = float(normalisation_coeffs.getElementsByTagName('LAT_OFF')[0].firstChild.data)
+        rpc_params['scale_Y']    = float(normalisation_coeffs.getElementsByTagName('LAT_SCALE')[0].firstChild.data)
+        rpc_params['offset_COL'] -= 1.5
+        rpc_params['offset_LIG'] -= 1.5
+        #If top left convention, 0.5 pixel shift added on col/row offsets
+        if topleftconvention:
+            rpc_params['offset_COL'] += 0.5
+            rpc_params['offset_LIG'] += 0.5
+        return cls(rpc_params)
+
+
+
+    @classmethod
+    def from_dimap_v1(cls, dimap_filepath, topleftconvention=False):
+        """ load from dimap  v1
+        :param dimap_filepath  : dimap xml file
+	    :type dimap_filepath  : str
+        :param topleftconvention  : [0,0] position
+	    :type topleftconvention  : boolean
+        If False : [0,0] is at the center of the Top Left pixel 
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
         rpc_params = dict()
 
         if not basename(dimap_filepath).endswith('XML'.upper()):
@@ -733,3 +829,9 @@ class RPC:
         los_edges[0, :] = self.direct_loc_h(row, col, alt_max, fill_nan)
         los_edges[1, :] = self.direct_loc_h(row, col, alt_min, fill_nan)
         return los_edges
+
+
+#=======
+#            (X,Y) = (None,None)
+#        return(X,Y)
+#>>>>>>> Stashed changes

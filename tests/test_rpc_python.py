@@ -95,7 +95,19 @@ def test_rpc_eucl(id_scene,lon,lat,alt,row_vt,col_vt):
     assert(col == pytest.approx(col_vt, abs = 1e-2))
     assert(row == pytest.approx(row_vt, abs = 1e-2))
 
-
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0)])
+def test_rpc_dimap_v2(id_scene,lon,lat,alt,row_vt,col_vt):
+    data_folder = test_path()
+    file_dimap = os.path.join(data_folder, 'rpc/RPC_{}.XML'.format(id_scene))
+    print(file_dimap)
+    fctrat_dimap = RPC.from_dimap(file_dimap, topleftconvention=True)
+    print("{} {} {}".format(lon,lat,alt))
+    (row,col,__) = fctrat_dimap.inverse_loc(lon,lat,alt)
+    print("col {} row {}".format(col,row))
+    assert(col == pytest.approx(col_vt, abs = 1e-2))
+    assert(row == pytest.approx(row_vt, abs = 1e-2))
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])
 def test_rpc_phrdimap(col,row,alt):

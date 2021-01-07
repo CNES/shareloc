@@ -105,7 +105,11 @@ def test_rpc_dimap_v2(id_scene,lon,lat,alt,row_vt,col_vt):
     fctrat_dimap = RPC.from_dimap(file_dimap, topleftconvention=True)
     print("{} {} {}".format(lon,lat,alt))
     (row,col,__) = fctrat_dimap.inverse_loc(lon,lat,alt)
-    print("col {} row {}".format(col,row))
+    print("col {} row {} dimap".format(col,row))
+    file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
+    fctrat_geom = RPC.from_any(file_geom, topleftconvention=True)
+    (row, col, __) = fctrat_geom.inverse_loc(lon, lat, alt)
+    print("col {} row {} geom".format(col,row))
     assert(col == pytest.approx(col_vt, abs = 1e-2))
     assert(row == pytest.approx(row_vt, abs = 1e-2))
 

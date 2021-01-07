@@ -155,7 +155,8 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     fctrat = RPC.from_any(fichier_dimap)
 
     loc_rpc = Localization(fctrat)
-    lonlatalt_rpc = loc_rpc.direct(row + 0.5, col + 0.5, h)
+    #TODO check difference
+    lonlatalt_rpc = loc_rpc.direct(row -1, col -1, h)
 
     diff_lon = lonlatalt[0] - lonlatalt_rpc[0]
     diff_lat = lonlatalt[1] - lonlatalt_rpc[1]
@@ -249,8 +250,8 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     [row_rpc, col_rpc, valid] = loc_rpc.inverse(lon, lat, alt)
     diff_row = row_rpc - row
     diff_col = col_rpc - col
-    assert (diff_row == pytest.approx(0.5, abs=1e-2))
-    assert (diff_col == pytest.approx(0.5, abs=1e-2))
+    assert (diff_row == pytest.approx(-1, abs=1e-2))
+    assert (diff_col == pytest.approx(-1, abs=1e-2))
 
 
 
@@ -340,8 +341,8 @@ def test_loc_dir_loc_inv_rpc(row, col, h):
     (inv_row, inv_col,__) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
     print('row {} col {}'.format(inv_row, inv_col))
 
-    assert(row == pytest.approx(inv_row - 0.5, abs=1e-2))
-    assert(col == pytest.approx(inv_col - 0.5, abs=1e-2))
+    assert(row == pytest.approx(inv_row + 1, abs=1e-2))
+    assert(col == pytest.approx(inv_col + 1, abs=1e-2))
 
 
 @pytest.mark.parametrize("l0_src,c0_src, steprow_src, stepcol_src,nbrow_src,nbcol_src", [(0.5,1.5,10,100,20, 20)])

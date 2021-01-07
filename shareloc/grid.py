@@ -20,8 +20,7 @@
 #
 import numpy as np
 from shareloc.readwrite import  read_bsq_hd
-from shareloc.math_utils import interpol_bilin
-
+from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 
 #-------------------------------------------------------------------------------
 class grid:
@@ -103,33 +102,50 @@ class grid:
 
             print("dtm format is not handled")
 
-    def direct_loc_h(self, row, col, alt):
+    def get_alt_min_max(self):
+        """
+        returns altitudes min and max layers
+        :return alt_min,lat_max
+        :rtype list
+        """
+        return [self.alts_down[-1], self.alts_down[0]]
+
+    def direct_loc_h(self, row, col, alt, fill_nan = False):
         """
         direct localization at constant altitude
         :param row :  line sensor position
-        :type row : float
+        :type row : float or 1D numpy.ndarray dtype=float64
         :param col :  column sensor position
-        :type col : float
+        :type col : float or 1D numpy.ndarray dtype=float64
         :param alt :  altitude
         :type alt : float
+        :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
         :return ground position (lon,lat,h)
-        :rtype numpy.array
+        :rtype numpy.ndarray
         """
         #faire une controle sur row / col !!!!
         # 0.5 < row < rowmax
-        (kh,kb) = self.return_grid_index(alt)
-        altbas  = self.alts_down[kb]
+        (kh, kb) = self.return_grid_index(alt)
+        altbas = self.alts_down[kb]
         althaut = self.alts_down[kh]
         dh = (alt - altbas)/(althaut - altbas)
-        mats =  [self.gld_lon[kh:kb+1,:,:],self.gld_lat[kh:kb+1,:,:]]
-        P     = np.zeros(3)
-        P[2] = alt
+        mats = [self.gld_lon[kh:kb+1, :, :], self.gld_lat[kh:kb+1, :, :]]
+
+        if not isinstance(col, (list, np.ndarray)):
+            col = np.array([col])
+            row = np.array([row])
+
+        P = np.zeros((col.size, 3))
+        P[:, 2] = alt
         dl = (row - self.row0)/self.steprow
         dc = (col - self.col0)/self.stepcol
-        [vlon,vlat] = interpol_bilin(mats,self.nbrow,self.nbcol,dl,dc)
-        P[0] = (dh*vlon[0] +(1-dh)*vlon[1])
-        P[1] = (dh*vlat[0] +(1-dh)*vlat[1])
-        return P
+        [vlon,vlat] = interpol_bilin_vectorized(mats, self.nbrow, self.nbcol, dl, dc)
+        P[:, 0] = (dh*vlon[0, :] + (1-dh)*vlon[1, :])
+        P[:, 1] = (dh*vlat[0, :] + (1-dh)*vlat[1, :])
+
+        return np.squeeze(P)
 
     def direct_loc_dtm(self, row, col, dtm):
         """
@@ -152,6 +168,48 @@ class grid:
         (code1, code2, PointB, dH3D) = dtm.checkCubeDTM(v)
         (code3,code4,Point_dtm) = dtm.intersection(v, PointB, dH3D)
         return Point_dtm
+
+    def los_extrema(self,row,col,alt_min,alt_max):
+        """
+        compute los extrema
+        :param row :  line sensor position
+        :type row : float
+        :param col :  column sensor position
+        :type col : float
+        :param alt_min : los alt min
+        :type alt_min  : float
+        :param alt_max : los alt max
+        :type alt_max : float
+        :return los extrema
+        :rtype numpy.array (2x3)
+        """
+        los_edges = np.zeros([2,3])
+        los_edges[0,:] = self.direct_loc_h(row,col,alt_max)
+        los_edges[1,:] = self.direct_loc_h(row,col,alt_min)
+        return los_edges
+
+
+    def fct_locdir_dtmopt(self,lig,col, dtm):
+        """
+        direct localization on 3D cube dtm
+        :param lig :  line sensor position
+        :type lig : float
+        :param col :  column sensor position
+        :type col : float
+        :param dtm : dtm model
+        :type dtm  : shareloc.dtm
+        :return boolean true
+        :rtype bool
+        """
+        visee = np.zeros((3,self.nbalt))
+        vislonlat = self.fct_interp_visee_unitaire_gld(lig,col)
+        visee[0,:] = vislonlat[0]
+        visee[1,:] = vislonlat[1]
+        visee[2,:] = self.alts_down
+        v = visee.T
+        (code, code2, PointB, dH3D) = dtm.checkCubeDTM(v)
+        #(code,code4,Point_dtm) = self.intersection(v, PointB, dH3D,dtm)
+        return code
 
 
     def interpolate_grid_in_plani(self, row, col):

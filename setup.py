@@ -5,10 +5,13 @@
 #      ``python setup.py install``
 #    or
 #      ``pip install shareloc``
+"""
+This module contains the required libraries and softwares allowing to execute the software,
+and setup elements to configure and identify the software.
+"""
 
-from setuptools import setup
-from subprocess import check_output
-from codecs import open
+from codecs import open as copen
+from setuptools import setup, find_packages
 
 # Meta-data.
 NAME = 'shareloc'
@@ -19,15 +22,15 @@ REQUIRES_PYTHON = '>=3.6.0'
 VERSION = '0.1.0'
 EMAIL = 'TBD'
 LICENSE = 'TBD'
-REQUIREMENTS = ['numpy']
+REQUIREMENTS = ['numpy','gdal','rasterio','xarray','netCDF4']
 DESCRIPTION = '''
 ShareLoc API
 '''
 
 
 def readme():
-    with open('readme.md', "r", "utf-8") as f:
-        return f.read()
+    with copen('readme.md', 'r', 'utf-8') as fstream:
+        return fstream.read()
 
 # Setup
 setup(
@@ -40,7 +43,8 @@ setup(
     license=LICENSE,
     long_description=DESCRIPTION,
     install_requires=REQUIREMENTS,
-    python_requires=REQUIRES_PYTHON)
+    python_requires=REQUIRES_PYTHON,
+    packages=find_packages())
 
 
 

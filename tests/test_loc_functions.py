@@ -376,7 +376,25 @@ def test_interp_dtm(index_x,index_y,valid_alt):
 
 
     
-    
+@pytest.mark.parametrize("col,lig,h", [(1000.5,1500.5,10.0)])
+@pytest.mark.unit_tests
+def test_loc_dir_loc_inv_couple(lig, col, h):
+    """
+    Test direct localization followed by inverse one for phr couple
+    """
+    id_scene_right = "P1BP--2017092838319324CP"
+    ___,gri_right = prepare_loc('ellipsoide',id_scene_right)
+    id_scene_left = "P1BP--2017092838284574CP"
+    ___, gri_left = prepare_loc('ellipsoide',id_scene_left)
+    #init des predicteurs
+    gri_right.estimate_inverse_loc_predictor()
+    lonlatalt = gri_left.direct_loc_h(lig, col, h)
+    inv_lig,inv_col,valid = gri_right.inverse_loc(lonlatalt[0],lonlatalt[1],lonlatalt[2])
+
+    print('lig {} col {} valid {}'.format(inv_lig, inv_col, valid))
+    #assert(lig == pytest.approx(inv_lig,abs=1e-2))
+    #assert(col == pytest.approx(inv_col,abs=1e-2))
+    #assert(valid == 1)
 
 
 

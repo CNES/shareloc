@@ -91,6 +91,9 @@ def test_rpc_ossim_kwl(id_scene,lon,lat,alt,row_vt,col_vt):
                                                                  ('RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML',
                                                                   7.048662660737769592, 43.72774839443545858, 0.0,
                                                                   100.0, 200.0),
+                                                                 ('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif',
+                                                                 7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                 100.0, 200.0),
                                                                  ])
 def test_rpc_from_any(id_scene,lon,lat,alt,row_vt,col_vt):
     data_folder = test_path()
@@ -101,6 +104,20 @@ def test_rpc_from_any(id_scene,lon,lat,alt,row_vt,col_vt):
     print("col {} row {}".format(col,row))
     assert(col == pytest.approx(col_vt, abs = 1e-2))
     assert(row == pytest.approx(row_vt, abs = 1e-2))
+
+
+
+@pytest.mark.parametrize("prod, can_read", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif', True),
+                                            ('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_nogeo.tif', False)])
+def test_rpc_from_geotiff_without_rpc(prod,can_read):
+    data_folder = test_path()
+    rpc_file = os.path.join(data_folder, 'rpc',  prod)
+    try :
+        fctrat = RPC.from_geotiff(rpc_file, topleftconvention=True)
+        assert can_read
+    except ValueError:
+        assert not can_read
+
 
 @pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001',
                                                                       7.048662660737769592, 43.72774839443545858, 0.0,

@@ -19,6 +19,7 @@
 # limitations under the License.
 #
 
+import rasterio as rio
 from xml.dom import minidom
 from os.path import basename
 import numpy as np
@@ -34,6 +35,16 @@ def renvoie_linesep(txt_liste_lines):
 		line_sep = '\n'
 	return line_sep
 
+
+def parse_coeff_line(coeff_str):
+    """
+    split str coef to float list
+    :param coeff_str : line coef
+    :type coeff_str : str
+    :return coeff list
+    :rtype list()
+    """
+    return [float(el) for el in coeff_str.split()]
 
 def identify_dimap(xml_file):
     """
@@ -61,7 +72,7 @@ def identify_ossim_kwl(ossim_kwl_file):
     parse geom file to identify if it is an ossim model
     :param ossim_kwl_file : ossim keyword list file
     :type ossim_kwl_file : str
-    :return ossim kwl info : ossimmodel or not if not an ossim kwl file
+    :return ossim kwl info : ossimmodel or None if not an ossim kwl file
     :rtype str
     """
     try :
@@ -77,6 +88,24 @@ def identify_ossim_kwl(ossim_kwl_file):
                 return geom_dict['type'].strip()
             else:
                 return None
+    except:
+        return None
+
+def identify_geotiff_rpc(image_filename):
+    """
+    read image file to identify if it is a geotiff which contains RPCs
+    :param image_filename : image_filename
+    :type image_filename : str
+    :return rpc info : rpc dict or None  if not a geotiff with rpc
+    :rtype str
+    """
+    try :
+        dataset = rio.open(image_filename)
+        rpc_dict = dataset.tags(ns='RPC')
+        if not rpc_dict:
+            return None
+        else:
+            return rpc_dict
     except:
         return None
 
@@ -365,7 +394,48 @@ class RPC:
             rpc_params['offset_LIG'] += 0.5
         return cls(rpc_params)
 
-
+    @classmethod
+    def from_geotiff(cls, image_filename, topleftconvention=False):
+        """ Load from a  geotiff image file
+        :param image_filename  : image filename
+    	:type image_filename  : str
+        :param topleftconvention  : [0,0] position
+    	:type topleftconvention  : boolean
+        If False : [0,0] is at the center of the Top Left pixel
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
+        dataset = rio.open(image_filename)
+        rpc_dict = dataset.tags(ns='RPC')
+        if not rpc_dict:
+            print("{} doesn't contains RPCS ".format(image_filename))
+            raise ValueError
+        rpc_params = dict()
+        rpc_params['Den_LIG'] = parse_coeff_line(rpc_dict['LINE_DEN_COEFF'])
+        rpc_params['Num_LIG'] = parse_coeff_line(rpc_dict['LINE_NUM_COEFF'])
+        rpc_params['Num_COL'] = parse_coeff_line(rpc_dict['SAMP_NUM_COEFF'])
+        rpc_params['Den_COL'] = parse_coeff_line(rpc_dict['SAMP_DEN_COEFF'])
+        rpc_params['offset_COL']   = float(rpc_dict["SAMP_OFF"])
+        rpc_params['scale_COL']    = float(rpc_dict["SAMP_SCALE"])
+        rpc_params['offset_LIG']   = float(rpc_dict["LINE_OFF"])
+        rpc_params['scale_LIG']    = float(rpc_dict["LINE_SCALE"])
+        rpc_params['offset_ALT']   = float(rpc_dict["HEIGHT_OFF"])
+        rpc_params['scale_ALT']    = float(rpc_dict["HEIGHT_SCALE"])
+        rpc_params['offset_X']   = float(rpc_dict["LONG_OFF"])
+        rpc_params['scale_X']    = float(rpc_dict["LONG_SCALE"])
+        rpc_params['offset_Y']   = float(rpc_dict["LAT_OFF"])
+        rpc_params['scale_Y']    = float(rpc_dict["LAT_SCALE"])
+        #inverse coeff are not defined
+        rpc_params['Num_X'] = None
+        rpc_params['Den_X'] = None
+        rpc_params['Num_Y'] = None
+        rpc_params['Den_Y'] = None
+        #If top left convention, 0.5 pixel shift added on col/row offsets
+        rpc_params['offset_COL'] -= 0.5
+        rpc_params['offset_LIG'] -= 0.5
+        if topleftconvention:
+            rpc_params['offset_COL'] += 0.5
+            rpc_params['offset_LIG'] += 0.5
+        return cls(rpc_params)
 
     @classmethod
     def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=False):
@@ -500,6 +570,10 @@ class RPC:
             ossim_model = identify_ossim_kwl(primary_file)
             if ossim_model is not None:
                     return cls.from_ossim_kwl(primary_file, topleftconvention)
+            else:
+                geotiff_rpc_dict = identify_geotiff_rpc(primary_file)
+                if geotiff_rpc_dict is not None:
+                    return cls.from_geotiff(primary_file, topleftconvention)
         return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
 
 

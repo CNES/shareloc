@@ -20,8 +20,9 @@
 #
 
 from xml.dom import minidom
-from numpy import array, dot, zeros, sqrt, nan
 from os.path import basename
+import numpy as np
+
 
 def renvoie_linesep(txt_liste_lines):
 	"""Renvoie le separateur de ligne d'un texte sous forme de liste de lignes
@@ -204,8 +205,13 @@ class RPC:
                  [2,0,1,1],[0,0,0,3]]
 
     @classmethod
-    def from_dimap_v1(cls, dimap_filepath):
-        """ load from dimap """
+    def from_dimap_v1(cls, dimap_filepath, topleftconvention=False):
+        """ load from dimap 
+        :param topleftconvention  : [0,0] position
+	:param topleftconvention  : boolean 
+        If False : [0,0] is at the center of the Top Left pixel 
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
 
         rpc_params = dict()
 
@@ -256,12 +262,22 @@ class RPC:
         rpc_params['Den_COL']    = coeff_COL[20::]
         rpc_params['Num_LIG']    = coeff_LIG[0:20]
         rpc_params['Den_LIG']    = coeff_LIG[20::]
+        #If top left convention, 0.5 pixel shift added on col/row offsets
+        if topleftconvention:
+            rpc_params['offset_COL'] += 0.5
+            rpc_params['offset_LIG'] += 0.5
         return cls(rpc_params)
 
 
 
     @classmethod
-    def from_ossim_kwl(cls, ossim_kwl_filename):
+    def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=False):
+        """ Load from a geom file
+        :param topleftconvention  : [0,0] position
+	:param topleftconvention  : boolean 
+        If False : [0,0] is at the center of the Top Left pixel 
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
 
         rpc_params = dict()
         #OSSIM keyword list
@@ -276,10 +292,10 @@ class RPC:
             (key, val) = line.split(': ')
             geom_dict[key] = val.rstrip()
 
-        rpc_params['Den_LIG']= [nan] * 20
-        rpc_params['Num_LIG'] = [nan] * 20
-        rpc_params['Den_COL']= [nan] * 20
-        rpc_params['Num_COL'] = [nan] * 20
+        rpc_params['Den_LIG']= [np.nan] * 20
+        rpc_params['Num_LIG'] = [np.nan] * 20
+        rpc_params['Den_COL']= [np.nan] * 20
+        rpc_params['Num_COL'] = [np.nan] * 20
         for index in range(0, 20):
             axis = "line"
             num_den = "den"
@@ -294,9 +310,9 @@ class RPC:
             num_den = "den"
             key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
             rpc_params['Den_COL'][index] = float(geom_dict[key])
-        rpc_params['offset_COL']    = float(geom_dict["samp_off"]) + 0.5
+        rpc_params['offset_COL']    = float(geom_dict["samp_off"])
         rpc_params['scale_COL']    = float(geom_dict["samp_scale"])
-        rpc_params['offset_LIG']    = float(geom_dict["line_off"]) + 0.5
+        rpc_params['offset_LIG']    = float(geom_dict["line_off"])
         rpc_params['scale_LIG']    = float(geom_dict["line_scale"])
         rpc_params['offset_ALT']    = float(geom_dict["height_off"])
         rpc_params['scale_ALT']    = float(geom_dict["height_scale"])
@@ -309,13 +325,23 @@ class RPC:
         rpc_params['Den_X'] = None
         rpc_params['Num_Y'] = None
         rpc_params['Den_Y'] = None
+        #If top left convention, 0.5 pixel shift added on col/row offsets
+        if topleftconvention:
+            rpc_params['offset_COL'] += 0.5
+            rpc_params['offset_LIG'] += 0.5
+
         return cls(rpc_params)
 
 
 
     @classmethod
-    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None):
-        """ load from euclidium """
+    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None, topleftconvention=False):
+        """ load from euclidium
+        :param topleftconvention  : [0,0] position
+	:param topleftconvention  : boolean 
+        If False : [0,0] is at the center of the Top Left pixel 
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
 
         rpc_params = dict()
         rpc_params['driver_type'] = 'euclidium'
@@ -351,20 +377,27 @@ class RPC:
             rpc_params['Den_X'] = None
             rpc_params['Num_Y'] = None
             rpc_params['Den_Y'] = None
+
+        #If top left convention, 0.5 pixel shift added on col/row offsets
+        if topleftconvention:
+            rpc_params['offset_COL'] += 0.5
+            rpc_params['offset_LIG'] += 0.5
+			
         return cls(rpc_params)
 
     @classmethod
-    def from_any(cls, primary_file, secondary_file=None):
+    def from_any(cls, primary_file, secondary_file=None, topleftconvention=False):
+
         if basename(primary_file).endswith('XML'.upper()):
            dimap_version = identify_dimap(primary_file)
            if dimap_version is not None :
             if float(dimap_version)<2.0 :
-                return cls.from_dimap_v1(primary_file)
+                return cls.from_dimap_v1(primary_file, topleftconvention)
         else:
             ossim_model = identify_ossim_kwl(primary_file)
             if ossim_model is not None:
-                    return cls.from_ossim_kwl(primary_file)
-        return cls.from_euclidium(primary_file, secondary_file)
+                    return cls.from_ossim_kwl(primary_file, topleftconvention)
+        return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
 
 
 
@@ -378,34 +411,34 @@ class RPC:
             Xnorm = (lon - self.offset_X)/self.scale_X
             Ynorm = (lat - self.offset_Y)/self.scale_Y
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
-            monomes = array([self.Monomes[i][0]*\
+            monomes = np.array([self.Monomes[i][0]*\
                  Xnorm**int(self.Monomes[i][1])*\
                  Ynorm**int(self.Monomes[i][2])*\
                  Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
-            NumDC = dot(array(self.Num_COL),monomes)
-            DenDC = dot(array(self.Den_COL),monomes)
-            NumDL = dot(array(self.Num_LIG),monomes)
-            DenDL = dot(array(self.Den_LIG),monomes)
+            NumDC = np.dot(np.array(self.Num_COL),monomes)
+            DenDC = np.dot(np.array(self.Den_COL),monomes)
+            NumDL = np.dot(np.array(self.Num_LIG),monomes)
+            DenDL = np.dot(np.array(self.Den_LIG),monomes)
 
-            monomes_deriv_x = array([self.monomes_deriv_1[i][0]*\
+            monomes_deriv_x = np.array([self.monomes_deriv_1[i][0]*\
                 Xnorm**int(self.monomes_deriv_1[i][1])*\
                 Ynorm**int(self.monomes_deriv_1[i][2])*\
                 Znorm**int(self.monomes_deriv_1[i][3]) for i in range(self.monomes_deriv_1.__len__())])
 
-            monomes_deriv_y = array([self.monomes_deriv_2[i][0]*\
+            monomes_deriv_y = np.array([self.monomes_deriv_2[i][0]*\
                 Xnorm**int(self.monomes_deriv_2[i][1])*\
                 Ynorm**int(self.monomes_deriv_2[i][2])*\
                 Znorm**int(self.monomes_deriv_2[i][3]) for i in range(self.monomes_deriv_2.__len__())])
 
-            NumDCdx = dot(array(self.Num_COL),monomes_deriv_x)
-            DenDCdx = dot(array(self.Den_COL),monomes_deriv_x)
-            NumDLdx = dot(array(self.Num_LIG),monomes_deriv_x)
-            DenDLdx = dot(array(self.Den_LIG),monomes_deriv_x)
+            NumDCdx = np.dot(np.array(self.Num_COL),monomes_deriv_x)
+            DenDCdx = np.dot(np.array(self.Den_COL),monomes_deriv_x)
+            NumDLdx = np.dot(np.array(self.Num_LIG),monomes_deriv_x)
+            DenDLdx = np.dot(np.array(self.Den_LIG),monomes_deriv_x)
 
-            NumDCdy = dot(array(self.Num_COL),monomes_deriv_y)
-            DenDCdy = dot(array(self.Den_COL),monomes_deriv_y)
-            NumDLdy = dot(array(self.Num_LIG),monomes_deriv_y)
-            DenDLdy = dot(array(self.Den_LIG),monomes_deriv_y)
+            NumDCdy = np.dot(np.array(self.Num_COL),monomes_deriv_y)
+            DenDCdy = np.dot(np.array(self.Den_COL),monomes_deriv_y)
+            NumDLdy = np.dot(np.array(self.Num_LIG),monomes_deriv_y)
+            DenDLdy = np.dot(np.array(self.Den_LIG),monomes_deriv_y)
 
             #derive (u/v)' = (u'v - v'u)/(v*v)
             DCdx = self.scale_COL/self.scale_X*(NumDCdx*DenDC - DenDCdx*NumDC)/DenDC**2
@@ -428,37 +461,59 @@ class RPC:
         :return ground position (lon,lat,h)
         :rtype numpy.array
         """
-        print("direct localization not yet impelemented for RPC model")
+        print("direct localization not yet implemented for RPC model")
         return None
 
+    def direct_loc_h(self,row,col,alt,fill_nan = False):
+        """
+        direct localization at constant altitude
+        :param row :  line sensor position
+        :type row : float or 1D numpy.ndarray dtype=float64
+        :param col :  column sensor position
+        :type col : float or 1D numpy.ndarray dtype=float64
+        :param alt :  altitude
+        :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
+        :return ground position (lon,lat,h)
+        :rtype numpy.ndarray
+        """
+        if not isinstance(col, (list, np.ndarray)):
+            col = np.array([col])
+            row = np.array([row])
 
+        P = np.zeros((col.size, 3))
+        filter_nan, P[:,0], P[:,1] = self.filter_coordinates(row, col, fill_nan)
+        row = row[filter_nan]
+        col = col[filter_nan]
 
-    def direct_loc_h(self,row,col, alt):
-        """evalue loc directe par application du RPC direct"""
-
+        # Direct localization using direct RPC
         if self.Num_X:
+            # ground position
+
+
             Xnorm = (col - self.offset_COL)/self.scale_COL
             Ynorm = (row - self.offset_LIG)/self.scale_LIG
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
 
-            if abs(Xnorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en colonne ",Xnorm,col)
-            if abs(Ynorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en ligne ",Ynorm,row)
-            if abs(Znorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt)
+            if np.sum(abs(Xnorm) > self.lim_extrapol) == Xnorm.shape[0]:
+                print("!!!!! l'evaluation au point est extrapolee en colonne ", Xnorm, col)
+            if np.sum(abs(Ynorm) > self.lim_extrapol) == Ynorm.shape[0]:
+                print("!!!!! l'evaluation au point est extrapolee en ligne ", Ynorm, row)
+            if abs(Znorm) > self.lim_extrapol :
+                print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
 
-            monomes = array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
+            monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
                  Ynorm**int(self.Monomes[i][2])*\
                  Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
 
-            Xout = dot(array(self.Num_X),monomes)/dot(array(self.Den_X),monomes)*self.scale_X+self.offset_X
-            Yout = dot(array(self.Num_Y),monomes)/dot(array(self.Den_Y),monomes)*self.scale_Y+self.offset_Y
+            P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*self.scale_X+self.offset_X
+            P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
+        # Direct localization using inverse RPC
         else:
-            print("les coefficient directs n'ont pas ete definis")
-            (Xout,Yout, alt) = (None,None,None)
-        return (Xout,Yout, alt)
-
+            (P[filter_nan, 0], P[filter_nan, 1], P[filter_nan, 2]) = self.direct_loc_inverse_iterative(row, col, alt, 10, fill_nan)
+        P[:, 2] = alt
+        return np.squeeze(P)
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
         """calcule une grille de loc directe a partir des RPC directs
@@ -480,8 +535,8 @@ class RPC:
          :return direct localization grid
          :rtype numpy.array
         """
-        gri_lon = zeros((nbrow,nbcol))
-        gri_lat = zeros((nbrow,nbcol))
+        gri_lon = np.zeros((nbrow,nbcol))
+        gri_lat = np.zeros((nbrow,nbcol))
         for c in range(int(nbcol)):
             col = col0 + stepcol*c
             for l in range(int(nbrow)):
@@ -489,59 +544,186 @@ class RPC:
                 (gri_lon[l,c],gri_lat[l,c],__) = self.direct_loc_h(row,col,alt)
         return (gri_lon,gri_lat)
 
+    def inverse_loc(self, lon, lat, alt):
+        """
+        Inverse localization
 
-    def inverse_loc(self,lon,lat, alt):
-        """evalue loc inverse par application du RPC direct"""
+        :param lon: longitude position
+        :type lon : float or 1D numpy.ndarray dtype=float64
+        :param lat: latitude position
+        :type lat : float or 1D numpy.ndarray dtype=float64
+        :param alt: altitude
+        :type alt : float
+        :return: sensor position (row, col, True)
+        :rtype numpy.ndarray
+        """
         if self.Num_COL:
+            if not isinstance(lon, (list, np.ndarray)):
+                lon = np.array([lon])
+                lat = np.array([lat])
+
             Xnorm = (lon - self.offset_X)/self.scale_X
             Ynorm = (lat - self.offset_Y)/self.scale_Y
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
 
-            if abs(Xnorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en longitude ",Xnorm,lon)
-            if abs(Ynorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en latitude ",Ynorm,lat)
-            if abs(Znorm)> self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en altitude ",Znorm,alt)
+            if np.sum(abs(Xnorm) > self.lim_extrapol) == Xnorm.shape[0]:
+                print("!!!!! l'evaluation au point est extrapolee en longitude ", Xnorm,lon)
+            if np.sum(abs(Ynorm) > self.lim_extrapol) == Ynorm.shape[0]:
+                print("!!!!! l'evaluation au point est extrapolee en latitude ", Ynorm,lat)
+            if abs(Znorm) > self.lim_extrapol:
+                print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
 
-            monomes = array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
+            monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
                 Ynorm**int(self.Monomes[i][2])*\
                 Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
 
-            Cout = dot(array(self.Num_COL),monomes)/dot(array(self.Den_COL),monomes)*self.scale_COL+self.offset_COL
-            Lout = dot(array(self.Num_LIG),monomes)/dot(array(self.Den_LIG),monomes)*self.scale_LIG+self.offset_LIG
+            Cout = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*self.scale_COL+self.offset_COL
+            Lout = np.dot(np.array(self.Num_LIG), monomes)/np.dot(np.array(self.Den_LIG), monomes)*self.scale_LIG+self.offset_LIG
         else:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
-            (Cout,Lout) = (None,None)
-        return (Lout,Cout, True)
+            (Cout, Lout) = (None, None)
+        return Lout, Cout, True
 
-    def direct_loc_inverse_iterative(self,row,col,alt,nb_iter_max=10):
-        """evalue loc inverse par inversion du RPC inverse        """
+    def filter_coordinates(self, first_coord, second_coord, fill_nan = False, direction = 'direct'):
+        """
+        Filter nan input values
+
+        :param first_coord :  first coordinate
+        :type first_coord : 1D numpy.ndarray dtype=float64
+        :param second_coord :  second coordinate
+        :type second_coord : 1D numpy.ndarray dtype=float64
+        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
+        :param direction :  direct or inverse localisation
+        :type direction : str in ('direct', 'inverse')
+        :return: filtered coordinates
+        :rtype list of numpy.array (index of nan, first filtered, second filtered)
+        """
+        filter_nan = np.logical_not(np.logical_or(np.isnan(first_coord), np.isnan(second_coord)))
+
+        if fill_nan:
+            if direction == 'direct':
+                out_x_nan_value = self.offset_X
+                out_y_nan_value = self.offset_Y
+            else:
+                out_x_nan_value = self.offset_COL
+                out_y_nan_value = self.offset_LIG
+        else:
+            out_x_nan_value = np.nan
+            out_y_nan_value = np.nan
+
+        x_out = np.full(second_coord.size, out_x_nan_value)
+        y_out = np.full(second_coord.size, out_y_nan_value)
+
+        return filter_nan, x_out, y_out
+
+
+
+    def direct_loc_inverse_iterative(self, row, col, alt, nb_iter_max=10, fill_nan = False):
+        """
+        Iterative direct localization using inverse RPC
+
+        :param row :  line sensor position
+        :type row : float or 1D numpy.ndarray dtype=float64
+        :param col :  column sensor position
+        :type col : float or 1D numpy.ndarray dtype=float64
+        :param alt :  altitude
+        :type alt : float
+        :param nb_iter_max: max number of iteration
+        :type alt : int
+        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan : boolean
+        :return: ground position (lon,lat,h)
+        :rtype list of numpy.array
+        """
         if self.Num_COL:
-            #calcul d'une sol approchee: en prend le milieu de la scene
-            X = self.offset_X
-            Y = self.offset_Y
-            (l0,c0, __) = self.inverse_loc(X,Y,alt)
 
-            #precision en pixels
+            if not isinstance(row, (list, np.ndarray)):
+                col = np.array([col])
+                row = np.array([row])
+
+            filter_nan, long_out, lat_out = self.filter_coordinates(row, col, fill_nan)
+            row=row[filter_nan]
+            col=col[filter_nan]
+
+            # if all coord
+            #  contains Nan then return
+            if not np.any(filter_nan):
+                return long_out, lat_out, alt
+
+            # inverse localization starting from the center of the scene
+            X = np.array([self.offset_X])
+            Y = np.array([self.offset_Y])
+            (l0, c0, __) = self.inverse_loc(X, Y, alt)
+
+            # desired precision in pixels
             eps = 1e-6
 
-            k=0
+            iteration = 0
+            # computing the residue between the sensor positions and those estimated by the inverse localization
             dc = col - c0
             dl = row - l0
-            while abs(dc)>eps and abs(dl)>eps and k<nb_iter_max:
-                #evaluer deriv partielles
-                (Cdx,Cdy,Ldx,Ldy) = self.calcule_derivees_inv(X,Y,alt)
+
+            # ground coordinates (latitude and longitude) of each point
+            X = np.repeat(X, dc.size)
+            Y = np.repeat(Y, dc.size)
+            # while the required precision is not achieved
+            while (np.max(abs(dc)) > eps or np.max(abs(dl)) > eps) and iteration < nb_iter_max:
+                # list of points that require another iteration
+                iter_ = np.where((abs(dc) > eps) | (abs(dl) > eps))[0]
+
+                # partial derivatives
+                (Cdx, Cdy, Ldx, Ldy) = self.calcule_derivees_inv(X[iter_], Y[iter_], alt)
                 det = Cdx*Ldy-Ldx*Cdy
-                dX = ( Ldy*dc - Cdy*dl)/det
-                dY = (-Ldx*dc + Cdx*dl)/det
-                X += dX
-                Y += dY
-                (l,c, __) = self.inverse_loc(X,Y,alt)
-                dc = col - c
-                dl = row - l
-                k+=1
+
+                dX = (Ldy*dc[iter_] - Cdy*dl[iter_])/det
+                dY = (-Ldx*dc[iter_] + Cdx*dl[iter_])/det
+
+                # update ground coordinates
+                X[iter_] += dX
+                Y[iter_] += dY
+
+                # inverse localization
+                (l, c, __) = self.inverse_loc(X[iter_], Y[iter_], alt)
+
+                # updating the residue between the sensor positions and those estimated by the inverse localization
+                dc[iter_] = col[iter_] - c
+                dl[iter_] = row[iter_] - l
+                iteration += 1
+            long_out[filter_nan] = X
+            lat_out[filter_nan] = Y
+
         else:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
-            (X,Y) = (None,None)
-        return(X,Y)
+            (long_out, lat_out) = (None, None)
+
+        return long_out, lat_out, alt
+
+    def get_alt_min_max(self):
+        """
+        returns altitudes min and max layers
+        :return alt_min,lat_max
+        :rtype list
+        """
+        return [self.offset_ALT - self.scale_ALT / 2.0, self.offset_ALT + self.scale_ALT / 2.0]
+
+    def los_extrema(self, row, col, alt_min, alt_max, fill_nan = False):
+        """
+        compute los extrema
+        :param row  :  line sensor position
+        :type row  : float
+        :param col :  column sensor position
+        :type col : float
+        :param alt_min : los alt min
+        :type alt_min  : float
+        :param alt_max : los alt max
+        :type alt_max : float
+        :return los extrema
+        :rtype numpy.array (2x3)
+        """
+        los_edges = np.zeros([2, 3])
+        los_edges[0, :] = self.direct_loc_h(row, col, alt_max, fill_nan)
+        los_edges[1, :] = self.direct_loc_h(row, col, alt_min, fill_nan)
+        return los_edges

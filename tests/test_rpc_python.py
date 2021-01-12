@@ -45,9 +45,17 @@ def test_rpc_drivers():
     file_geom = os.path.join(data_folder,'rpc/{}.geom'.format(id_scene))
     fctrat_geom = RPC.from_any(file_geom)
 
+    file_dimap = os.path.join(data_folder, 'rpc/RPC_{}.XML'.format(id_scene))
+    print(file_dimap)
+    fctrat_dimap_v2 = RPC.from_any(file_dimap, topleftconvention=True)
+
+    fake_rpc = os.path.join(data_folder, 'rpc/fake_rpc.txt')
+    fctrat_fake = RPC.from_any(fake_rpc, topleftconvention=True)
     assert (fctrat_eucl.driver_type == 'euclidium')
     assert (fctrat_dimap.driver_type == 'dimap_v1.4')
     assert (fctrat_geom.driver_type == 'ossim_kwl')
+    assert (fctrat_dimap_v2.driver_type == 'dimap_v2.15')
+    assert (fctrat_fake == None)
 
 def test_identify_ossim_kwl():
     data_folder = test_path()

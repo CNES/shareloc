@@ -87,9 +87,6 @@ def identify_euclidium_rpc(eucl_file):
     except:
         return None
 
-
-
-
 def identify_ossim_kwl(ossim_kwl_file):
     """
     parse geom file to identify if it is an ossim model
@@ -513,10 +510,7 @@ class RPC:
         if topleftconvention:
             rpc_params['offset_COL'] += 0.5
             rpc_params['offset_LIG'] += 0.5
-
         return cls(rpc_params)
-
-
 
     @classmethod
     def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None, topleftconvention=False):
@@ -526,8 +520,6 @@ class RPC:
         If False : [0,0] is at the center of the Top Left pixel 
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-
-
         rpc_params = dict()
         rpc_params['driver_type'] = 'euclidium'
 
@@ -551,7 +543,6 @@ class RPC:
             direct_coeffs = read_eucl_file(direct_euclidium_coeff)
             if direct_coeffs['type_fic'] != 'D':
                 print("direct euclidium file is of {} type".format(direct_coeffs['type_fic']))
-
             check_coeff_consistency(inverse_coeffs['normalisation_coeffs'], direct_coeffs['normalisation_coeffs'])
             rpc_params['Num_X'] = direct_coeffs['coeff_PX']
             rpc_params['Den_X'] = direct_coeffs['coeff_QX']
@@ -574,24 +565,35 @@ class RPC:
 
     @classmethod
     def from_any(cls, primary_file, secondary_file=None, topleftconvention=False):
-
+        """ load from any RPC (auto indetify driver)
+        :param primary_file  : rpc filename (dimap, ossim kwl, euclidium, geotiff)
+        :type primary_file  : str
+        :param secondary_file  : secondary file (inverse euclidium coefficients)
+        :type secondary_file  : str
+        :param topleftconvention  : [0,0] position
+        :type topleftconvention  : boolean
+        If False : [0,0] is at the center of the Top Left pixel
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
         if basename(primary_file).endswith('XML'.upper()):
            dimap_version = identify_dimap(primary_file)
            if dimap_version is not None :
-            if float(dimap_version)<2.0 :
-                return cls.from_dimap_v1(primary_file, topleftconvention)
-            else:
-                return cls.from_dimap_v2(primary_file, topleftconvention)
-        else:
-            ossim_model = identify_ossim_kwl(primary_file)
-            if ossim_model is not None:
-                    return cls.from_ossim_kwl(primary_file, topleftconvention)
-            else:
-                geotiff_rpc_dict = identify_geotiff_rpc(primary_file)
-                if geotiff_rpc_dict is not None:
-                    return cls.from_geotiff(primary_file, topleftconvention)
-        return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
-        ValueError("can''t read dimap file")
+                if float(dimap_version)<2.0 :
+                    return cls.from_dimap_v1(primary_file, topleftconvention)
+                else:
+                    return cls.from_dimap_v2(primary_file, topleftconvention)
+        ossim_model = identify_ossim_kwl(primary_file)
+        if ossim_model is not None:
+            return cls.from_ossim_kwl(primary_file, topleftconvention)
+        geotiff_rpc_dict = identify_geotiff_rpc(primary_file)
+        if geotiff_rpc_dict is not None:
+            return cls.from_geotiff(primary_file, topleftconvention)
+        is_eucl_rpc = identify_euclidium_rpc(primary_file)
+        if secondary_file is not None:
+            is_eucl_rpc = is_eucl_rpc and identify_euclidium_rpc(secondary_file)
+        if is_eucl_rpc:
+            return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
+        ValueError("can''t read rpc file")
         return None
 
 

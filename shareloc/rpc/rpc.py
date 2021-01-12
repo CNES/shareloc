@@ -246,16 +246,13 @@ class RPC:
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         dimap_version = identify_dimap(dimap_filepath)
-        print('***',dimap_version)
         if identify_dimap(dimap_filepath) is not None:
             if float(dimap_version) < 2.0:
                 return cls.from_dimap_v1(dimap_filepath, topleftconvention)
             else:
-                print('v2')
                 return cls.from_dimap_v2(dimap_filepath, topleftconvention)
         else:
             ValueError("can''t read dimap file")
-
             return None
 
     @classmethod

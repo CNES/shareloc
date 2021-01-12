@@ -24,7 +24,7 @@ import pytest
 from utils import test_path
 import numpy as np
 
-from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl
+from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl, identify_euclidium_rpc
 
 
 
@@ -56,6 +56,20 @@ def test_identify_ossim_kwl():
     ossim_model =  identify_ossim_kwl(file_geom)
     assert (ossim_model == 'ossimPleiadesModel')
 
+def test_identify_euclidium_rpc():
+    data_folder = test_path()
+    file_direct_euclide = os.path.join(data_folder, 'rpc/rpc_dir.euc')
+    file_inverse_euclide = os.path.join(data_folder, 'rpc/rpc_inv.euc')
+
+    is_eucl_inverse = identify_euclidium_rpc(file_inverse_euclide)
+    is_eucl_direct = identify_euclidium_rpc(file_direct_euclide)
+
+    id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
+    file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
+    is_eucl_bad =  identify_euclidium_rpc(file_geom)
+    assert (is_eucl_inverse == True)
+    assert (is_eucl_direct == True)
+    assert (is_eucl_bad == False)
 
 
 def test_identify_dimap():

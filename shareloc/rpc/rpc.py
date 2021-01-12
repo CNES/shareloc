@@ -67,6 +67,29 @@ def identify_dimap(xml_file):
     except:
         return None
 
+
+def identify_euclidium_rpc(eucl_file):
+    """
+    parse file to identify if it is an euclidium model (starts with '>>')
+    :param eucl_file : ossim keyword list file
+    :type eucl_file : str
+    :return  True if euclidium rpc or False if not an euclidium file
+    :rtype Boolean
+    """
+    try :
+        with open(eucl_file) as f:
+                content = f.readlines()
+        is_eucl = True
+        for line in content:
+                if not line.startswith('>>') and line !='\n':
+                    is_eucl = False
+        return is_eucl
+    except:
+        return None
+
+
+
+
 def identify_ossim_kwl(ossim_kwl_file):
     """
     parse geom file to identify if it is an ossim model
@@ -442,13 +465,9 @@ class RPC:
         If False : [0,0] is at the center of the Top Left pixel 
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-
-
         rpc_params = dict()
         #OSSIM keyword list
         rpc_params['driver_type'] = 'ossim_kwl'
-
-
         with open(ossim_kwl_filename) as f:
             content = f.readlines()
 
@@ -572,7 +591,8 @@ class RPC:
                 if geotiff_rpc_dict is not None:
                     return cls.from_geotiff(primary_file, topleftconvention)
         return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
-
+        ValueError("can''t read dimap file")
+        return None
 
 
     def calcule_derivees_inv(self,lon,lat,alt):

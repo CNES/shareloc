@@ -256,7 +256,7 @@ class RPC:
                  [2,0,1,1],[0,0,0,3]]
 
     @classmethod
-    def from_dimap(cls, dimap_filepath, topleftconvention=False):
+    def from_dimap(cls, dimap_filepath, topleftconvention=True):
         """ load from dimap
         param dimap_filepath  : dimap xml file
     	:type dimap_filepath  : str
@@ -276,7 +276,7 @@ class RPC:
             return None
 
     @classmethod
-    def from_dimap_v2(cls, dimap_filepath, topleftconvention=False):
+    def from_dimap_v2(cls, dimap_filepath, topleftconvention=True):
         """ load from dimap  v2
         :param dimap_filepath  : dimap xml file
     	:type dimap_filepath  : str
@@ -345,7 +345,7 @@ class RPC:
 
 
     @classmethod
-    def from_dimap_v1(cls, dimap_filepath, topleftconvention=False):
+    def from_dimap_v1(cls, dimap_filepath, topleftconvention=True):
         """ load from dimap  v1
         :param dimap_filepath  : dimap xml file
 	    :type dimap_filepath  : str
@@ -412,7 +412,7 @@ class RPC:
         return cls(rpc_params)
 
     @classmethod
-    def from_geotiff(cls, image_filename, topleftconvention=False):
+    def from_geotiff(cls, image_filename, topleftconvention=True):
         """ Load from a  geotiff image file
         :param image_filename  : image filename
     	:type image_filename  : str
@@ -455,7 +455,7 @@ class RPC:
         return cls(rpc_params)
 
     @classmethod
-    def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=False):
+    def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=True):
         """ Load from a geom file
         :param topleftconvention  : [0,0] position
 	    :type topleftconvention  : boolean
@@ -513,7 +513,7 @@ class RPC:
         return cls(rpc_params)
 
     @classmethod
-    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None, topleftconvention=False):
+    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None, topleftconvention=True):
         """ load from euclidium
         :param topleftconvention  : [0,0] position
 	    :type topleftconvention  : boolean
@@ -564,7 +564,7 @@ class RPC:
         return cls(rpc_params)
 
     @classmethod
-    def from_any(cls, primary_file, secondary_file=None, topleftconvention=False):
+    def from_any(cls, primary_file, secondary_file=None, topleftconvention=True):
         """ load from any RPC (auto indetify driver)
         :param primary_file  : rpc filename (dimap, ossim kwl, euclidium, geotiff)
         :type primary_file  : str

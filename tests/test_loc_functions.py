@@ -155,8 +155,8 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     fctrat = RPC.from_any(fichier_dimap)
 
     loc_rpc = Localization(fctrat)
-    #TODO check difference
-    lonlatalt_rpc = loc_rpc.direct(row -1, col -1, h)
+    #grid (from physical model) and RP have 0.5 pixel shift
+    lonlatalt_rpc = loc_rpc.direct(row-0.5, col-0.5, h)
 
     diff_lon = lonlatalt[0] - lonlatalt_rpc[0]
     diff_lat = lonlatalt[1] - lonlatalt_rpc[1]

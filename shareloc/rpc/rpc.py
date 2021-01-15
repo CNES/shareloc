@@ -568,7 +568,7 @@ class RPC:
         """ load from any RPC (auto indetify driver)
         :param primary_file  : rpc filename (dimap, ossim kwl, inverse euclidium coefficients, geotiff)
         :type primary_file  : str
-        :param secondary_file  : secondary file (inverse euclidium coefficients)
+        :param secondary_file  : secondary file (direct euclidium coefficients)
         :type secondary_file  : str
         :param topleftconvention  : [0,0] position
         :type topleftconvention  : boolean

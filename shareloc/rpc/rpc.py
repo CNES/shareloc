@@ -566,7 +566,7 @@ class RPC:
     @classmethod
     def from_any(cls, primary_file, secondary_file=None, topleftconvention=True):
         """ load from any RPC (auto indetify driver)
-        :param primary_file  : rpc filename (dimap, ossim kwl, euclidium, geotiff)
+        :param primary_file  : rpc filename (dimap, ossim kwl, inverse euclidium coefficients, geotiff)
         :type primary_file  : str
         :param secondary_file  : secondary file (inverse euclidium coefficients)
         :type secondary_file  : str

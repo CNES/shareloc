@@ -129,6 +129,35 @@ def test_rpc_from_any(id_scene,lon,lat,alt,row_vt,col_vt):
 
 
 
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0)])
+def test_rpc_euclidium_direct_iterative(id_scene,lon,lat,alt,row_vt,col_vt):
+    data_folder = test_path()
+    rpc_file = os.path.join(data_folder, 'rpc', id_scene)
+    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+    print("{} {} {}".format(lon,lat,alt))
+    (row,col,__) = fctrat.inverse_loc(lon,lat,alt)
+    print("col {} row {}".format(col,row))
+    (lon2,lat2,__) = fctrat.direct_loc_h(row,col,alt)
+    assert(lon == pytest.approx(lon2, abs = 1e-2))
+    assert(lat == pytest.approx(lat2, abs = 1e-2))
+
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_dir.txt',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0)])
+def test_rpc_euclidium_direct(id_scene,lon,lat,alt,row_vt,col_vt):
+    data_folder = test_path()
+    rpc_file = os.path.join(data_folder, 'rpc', id_scene)
+    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+    (row,col,__) = fctrat.inverse_loc(lon,lat,alt)
+    assert(row is None)
+    assert(col is None)
+    (lon2,lat2,__) = fctrat.direct_loc_inverse_iterative(row_vt,col_vt,alt)
+    assert(lat2 is None)
+    assert(lon2 is None)
+
+
 @pytest.mark.parametrize("prod, can_read", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif', True),
                                             ('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_nogeo.tif', False)])
 def test_rpc_from_geotiff_without_rpc(prod,can_read):

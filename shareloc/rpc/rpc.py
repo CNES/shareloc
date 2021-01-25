@@ -71,9 +71,9 @@ def identify_dimap(xml_file):
 def identify_euclidium_rpc(eucl_file):
     """
     parse file to identify if it is an euclidium model (starts with '>>')
-    :param eucl_file : ossim keyword list file
+    :param eucl_file : euclidium rpc file
     :type eucl_file : str
-    :return  True if euclidium rpc or False if not an euclidium file
+    :return  True if euclidium rpc has been identified, False otherwise
     :rtype Boolean
     """
     try :
@@ -81,11 +81,11 @@ def identify_euclidium_rpc(eucl_file):
                 content = f.readlines()
         is_eucl = True
         for line in content:
-                if not line.startswith('>>') and line !='\n':
-                    is_eucl = False
-        return is_eucl
+            if not line.startswith('>>') and line !='\n':
+                is_eucl = False
+            return is_eucl
     except:
-        return None
+        return False
 
 def identify_ossim_kwl(ossim_kwl_file):
     """
@@ -142,6 +142,13 @@ def read_eucl_file(eucl_file):
     with open(eucl_file, 'r') as fid:
         txt = fid.readlines()
 
+    for line in txt:
+        if line.startswith('>>\tTYPE_OBJET'):
+            if line.split()[-1].endswith('Inverse'):
+                parsed_file['type_fic'] = 'I'
+            if line.split()[-1].endswith('Directe'):
+                parsed_file['type_fic'] = 'D'
+
     lsep = renvoie_linesep(txt)
 
     ind_debut_PX = txt.index('>>\tCOEFF POLYNOME PXOUT' + lsep)
@@ -154,19 +161,22 @@ def read_eucl_file(eucl_file):
     coeff_PY_str = txt[ind_debut_PY + 1:ind_debut_PY + 21]
     coeff_QY_str = txt[ind_debut_QY + 1:ind_debut_QY + 21]
 
-    parsed_file['coeff_PX'] = [float(coeff.split()[1]) for coeff in coeff_PX_str]
-    parsed_file['coeff_QX'] = [float(coeff.split()[1]) for coeff in coeff_QX_str]
-    parsed_file['coeff_PY'] = [float(coeff.split()[1]) for coeff in coeff_PY_str]
-    parsed_file['coeff_QY'] = [float(coeff.split()[1]) for coeff in coeff_QY_str]
+    poly_coeffs = dict()
+    if parsed_file['type_fic'] == 'I':
+        poly_coeffs['Num_COL'] = [float(coeff.split()[1]) for coeff in coeff_PX_str]
+        poly_coeffs['Den_COL'] = [float(coeff.split()[1]) for coeff in coeff_QX_str]
+        poly_coeffs['Num_LIG'] = [float(coeff.split()[1]) for coeff in coeff_PY_str]
+        poly_coeffs['Den_LIG'] = [float(coeff.split()[1]) for coeff in coeff_QY_str]
+    else:
+        poly_coeffs['Num_X'] = [float(coeff.split()[1]) for coeff in coeff_PX_str]
+        poly_coeffs['Den_X'] = [float(coeff.split()[1]) for coeff in coeff_QX_str]
+        poly_coeffs['Num_Y'] = [float(coeff.split()[1]) for coeff in coeff_PY_str]
+        poly_coeffs['Den_Y'] = [float(coeff.split()[1]) for coeff in coeff_QY_str]
 
+    parsed_file['poly_coeffs'] = poly_coeffs
     # list [offset , scale]
     normalisation_coeff = dict()
     for l in txt:
-        if l.startswith('>>\tTYPE_OBJET'):
-            if l.split()[-1].endswith('Inverse'):
-                parsed_file['type_fic'] = 'I'
-            if l.split()[-1].endswith('Directe'):
-                parsed_file['type_fic'] = 'D'
         if l.startswith('>>\tXIN_OFFSET'):
             lsplit = l.split()
             if parsed_file['type_fic'] == 'I':
@@ -513,46 +523,52 @@ class RPC:
         return cls(rpc_params)
 
     @classmethod
-    def from_euclidium(cls, inverse_euclidium_coeff, direct_euclidium_coeff=None, topleftconvention=True):
+    def from_euclidium(cls, primary_euclidium_coeff, secondary_euclidium_coeff=None, topleftconvention=True):
         """ load from euclidium
         :param topleftconvention  : [0,0] position
-	    :type topleftconvention  : boolean
+        :type topleftconvention  : boolean
+        :param primary_euclidium_coeff  : primary euclidium coefficients file (can be either direct or inverse)
+        :type primary_euclidium_coeff  : str
+        :param secondary_euclidium_coeff  : optional secondary euclidium coeff coefficients file
+            (can be either direct or inverse)
+        :type secondary_euclidium_coeff  : str
         If False : [0,0] is at the center of the Top Left pixel 
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         rpc_params = dict()
         rpc_params['driver_type'] = 'euclidium'
 
-        #lecture fichier euclide
-        inverse_coeffs = read_eucl_file(inverse_euclidium_coeff)
+        #lecture fichier euclidium
+        primary_coeffs = read_eucl_file(primary_euclidium_coeff)
 
-        if inverse_coeffs['type_fic'] != 'I':
-            print("inverse euclidium file is of {} type".format(inverse_coeffs['type_fic']))
+        # info log
+        print("primary euclidium file is of {} type".format(primary_coeffs['type_fic']))
 
-        rpc_params['Num_COL'] = inverse_coeffs['coeff_PX']
-        rpc_params['Den_COL'] = inverse_coeffs['coeff_QX']
-        rpc_params['Num_LIG'] = inverse_coeffs['coeff_PY']
-        rpc_params['Den_LIG'] = inverse_coeffs['coeff_QY']
+        rpc_params['Num_X'] = None
+        rpc_params['Den_X'] = None
+        rpc_params['Num_Y'] = None
+        rpc_params['Den_Y'] = None
+        rpc_params['Num_COL'] = None
+        rpc_params['Den_COL'] = None
+        rpc_params['Num_LIG'] = None
+        rpc_params['Den_LIG'] = None
 
-        rpc_params['normalisation_coeffs'] = inverse_coeffs['normalisation_coeffs']
-        for key, value in inverse_coeffs['normalisation_coeffs'].items():
+        for key, value in primary_coeffs['poly_coeffs'].items():
+            rpc_params[key] = value
+
+        rpc_params['normalisation_coeffs'] = primary_coeffs['normalisation_coeffs']
+        for key, value in primary_coeffs['normalisation_coeffs'].items():
             rpc_params['offset_' + key] = value[0]
             rpc_params['scale_' + key] = value[1]
 
-        if direct_euclidium_coeff is not None :
-            direct_coeffs = read_eucl_file(direct_euclidium_coeff)
-            if direct_coeffs['type_fic'] != 'D':
-                print("direct euclidium file is of {} type".format(direct_coeffs['type_fic']))
-            check_coeff_consistency(inverse_coeffs['normalisation_coeffs'], direct_coeffs['normalisation_coeffs'])
-            rpc_params['Num_X'] = direct_coeffs['coeff_PX']
-            rpc_params['Den_X'] = direct_coeffs['coeff_QX']
-            rpc_params['Num_Y'] = direct_coeffs['coeff_PY']
-            rpc_params['Den_Y'] = direct_coeffs['coeff_QY']
-        else:
-            rpc_params['Num_X'] = None
-            rpc_params['Den_X'] = None
-            rpc_params['Num_Y'] = None
-            rpc_params['Den_Y'] = None
+        if secondary_euclidium_coeff is not None :
+            secondary_coeffs = read_eucl_file(secondary_euclidium_coeff)
+            print("secondary euclidium file is of {} type".format(secondary_coeffs['type_fic']))
+            check_coeff_consistency(primary_coeffs['normalisation_coeffs'], secondary_coeffs['normalisation_coeffs'])
+
+            for key, value in secondary_coeffs['poly_coeffs'].items():
+                rpc_params[key] = value
+
         rpc_params['offset_COL'] -= 1
         rpc_params['offset_LIG'] -= 1
         #If top left convention, 0.5 pixel shift added on col/row offsets
@@ -566,9 +582,9 @@ class RPC:
     @classmethod
     def from_any(cls, primary_file, secondary_file=None, topleftconvention=True):
         """ load from any RPC (auto indetify driver)
-        :param primary_file  : rpc filename (dimap, ossim kwl, inverse euclidium coefficients, geotiff)
+        :param primary_file  : rpc filename (dimap, ossim kwl, euclidium coefficients, geotiff)
         :type primary_file  : str
-        :param secondary_file  : secondary file (direct euclidium coefficients)
+        :param secondary_file  : secondary file (euclidium coefficients)
         :type secondary_file  : str
         :param topleftconvention  : [0,0] position
         :type topleftconvention  : boolean
@@ -687,7 +703,6 @@ class RPC:
         if self.Num_X:
             # ground position
 
-
             Xnorm = (col - self.offset_COL)/self.scale_COL
             Ynorm = (row - self.offset_LIG)/self.scale_LIG
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
@@ -707,6 +722,8 @@ class RPC:
             P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
         # Direct localization using inverse RPC
         else:
+            #TODO log info
+            print("direct localisation from inverse iterative")
             (P[filter_nan, 0], P[filter_nan, 1], P[filter_nan, 2]) = self.direct_loc_inverse_iterative(row, col, alt, 10, fill_nan)
         P[:, 2] = alt
         return np.squeeze(P)
@@ -776,7 +793,7 @@ class RPC:
             Cout = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*self.scale_COL+self.offset_COL
             Lout = np.dot(np.array(self.Num_LIG), monomes)/np.dot(np.array(self.Den_LIG), monomes)*self.scale_LIG+self.offset_LIG
         else:
-            print("!!!!! les coefficient inverses n'ont pas ete definis")
+            print("inverse localisation can't be performed, inverse coefficients have not been defined")
             (Cout, Lout) = (None, None)
         return Lout, Cout, True
 
@@ -892,7 +909,7 @@ class RPC:
             lat_out[filter_nan] = Y
 
         else:
-            print("!!!!! les coefficient inverses n'ont pas ete definis")
+            print("inverse localisation can't be performed, inverse coefficients have not been defined")
             (long_out, lat_out) = (None, None)
 
         return long_out, lat_out, alt

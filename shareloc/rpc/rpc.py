@@ -767,13 +767,14 @@ class RPC:
         :type lat : float or 1D numpy.ndarray dtype=float64
         :param alt: altitude
         :type alt : float
-        :return: sensor position (row, col, True)
+        :return: sensor position (row, col, alt)
         :rtype numpy.ndarray
         """
         if self.Num_COL:
             if not isinstance(lon, (list, np.ndarray)):
                 lon = np.array([lon])
                 lat = np.array([lat])
+                alt = np.array([alt])
 
             Xnorm = (lon - self.offset_X)/self.scale_X
             Ynorm = (lat - self.offset_Y)/self.scale_Y
@@ -795,7 +796,7 @@ class RPC:
         else:
             print("inverse localisation can't be performed, inverse coefficients have not been defined")
             (Cout, Lout) = (None, None)
-        return Lout, Cout, True
+        return Lout, Cout, alt
 
     def filter_coordinates(self, first_coord, second_coord, fill_nan = False, direction = 'direct'):
         """
@@ -940,9 +941,3 @@ class RPC:
         los_edges[0, :] = self.direct_loc_h(row, col, alt_max, fill_nan)
         los_edges[1, :] = self.direct_loc_h(row, col, alt_min, fill_nan)
         return los_edges
-
-
-#=======
-#            (X,Y) = (None,None)
-#        return(X,Y)
-#>>>>>>> Stashed changes

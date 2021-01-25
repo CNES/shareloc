@@ -73,8 +73,7 @@ def test_sensor_triangulation(row, col, h):
     gri_right.estimate_inverse_loc_predictor()
     lonlatalt = gri_left.direct_loc_h(row, col, h)
 
-    inv_row,inv_col,valid = gri_right.inverse_loc(lonlatalt[0],lonlatalt[1],lonlatalt[2])
-
+    inv_row,inv_col, alt, valid = gri_right.inverse_loc(lonlatalt[0],lonlatalt[1],lonlatalt[2])
 
     matches = np.zeros([1,4])
     matches[0,:] = [col,row,inv_col,inv_row]

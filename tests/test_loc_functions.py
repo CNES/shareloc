@@ -181,7 +181,7 @@ def test_sensor_loc_dir_dtm(index_x,index_y):
     print([lon,lat])
     alt = dtmbsq.Interpolate(index_x - 0.5, index_y - 0.5)
 
-    row, col, valid = loc.inverse(lon, lat, alt)
+    row, col, alt, valid = loc.inverse(lon, lat, alt)
     print("row col ",row,col)
     lonlath = loc.direct(row, col)
     assert(lon == pytest.approx(lonlath[0],abs=1e-8))
@@ -221,14 +221,14 @@ def test_sensor_loc_inv(lon,lat,alt,valid_col,valid_row):
     ___,gri = prepare_loc()
 
     loc = Localization(gri)
-    inv_row,inv_col,valid = loc.inverse(lon,lat,alt)
+    inv_row,inv_col, h, valid = loc.inverse(lon,lat,alt)
 
     print("inverse localization  : lon {} lat {} alt {}".format(lon,lat,alt))
     print("row {} col {}  ".format(inv_row, inv_col))
     print('diff_row {} diff_col {} '.format(inv_row - valid_row, inv_col - valid_col))
     assert(inv_row == pytest.approx(valid_row,abs=1e-2))
     assert(inv_col == pytest.approx(valid_col,abs=1e-2))
-
+    assert(h == alt)
 
 @pytest.mark.parametrize("lon,lat,alt", [(2.12026631, 31.11245154,10.0)])
 @pytest.mark.unit_tests
@@ -239,8 +239,8 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     id_scene = 'P1BP--2018122638935449CP'
     ___,gri = prepare_loc('ellipsoide',id_scene)
     loc_grid = Localization(gri)
-    #init des predicteurs
-    [row, col, valid] = loc_grid.inverse(lon, lat, alt)
+
+    [row, col, h, valid] = loc_grid.inverse(lon, lat, alt)
     data_folder = test_path()
     fichier_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
@@ -316,7 +316,7 @@ def test_loc_dir_loc_inv(row, col, h):
     #init des predicteurs
     gri.estimate_inverse_loc_predictor()
     (lon,lat,alt) = gri.direct_loc_h(row, col, h)
-    inv_row,inv_col,valid = gri.inverse_loc(lon,lat,alt)
+    inv_row,inv_col, h,valid = gri.inverse_loc(lon,lat,alt)
 
     print('row {} col {} valid {}'.format(inv_row, inv_col, valid))
     assert(row == pytest.approx(inv_row,abs=1e-2))
@@ -392,7 +392,7 @@ def test_loc_dir_loc_inv_couple(lig, col, h):
     #init des predicteurs
     gri_right.estimate_inverse_loc_predictor()
     lonlatalt = gri_left.direct_loc_h(lig, col, h)
-    inv_lig,inv_col,valid = gri_right.inverse_loc(lonlatalt[0],lonlatalt[1],lonlatalt[2])
+    inv_lig,inv_col, alt, valid = gri_right.inverse_loc(lonlatalt[0],lonlatalt[1],lonlatalt[2])
 
     print('lig {} col {} valid {}'.format(inv_lig, inv_col, valid))
     #assert(lig == pytest.approx(inv_lig,abs=1e-2))

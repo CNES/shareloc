@@ -570,7 +570,7 @@ class RPC:
                 print("!!!!! l'evaluation au point est extrapolee en longitude ", Xnorm,lon)
             if np.sum(abs(Ynorm) > self.lim_extrapol) == Ynorm.shape[0]:
                 print("!!!!! l'evaluation au point est extrapolee en latitude ", Ynorm,lat)
-            if abs(Znorm) > self.lim_extrapol:
+            if np.sum(abs(Znorm) > self.lim_extrapol) != 0:
                 print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
 
             monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\

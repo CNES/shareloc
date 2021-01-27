@@ -25,22 +25,25 @@ from utils import test_path
 from shareloc.localization import Localization
 from shareloc.image.image  import Image
 
-@pytest.mark.parametrize("row,col", [(100.0, 200.0)])
+
+@pytest.mark.parametrize("image_name, row,col, origin_row, origin_col, pixel_size_row, pixel_size_col",
+                         [('right_image.tif',100.0, 200.0, 5162.0,4915.0,1.0,1.0),
+                          ('right_image_resample.tif',100.0, 200.0, 5162.0,4915.0,0.4,0.5)])
 @pytest.mark.unit_tests
-def test_image_metadata(row, col):
+def test_image_metadata(image_name,row, col, origin_row, origin_col, pixel_size_row, pixel_size_col):
     """
      Test image class
     """
     data_folder = test_path()
-    image_filename = os.path.join(data_folder, 'image/phr_ventoux/right_image.tif')
+    image_filename = os.path.join(data_folder, 'image/phr_ventoux/', image_name)
 
     my_image = Image(image_filename)
-    assert my_image.origin_row == 5162.0
-    assert my_image.origin_col == 4915.0
-    assert my_image.pixel_size_row == 1
-    assert my_image.pixel_size_col == 1
+    assert my_image.origin_row == origin_row
+    assert my_image.origin_col == origin_col
+    assert my_image.pixel_size_row == pixel_size_row
+    assert my_image.pixel_size_col == pixel_size_col
 
     [phys_row, phys_col] = my_image.transform_index_to_physical_point(row, col)
 
-    assert phys_row == my_image.origin_row + (row + 0.5) * my_image.pixel_size_row
-    assert phys_col == my_image.origin_col + (col + 0.5) * my_image.pixel_size_col
+    assert phys_row == origin_row + (row + 0.5) * pixel_size_row
+    assert phys_col == origin_col + (col + 0.5) * pixel_size_col

@@ -24,7 +24,7 @@
 import rasterio
 import numpy as np
 from affine import Affine
-
+import math
 
 class Image:
     def __init__(self, image_path, read_data=False):
@@ -105,8 +105,23 @@ class Image:
         :param col: col index
         :type col: int or 1D numpy array
         :return: Georeferenced coordinates (row, col)
-        :rtype: Tuple(georeference row int or 1D np.array, georeference col int or 1D np.array)
+        :rtype: Tuple(georeference row float or 1D np.array, georeference col float or 1D np.array)
         """
         col_geo, row_geo = rasterio.transform.xy(self.transform, row, col, offset='center')
 
         return row_geo, col_geo
+
+    def transform_physical_point_to_index(self, row_geo, col_geo):
+        """
+        Transform physical point to index
+
+        :param row_geo: physical point row
+        :type row_geo: int or 1D numpy array
+        :param col_geo: physical point col
+        :type col_geo: int or 1D numpy array
+        :return: index coordinates (row, col)
+        :rtype: Tuple(row float or 1D np.array, col float or 1D np.array)
+        """
+        row = (row_geo - self.origin_row) / self.pixel_size_row - 0.5
+        col = (col_geo - self.origin_col) / self.pixel_size_col - 0.5
+        return row, col

@@ -673,8 +673,12 @@ class RPC:
         :return ground position (lon,lat,h)
         :rtype numpy.array
         """
-        print("direct localization not yet implemented for RPC model")
-        return None
+
+        #print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
+        los = self.los_extrema(row,col, dtm.Zmin - 1.0 , dtm.Zmax + 1.0)
+        (code1, code2, PointB, dH3D) = dtm.checkCubeDTM(los)
+        (code3, code4, PointR) = dtm.intersection(los, PointB, dH3D)
+        return PointR
 
     def direct_loc_h(self,row,col,alt,fill_nan = False):
         """
@@ -923,7 +927,7 @@ class RPC:
         """
         return [self.offset_ALT - self.scale_ALT / 2.0, self.offset_ALT + self.scale_ALT / 2.0]
 
-    def los_extrema(self, row, col, alt_min, alt_max, fill_nan = False):
+    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False):
         """
         compute los extrema
         :param row  :  line sensor position
@@ -937,6 +941,8 @@ class RPC:
         :return los extrema
         :rtype numpy.array (2x3)
         """
+        if alt_min is None or alt_max is None:
+            [alt_min, alt_max] = self.get_alt_min_max()
         los_edges = np.zeros([2, 3])
         los_edges[0, :] = self.direct_loc_h(row, col, alt_max, fill_nan)
         los_edges[1, :] = self.direct_loc_h(row, col, alt_min, fill_nan)

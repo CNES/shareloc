@@ -24,6 +24,7 @@ import pytest
 from utils import test_path
 import numpy as np
 
+from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl, identify_euclidium_rpc
 
 
@@ -297,6 +298,37 @@ def test_rpc_direct_inverse_iterative(col,row,alt):
     (lon_iter,lat_iter,__) = fctrat.direct_loc_inverse_iterative(row_inv,col_inv,alt)
     assert (lon==lon_iter)
     assert (lat==lat_iter)
+
+
+@pytest.mark.parametrize("id_scene, index_x,index_y", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt', 10.5, 20.5)])
+@pytest.mark.unit_tests
+def test_rpc_direct_dtm(id_scene, index_x, index_y):
+    """
+    Test direct localization on DTM
+    """
+    vect_index = [index_x, index_y]
+
+    data_folder = test_path()
+    rpc_file = os.path.join(data_folder, 'rpc', id_scene)
+    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+
+    data_folder_mnt = test_path('ellipsoide', 'P1BP--2017092838284574CP')
+
+    #chargement du mnt
+    fic = os.path.join(data_folder_mnt,'MNT_extrait/mnt_extrait.c1')
+    dtmbsq = DTM(fic)
+    [lon, lat] = dtmbsq.DTMToTer(vect_index)
+    print([lon, lat])
+    alt = dtmbsq.Interpolate(index_x, index_y)
+
+
+    row, col, alt = fctrat.inverse_loc(lon, lat, alt)
+    print("row col ", row, col)
+    lonlath = fctrat.direct_loc_dtm(row, col, dtmbsq)
+    assert (lon == pytest.approx(lonlath[0], abs=1e-7))
+    assert (lat == pytest.approx(lonlath[1], abs=1e-7))
+    assert (alt == pytest.approx(lonlath[2], abs=1e-4))
+
 
 def test_rpc_minmax():
     data_folder = test_path()

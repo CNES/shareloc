@@ -174,12 +174,10 @@ def test_sensor_loc_dir_dtm(index_x,index_y):
     """
     dtmbsq, gri = prepare_loc()
     loc = Localization(gri, dtm=dtmbsq)
-
-
     vect_index = [index_x, index_y]
     [lon,lat] = dtmbsq.DTMToTer(vect_index)
     print([lon,lat])
-    alt = dtmbsq.Interpolate(index_x - 0.5, index_y - 0.5)
+    alt = dtmbsq.Interpolate(index_x, index_y)
 
     row, col, alt, valid = loc.inverse(lon, lat, alt)
     print("row col ",row,col)

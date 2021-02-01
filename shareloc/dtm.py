@@ -60,7 +60,7 @@ class DTM:
         self.load()
         self.InitMinMax()
         self.Zmax = self.Z.max()
-        self.Zmin = self.Z.min()
+        self.Zmin=self.Z.min()
 
         self.a = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0])
         self.b = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])

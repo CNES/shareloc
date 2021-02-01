@@ -59,20 +59,20 @@ class DTM:
         #lecture mnt
         self.load()
         self.InitMinMax()
-        self.Zmax    = self.Z.max()
-        self.Zmin    = self.Z.min()
+        self.Zmax = self.Z.max()
+        self.Zmin = self.Z.min()
 
         self.a = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0])
         self.b = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
         self.c = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
-        self.d = np.array([0.0, self.nl-1.0 , 0.0, self.nc-1.0, self.Zmin, self.Zmax])
+        self.d = np.array([0.0, self.nl-1.0, 0.0, self.nc-1.0, self.Zmin, self.Zmax])
 
-        self.plans = np.array([[1.0,0.0,0.0,0.0],\
-                            [1.0,0.0,0.0,self.nl-1.0],
-                            [0.0,1.0,0.0,0.0,],
-                            [0.0,1.0,0.0,self.nc-1.0],
-                            [0.0,0.0,1.0,self.Zmin],
-                            [0.0,0.0,1.0,self.Zmax]])
+        self.plans = np.array([[1.0, 0.0, 0.0, 0.0],
+                               [1.0, 0.0, 0.0, self.nl-1.0],
+                               [0.0, 1.0, 0.0, 0.0],
+                               [0.0, 1.0, 0.0, self.nc-1.0],
+                               [0.0, 0.0, 1.0, self.Zmin],
+                               [0.0, 0.0, 1.0, self.Zmax]])
 
     def load(self):
         """

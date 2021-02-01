@@ -66,3 +66,18 @@ def test_rectification_grid_interpolation():
     assert(value_row == pytest.approx(coords[0,1],abs=1e-4))
 
 
+@pytest.mark.unit_tests
+def test_rectification_grid_extrapolation():
+    """
+    Test interpolation on rectification grid
+    """
+    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid_ventoux.tif")
+    rectif_grid = rectification_grid(grid_filename)
+
+    sensor_positions = np.zeros((2,2))
+    sensor_positions[0,:] = [30.0,-10.0]
+    sensor_positions[1,:] = [30.0,691.0]
+    coords = rectif_grid.interpolate(sensor_positions)
+    assert(5065.72347005208303016 == pytest.approx(coords[0,1],abs=1e-10))
+    assert(4883.84894205729142413474619389 == pytest.approx(coords[1,1],abs=1e-10))
+

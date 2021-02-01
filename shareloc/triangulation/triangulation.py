@@ -25,7 +25,7 @@ from shareloc.proj_utils import coordinates_conversion
 from shareloc.los import LOS
 
 def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right,left_min_max = None,
-                         right_min_max = None, residues = False):
+                         right_min_max = None, residues = False, fill_nan = False):
     """
     triangulation in sensor geometry
 
@@ -48,14 +48,17 @@ def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right
     :type right_min_max : list
     :param residues : calculates residues (distance in meters between los and 3D points)
     :type residues : boolean
+    :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+        otherwise
+    :type fill_nan : boolean
     :return intersections in cartesian crs, intersections in wgs84 crs and optionnaly residues
     :rtype (numpy.array,numpy,array,numpy.array)
     """
     #los construction
     matches_left = matches[:,0:2]
-    left_los = LOS(matches_left, geometrical_model_left, left_min_max)
+    left_los = LOS(matches_left, geometrical_model_left, left_min_max, fill_nan)
     matches_right = matches[:, 2:4]
-    right_los = LOS(matches_right, geometrical_model_right, right_min_max)
+    right_los = LOS(matches_right, geometrical_model_right, right_min_max, fill_nan)
 
     #los conversion
     #los intersection
@@ -134,12 +137,6 @@ def transform_disp_to_matches(disp, mask = None):
 
 
     col,row  = np.meshgrid(disp.col,disp.row)
-
-    roi = disp.roi
-    ori_col = roi[0]
-    ori_row = roi[1]
-    col = col + ori_col
-    row = row + ori_row
     disp_array = disp.disp.values
     if mask is not None:
         values_ok = mask > 0
@@ -157,7 +154,8 @@ def transform_disp_to_matches(disp, mask = None):
 
 
 def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,geometrical_model_right,
-                           grid_left,grid_right,left_min_max = None,right_min_max = None,residues = False):
+                           grid_left,grid_right,left_min_max = None,right_min_max = None,residues = False,
+                           fill_nan = False):
     """
     epipolar triangulation
 
@@ -181,18 +179,19 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
     :type right_min_max : list
     :param residues : calculates residues (distance in meters)
     :type residues : boolean
+    :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+        otherwise
+    :type fill_nan : boolean
     :return intersections in cartesian crs
     :rtype numpy.array
     """
 
     # retrieve point matches in sensor geometry
     if matches_type is 'sift':
-        print('sift')
         epi_pos_left = matches[:,0:2]
         epi_pos_right= matches[:,2:4]
         values_ok = np.full((matches.shape[0]), True, dtype=bool)
     elif matches_type is 'disp':
-        print('disp')
         [epi_pos_left, epi_pos_right, values_ok] = transform_disp_to_matches(matches,mask)
         #epi_pos_left = matches[:,0:2]
         #epi_disp_right= matches[:,2:4]
@@ -216,8 +215,9 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
     #print("matches shape {}".format(matches_sensor.shape))
     #print("matches  {}".format(matches_sensor[0,:]))
     # triangulate positions in sensor geometry
-    [intersections_ecef, intersections_wgs84, intersections_residues] = sensor_triangulation(matches_sensor, geometrical_model_left,
-                                                                geometrical_model_right, left_min_max, right_min_max,  residues)
+    [intersections_ecef, intersections_wgs84, intersections_residues] = sensor_triangulation(matches_sensor,
+                                        geometrical_model_left, geometrical_model_right,
+                                        left_min_max, right_min_max, residues, fill_nan)
 
     tab_size = values_ok.shape[0]
     intersections_ecef_masked = np.zeros((tab_size,3))

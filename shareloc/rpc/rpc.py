@@ -26,14 +26,15 @@ import numpy as np
 
 
 def renvoie_linesep(txt_liste_lines):
-	"""Renvoie le separateur de ligne d'un texte sous forme de liste de lignes
-	Obtenu par readlines
-	"""
-	if txt_liste_lines[0].endswith('\r\n'):
-		line_sep = '\r\n'
-	elif txt_liste_lines[0].endswith('\n'):
-		line_sep = '\n'
-	return line_sep
+    """
+    Renvoie le separateur de ligne d'un texte sous forme de liste de lignes
+    Obtenu par readlines
+    """
+    if txt_liste_lines[0].endswith('\r\n'):
+        line_sep = '\r\n'
+    elif txt_liste_lines[0].endswith('\n'):
+        line_sep = '\n'
+    return line_sep
 
 
 def parse_coeff_line(coeff_str):
@@ -78,7 +79,7 @@ def identify_euclidium_rpc(eucl_file):
     """
     try :
         with open(eucl_file) as f:
-                content = f.readlines()
+            content = f.readlines()
         is_eucl = True
         for line in content:
             if not line.startswith('>>') and line !='\n':
@@ -223,8 +224,8 @@ def check_coeff_consistency(dict1, dict2):
     """
     for key, value in dict1.items() :
         if dict2[key] != value:
-            print("normalisation coeffs are different between"
-                  " direct en inverse one : {} : {} {}".format(key,value,dict2[key]))
+            print('normalisation coeffs are different between'
+                  ' direct en inverse one : {} : {} {}'.format(key,value,dict2[key]))
 
 class RPC:
     def __init__(self,rpc_params):
@@ -269,9 +270,9 @@ class RPC:
     def from_dimap(cls, dimap_filepath, topleftconvention=True):
         """ load from dimap
         param dimap_filepath  : dimap xml file
-    	:type dimap_filepath  : str
+        :type dimap_filepath  : str
         :param topleftconvention  : [0,0] position
-    	:type topleftconvention  : boolean
+        :type topleftconvention  : boolean
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
@@ -289,9 +290,9 @@ class RPC:
     def from_dimap_v2(cls, dimap_filepath, topleftconvention=True):
         """ load from dimap  v2
         :param dimap_filepath  : dimap xml file
-    	:type dimap_filepath  : str
+        :type dimap_filepath  : str
         :param topleftconvention  : [0,0] position
-    	:type topleftconvention  : boolean
+        :type topleftconvention  : boolean
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
@@ -299,7 +300,7 @@ class RPC:
         rpc_params = dict()
 
         if not basename(dimap_filepath).endswith('XML'.upper()):
-            raise ValueError("dimap must ends with .xml")
+            raise ValueError('dimap must ends with .xml')
 
         xmldoc = minidom.parse(dimap_filepath)
 
@@ -358,16 +359,16 @@ class RPC:
     def from_dimap_v1(cls, dimap_filepath, topleftconvention=True):
         """ load from dimap  v1
         :param dimap_filepath  : dimap xml file
-	    :type dimap_filepath  : str
+        :type dimap_filepath  : str
         :param topleftconvention  : [0,0] position
-	    :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel 
+        :type topleftconvention  : boolean
+        If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         rpc_params = dict()
 
         if not basename(dimap_filepath).endswith('XML'.upper()):
-            raise ValueError("dimap must ends with .xml")
+            raise ValueError('dimap must ends with .xml')
 
 
         xmldoc= minidom.parse(dimap_filepath)
@@ -425,32 +426,32 @@ class RPC:
     def from_geotiff(cls, image_filename, topleftconvention=True):
         """ Load from a  geotiff image file
         :param image_filename  : image filename
-    	:type image_filename  : str
+        :type image_filename  : str
         :param topleftconvention  : [0,0] position
-    	:type topleftconvention  : boolean
+        :type topleftconvention  : boolean
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns='RPC')
         if not rpc_dict:
-            print("{} doesn't contains RPCS ".format(image_filename))
+            print('{} does not contains RPCs '.format(image_filename))
             raise ValueError
         rpc_params = dict()
         rpc_params['Den_LIG'] = parse_coeff_line(rpc_dict['LINE_DEN_COEFF'])
         rpc_params['Num_LIG'] = parse_coeff_line(rpc_dict['LINE_NUM_COEFF'])
         rpc_params['Num_COL'] = parse_coeff_line(rpc_dict['SAMP_NUM_COEFF'])
         rpc_params['Den_COL'] = parse_coeff_line(rpc_dict['SAMP_DEN_COEFF'])
-        rpc_params['offset_COL']   = float(rpc_dict["SAMP_OFF"])
-        rpc_params['scale_COL']    = float(rpc_dict["SAMP_SCALE"])
-        rpc_params['offset_LIG']   = float(rpc_dict["LINE_OFF"])
-        rpc_params['scale_LIG']    = float(rpc_dict["LINE_SCALE"])
-        rpc_params['offset_ALT']   = float(rpc_dict["HEIGHT_OFF"])
-        rpc_params['scale_ALT']    = float(rpc_dict["HEIGHT_SCALE"])
-        rpc_params['offset_X']   = float(rpc_dict["LONG_OFF"])
-        rpc_params['scale_X']    = float(rpc_dict["LONG_SCALE"])
-        rpc_params['offset_Y']   = float(rpc_dict["LAT_OFF"])
-        rpc_params['scale_Y']    = float(rpc_dict["LAT_SCALE"])
+        rpc_params['offset_COL']   = float(rpc_dict['SAMP_OFF'])
+        rpc_params['scale_COL']    = float(rpc_dict['SAMP_SCALE'])
+        rpc_params['offset_LIG']   = float(rpc_dict['LINE_OFF'])
+        rpc_params['scale_LIG']    = float(rpc_dict['LINE_SCALE'])
+        rpc_params['offset_ALT']   = float(rpc_dict['HEIGHT_OFF'])
+        rpc_params['scale_ALT']    = float(rpc_dict['HEIGHT_SCALE'])
+        rpc_params['offset_X']   = float(rpc_dict['LONG_OFF'])
+        rpc_params['scale_X']    = float(rpc_dict['LONG_SCALE'])
+        rpc_params['offset_Y']   = float(rpc_dict['LAT_OFF'])
+        rpc_params['scale_Y']    = float(rpc_dict['LAT_SCALE'])
         #inverse coeff are not defined
         rpc_params['Num_X'] = None
         rpc_params['Den_X'] = None
@@ -468,8 +469,8 @@ class RPC:
     def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=True):
         """ Load from a geom file
         :param topleftconvention  : [0,0] position
-	    :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel 
+        :type topleftconvention  : boolean
+        If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         rpc_params = dict()
@@ -488,29 +489,29 @@ class RPC:
         rpc_params['Den_COL']= [np.nan] * 20
         rpc_params['Num_COL'] = [np.nan] * 20
         for index in range(0, 20):
-            axis = "line"
-            num_den = "den"
-            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            axis = 'line'
+            num_den = 'den'
+            key = '{0}_{1}_coeff_{2:02d}'.format(axis, num_den, index)
             rpc_params['Den_LIG'][index] = float(geom_dict[key])
-            num_den = "num"
-            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            num_den = 'num'
+            key = '{0}_{1}_coeff_{2:02d}'.format(axis, num_den, index)
             rpc_params['Num_LIG'][index] = float(geom_dict[key])
-            axis = "samp"
-            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            axis = 'samp'
+            key = '{0}_{1}_coeff_{2:02d}'.format(axis, num_den, index)
             rpc_params['Num_COL'][index] = float(geom_dict[key])
-            num_den = "den"
-            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            num_den = 'den'
+            key = '{0}_{1}_coeff_{2:02d}'.format(axis, num_den, index)
             rpc_params['Den_COL'][index] = float(geom_dict[key])
-        rpc_params['offset_COL']    = float(geom_dict["samp_off"])
-        rpc_params['scale_COL']    = float(geom_dict["samp_scale"])
-        rpc_params['offset_LIG']    = float(geom_dict["line_off"])
-        rpc_params['scale_LIG']    = float(geom_dict["line_scale"])
-        rpc_params['offset_ALT']    = float(geom_dict["height_off"])
-        rpc_params['scale_ALT']    = float(geom_dict["height_scale"])
-        rpc_params['offset_X']    = float(geom_dict["long_off"])
-        rpc_params['scale_X']    = float(geom_dict["long_scale"])
-        rpc_params['offset_Y']    = float(geom_dict["lat_off"])
-        rpc_params['scale_Y']    = float(geom_dict["lat_scale"])
+        rpc_params['offset_COL']    = float(geom_dict['samp_off'])
+        rpc_params['scale_COL']    = float(geom_dict['samp_scale'])
+        rpc_params['offset_LIG']    = float(geom_dict['line_off'])
+        rpc_params['scale_LIG']    = float(geom_dict['line_scale'])
+        rpc_params['offset_ALT']    = float(geom_dict['height_off'])
+        rpc_params['scale_ALT']    = float(geom_dict['height_scale'])
+        rpc_params['offset_X']    = float(geom_dict['long_off'])
+        rpc_params['scale_X']    = float(geom_dict['long_scale'])
+        rpc_params['offset_Y']    = float(geom_dict['lat_off'])
+        rpc_params['scale_Y']    = float(geom_dict['lat_scale'])
         #inverse coeff are not defined
         rpc_params['Num_X'] = None
         rpc_params['Den_X'] = None
@@ -532,7 +533,7 @@ class RPC:
         :param secondary_euclidium_coeff  : optional secondary euclidium coeff coefficients file
             (can be either direct or inverse)
         :type secondary_euclidium_coeff  : str
-        If False : [0,0] is at the center of the Top Left pixel 
+        If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         rpc_params = dict()
@@ -542,7 +543,7 @@ class RPC:
         primary_coeffs = read_eucl_file(primary_euclidium_coeff)
 
         # info log
-        print("primary euclidium file is of {} type".format(primary_coeffs['type_fic']))
+        print('primary euclidium file is of {} type'.format(primary_coeffs['type_fic']))
 
         rpc_params['Num_X'] = None
         rpc_params['Den_X'] = None
@@ -563,7 +564,7 @@ class RPC:
 
         if secondary_euclidium_coeff is not None :
             secondary_coeffs = read_eucl_file(secondary_euclidium_coeff)
-            print("secondary euclidium file is of {} type".format(secondary_coeffs['type_fic']))
+            print('secondary euclidium file is of {} type'.format(secondary_coeffs['type_fic']))
             check_coeff_consistency(primary_coeffs['normalisation_coeffs'], secondary_coeffs['normalisation_coeffs'])
 
             for key, value in secondary_coeffs['poly_coeffs'].items():
@@ -592,8 +593,8 @@ class RPC:
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         if basename(primary_file).endswith('XML'.upper()):
-           dimap_version = identify_dimap(primary_file)
-           if dimap_version is not None :
+            dimap_version = identify_dimap(primary_file)
+            if dimap_version is not None :
                 if float(dimap_version)<2.0 :
                     return cls.from_dimap_v1(primary_file, topleftconvention)
                 else:
@@ -609,7 +610,7 @@ class RPC:
             is_eucl_rpc = is_eucl_rpc and identify_euclidium_rpc(secondary_file)
         if is_eucl_rpc:
             return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
-        ValueError("can''t read rpc file")
+        ValueError('can not read rpc file')
         return None
 
 
@@ -673,7 +674,7 @@ class RPC:
         :return ground position (lon,lat,h)
         :rtype numpy.array
         """
-        print("direct localization not yet implemented for RPC model")
+        print('direct localization not yet implemented for RPC model')
         return None
 
     def direct_loc_h(self,row,col,alt,fill_nan = False):
@@ -718,13 +719,16 @@ class RPC:
                  Ynorm**int(self.Monomes[i][2])*\
                  Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
 
-            P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*self.scale_X+self.offset_X
-            P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
+            P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*\
+                               self.scale_X+self.offset_X
+            P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*\
+                               self.scale_Y+self.offset_Y
         # Direct localization using inverse RPC
         else:
             #TODO log info
-            print("direct localisation from inverse iterative")
-            (P[filter_nan, 0], P[filter_nan, 1], P[filter_nan, 2]) = self.direct_loc_inverse_iterative(row, col, alt, 10, fill_nan)
+            print('direct localisation from inverse iterative')
+            (P[filter_nan, 0], P[filter_nan, 1], P[filter_nan, 2]) = self.direct_loc_inverse_iterative\
+                (row, col, alt, 10, fill_nan)
         P[:, 2] = alt
         return np.squeeze(P)
 
@@ -791,8 +795,10 @@ class RPC:
                 Ynorm**int(self.Monomes[i][2])*\
                 Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
 
-            Cout = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*self.scale_COL+self.offset_COL
-            Lout = np.dot(np.array(self.Num_LIG), monomes)/np.dot(np.array(self.Den_LIG), monomes)*self.scale_LIG+self.offset_LIG
+            Cout = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*\
+                   self.scale_COL+self.offset_COL
+            Lout = np.dot(np.array(self.Num_LIG), monomes)/np.dot(np.array(self.Den_LIG), monomes)*\
+                   self.scale_LIG+self.offset_LIG
         else:
             print("inverse localisation can't be performed, inverse coefficients have not been defined")
             (Cout, Lout) = (None, None)

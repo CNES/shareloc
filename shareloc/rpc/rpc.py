@@ -18,10 +18,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+"""
+This module contains the RPC class corresponding to the RPC models.
+RPC models covered are : DIMAP V1, DIMAP V2, Euclidium, ossim (geom file), geotiff.
+"""
 
-import rasterio as rio
 from xml.dom import minidom
 from os.path import basename
+import rasterio as rio
 import numpy as np
 
 
@@ -78,8 +82,8 @@ def identify_euclidium_rpc(eucl_file):
     :rtype Boolean
     """
     try :
-        with open(eucl_file) as f:
-            content = f.readlines()
+        with open(eucl_file) as euclidium_file:
+            content = euclidium_file.readlines()
         is_eucl = True
         for line in content:
             if not line.startswith('>>') and line !='\n':
@@ -97,8 +101,8 @@ def identify_ossim_kwl(ossim_kwl_file):
     :rtype str
     """
     try :
-        with open(ossim_kwl_file) as f:
-            content = f.readlines()
+        with open(ossim_kwl_file) as ossim_file:
+            content = ossim_file.readlines()
 
         geom_dict = dict()
         for line in content:
@@ -152,58 +156,58 @@ def read_eucl_file(eucl_file):
 
     lsep = renvoie_linesep(txt)
 
-    ind_debut_PX = txt.index('>>\tCOEFF POLYNOME PXOUT' + lsep)
-    ind_debut_QX = txt.index('>>\tCOEFF POLYNOME QXOUT' + lsep)
-    ind_debut_PY = txt.index('>>\tCOEFF POLYNOME PYOUT' + lsep)
-    ind_debut_QY = txt.index('>>\tCOEFF POLYNOME QYOUT' + lsep)
+    ind_debut_pxout = txt.index('>>\tCOEFF POLYNOME PXOUT' + lsep)
+    ind_debut_qxout = txt.index('>>\tCOEFF POLYNOME QXOUT' + lsep)
+    ind_debut_pyout = txt.index('>>\tCOEFF POLYNOME PYOUT' + lsep)
+    ind_debut_qyout = txt.index('>>\tCOEFF POLYNOME QYOUT' + lsep)
 
-    coeff_PX_str = txt[ind_debut_PX + 1:ind_debut_PX + 21]
-    coeff_QX_str = txt[ind_debut_QX + 1:ind_debut_QX + 21]
-    coeff_PY_str = txt[ind_debut_PY + 1:ind_debut_PY + 21]
-    coeff_QY_str = txt[ind_debut_QY + 1:ind_debut_QY + 21]
+    coeff_px_str = txt[ind_debut_pxout + 1:ind_debut_pxout + 21]
+    coeff_qx_str = txt[ind_debut_qxout + 1:ind_debut_qxout + 21]
+    coeff_py_str = txt[ind_debut_pyout + 1:ind_debut_pyout + 21]
+    coeff_qy_str = txt[ind_debut_qyout + 1:ind_debut_qyout + 21]
 
     poly_coeffs = dict()
     if parsed_file['type_fic'] == 'I':
-        poly_coeffs['Num_COL'] = [float(coeff.split()[1]) for coeff in coeff_PX_str]
-        poly_coeffs['Den_COL'] = [float(coeff.split()[1]) for coeff in coeff_QX_str]
-        poly_coeffs['Num_LIG'] = [float(coeff.split()[1]) for coeff in coeff_PY_str]
-        poly_coeffs['Den_LIG'] = [float(coeff.split()[1]) for coeff in coeff_QY_str]
+        poly_coeffs['Num_COL'] = [float(coeff.split()[1]) for coeff in coeff_px_str]
+        poly_coeffs['Den_COL'] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
+        poly_coeffs['Num_LIG'] = [float(coeff.split()[1]) for coeff in coeff_py_str]
+        poly_coeffs['Den_LIG'] = [float(coeff.split()[1]) for coeff in coeff_qy_str]
     else:
-        poly_coeffs['Num_X'] = [float(coeff.split()[1]) for coeff in coeff_PX_str]
-        poly_coeffs['Den_X'] = [float(coeff.split()[1]) for coeff in coeff_QX_str]
-        poly_coeffs['Num_Y'] = [float(coeff.split()[1]) for coeff in coeff_PY_str]
-        poly_coeffs['Den_Y'] = [float(coeff.split()[1]) for coeff in coeff_QY_str]
+        poly_coeffs['Num_X'] = [float(coeff.split()[1]) for coeff in coeff_px_str]
+        poly_coeffs['Den_X'] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
+        poly_coeffs['Num_Y'] = [float(coeff.split()[1]) for coeff in coeff_py_str]
+        poly_coeffs['Den_Y'] = [float(coeff.split()[1]) for coeff in coeff_qy_str]
 
     parsed_file['poly_coeffs'] = poly_coeffs
     # list [offset , scale]
     normalisation_coeff = dict()
-    for l in txt:
-        if l.startswith('>>\tXIN_OFFSET'):
-            lsplit = l.split()
+    for line in txt:
+        if line.startswith('>>\tXIN_OFFSET'):
+            lsplit = line.split()
             if parsed_file['type_fic'] == 'I':
                 param ='X'
             else:
                 param = 'COL'
             normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
-        if l.startswith('>>\tYIN_OFFSET'):
+        if line.startswith('>>\tYIN_OFFSET'):
             if parsed_file['type_fic'] == 'I':
                 param ='Y'
             else:
                 param = 'LIG'
-            lsplit = l.split()
+            lsplit = line.split()
             normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
-        if l.startswith('>>\tZIN_OFFSET'):
-            lsplit = l.split()
+        if line.startswith('>>\tZIN_OFFSET'):
+            lsplit = line.split()
             normalisation_coeff['ALT'] = [float(lsplit[4]), float(lsplit[5])]
-        if l.startswith('>>\tXOUT_OFFSET'):
-            lsplit = l.split()
+        if line.startswith('>>\tXOUT_OFFSET'):
+            lsplit = line.split()
             if parsed_file['type_fic'] == 'D':
                 param ='X'
             else:
                 param = 'COL'
             normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
-        if l.startswith('>>\tYOUT_OFFSET'):
-            lsplit = l.split()
+        if line.startswith('>>\tYOUT_OFFSET'):
+            lsplit = line.split()
             if parsed_file['type_fic'] == 'D':
                 param ='Y'
             else:
@@ -228,14 +232,17 @@ def check_coeff_consistency(dict1, dict2):
                   ' direct en inverse one : {} : {} {}'.format(key,value,dict2[key]))
 
 class RPC:
+    """
+    RPC class including direct and inverse localization instance methods
+    """
     def __init__(self,rpc_params):
-        for a, b in rpc_params.items():
-            setattr(self, a, b)
+        for key, value in rpc_params.items():
+            setattr(self, key, value)
 
         self.type = 'rpc'
         self.lim_extrapol = 1.0001
-        #chaque mononome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
-        ordre_monomes_LAI = \
+        #chaque monome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
+        ordre_monomes_lai = \
                 [[1,0,0,0],[1,1,0,0],[1,0,1,0],\
                  [1,0,0,1],[1,1,1,0],[1,1,0,1],\
                  [1,0,1,1],[1,2,0,0],[1,0,2,0],\
@@ -244,7 +251,7 @@ class RPC:
                  [1,0,3,0],[1,0,1,2],[1,2,0,1],\
                  [1,0,2,1],[1,0,0,3]]
 
-        self.Monomes    = ordre_monomes_LAI
+        self.monomes    = ordre_monomes_lai
 
         #coefficient des degres monomes avec derivation 1ere variable
         self.monomes_deriv_1 = \
@@ -307,8 +314,8 @@ class RPC:
         mtd = xmldoc.getElementsByTagName('Metadata_Identification')
         version = mtd[0].getElementsByTagName('METADATA_FORMAT')[0].attributes.items()[0][1]
         rpc_params['driver_type'] = 'dimap_v' + version
-        GLOBAL_RFM    = xmldoc.getElementsByTagName('Global_RFM')[0]
-        direct_coeffs = GLOBAL_RFM.getElementsByTagName('Direct_Model')[0]
+        global_rfm    = xmldoc.getElementsByTagName('Global_RFM')[0]
+        direct_coeffs = global_rfm.getElementsByTagName('Direct_Model')[0]
         rpc_params['Num_X'] = [float(direct_coeffs.getElementsByTagName('SAMP_NUM_COEFF_{}'.
                                                                           format(index))[0].firstChild.data)
                 for index in range(1,21)]
@@ -321,7 +328,7 @@ class RPC:
         rpc_params['Den_Y'] = [float(direct_coeffs.getElementsByTagName('LINE_DEN_COEFF_{}'.
                                                                           format(index))[0].firstChild.data)
                 for index in range(1,21)]
-        inverse_coeffs = GLOBAL_RFM.getElementsByTagName('Inverse_Model')[0]
+        inverse_coeffs = global_rfm.getElementsByTagName('Inverse_Model')[0]
         rpc_params['Num_COL'] = [float(inverse_coeffs.getElementsByTagName('SAMP_NUM_COEFF_{}'.
                                                                           format(index))[0].firstChild.data)
                 for index in range(1,21)]
@@ -334,7 +341,7 @@ class RPC:
         rpc_params['Den_LIG'] = [float(inverse_coeffs.getElementsByTagName('LINE_DEN_COEFF_{}'.
                                                                           format(index))[0].firstChild.data)
                 for index in range(1,21)]
-        normalisation_coeffs = GLOBAL_RFM.getElementsByTagName('RFM_Validity')[0]
+        normalisation_coeffs = global_rfm.getElementsByTagName('RFM_Validity')[0]
         rpc_params['offset_COL']    = float(normalisation_coeffs.getElementsByTagName('SAMP_OFF')[0].firstChild.data)
         rpc_params['scale_COL']    = float(normalisation_coeffs.getElementsByTagName('SAMP_SCALE')[0].firstChild.data)
         rpc_params['offset_LIG']    = float(normalisation_coeffs.getElementsByTagName('LINE_OFF')[0].firstChild.data)
@@ -377,43 +384,43 @@ class RPC:
         version = mtd[0].getElementsByTagName('METADATA_PROFILE')[0].attributes.items()[0][1]
         rpc_params['driver_type'] = 'dimap_v' + version
 
-        GLOBAL_RFM    = xmldoc.getElementsByTagName('Global_RFM')
-        RFM_Validity     = xmldoc.getElementsByTagName('RFM_Validity')
-        coeff_LON = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_LON')[0].firstChild.data.split()]
-        coeff_LAT = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_LAT')[0].firstChild.data.split()]
-        coeff_COL = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_COL')[0].firstChild.data.split()]
-        coeff_LIG = [float(el) for el in GLOBAL_RFM[0].getElementsByTagName('F_ROW')[0].firstChild.data.split()]
+        global_rfm    = xmldoc.getElementsByTagName('Global_RFM')
+        rfm_validity     = xmldoc.getElementsByTagName('RFM_Validity')
+        coeff_lon = [float(el) for el in global_rfm[0].getElementsByTagName('F_LON')[0].firstChild.data.split()]
+        coeff_lat = [float(el) for el in global_rfm[0].getElementsByTagName('F_LAT')[0].firstChild.data.split()]
+        coeff_col = [float(el) for el in global_rfm[0].getElementsByTagName('F_COL')[0].firstChild.data.split()]
+        coeff_lig = [float(el) for el in global_rfm[0].getElementsByTagName('F_ROW')[0].firstChild.data.split()]
 
-        A_lon = float(RFM_Validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('A')[0].firstChild.data)
-        B_lon = float(RFM_Validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('B')[0].firstChild.data)
-        A_lat = float(RFM_Validity[0].getElementsByTagName('Lat')[0].getElementsByTagName('A')[0].firstChild.data)
-        B_lat = float(RFM_Validity[0].getElementsByTagName('Lat')[0].getElementsByTagName('B')[0].firstChild.data)
-        A_alt = float(RFM_Validity[0].getElementsByTagName('Alt')[0].getElementsByTagName('A')[0].firstChild.data)
-        B_alt = float(RFM_Validity[0].getElementsByTagName('Alt')[0].getElementsByTagName('B')[0].firstChild.data)
-        A_col = float(RFM_Validity[0].getElementsByTagName('Col')[0].getElementsByTagName('A')[0].firstChild.data)
-        B_col = float(RFM_Validity[0].getElementsByTagName('Col')[0].getElementsByTagName('B')[0].firstChild.data)
-        A_row = float(RFM_Validity[0].getElementsByTagName('Row')[0].getElementsByTagName('A')[0].firstChild.data)
-        B_row = float(RFM_Validity[0].getElementsByTagName('Row')[0].getElementsByTagName('B')[0].firstChild.data)
+        scale_lon = float(rfm_validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('A')[0].firstChild.data)
+        offset_lon = float(rfm_validity[0].getElementsByTagName('Lon')[0].getElementsByTagName('B')[0].firstChild.data)
+        scale_lat = float(rfm_validity[0].getElementsByTagName('Lat')[0].getElementsByTagName('A')[0].firstChild.data)
+        offset_lat = float(rfm_validity[0].getElementsByTagName('Lat')[0].getElementsByTagName('B')[0].firstChild.data)
+        scale_alt = float(rfm_validity[0].getElementsByTagName('Alt')[0].getElementsByTagName('A')[0].firstChild.data)
+        offset_alt = float(rfm_validity[0].getElementsByTagName('Alt')[0].getElementsByTagName('B')[0].firstChild.data)
+        scale_col = float(rfm_validity[0].getElementsByTagName('Col')[0].getElementsByTagName('A')[0].firstChild.data)
+        offset_col = float(rfm_validity[0].getElementsByTagName('Col')[0].getElementsByTagName('B')[0].firstChild.data)
+        scale_row = float(rfm_validity[0].getElementsByTagName('Row')[0].getElementsByTagName('A')[0].firstChild.data)
+        offset_row = float(rfm_validity[0].getElementsByTagName('Row')[0].getElementsByTagName('B')[0].firstChild.data)
 
 
-        rpc_params['offset_COL']    = B_col
-        rpc_params['scale_COL']    = A_col
-        rpc_params['offset_LIG']    = B_row
-        rpc_params['scale_LIG']    = A_row
-        rpc_params['offset_ALT']    = B_alt
-        rpc_params['scale_ALT']    = A_alt
-        rpc_params['offset_X']    = B_lon
-        rpc_params['scale_X']    = A_lon
-        rpc_params['offset_Y']    = B_lat
-        rpc_params['scale_Y']    = A_lat
-        rpc_params['Num_X']    = coeff_LON[0:20]
-        rpc_params['Den_X']    = coeff_LON[20::]
-        rpc_params['Num_Y']    = coeff_LAT[0:20]
-        rpc_params['Den_Y']    = coeff_LAT[20::]
-        rpc_params['Num_COL']    = coeff_COL[0:20]
-        rpc_params['Den_COL']    = coeff_COL[20::]
-        rpc_params['Num_LIG']    = coeff_LIG[0:20]
-        rpc_params['Den_LIG']    = coeff_LIG[20::]
+        rpc_params['offset_COL']    = offset_col
+        rpc_params['scale_COL']    = scale_col
+        rpc_params['offset_LIG']    = offset_row
+        rpc_params['scale_LIG']    = scale_row
+        rpc_params['offset_ALT']    = offset_alt
+        rpc_params['scale_ALT']    = scale_alt
+        rpc_params['offset_X']    = offset_lon
+        rpc_params['scale_X']    = scale_lon
+        rpc_params['offset_Y']    = offset_lat
+        rpc_params['scale_Y']    = scale_lat
+        rpc_params['Num_X']    = coeff_lon[0:20]
+        rpc_params['Den_X']    = coeff_lon[20::]
+        rpc_params['Num_Y']    = coeff_lat[0:20]
+        rpc_params['Den_Y']    = coeff_lat[20::]
+        rpc_params['Num_COL']    = coeff_col[0:20]
+        rpc_params['Den_COL']    = coeff_col[20::]
+        rpc_params['Num_LIG']    = coeff_lig[0:20]
+        rpc_params['Den_LIG']    = coeff_lig[20::]
         rpc_params['offset_COL'] -= 1.5
         rpc_params['offset_LIG'] -= 1.5
         #If top left convention, 0.5 pixel shift added on col/row offsets
@@ -476,8 +483,8 @@ class RPC:
         rpc_params = dict()
         #OSSIM keyword list
         rpc_params['driver_type'] = 'ossim_kwl'
-        with open(ossim_kwl_filename) as f:
-            content = f.readlines()
+        with open(ossim_kwl_filename) as file:
+            content = file.readlines()
 
         geom_dict = dict()
         for line in content:
@@ -621,27 +628,27 @@ class RPC:
         """
 
         if self.Num_COL:
-            Xnorm = (lon - self.offset_X)/self.scale_X
-            Ynorm = (lat - self.offset_Y)/self.scale_Y
-            Znorm = (alt - self.offset_ALT)/self.scale_ALT
-            monomes = np.array([self.Monomes[i][0]*\
-                 Xnorm**int(self.Monomes[i][1])*\
-                 Ynorm**int(self.Monomes[i][2])*\
-                 Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
+            lon_norm = (lon - self.offset_X)/self.scale_X
+            lat_norm = (lat - self.offset_Y)/self.scale_Y
+            alt_norm = (alt - self.offset_ALT)/self.scale_ALT
+            monomes = np.array([self.monomes[i][0]*\
+                 lon_norm**int(self.monomes[i][1])*\
+                 lat_norm**int(self.monomes[i][2])*\
+                 alt_norm**int(self.monomes[i][3]) for i in range(self.monomes.__len__())])
             NumDC = np.dot(np.array(self.Num_COL),monomes)
             DenDC = np.dot(np.array(self.Den_COL),monomes)
             NumDL = np.dot(np.array(self.Num_LIG),monomes)
             DenDL = np.dot(np.array(self.Den_LIG),monomes)
 
             monomes_deriv_x = np.array([self.monomes_deriv_1[i][0]*\
-                Xnorm**int(self.monomes_deriv_1[i][1])*\
-                Ynorm**int(self.monomes_deriv_1[i][2])*\
-                Znorm**int(self.monomes_deriv_1[i][3]) for i in range(self.monomes_deriv_1.__len__())])
+                lon_norm**int(self.monomes_deriv_1[i][1])*\
+                lat_norm**int(self.monomes_deriv_1[i][2])*\
+                alt_norm**int(self.monomes_deriv_1[i][3]) for i in range(self.monomes_deriv_1.__len__())])
 
             monomes_deriv_y = np.array([self.monomes_deriv_2[i][0]*\
-                Xnorm**int(self.monomes_deriv_2[i][1])*\
-                Ynorm**int(self.monomes_deriv_2[i][2])*\
-                Znorm**int(self.monomes_deriv_2[i][3]) for i in range(self.monomes_deriv_2.__len__())])
+                lon_norm**int(self.monomes_deriv_2[i][1])*\
+                lat_norm**int(self.monomes_deriv_2[i][2])*\
+                alt_norm**int(self.monomes_deriv_2[i][3]) for i in range(self.monomes_deriv_2.__len__())])
 
             NumDCdx = np.dot(np.array(self.Num_COL),monomes_deriv_x)
             DenDCdx = np.dot(np.array(self.Den_COL),monomes_deriv_x)
@@ -704,20 +711,20 @@ class RPC:
         if self.Num_X:
             # ground position
 
-            Xnorm = (col - self.offset_COL)/self.scale_COL
-            Ynorm = (row - self.offset_LIG)/self.scale_LIG
-            Znorm = (alt - self.offset_ALT)/self.scale_ALT
+            col_norm = (col - self.offset_COL)/self.scale_COL
+            row_norm = (row - self.offset_LIG)/self.scale_LIG
+            alt_norm = (alt - self.offset_ALT)/self.scale_ALT
 
-            if np.sum(abs(Xnorm) > self.lim_extrapol) == Xnorm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en colonne ", Xnorm, col)
-            if np.sum(abs(Ynorm) > self.lim_extrapol) == Ynorm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en ligne ", Ynorm, row)
-            if abs(Znorm) > self.lim_extrapol :
-                print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
+            if np.sum(abs(col_norm) > self.lim_extrapol) == col_norm.shape[0]:
+                print("!!!!! l'evaluation au point est extrapolee en colonne ", col_norm, col)
+            if np.sum(abs(row_norm) > self.lim_extrapol) == row_norm.shape[0]:
+                print("!!!!! l'evaluation au point est extrapolee en ligne ", row_norm, row)
+            if abs(alt_norm) > self.lim_extrapol :
+                print("!!!!! l'evaluation au point est extrapolee en altitude ", alt_norm, alt)
 
-            monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
-                 Ynorm**int(self.Monomes[i][2])*\
-                 Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
+            monomes = np.array([self.monomes[i][0]*col_norm**int(self.monomes[i][1])*\
+                 row_norm**int(self.monomes[i][2])*\
+                 alt_norm**int(self.monomes[i][3]) for i in range(self.monomes.__len__())])
 
             P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*\
                                self.scale_X+self.offset_X
@@ -780,20 +787,20 @@ class RPC:
                 lat = np.array([lat])
                 alt = np.array([alt])
 
-            Xnorm = (lon - self.offset_X)/self.scale_X
-            Ynorm = (lat - self.offset_Y)/self.scale_Y
-            Znorm = (alt - self.offset_ALT)/self.scale_ALT
+            lon_norm = (lon - self.offset_X)/self.scale_X
+            lat_norm = (lat - self.offset_Y)/self.scale_Y
+            alt_norm = (alt - self.offset_ALT)/self.scale_ALT
 
-            if np.sum(abs(Xnorm) > self.lim_extrapol) == Xnorm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en longitude ", Xnorm,lon)
-            if np.sum(abs(Ynorm) > self.lim_extrapol) == Ynorm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en latitude ", Ynorm,lat)
-            if abs(Znorm) > self.lim_extrapol:
-                print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
+            if np.sum(abs(lon_norm) > self.lim_extrapol) == lon_norm.shape[0]:
+                print("!!!!! l'evaluation au point est extrapolee en longitude ", lon_norm,lon)
+            if np.sum(abs(lat_norm) > self.lim_extrapol) == lat_norm.shape[0]:
+                print("!!!!! l'evaluation au point est extrapolee en latitude ", lat_norm,lat)
+            if abs(alt_norm) > self.lim_extrapol:
+                print("!!!!! l'evaluation au point est extrapolee en altitude ", alt_norm, alt)
 
-            monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
-                Ynorm**int(self.Monomes[i][2])*\
-                Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
+            monomes = np.array([self.monomes[i][0]*lon_norm**int(self.monomes[i][1])*\
+                lat_norm**int(self.monomes[i][2])*\
+                alt_norm**int(self.monomes[i][3]) for i in range(self.monomes.__len__())])
 
             Cout = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*\
                    self.scale_COL+self.offset_COL

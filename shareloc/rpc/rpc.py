@@ -109,7 +109,7 @@ def identify_ossim_kwl(ossim_kwl_file):
             (key, val) = line.split(': ')
             geom_dict[key] = val.rstrip()
         if 'type' in geom_dict.keys():
-            if geom_dict['type'].strip().startswith('ossim') :
+            if geom_dict['type'].strip().startswith('ossim'):
                 return geom_dict['type'].strip()
             else:
                 return None
@@ -623,8 +623,8 @@ class RPC:
 
     def calcule_derivees_inv(self,lon,lat,alt):
         """ calcul analytiques des derivees partielles de la loc inverse
-            DCdx: derivee de loc_inv_C p/r a X
-            DLdy: derivee de loc_inv_L p/r a Y
+            dcol_dlon: derivee de loc_inv_col p/r a lon
+            drow_dlat: derivee de loc_inv_row p/r a lat
         """
 
         if self.Num_COL:
@@ -635,10 +635,10 @@ class RPC:
                  lon_norm**int(self.monomes[i][1])*\
                  lat_norm**int(self.monomes[i][2])*\
                  alt_norm**int(self.monomes[i][3]) for i in range(self.monomes.__len__())])
-            NumDC = np.dot(np.array(self.Num_COL),monomes)
-            DenDC = np.dot(np.array(self.Den_COL),monomes)
-            NumDL = np.dot(np.array(self.Num_LIG),monomes)
-            DenDL = np.dot(np.array(self.Den_LIG),monomes)
+            num_dcol = np.dot(np.array(self.Num_COL),monomes)
+            den_dcol = np.dot(np.array(self.Den_COL),monomes)
+            num_drow = np.dot(np.array(self.Num_LIG),monomes)
+            den_drow = np.dot(np.array(self.Den_LIG),monomes)
 
             monomes_deriv_x = np.array([self.monomes_deriv_1[i][0]*\
                 lon_norm**int(self.monomes_deriv_1[i][1])*\
@@ -650,23 +650,23 @@ class RPC:
                 lat_norm**int(self.monomes_deriv_2[i][2])*\
                 alt_norm**int(self.monomes_deriv_2[i][3]) for i in range(self.monomes_deriv_2.__len__())])
 
-            NumDCdx = np.dot(np.array(self.Num_COL),monomes_deriv_x)
-            DenDCdx = np.dot(np.array(self.Den_COL),monomes_deriv_x)
-            NumDLdx = np.dot(np.array(self.Num_LIG),monomes_deriv_x)
-            DenDLdx = np.dot(np.array(self.Den_LIG),monomes_deriv_x)
+            num_dcol_dlon = np.dot(np.array(self.Num_COL),monomes_deriv_x)
+            den_dcol_dlon = np.dot(np.array(self.Den_COL),monomes_deriv_x)
+            num_drow_dlon = np.dot(np.array(self.Num_LIG),monomes_deriv_x)
+            den_drow_dlon = np.dot(np.array(self.Den_LIG),monomes_deriv_x)
 
-            NumDCdy = np.dot(np.array(self.Num_COL),monomes_deriv_y)
-            DenDCdy = np.dot(np.array(self.Den_COL),monomes_deriv_y)
-            NumDLdy = np.dot(np.array(self.Num_LIG),monomes_deriv_y)
-            DenDLdy = np.dot(np.array(self.Den_LIG),monomes_deriv_y)
+            num_dcol_dlat = np.dot(np.array(self.Num_COL),monomes_deriv_y)
+            den_dcol_dlat = np.dot(np.array(self.Den_COL),monomes_deriv_y)
+            num_drow_dlat = np.dot(np.array(self.Num_LIG),monomes_deriv_y)
+            den_drow_dlat = np.dot(np.array(self.Den_LIG),monomes_deriv_y)
 
             #derive (u/v)' = (u'v - v'u)/(v*v)
-            DCdx = self.scale_COL/self.scale_X*(NumDCdx*DenDC - DenDCdx*NumDC)/DenDC**2
-            DCdy = self.scale_COL/self.scale_Y*(NumDCdy*DenDC - DenDCdy*NumDC)/DenDC**2
-            DLdx = self.scale_LIG/self.scale_X*(NumDLdx*DenDL - DenDLdx*NumDL)/DenDL**2
-            DLdy = self.scale_LIG/self.scale_Y*(NumDLdy*DenDL - DenDLdy*NumDL)/DenDL**2
+            dcol_dlon = self.scale_COL/self.scale_X*(num_dcol_dlon*den_dcol - den_dcol_dlon*num_dcol)/den_dcol**2
+            dcol_dlat = self.scale_COL/self.scale_Y*(num_dcol_dlat*den_dcol - den_dcol_dlat*num_dcol)/den_dcol**2
+            drow_dlon = self.scale_LIG/self.scale_X*(num_drow_dlon*den_drow - den_drow_dlon*num_drow)/den_drow**2
+            drow_dlat = self.scale_LIG/self.scale_Y*(num_drow_dlat*den_drow - den_drow_dlat*num_drow)/den_drow**2
 
-        return (DCdx,DCdy,DLdx,DLdy)
+        return (dcol_dlon,dcol_dlat,drow_dlon,drow_dlat)
 
 
     def direct_loc_dtm(self, row, col, dtm):
@@ -702,8 +702,8 @@ class RPC:
             col = np.array([col])
             row = np.array([row])
 
-        P = np.zeros((col.size, 3))
-        filter_nan, P[:,0], P[:,1] = self.filter_coordinates(row, col, fill_nan)
+        points = np.zeros((col.size, 3))
+        filter_nan, points[:,0], points[:,1] = self.filter_coordinates(row, col, fill_nan)
         row = row[filter_nan]
         col = col[filter_nan]
 
@@ -726,18 +726,18 @@ class RPC:
                  row_norm**int(self.monomes[i][2])*\
                  alt_norm**int(self.monomes[i][3]) for i in range(self.monomes.__len__())])
 
-            P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*\
+            points[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*\
                                self.scale_X+self.offset_X
-            P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*\
+            points[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*\
                                self.scale_Y+self.offset_Y
         # Direct localization using inverse RPC
         else:
             #TODO log info
             print('direct localisation from inverse iterative')
-            (P[filter_nan, 0], P[filter_nan, 1], P[filter_nan, 2]) = self.direct_loc_inverse_iterative\
+            (points[filter_nan, 0], points[filter_nan, 1], points[filter_nan, 2]) = self.direct_loc_inverse_iterative\
                 (row, col, alt, 10, fill_nan)
-        P[:, 2] = alt
-        return np.squeeze(P)
+        points[:, 2] = alt
+        return np.squeeze(points)
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
         """calcule une grille de loc directe a partir des RPC directs
@@ -761,11 +761,11 @@ class RPC:
         """
         gri_lon = np.zeros((nbrow,nbcol))
         gri_lat = np.zeros((nbrow,nbcol))
-        for c in range(int(nbcol)):
-            col = col0 + stepcol*c
-            for l in range(int(nbrow)):
-                row = row0 + steprow*l
-                (gri_lon[l,c],gri_lat[l,c],__) = self.direct_loc_h(row,col,alt)
+        for column in range(int(nbcol)):
+            col = col0 + stepcol*column
+            for line in range(int(nbrow)):
+                row = row0 + steprow*line
+                (gri_lon[line,column],gri_lat[line,column],__) = self.direct_loc_h(row,col,alt)
         return (gri_lon,gri_lat)
 
     def inverse_loc(self, lon, lat, alt):
@@ -802,14 +802,14 @@ class RPC:
                 lat_norm**int(self.monomes[i][2])*\
                 alt_norm**int(self.monomes[i][3]) for i in range(self.monomes.__len__())])
 
-            Cout = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*\
+            col_out = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*\
                    self.scale_COL+self.offset_COL
-            Lout = np.dot(np.array(self.Num_LIG), monomes)/np.dot(np.array(self.Den_LIG), monomes)*\
+            row_out = np.dot(np.array(self.Num_LIG), monomes)/np.dot(np.array(self.Den_LIG), monomes)*\
                    self.scale_LIG+self.offset_LIG
         else:
             print("inverse localisation can't be performed, inverse coefficients have not been defined")
-            (Cout, Lout) = (None, None)
-        return Lout, Cout, alt
+            (col_out, row_out) = (None, None)
+        return row_out, col_out, alt
 
     def filter_coordinates(self, first_coord, second_coord, fill_nan = False, direction = 'direct'):
         """
@@ -881,46 +881,46 @@ class RPC:
                 return long_out, lat_out, alt
 
             # inverse localization starting from the center of the scene
-            X = np.array([self.offset_X])
-            Y = np.array([self.offset_Y])
-            (l0, c0, __) = self.inverse_loc(X, Y, alt)
+            lon = np.array([self.offset_X])
+            lat = np.array([self.offset_Y])
+            (row_start, col_start, __) = self.inverse_loc(lon, lat, alt)
 
             # desired precision in pixels
             eps = 1e-6
 
             iteration = 0
             # computing the residue between the sensor positions and those estimated by the inverse localization
-            dc = col - c0
-            dl = row - l0
+            delta_col = col - col_start
+            delta_row = row - row_start
 
             # ground coordinates (latitude and longitude) of each point
-            X = np.repeat(X, dc.size)
-            Y = np.repeat(Y, dc.size)
+            lon = np.repeat(lon, delta_col.size)
+            lat = np.repeat(lat, delta_col.size)
             # while the required precision is not achieved
-            while (np.max(abs(dc)) > eps or np.max(abs(dl)) > eps) and iteration < nb_iter_max:
+            while (np.max(abs(delta_col)) > eps or np.max(abs(delta_row)) > eps) and iteration < nb_iter_max:
                 # list of points that require another iteration
-                iter_ = np.where((abs(dc) > eps) | (abs(dl) > eps))[0]
+                iter_ = np.where((abs(delta_col) > eps) | (abs(delta_row) > eps))[0]
 
                 # partial derivatives
-                (Cdx, Cdy, Ldx, Ldy) = self.calcule_derivees_inv(X[iter_], Y[iter_], alt)
-                det = Cdx*Ldy-Ldx*Cdy
+                (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = self.calcule_derivees_inv(lon[iter_], lat[iter_], alt)
+                det = dcol_dlon*drow_dlat-drow_dlon*dcol_dlat
 
-                dX = (Ldy*dc[iter_] - Cdy*dl[iter_])/det
-                dY = (-Ldx*dc[iter_] + Cdx*dl[iter_])/det
+                delta_lon = (drow_dlat*delta_col[iter_] - dcol_dlat*delta_row[iter_])/det
+                delta_lat = (-drow_dlon*delta_col[iter_] + dcol_dlon*delta_row[iter_])/det
 
                 # update ground coordinates
-                X[iter_] += dX
-                Y[iter_] += dY
+                lon[iter_] += delta_lon
+                lat[iter_] += delta_lat
 
                 # inverse localization
-                (l, c, __) = self.inverse_loc(X[iter_], Y[iter_], alt)
+                (row_estim, col_estim, __) = self.inverse_loc(lon[iter_], lat[iter_], alt)
 
                 # updating the residue between the sensor positions and those estimated by the inverse localization
-                dc[iter_] = col[iter_] - c
-                dl[iter_] = row[iter_] - l
+                delta_col[iter_] = col[iter_] - col_estim
+                delta_row[iter_] = row[iter_] - row_estim
                 iteration += 1
-            long_out[filter_nan] = X
-            lat_out[filter_nan] = Y
+            long_out[filter_nan] = lon
+            lat_out[filter_nan] = lat
 
         else:
             print("inverse localisation can't be performed, inverse coefficients have not been defined")

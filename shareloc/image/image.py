@@ -88,8 +88,8 @@ class Image:
         self.transform = Affine(transform[0], transform[1], transform[2], transform[3], transform[4], transform[5])
 
         # Georeferenced coordinates of the upper-left origin
-        self.origin_row = transform[1]
-        self.origin_col = transform[5]
+        self.origin_row = transform[5]
+        self.origin_col = transform[2]
 
         # Image size
         self.nb_rows = nb_row
@@ -103,7 +103,7 @@ class Image:
 
     def transform_index_to_physical_point(self, row, col):
         """
-        Transform index to physical point using rasterio.xy function
+        Transform index to physical point
 
         :param row: row index
         :type row: int or 1D numpy array
@@ -112,7 +112,11 @@ class Image:
         :return: Georeferenced coordinates (row, col)
         :rtype: Tuple(georeference row float or 1D np.array, georeference col float or 1D np.array)
         """
-        col_geo, row_geo = rasterio.transform.xy(self.transform, row, col, offset="center")
+
+        # trans with convention : | pixel size col, row rotation, origin col, col rotation, pixel size row, origin row |
+        trans = self.transform
+        col_geo = trans[2] + (col + 0.5) * trans[0] + (row + 0.5) * trans[1]
+        row_geo = trans[5] + (col + 0.5) * trans[3] + (row + 0.5) * trans[4]
 
         return row_geo, col_geo
 

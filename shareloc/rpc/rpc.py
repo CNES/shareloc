@@ -22,6 +22,7 @@
 from xml.dom import minidom
 from os.path import basename
 import numpy as np
+from numba import njit, prange
 
 
 def renvoie_linesep(txt_liste_lines):
@@ -182,27 +183,27 @@ class RPC:
                  [1,0,3,0],[1,0,1,2],[1,2,0,1],\
                  [1,0,2,1],[1,0,0,3]]
 
-        self.Monomes    = ordre_monomes_LAI
+        self.Monomes    = np.array(ordre_monomes_LAI)
 
         #coefficient des degres monomes avec derivation 1ere variable
-        self.monomes_deriv_1 = \
-                [[0,0,0,0],[1,0,0,0],[0,0,1,0],\
-                 [0,0,0,1],[1,0,1,0],[1,0,0,1],\
-                 [0,0,1,1],[2,1,0,0],[0,0,2,0],\
-                 [0,0,0,2],[1,0,1,1],[3,2,0,0],\
-                 [1,0,2,0],[1,0,0,2],[2,1,1,0],\
-                 [0,0,3,0],[0,0,1,2],[2,1,0,1],\
-                 [0,0,2,1],[0,0,0,3]]
+        self.monomes_deriv_1 = np.array(
+                [[0,0,0,0],[1,0,0,0],[0,0,1,0],
+                 [0,0,0,1],[1,0,1,0],[1,0,0,1],
+                 [0,0,1,1],[2,1,0,0],[0,0,2,0],
+                 [0,0,0,2],[1,0,1,1],[3,2,0,0],
+                 [1,0,2,0],[1,0,0,2],[2,1,1,0],
+                 [0,0,3,0],[0,0,1,2],[2,1,0,1],
+                 [0,0,2,1],[0,0,0,3]])
 
         #coefficient des degres monomes avec derivation 1ere variable
-        self.monomes_deriv_2 = \
-                [[0,0,0,0],[0,1,0,0],[1,0,0,0],\
-                 [0,0,0,1],[1,1,0,0],[0,1,0,1],\
-                 [1,0,0,1],[0,2,0,0],[2,0,1,0],\
-                 [0,0,0,2],[1,1,0,1],[0,3,0,0],\
-                 [2,1,1,0],[0,1,0,2],[1,2,0,0],\
-                 [3,0,2,0],[1,0,0,2],[0,2,0,1],\
-                 [2,0,1,1],[0,0,0,3]]
+        self.monomes_deriv_2 =  np.array(
+                [[0,0,0,0],[0,1,0,0],[1,0,0,0],
+                 [0,0,0,1],[1,1,0,0],[0,1,0,1],
+                 [1,0,0,1],[0,2,0,0],[2,0,1,0],
+                 [0,0,0,2],[1,1,0,1],[0,3,0,0],
+                 [2,1,1,0],[0,1,0,2],[1,2,0,0],
+                 [3,0,2,0],[1,0,0,2],[0,2,0,1],
+                 [2,0,1,1],[0,0,0,3]])
 
     @classmethod
     def from_dimap_v1(cls, dimap_filepath, topleftconvention=False):
@@ -399,55 +400,54 @@ class RPC:
                     return cls.from_ossim_kwl(primary_file, topleftconvention)
         return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
 
-
-
-    def calcule_derivees_inv(self,lon,lat,alt):
+    def calcule_derivees_inv(self, lon, lat, alt):
         """ calcul analytiques des derivees partielles de la loc inverse
             DCdx: derivee de loc_inv_C p/r a X
             DLdy: derivee de loc_inv_L p/r a Y
         """
+        if not isinstance(alt, (list, np.ndarray)):
+            alt = np.array([alt])
 
-        if self.Num_COL:
-            Xnorm = (lon - self.offset_X)/self.scale_X
-            Ynorm = (lat - self.offset_Y)/self.scale_Y
-            Znorm = (alt - self.offset_ALT)/self.scale_ALT
-            monomes = np.array([self.Monomes[i][0]*\
-                 Xnorm**int(self.Monomes[i][1])*\
-                 Ynorm**int(self.Monomes[i][2])*\
-                 Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
-            NumDC = np.dot(np.array(self.Num_COL),monomes)
-            DenDC = np.dot(np.array(self.Den_COL),monomes)
-            NumDL = np.dot(np.array(self.Num_LIG),monomes)
-            DenDL = np.dot(np.array(self.Den_LIG),monomes)
+        if alt.shape[0] != lon.shape[0]:
+            alt = np.full(lon.shape[0], fill_value=alt[0])
 
-            monomes_deriv_x = np.array([self.monomes_deriv_1[i][0]*\
-                Xnorm**int(self.monomes_deriv_1[i][1])*\
-                Ynorm**int(self.monomes_deriv_1[i][2])*\
-                Znorm**int(self.monomes_deriv_1[i][3]) for i in range(self.monomes_deriv_1.__len__())])
+        Xnorm = (lon - self.offset_X) / self.scale_X
+        Ynorm = (lat - self.offset_Y) / self.scale_Y
+        Znorm = (alt - self.offset_ALT) / self.scale_ALT
 
-            monomes_deriv_y = np.array([self.monomes_deriv_2[i][0]*\
-                Xnorm**int(self.monomes_deriv_2[i][1])*\
-                Ynorm**int(self.monomes_deriv_2[i][2])*\
-                Znorm**int(self.monomes_deriv_2[i][3]) for i in range(self.monomes_deriv_2.__len__())])
+        if lon.shape[0] > 1:
+            DCdx, DCdy, DLdx, DLdy = calcule_derivees_inv_numba(Xnorm, Ynorm, Znorm, np.array(self.Num_COL), np.array(self.Den_COL), np.array(self.Num_LIG), np.array(self.Den_LIG),
+                                       self.scale_COL, self.scale_X, self.scale_LIG, self.scale_Y)
+        else:
+            monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
+                      np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
 
-            NumDCdx = np.dot(np.array(self.Num_COL),monomes_deriv_x)
-            DenDCdx = np.dot(np.array(self.Den_COL),monomes_deriv_x)
-            NumDLdx = np.dot(np.array(self.Num_LIG),monomes_deriv_x)
-            DenDLdx = np.dot(np.array(self.Den_LIG),monomes_deriv_x)
+            NumDC = np.dot(self.Num_COL, monomes)
+            DenDC = np.dot(self.Den_COL, monomes)
+            NumDL = np.dot(self.Num_LIG, monomes)
+            DenDL = np.dot(self.Den_LIG, monomes)
+            monomes_deriv_x = self.monomes_deriv_1[:, 0:1] * np.power(Xnorm, self.monomes_deriv_1[:, 1:2]) * \
+                              np.power(Ynorm, self.monomes_deriv_1[:, 2:3]) * np.power(Znorm, self.monomes_deriv_1[:, 3:])
 
-            NumDCdy = np.dot(np.array(self.Num_COL),monomes_deriv_y)
-            DenDCdy = np.dot(np.array(self.Den_COL),monomes_deriv_y)
-            NumDLdy = np.dot(np.array(self.Num_LIG),monomes_deriv_y)
-            DenDLdy = np.dot(np.array(self.Den_LIG),monomes_deriv_y)
+            NumDCdx = np.dot(self.Num_COL, monomes_deriv_x)
+            DenDCdx = np.dot(self.Den_COL, monomes_deriv_x)
+            NumDLdx = np.dot(self.Num_LIG, monomes_deriv_x)
+            DenDLdx = np.dot(self.Den_LIG, monomes_deriv_x)
 
-            #derive (u/v)' = (u'v - v'u)/(v*v)
+            monomes_deriv_y = self.monomes_deriv_2[:, 0:1] * np.power(Xnorm, self.monomes_deriv_2[:, 1:2]) * \
+                      np.power(Ynorm, self.monomes_deriv_2[:, 2:3]) * np.power(Znorm, self.monomes_deriv_2[:, 3:])
+
+            NumDCdy = np.dot(self.Num_COL, monomes_deriv_y)
+            DenDCdy = np.dot(self.Den_COL, monomes_deriv_y)
+            NumDLdy = np.dot(self.Num_LIG, monomes_deriv_y)
+            DenDLdy = np.dot(self.Den_LIG, monomes_deriv_y)
+
             DCdx = self.scale_COL/self.scale_X*(NumDCdx*DenDC - DenDCdx*NumDC)/DenDC**2
             DCdy = self.scale_COL/self.scale_Y*(NumDCdy*DenDC - DenDCdy*NumDC)/DenDC**2
             DLdx = self.scale_LIG/self.scale_X*(NumDLdx*DenDL - DenDLdx*NumDL)/DenDL**2
             DLdy = self.scale_LIG/self.scale_Y*(NumDLdy*DenDL - DenDLdy*NumDL)/DenDL**2
 
         return (DCdx,DCdy,DLdx,DLdy)
-
 
     def direct_loc_dtm(self, row, col, dtm):
         """
@@ -490,8 +490,6 @@ class RPC:
         # Direct localization using direct RPC
         if self.Num_X:
             # ground position
-
-
             Xnorm = (col - self.offset_COL)/self.scale_COL
             Ynorm = (row - self.offset_LIG)/self.scale_LIG
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
@@ -500,12 +498,11 @@ class RPC:
                 print("!!!!! l'evaluation au point est extrapolee en colonne ", Xnorm, col)
             if np.sum(abs(Ynorm) > self.lim_extrapol) == Ynorm.shape[0]:
                 print("!!!!! l'evaluation au point est extrapolee en ligne ", Ynorm, row)
-            if abs(Znorm) > self.lim_extrapol :
+            if abs(Znorm) > self.lim_extrapol:
                 print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
 
-            monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
-                 Ynorm**int(self.Monomes[i][2])*\
-                 Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
+            monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
+                      np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
 
             P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*self.scale_X+self.offset_X
             P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
@@ -562,23 +559,27 @@ class RPC:
                 lon = np.array([lon])
                 lat = np.array([lat])
 
-            Xnorm = (lon - self.offset_X)/self.scale_X
-            Ynorm = (lat - self.offset_Y)/self.scale_Y
-            Znorm = (alt - self.offset_ALT)/self.scale_ALT
+            if not isinstance(alt, (list, np.ndarray)):
+                alt = np.array([alt])
 
-            if np.sum(abs(Xnorm) > self.lim_extrapol) == Xnorm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en longitude ", Xnorm,lon)
-            if np.sum(abs(Ynorm) > self.lim_extrapol) == Ynorm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en latitude ", Ynorm,lat)
-            if np.sum(abs(Znorm) > self.lim_extrapol) != 0:
-                print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
+            if alt.shape[0] != lon.shape[0]:
+                alt = np.full(lon.shape[0], fill_value=alt[0])
 
-            monomes = np.array([self.Monomes[i][0]*Xnorm**int(self.Monomes[i][1])*\
-                Ynorm**int(self.Monomes[i][2])*\
-                Znorm**int(self.Monomes[i][3]) for i in range(self.Monomes.__len__())])
+            Xnorm = (lon - self.offset_X) / self.scale_X
+            Ynorm = (lat - self.offset_Y) / self.scale_Y
+            Znorm = (alt - self.offset_ALT) / self.scale_ALT
 
-            Cout = np.dot(np.array(self.Num_COL), monomes)/np.dot(np.array(self.Den_COL), monomes)*self.scale_COL+self.offset_COL
-            Lout = np.dot(np.array(self.Num_LIG), monomes)/np.dot(np.array(self.Den_LIG), monomes)*self.scale_LIG+self.offset_LIG
+            if lon.shape[0] > 1:
+                # Inverse localization using numba to reduce calculation time
+                Lout, Cout = inverse_loc_numba(Xnorm, Ynorm, Znorm, np.array(self.Num_COL), np.array(self.Den_COL),
+                                               np.array(self.Num_LIG), np.array(self.Den_LIG), self.scale_COL,
+                                               self.offset_COL, self.scale_LIG, self.offset_LIG)
+            else:
+                monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
+                          np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
+
+                Cout = np.dot(self.Num_COL, monomes) / np.dot(self.Den_COL, monomes) * self.scale_COL + self.offset_COL
+                Lout = np.dot(self.Num_LIG, monomes) / np.dot(self.Den_LIG, monomes) * self.scale_LIG + self.offset_LIG
         else:
             print("!!!!! les coefficient inverses n'ont pas ete definis")
             (Cout, Lout) = (None, None)
@@ -618,8 +619,6 @@ class RPC:
 
         return filter_nan, x_out, y_out
 
-
-
     def direct_loc_inverse_iterative(self, row, col, alt, nb_iter_max=10, fill_nan = False):
         """
         Iterative direct localization using inverse RPC
@@ -639,17 +638,22 @@ class RPC:
         :rtype list of numpy.array
         """
         if self.Num_COL:
-
             if not isinstance(row, (list, np.ndarray)):
                 col = np.array([col])
                 row = np.array([row])
 
-            filter_nan, long_out, lat_out = self.filter_coordinates(row, col, fill_nan)
-            row=row[filter_nan]
-            col=col[filter_nan]
+            if not isinstance(alt, (list, np.ndarray)):
+                alt = np.array([alt])
 
-            # if all coord
-            #  contains Nan then return
+            if alt.shape[0] != col.shape[0]:
+                alt = np.full(col.shape[0], fill_value=alt[0])
+
+            filter_nan, long_out, lat_out = self.filter_coordinates(row, col, fill_nan)
+            row = row[filter_nan]
+            col = col[filter_nan]
+            alt = alt[filter_nan]
+
+            # if all coord contains Nan then return
             if not np.any(filter_nan):
                 return long_out, lat_out, alt
 
@@ -669,13 +673,14 @@ class RPC:
             # ground coordinates (latitude and longitude) of each point
             X = np.repeat(X, dc.size)
             Y = np.repeat(Y, dc.size)
+
             # while the required precision is not achieved
             while (np.max(abs(dc)) > eps or np.max(abs(dl)) > eps) and iteration < nb_iter_max:
                 # list of points that require another iteration
                 iter_ = np.where((abs(dc) > eps) | (abs(dl) > eps))[0]
 
                 # partial derivatives
-                (Cdx, Cdy, Ldx, Ldy) = self.calcule_derivees_inv(X[iter_], Y[iter_], alt)
+                (Cdx, Cdy, Ldx, Ldy) = self.calcule_derivees_inv(X[iter_], Y[iter_], alt[iter_])
                 det = Cdx*Ldy-Ldx*Cdy
 
                 dX = (Ldy*dc[iter_] - Cdy*dl[iter_])/det
@@ -686,12 +691,13 @@ class RPC:
                 Y[iter_] += dY
 
                 # inverse localization
-                (l, c, __) = self.inverse_loc(X[iter_], Y[iter_], alt)
+                (l, c, __) = self.inverse_loc(X[iter_], Y[iter_], alt[iter_])
 
                 # updating the residue between the sensor positions and those estimated by the inverse localization
                 dc[iter_] = col[iter_] - c
                 dl[iter_] = row[iter_] - l
                 iteration += 1
+
             long_out[filter_nan] = X
             lat_out[filter_nan] = Y
 
@@ -727,3 +733,183 @@ class RPC:
         los_edges[0, :] = self.direct_loc_h(row, col, alt_max, fill_nan)
         los_edges[1, :] = self.direct_loc_h(row, col, alt_min, fill_nan)
         return los_edges
+
+
+@njit('f8(f8, f8, f8, f8[:])', cache=True, fastmath=True)
+def polynomial_equation(Xnorm, Ynorm, Znorm, coeff):
+    """
+    Compute polynomial equation
+
+    :param Xnorm: Normalized longitude position
+    :type Xnorm: float 64
+    :param Ynorm: Normalized latitude position
+    :type Ynorm: float 64
+    :param Znorm: Normalized altitude position
+    :type Znorm: float 64
+    :param coeff: coefficients
+    :type coeff: 1D np.array dtype np.float 64
+    :return: rational
+    :rtype: float 64
+    """
+    rational = coeff[0] + coeff[1] * Xnorm + coeff[2] * Ynorm + coeff[3] * Znorm + coeff[4] * Xnorm * Ynorm + \
+        coeff[5] * Xnorm * Znorm + coeff[6] * Ynorm * Znorm + coeff[7] * Xnorm ** 2 + coeff[8] * Ynorm ** 2 + \
+        coeff[9] * Znorm ** 2 + coeff[10] * Xnorm * Ynorm * Znorm + coeff[11] * Xnorm ** 3 + \
+        coeff[12] * Xnorm * Ynorm ** 2 + coeff[13] * Xnorm * Znorm ** 2 + coeff[14] * Xnorm ** 2 * Ynorm + \
+        coeff[15] * Ynorm ** 3 + coeff[16] * Ynorm * Znorm ** 2 + coeff[17] * Xnorm ** 2 * Znorm + \
+        coeff[18] * Ynorm ** 2 * Znorm + coeff[19] * Znorm ** 3
+
+    return rational
+
+
+@njit('Tuple((f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)', parallel=True,
+      cache=True, fastmath=True)
+def inverse_loc_numba(Xnorm, Ynorm, Znorm, Num_COL, Den_COL, Num_LIG, Den_LIG, scale_COL, offset_COL, scale_LIG,
+                  offset_LIG):
+    """
+    Inverse localization using numba to reduce calculation time on multiple points
+
+    :param Xnorm: Normalized longitude position
+    :type Xnorm: 1D np.array dtype np.float 64
+    :param Ynorm: Normalized latitude position
+    :type Ynorm: 1D np.array dtype np.float 64
+    :param Znorm: Normalized altitude position
+    :type Znorm: 1D np.array dtype np.float 64
+    :param Num_COL: Column numerator coefficients
+    :type Num_COL: 1D np.array dtype np.float 64
+    :param Den_COL: Column denominator coefficients
+    :type Den_COL: 1D np.array dtype np.float 64
+    :param Num_LIG: Line numerator coefficients
+    :type Num_LIG: 1D np.array dtype np.float 64
+    :param Den_LIG: Line denominator coefficients
+    :type Den_LIG: 1D np.array dtype np.float 64
+    :param scale_COL: Column scale
+    :type scale_COL: float 64
+    :param offset_COL: Column offset
+    :type offset_COL: float 64
+    :param scale_LIG: Line scale
+    :type scale_LIG: float 64
+    :param offset_LIG: Line offset
+    :type offset_LIG: float 64
+    :return: sensor position (row, col)
+    :rtype Tuple(np.ndarray, np.ndarray)
+    """
+    Cout = np.zeros((Xnorm.shape[0]), dtype=np.float64)
+    Lout = np.zeros((Xnorm.shape[0]), dtype=np.float64)
+
+    for i in prange(Xnorm.shape[0]):
+        Pu = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Num_COL)
+        Qu = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Den_COL)
+        Pv = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Num_LIG)
+        Qv = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Den_LIG)
+        Cout[i] = Pu / Qu * scale_COL + offset_COL
+        Lout[i] = Pv / Qv * scale_LIG + offset_LIG
+
+    return Lout, Cout
+
+
+@njit('f8(f8, f8, f8, f8[:])', cache=True, fastmath=True)
+def derivative_polynomial_latitude(Xnorm, Ynorm, Znorm, coeff):
+    """
+    Compute latitude derivative polynomial equation
+
+    :param Xnorm: Normalized longitude position
+    :type Xnorm: float 64
+    :param Ynorm: Normalized latitude position
+    :type Ynorm: float 64
+    :param Znorm: Normalized altitude position
+    :type Znorm: float 64
+    :param coeff: coefficients
+    :type coeff: 1D np.array dtype np.float 64
+    :return: rational derivative
+    :rtype: float 64
+    """
+    dr = coeff[2] + coeff[4] * Xnorm + coeff[6] * Znorm + 2 * coeff[8] * Ynorm + \
+         coeff[10] * Xnorm * Znorm + 2 * coeff[12] * Xnorm * Ynorm + coeff[14] * Xnorm**2 + 3 * coeff[15] * Ynorm**2 + \
+         coeff[16] * Znorm**2 + 2 * coeff[18] * Ynorm * Znorm
+
+    return dr
+
+
+@njit('f8(f8, f8, f8, f8[:])', cache=True, fastmath=True)
+def derivative_polynomial_longitude(Xnorm, Ynorm, Znorm, coeff):
+    """
+    Compute longitude derivative polynomial equation
+
+    :param Xnorm: Normalized longitude position
+    :type Xnorm: float 64
+    :param Ynorm: Normalized latitude position
+    :type Ynorm: float 64
+    :param Znorm: Normalized altitude position
+    :type Znorm: float 64
+    :param coeff: coefficients
+    :type coeff: 1D np.array dtype np.float 64
+    :return: rational derivative
+    :rtype: float 64
+    """
+    dr = coeff[1] + coeff[4] * Ynorm + coeff[5] * Znorm + 2 * coeff[7] * Xnorm + coeff[10] * Ynorm * Znorm + \
+         3 * coeff[11] * Xnorm**2 + coeff[12] * Ynorm**2 + coeff[13] * Znorm**2 + 2 * coeff[14] * Ynorm * Xnorm + \
+         2 * coeff[17] * Xnorm * Znorm
+
+    return dr
+
+
+@njit('Tuple((f8[:], f8[:], f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)',
+      parallel=True, cache=True, fastmath=True)
+def calcule_derivees_inv_numba(Xnorm, Ynorm, Znorm, Num_COL, Den_COL, Num_LIG, Den_LIG, scale_COL, scale_X, scale_LIG, scale_Y):
+    """
+    Analytically compute the partials derivatives of inverse localization using numba to reduce calculation time on
+    multiple points
+
+    :param Xnorm: Normalized longitude position
+    :type Xnorm: 1D np.array dtype np.float 64
+    :param Ynorm: Normalized latitude position
+    :type Ynorm: 1D np.array dtype np.float 64
+    :param Znorm: Normalized altitude position
+    :type Znorm: 1D np.array dtype np.float 64
+    :param Num_COL: Column numerator coefficients
+    :type Num_COL: 1D np.array dtype np.float 64
+    :param Den_COL: Column denominator coefficients
+    :type Den_COL: 1D np.array dtype np.float 64
+    :param Num_LIG: Line numerator coefficients
+    :type Num_LIG: 1D np.array dtype np.float 64
+    :param Den_LIG: Line denominator coefficients
+    :type Den_LIG: 1D np.array dtype np.float 64
+    :param scale_COL: Column scale
+    :type scale_COL: float 64
+    :param scale_X: Geodetic longitude scale
+    :type scale_X: float 64
+    :param scale_LIG: Line scale
+    :type scale_LIG: float 64
+    :param scale_Y: Geodetic latitude scale
+    :type scale_Y: float 64
+    :return: partials derivatives of inverse localization
+    :rtype: Tuples(DCdx np.array, DCdy np.array, DLdx np.array, DLdy np.array)
+    """
+
+    DCdx = np.zeros((Xnorm.shape[0]), dtype=np.float64)
+    DCdy = np.zeros((Xnorm.shape[0]), dtype=np.float64)
+    DLdx = np.zeros((Xnorm.shape[0]), dtype=np.float64)
+    DLdy = np.zeros((Xnorm.shape[0]), dtype=np.float64)
+
+    for i in prange(Xnorm.shape[0]):
+        NumDC = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Num_COL)
+        DenDC = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Den_COL)
+        NumDL = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Num_LIG)
+        DenDL = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Den_LIG)
+
+        NumDCdx = derivative_polynomial_longitude(Xnorm[i], Ynorm[i], Znorm[i], Num_COL)
+        DenDCdx = derivative_polynomial_longitude(Xnorm[i], Ynorm[i], Znorm[i], Den_COL)
+        NumDLdx = derivative_polynomial_longitude(Xnorm[i], Ynorm[i], Znorm[i], Num_LIG)
+        DenDLdx = derivative_polynomial_longitude(Xnorm[i], Ynorm[i], Znorm[i], Den_LIG)
+
+        NumDCdy = derivative_polynomial_latitude(Xnorm[i], Ynorm[i], Znorm[i], Num_COL)
+        DenDCdy = derivative_polynomial_latitude(Xnorm[i], Ynorm[i], Znorm[i], Den_COL)
+        NumDLdy = derivative_polynomial_latitude(Xnorm[i], Ynorm[i], Znorm[i], Num_LIG)
+        DenDLdy = derivative_polynomial_latitude(Xnorm[i], Ynorm[i], Znorm[i], Den_LIG)
+
+        DCdx[i] = scale_COL/scale_X * (NumDCdx*DenDC - DenDCdx*NumDC)/DenDC**2
+        DCdy[i] = scale_COL/scale_Y * (NumDCdy*DenDC - DenDCdy*NumDC)/DenDC**2
+        DLdx[i] = scale_LIG/scale_X * (NumDLdx*DenDL - DenDLdx*NumDL)/DenDL**2
+        DLdy[i] = scale_LIG/scale_Y * (NumDLdy*DenDL - DenDLdy*NumDL)/DenDL**2
+
+    return DCdx, DCdy, DLdx, DLdy

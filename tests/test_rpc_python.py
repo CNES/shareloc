@@ -24,7 +24,7 @@ import pytest
 from utils import test_path
 import numpy as np
 
-from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl
+from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl, identify_euclidium_rpc
 
 
 
@@ -45,9 +45,17 @@ def test_rpc_drivers():
     file_geom = os.path.join(data_folder,'rpc/{}.geom'.format(id_scene))
     fctrat_geom = RPC.from_any(file_geom)
 
+    file_dimap = os.path.join(data_folder, 'rpc/RPC_{}.XML'.format(id_scene))
+    print(file_dimap)
+    fctrat_dimap_v2 = RPC.from_any(file_dimap, topleftconvention=True)
+
+    fake_rpc = os.path.join(data_folder, 'rpc/fake_rpc.txt')
+    fctrat_fake = RPC.from_any(fake_rpc, topleftconvention=True)
     assert (fctrat_eucl.driver_type == 'euclidium')
     assert (fctrat_dimap.driver_type == 'dimap_v1.4')
     assert (fctrat_geom.driver_type == 'ossim_kwl')
+    assert (fctrat_dimap_v2.driver_type == 'dimap_v2.15')
+    assert (fctrat_fake == None)
 
 def test_identify_ossim_kwl():
     data_folder = test_path()
@@ -56,6 +64,20 @@ def test_identify_ossim_kwl():
     ossim_model =  identify_ossim_kwl(file_geom)
     assert (ossim_model == 'ossimPleiadesModel')
 
+def test_identify_euclidium_rpc():
+    data_folder = test_path()
+    file_direct_euclide = os.path.join(data_folder, 'rpc/rpc_dir.euc')
+    file_inverse_euclide = os.path.join(data_folder, 'rpc/rpc_inv.euc')
+
+    is_eucl_inverse = identify_euclidium_rpc(file_inverse_euclide)
+    is_eucl_direct = identify_euclidium_rpc(file_direct_euclide)
+
+    id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
+    file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
+    is_eucl_bad =  identify_euclidium_rpc(file_geom)
+    assert (is_eucl_inverse == True)
+    assert (is_eucl_direct == True)
+    assert (is_eucl_bad == False)
 
 
 def test_identify_dimap():
@@ -82,18 +104,89 @@ def test_rpc_ossim_kwl(id_scene,lon,lat,alt,row_vt,col_vt):
 
 
 
-@pytest.mark.parametrize("lon,lat,alt", [(7.048662660737769592,43.72774839443545858,0.0)])
-def test_rpc_eucl(lon,lat,alt):
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0),
+                                                                ('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.geom',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0),
+                                                                 ('RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML',
+                                                                  7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                  100.0, 200.0),
+                                                                 ('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif',
+                                                                 7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                 100.0, 200.0),
+                                                                 ])
+def test_rpc_from_any(id_scene,lon,lat,alt,row_vt,col_vt):
     data_folder = test_path()
-    id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
-    file_inverse = os.path.join(data_folder, 'rpc/{}_inv.txt'.format(id_scene))
-    fctrat_eucl = RPC.from_euclidium(file_inverse)
+    rpc_file = os.path.join(data_folder, 'rpc', id_scene)
+    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
     print("{} {} {}".format(lon,lat,alt))
-    (row,col,__) = fctrat_eucl.inverse_loc(lon,lat,alt)
+    (row,col,__) = fctrat.inverse_loc(lon,lat,alt)
     print("col {} row {}".format(col,row))
-    assert(col == pytest.approx(100.5, abs = 1e-2))
-    assert(row == pytest.approx(200.5, abs = 1e-2))
+    assert(col == pytest.approx(col_vt, abs = 1e-2))
+    assert(row == pytest.approx(row_vt, abs = 1e-2))
 
+
+
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0)])
+def test_rpc_euclidium_direct_iterative(id_scene,lon,lat,alt,row_vt,col_vt):
+    data_folder = test_path()
+    rpc_file = os.path.join(data_folder, 'rpc', id_scene)
+    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+    print("{} {} {}".format(lon,lat,alt))
+    (row,col,__) = fctrat.inverse_loc(lon,lat,alt)
+    print("col {} row {}".format(col,row))
+    (lon2,lat2,__) = fctrat.direct_loc_h(row,col,alt)
+    assert(lon == pytest.approx(lon2, abs = 1e-2))
+    assert(lat == pytest.approx(lat2, abs = 1e-2))
+
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_dir.txt',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0)])
+def test_rpc_euclidium_direct(id_scene,lon,lat,alt,row_vt,col_vt):
+    data_folder = test_path()
+    rpc_file = os.path.join(data_folder, 'rpc', id_scene)
+    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+    (row,col,__) = fctrat.inverse_loc(lon,lat,alt)
+    assert(row is None)
+    assert(col is None)
+    (lon2,lat2,__) = fctrat.direct_loc_inverse_iterative(row_vt,col_vt,alt)
+    assert(lat2 is None)
+    assert(lon2 is None)
+
+
+@pytest.mark.parametrize("prod, can_read", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif', True),
+                                            ('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_nogeo.tif', False)])
+def test_rpc_from_geotiff_without_rpc(prod,can_read):
+    data_folder = test_path()
+    rpc_file = os.path.join(data_folder, 'rpc',  prod)
+    try :
+        fctrat = RPC.from_geotiff(rpc_file, topleftconvention=True)
+        assert can_read
+    except ValueError:
+        assert not can_read
+
+
+@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [('PHR1B_P_201709281038393_SEN_PRG_FC_178609-001',
+                                                                      7.048662660737769592, 43.72774839443545858, 0.0,
+                                                                      100.0, 200.0)])
+def test_rpc_dimap_v2(id_scene,lon,lat,alt,row_vt,col_vt):
+    data_folder = test_path()
+    file_dimap = os.path.join(data_folder, 'rpc/RPC_{}.XML'.format(id_scene))
+    print(file_dimap)
+    fctrat_dimap = RPC.from_dimap(file_dimap, topleftconvention=True)
+    print("{} {} {}".format(lon,lat,alt))
+    (row,col,__) = fctrat_dimap.inverse_loc(lon,lat,alt)
+    print("col {} row {} dimap".format(col,row))
+    file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
+    fctrat_geom = RPC.from_any(file_geom, topleftconvention=True)
+    (row, col, __) = fctrat_geom.inverse_loc(lon, lat, alt)
+    print("col {} row {} geom".format(col,row))
+    assert(col == pytest.approx(col_vt, abs = 1e-2))
+    assert(row == pytest.approx(row_vt, abs = 1e-2))
 
 @pytest.mark.parametrize("col,row,alt", [(600,200,125)])
 def test_rpc_phrdimap(col,row,alt):
@@ -101,7 +194,7 @@ def test_rpc_phrdimap(col,row,alt):
     id_scene = 'P1BP--2018122638935449CP'
     file_dimap = os.path.join(data_folder,'rpc/PHRDIMAP_{}.XML'.format(id_scene))
 
-    fctrat = RPC.from_dimap_v1(file_dimap)
+    fctrat = RPC.from_dimap(file_dimap)
 
     (lon,lat,alt) = fctrat.direct_loc_h(row,col,alt)
     print (lon,lat)

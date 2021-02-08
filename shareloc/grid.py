@@ -586,8 +586,8 @@ class grid:
         :type alt: float
         :param nb_iterations : max number of iterations (15 by default)
         :type nb_iterations : int
-        :return sensor position (row,col, is_valid)
-        :rtype tuple (float,float,boolean)
+        :return sensor position (row,col,alt, is_valid)
+        :rtype tuple (float,float,float,boolean)
         """
 
 
@@ -614,9 +614,7 @@ class grid:
                 row_i += -dimg[1]
                 k +=1
                 point_valide = 1
-        return (row_i,col_i,point_valide)
-
-    #-------------------------------------------------------------------------------
+        return (row_i,col_i, alt, point_valide)
 
 def coloc(gld_xH_src, gld_xH_dst, dtm, \
           l0_src, c0_src, steprow_src, stepcol_src, nbrow_src, nbcol_src):
@@ -642,7 +640,7 @@ def coloc(gld_xH_src, gld_xH_dst, dtm, \
      :return colocalization grid
      :rtype numpy.array
     """
-    gricoloc = np.zeros((3,nbrow_src,nbcol_src))
+    gricoloc = np.zeros((4,nbrow_src,nbcol_src))
     for l in range(nbrow_src):
         row = l0_src + steprow_src * l
         for c in range(nbcol_src):

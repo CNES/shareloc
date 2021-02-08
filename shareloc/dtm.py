@@ -78,7 +78,7 @@ class DTM:
         """
         load DTM infos
         """
-        if self.format == 'bsq':
+        if self.format == "bsq":
             hd_babel = read_hdbabel_header(self.dtm_file)
             for key in hd_babel:
                 setattr(self, key, hd_babel[key])
@@ -138,44 +138,44 @@ class DTM:
         vect_ter[1] = self.origin_y + self.pixel_size_y * vect_dtm[0]
         return vect_ter
 
-    def interpolate(self, dX, dY):
+    def interpolate(self, pos_row, pos_col):
         """
         interpolate altitude
         if interpolation is done outside DTM the penultimate index is used (or first if d is negative).
-        :param dX: cell position X
-        :type dX: float
-        :param dX: cell position X
-        :type dX: float
+        :param pos_row: cell position row
+        :type pos_row: float
+        :param pos_col: cell position col
+        :type pos_col: float
         :return interpolated altitude
         :rtype float
         """
 
-        "index clipping in [0, _row_nb -2]"
-        if dX < 0:
-            i1 = 0
-        elif dX >= self.row_nb-1:
-            i1 = self.row_nb - 2
+        #index clipping in [0, _row_nb -2]
+        if pos_row < 0:
+            row_inf = 0
+        elif pos_row >= self.row_nb-1:
+            row_inf = self.row_nb - 2
         else:
-            i1 = int(np.floor(dX))
+            row_inf = int(np.floor(pos_row))
 
-        i2 = i1+1
+        row_sup = row_inf + 1
 
-        "index clipping in [0, _nc -2]"
-        if dY < 0:
-            j1 = 0
-        elif dY >= self.column_nb-1:
-            j1 = self.column_nb - 2
+        #index clipping in [0, _nc -2]
+        if pos_col < 0:
+            col_inf = 0
+        elif pos_col >= self.column_nb-1:
+            col_inf = self.column_nb - 2
         else:
-            j1 = int(np.floor(dY))
+            col_inf = int(np.floor(pos_col))
 
-        j2 = j1+1
+        col_sup = col_inf + 1
         #Coefficients d'interpolation bilineaire
-        u = dY - j1
-        v = dX - i1
+        delta_u = pos_col - col_inf
+        delta_v = pos_row - row_inf
         #Altitude
-        alt = (1-u)*(1-v)*self.alt_data[i1,j1] + u*(1-v)*self.alt_data[i1,j2] +\
-              (1-u)*v*self.alt_data[i2,j1] + u*v*self.alt_data[i2,j2]
-
+        alt = (1-delta_u)*(1-delta_v)*self.alt_data[row_inf, col_inf] + \
+              delta_u*(1-delta_v)*self.alt_data[row_inf, col_sup] +\
+              (1-delta_u)*delta_v*self.alt_data[row_sup, col_inf] + delta_u*delta_v*self.alt_data[row_sup, col_sup]
         return alt
 
     def InitMinMax(self):

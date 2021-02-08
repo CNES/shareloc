@@ -29,7 +29,7 @@ class DTM:
      works only with BSQ file format
      we work in cell convention [0,0] is the first cell center (not [0.5,0.5])
     """
-    def __init__(self, dtm_filename, dtm_format ='bsq'):
+    def __init__(self, dtm_filename, dtm_format="bsq"):
         """
         Constructor
         :param dtm_filename: dtm filename
@@ -39,67 +39,67 @@ class DTM:
         """
         self.dtm_file = dtm_filename
         self.format = dtm_format
-        self.Z = None
-        self.Zmin = None
-        self.Zmax = None
-        self.x0 = None
-        self.y0 = None
-        self.px = None
-        self.py = None
-        self.nc = None
-        self.nl = None
-        self.a = None
-        self.b = None
-        self.c = None
-        self.d = None
-        self.Zmin_cell = None
-        self.Zmax_cell = None
-        self.TOL_Z = 0.0001
+        self.alt_data = None
+        self.alt_min = None
+        self.alt_max = None
+        self.origin_x = None
+        self.origin_y = None
+        self.pixel_size_x = None
+        self.pixel_size_y = None
+        self.column_nb = None
+        self.row_nb = None
+        self.plane_coef_a = None
+        self.plane_coef_b = None
+        self.plane_coef_c = None
+        self.plane_coef_d = None
+        self.alt_min_cell = None
+        self.alt_max_cell = None
+        self.tol_z = 0.0001
 
         #lecture mnt
         self.load()
         self.InitMinMax()
-        self.Zmax = self.Z.max()
-        self.Zmin=self.Z.min()
+        self.alt_max = self.alt_data.max()
+        self.alt_min = self.alt_data.min()
 
-        self.a = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0])
-        self.b = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
-        self.c = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
-        self.d = np.array([0.0, self.nl-1.0, 0.0, self.nc-1.0, self.Zmin, self.Zmax])
+        self.plane_coef_a = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0])
+        self.plane_coef_b = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
+        self.plane_coef_c = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
+        self.plane_coef_d = np.array([0.0, self.row_nb-1.0, 0.0, self.column_nb-1.0, self.alt_min, self.alt_max])
 
         self.plans = np.array([[1.0, 0.0, 0.0, 0.0],
-                               [1.0, 0.0, 0.0, self.nl-1.0],
+                               [1.0, 0.0, 0.0, self.row_nb-1.0],
                                [0.0, 1.0, 0.0, 0.0],
-                               [0.0, 1.0, 0.0, self.nc-1.0],
-                               [0.0, 0.0, 1.0, self.Zmin],
-                               [0.0, 0.0, 1.0, self.Zmax]])
+                               [0.0, 1.0, 0.0, self.column_nb-1.0],
+                               [0.0, 0.0, 1.0, self.alt_min],
+                               [0.0, 0.0, 1.0, self.alt_max]])
 
     def load(self):
         """
         load DTM infos
         """
-        if self.format=='bsq':
+        if self.format == 'bsq':
             hd_babel = read_hdbabel_header(self.dtm_file)
             for key in hd_babel:
-                setattr(self,key,hd_babel[key])
-            self.Z = read_bsq_grid(self.dtm_file, self.nl, self.nc, self.data_type)
+                setattr(self, key, hd_babel[key])
+            self.alt_data = read_bsq_grid(self.dtm_file, self.row_nb, self.column_nb, self.data_type)
         else:
             print("dtm format not handled")
 
-
-    def eq_plan(self,i,P):
+    def eq_plan(self, i, position):
         """
         return evaluation of equation on a plane on DTM cube
         :param i: face index
         :type i: int
-        :param P: position
-        :type P : numpy.array (1x3)
+        :param position: position
+        :type position: numpy.array (1x3)
         :return evaluation on the plan
         :rtype float
         """
-        return self.a[i]*P[0] + self.b[i]*P[1] + self.c[i]*P[2] - self.d[i]
+        return self.plane_coef_a[i]*position[0] + self.plane_coef_b[i]*position[1] + \
+               self.plane_coef_c[i]*position[2] - self.plane_coef_d[i]
 
-    def TerToDTM(self, vect_ter):
+    def ter_to_index(self, vect_ter):
         """
         terrain to index conversion
         :param vect_ter: terrain coordinate
@@ -107,12 +107,12 @@ class DTM:
         :return index coordinates
         :rtype array (1x2 or 1x3)
         """
-        vectDTM = vect_ter.copy()
-        vectDTM[0] = (vect_ter[1] - self.y0) / self.py
-        vectDTM[1] = (vect_ter[0] - self.x0) / self.px
-        return vectDTM
+        vect_dtm = vect_ter.copy()
+        vect_dtm[0] = (vect_ter[1] - self.origin_y) / self.pixel_size_y
+        vect_dtm[1] = (vect_ter[0] - self.origin_x) / self.pixel_size_x
+        return vect_dtm
 
-    def TersToDTMs(self, vect_ters):
+    def ters_to_indexs(self, vect_ters):
         """
         terrain to index conversion
         :param vect_ters: terrain coordinates
@@ -120,12 +120,12 @@ class DTM:
         :return index coordinates
         :rtype array (nx2 or nx3)
         """
-        vectDTMs = vect_ters.copy()
-        for i,vectTer in enumerate(vect_ters):
-            vectDTMs[i,:] = self.TerToDTM(vectTer)
-        return vectDTMs
+        vect_dtms = vect_ters.copy()
+        for i, vect_ter in enumerate(vect_ters):
+            vect_dtms[i, :] = self.ter_to_index(vect_ter)
+        return vect_dtms
 
-    def DTMToTer(self, vect_dtm):
+    def index_to_ter(self, vect_dtm):
         """
         index to terrain conversion
         :param vect_dtm: index coordinate
@@ -133,12 +133,12 @@ class DTM:
         :return terrain coordinates
         :rtype array (1x2 or 1x3)
         """
-        vectTer = vect_dtm.copy()
-        vectTer[0] = self.x0 + self.px * vect_dtm[1]
-        vectTer[1] = self.y0 + self.py * vect_dtm[0]
-        return vectTer
+        vect_ter = vect_dtm.copy()
+        vect_ter[0] = self.origin_x + self.pixel_size_x * vect_dtm[1]
+        vect_ter[1] = self.origin_y + self.pixel_size_y * vect_dtm[0]
+        return vect_ter
 
-    def Interpolate(self, dX, dY):
+    def interpolate(self, dX, dY):
         """
         interpolate altitude
         if interpolation is done outside DTM the penultimate index is used (or first if d is negative).
@@ -150,11 +150,11 @@ class DTM:
         :rtype float
         """
 
-        "index clipping in [0, _nl -2]"
+        "index clipping in [0, _row_nb -2]"
         if dX < 0:
             i1 = 0
-        elif dX >= self.nl-1:
-            i1 = self.nl - 2
+        elif dX >= self.row_nb-1:
+            i1 = self.row_nb - 2
         else:
             i1 = int(np.floor(dX))
 
@@ -163,8 +163,8 @@ class DTM:
         "index clipping in [0, _nc -2]"
         if dY < 0:
             j1 = 0
-        elif dY >= self.nc-1:
-            j1 = self.nc - 2
+        elif dY >= self.column_nb-1:
+            j1 = self.column_nb - 2
         else:
             j1 = int(np.floor(dY))
 
@@ -173,8 +173,8 @@ class DTM:
         u = dY - j1
         v = dX - i1
         #Altitude
-        alt = (1-u)*(1-v)*self.Z[i1,j1] + u*(1-v)*self.Z[i1,j2] +\
-              (1-u)*v*self.Z[i2,j1] + u*v*self.Z[i2,j2]
+        alt = (1-u)*(1-v)*self.alt_data[i1,j1] + u*(1-v)*self.alt_data[i1,j2] +\
+              (1-u)*v*self.alt_data[i2,j1] + u*v*self.alt_data[i2,j2]
 
         return alt
 
@@ -182,11 +182,11 @@ class DTM:
         """
         initialize min/max at each dtm cell
         """
-        NC = self.nc-1
-        NL = self.nl-1
+        NC = self.column_nb-1
+        NL = self.row_nb-1
 
-        self.Zmax_cell = np.zeros((NL,NC))
-        self.Zmin_cell = np.zeros((NL,NC))
+        self.alt_max_cell = np.zeros((NL,NC))
+        self.alt_min_cell = np.zeros((NL,NC))
 
         # On calcule les altitudes min et max du MNT
         nMin =  32000
@@ -199,25 +199,25 @@ class DTM:
                 dAltMin = nMin
                 dAltMax = nMax
 
-                dZ1 = self.Z[i, j]
+                dZ1 = self.alt_data[i, j]
                 if dZ1 < dAltMin:
                     dAltMin = dZ1
                 if dZ1 > dAltMax:
                     dAltMax = dZ1
 
-                dZ2 =  self.Z[i, j+1]
+                dZ2 =  self.alt_data[i, j+1]
                 if dZ2 < dAltMin:
                     dAltMin = dZ2
                 if dZ2 > dAltMax:
                     dAltMax = dZ2
 
-                dZ3 = self.Z[i+1, j]
+                dZ3 = self.alt_data[i+1, j]
                 if dZ3 < dAltMin:
                     dAltMin = dZ3
                 if dZ3 > dAltMax:
                     dAltMax = dZ3
 
-                dZ4 = self.Z[i+1, j+1]
+                dZ4 = self.alt_data[i+1, j+1]
                 if dZ4 < dAltMin:
                     dAltMin = dZ4
                 if dZ4 > dAltMax:
@@ -234,8 +234,8 @@ class DTM:
                 #    et non pas jointifs strictement
                 i_altmin = np.floor(dAltMin)
                 i_altmax = np.ceil(dAltMax)
-                self.Zmin_cell[i, j] = i_altmin
-                self.Zmax_cell[i, j] = i_altmax
+                self.alt_min_cell[i, j] = i_altmin
+                self.alt_max_cell[i, j] = i_altmax
 
     def checkCubeDTM(self,LOS):
         """
@@ -250,7 +250,7 @@ class DTM:
         dH3D = None
         (ui, vi, zi, hi) = ([], [], [], [])
         nbalt = LOS.shape[0]
-        LOSDTM = self.TersToDTMs(LOS)
+        LOSDTM = self.ters_to_indexs(LOS)
         # -----------------------------------------------------------------------
         # Nombre d'intersections valides trouvees
         nbi = 0
@@ -317,20 +317,20 @@ class DTM:
                         # . coordonn?e <u> (ligne)
                         # -----------------------------------------------------------------------
                         if f < 2:
-                            ui.append(self.d[f])
+                            ui.append(self.plane_coef_d[f])
                         # -----------------------------------------------------------------------
                         else:
                             ui.append(cA * sA[0] + cB * sB[0])
                         # -----------------------------------------------------------------------
                         # . coordonnee <v> (colonne)
                         if f > 1 and f < 4:
-                            vi.append(self.d[f])
+                            vi.append(self.plane_coef_d[f])
                         else:
                             vi.append(cA * sA[1] + cB * sB[1])
                         # -----------------------------------------------------------------------
                         # . coordonn?e <z> (altitude)
                         if f > 3:
-                            zi.append(self.d[f])
+                            zi.append(self.plane_coef_d[f])
                         # -----------------------------------------------------------------------
                         else:
                             zi.append(cA * sA[2] + cB * sB[2])
@@ -367,9 +367,9 @@ class DTM:
         p = 0
         while p < nbi:
             #test a l'interieur du cube
-            test_on_cube = (ui[p] >= self.d[0]) and (ui[p] <= self.d[1]) and \
-                         (vi[p] >= self.d[2]) and (vi[p] <= self.d[3]) and \
-                         (zi[p] >= self.d[4]) and (zi[p] <= self.d[5])
+            test_on_cube = (ui[p] >= self.plane_coef_d[0]) and (ui[p] <= self.plane_coef_d[1]) and \
+                         (vi[p] >= self.plane_coef_d[2]) and (vi[p] <= self.plane_coef_d[3]) and \
+                         (zi[p] >= self.plane_coef_d[4]) and (zi[p] <= self.plane_coef_d[5])
             if not test_on_cube:
                 # On translate tous les points suivants (on ecrase ce point non valide)
                 for q in range(p+1, nbi):
@@ -401,7 +401,7 @@ class DTM:
         #dH3D correspond a l'index (non entier) d'interpolation en h
         # -----------------------------------------------------------------------
         # Coordonnees terrain
-        point_b = self.DTMToTer(point_dtm)
+        point_b = self.index_to_ter(point_dtm)
         #PointB est le point Terrain (lon,lat)
         # -----------------------------------------------------------------------
         # Fin, retour
@@ -420,8 +420,8 @@ class DTM:
         :return intersection information (True,an intersection has been found ?, position of intersection)
         :rtype tuple (bool, bool, numpy.array)
         """
-        LOSDTM = self.TersToDTMs(LOS)
-        PointB_DTM = self.TerToDTM(PointB)
+        LOSDTM = self.ters_to_indexs(LOS)
+        PointB_DTM = self.ter_to_index(PointB)
         PointR = np.zeros(3)
         (npl, _) = LOS.shape
         H3D = range(npl, -1, -1)
@@ -430,13 +430,13 @@ class DTM:
 
         dH3D_p1 = dH3D
 
-        nu = self.nl
-        nv = self.nc
+        nu = self.row_nb
+        nv = self.column_nb
 
         #1 - Initilialisation et tests prealables
         #   1.1 - Test si le sommet est au-dessu du DTM
         #       - Calcul de l'altitude du DTM ? la position du sommet
-        h1 = self.Interpolate(p1[0], p1[1])
+        h1 = self.interpolate(p1[0], p1[1])
         #       - Calcul de l'ecart d'altitude au DTM
         d1 = p1[2] - h1
 
@@ -471,16 +471,16 @@ class DTM:
             if (VM[0]==0 and VM[1]==0):
                 #2.3.1 - La vis?e est verticale :
                 #    - Calcul de l'altitude du DTM ? la position du sommet
-                h1 = self.Interpolate(u0, v0)
+                h1 = self.interpolate(u0, v0)
 
                 #    Test si le plan suivant est en dessous du DTM
-                if (LOSDTM[i0 + 1][2] <= h1):
+                if LOSDTM[i0 + 1][2] <= h1:
                     #Init point de sortie
                     p1[0] = u0
                     p1[1] = v0
                     p1[2] = h1
                     bTrouve = True
-                    self.DTMToTer(p1, PointR)
+                    self.index_to_ter(p1, PointR)
                     return (True, bTrouve, PointR)
                 else:
                     #Positionnement sur le sommet suivant
@@ -527,8 +527,8 @@ class DTM:
                 # Boucle de recherche iterative de la maille intersectee
                 while (a2 < 1) and (uc > -1) and (uc < (nu - 1)) and (vc > -1) and (vc < (nv - 1)):
                     # - Altitudes min et max de la maille
-                    hi = self.Zmin_cell[uc, vc]
-                    hs = self.Zmax_cell[uc, vc]
+                    hi = self.alt_min_cell[uc, vc]
+                    hs = self.alt_max_cell[uc, vc]
 
                     # - Transfert : le point bas devient le point haut
                     #a1 = a2;
@@ -538,7 +538,7 @@ class DTM:
 
                     # 4.2 - D?termination d'un nouveau point bas
                     #      - Test d'orientation de la vis?e
-                    if not(VM[0]):
+                    if not VM[0]:
                         # 4.2.1 - La vis?e est orientee pile poil est-ouest
                         #   p2[0] = p1[0] ; // inutile, est deja initialise
                         #       - Test d'orientation de la visee
@@ -624,9 +624,9 @@ class DTM:
 
                             if (p2[0] > uc) and (p2[0] < (uc + 1)):
                                 #  La vis?e sort par l'est
-                                    vc+=1
-                                    p2[1] = vc
-                                    p2[2] = z0 + a2 * VM[2]
+                                vc+=1
+                                p2[1] = vc
+                                p2[2] = z0 + a2 * VM[2]
 
                             elif p2[0] < uc:
                                 # La vis?e sort par le nord
@@ -767,8 +767,8 @@ class DTM:
                     if bIntersect:
                         # Il y a intersection entre la vis?e et le cube
                         # 5.1 - Altitudes du DTM
-                        h1 = self.Interpolate(p1[0], p1[1])
-                        h2 = self.Interpolate(p2[0], p2[1])
+                        h1 = self.interpolate(p1[0], p1[1])
+                        h2 = self.interpolate(p2[0], p2[1])
 
                         # 5.2 - Diff?rences d'altitude avec le DTM
                         d1 = p1[2] - h1
@@ -778,12 +778,12 @@ class DTM:
                         if d1 * d2 <= 0:
                             # Il y a intersection entre la vis?e et le DTM
                             # 5.3.1 - Calcul de la solution approch?e
-                            d2 = 2 * self.TOL_Z # Init de d2 > TOL_Z
+                            d2 = 2 * self.tol_z # Init de d2 > TOL_Z
                             ua = p2[0]
                             va = p2[1]
                             za = h2
 
-                            while abs(d2) > self.TOL_Z:
+                            while abs(d2) > self.tol_z:
                                 # 5.3.1.1 - Coefficient d'interpolation lin?aire de h
                                 ch = (p1[2] - h1) / ((h2 - h1) - (p2[2] - p1[2]))
 
@@ -793,7 +793,7 @@ class DTM:
                                 za = p1[2] + ch * (p2[2] - p1[2])
 
                                 # 5.3.1.3 - Altitude du point interpole
-                                zv = self.Interpolate(ua, va)
+                                zv = self.interpolate(ua, va)
 
                                 # 5.3.1.4 - Ecart d'altitude au point interpole
                                 d2 = zv - za
@@ -819,7 +819,7 @@ class DTM:
                             p1[2] = za
 
                             bTrouve = True
-                            PointR = self.DTMToTer(p1)
+                            PointR = self.index_to_ter(p1)
                             return (True, bTrouve, PointR)
 
                 # Fin boucle sur les mailles

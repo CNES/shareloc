@@ -45,13 +45,12 @@ def read_hdbabel_header(bsq_filename):
         if row_header.startswith('>>'):
             rowsplit = row_header.split('\t')
             header[rowsplit[1]] = rowsplit[2]
-
-    hd_babel['x0'] = float(header['LON_REF'])
-    hd_babel['y0'] = float(header['LAT_REF'])
-    hd_babel['nc'] = int(header['NB_LON'])
-    hd_babel['nl'] = int(header['NB_LAT'])
-    hd_babel['px'] = float(header['PAS_LON'])
-    hd_babel['py'] = float(header['PAS_LAT'])
+    hd_babel['origin_x'] = float(header['LON_REF'])
+    hd_babel['origin_y'] = float(header['LAT_REF'])
+    hd_babel['column_nb'] = int(header['NB_LON'])
+    hd_babel['row_nb'] = int(header['NB_LAT'])
+    hd_babel['pixel_size_x'] = float(header['PAS_LON'])
+    hd_babel['pixel_size_y'] = float(header['PAS_LAT'])
     if int(header['TYPE_CODE']) == 2:
         hd_babel['data_type'] = 'int16'
     return hd_babel

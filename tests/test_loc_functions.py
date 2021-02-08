@@ -177,9 +177,9 @@ def test_sensor_loc_dir_dtm(index_x,index_y):
 
 
     vect_index = [index_x, index_y]
-    [lon,lat] = dtmbsq.DTMToTer(vect_index)
+    [lon,lat] = dtmbsq.index_to_ter(vect_index)
     print([lon,lat])
-    alt = dtmbsq.Interpolate(index_x - 0.5, index_y - 0.5)
+    alt = dtmbsq.interpolate(index_x - 0.5, index_y - 0.5)
 
     row, col, alt, valid = loc.inverse(lon, lat, alt)
     print("row col ",row,col)
@@ -372,9 +372,9 @@ def test_interp_dtm(index_x,index_y,valid_alt):
     dtmbsq, ___ = prepare_loc()
 
     vect_index = [index_x, index_y]
-    coords = dtmbsq.DTMToTer(vect_index)
+    coords = dtmbsq.index_to_ter(vect_index)
     print(coords)
-    alti = dtmbsq.Interpolate(index_x - 0.5, index_y - 0.5)
+    alti = dtmbsq.interpolate(index_x - 0.5, index_y - 0.5)
     assert(alti == valid_alt)
 
 

@@ -60,30 +60,41 @@ def compute_epipolar_angle(end_line, start_line):
     Define the epipolar angle
 
     :param end_line: ending of the epipolar line (georeferenced coordinates)
-    :type end_line: 1D np.array [row, col, altitude]
+    :type end_line: 1D np.array [row, col, altitude] or 2D np.array [number of points, [row, col, altitude]]
     :param start_line: beginning of the epipolar line (georeferenced coordinates)
-    :type start_line: 1D np.array [row, col, altitude]
+    :type start_line: 1D np.array [row, col, altitude] or 2D np.array [number of points, [row, col, altitude]]
     :return: epipolar angle
-    :rtype : float
+    :rtype : float or 1D np.array
     """
+    # Only one point, expand the shape of the array
+    if len(end_line.shape) == 1:
+        end_line = np.expand_dims(end_line, axis=0)
+        start_line = np.expand_dims(start_line, axis=0)
+
     # Compute the equation of the epipolar line y = a*x + b and define the epipolare angle
-    alpha = 0
+    alpha = np.zeros(end_line.shape[0])
 
-    # Same columns
-    if end_line[1] == start_line[1]:
-        if end_line[0] > start_line[0]:
-            alpha = 0.5 * math.pi
-        else:
-            alpha = -0.5 * math.pi
-    # Different columns
-    else:
-        a = (end_line[0] - start_line[0]) / (end_line[1] - start_line[1])
-        if end_line[1] > start_line[1]:
-            alpha = math.atan(a)
-        else:
-            alpha = math.pi + math.atan(a)
+    # Same columns, positive direction
+    same_col_positive = (end_line[:, 1] == start_line[:, 1]) & (end_line[:, 0] > start_line[:, 0])
+    alpha[same_col_positive] = 0.5 * math.pi
 
-    return alpha
+    # Same columns, negative direction
+    same_col_negative = (end_line[:, 1] == start_line[:, 1]) & (end_line[:, 0] <= start_line[:, 0])
+    alpha[same_col_negative] = -0.5 * math.pi
+
+    # Different columns, positive direction
+    diff_col_pos = np.where((end_line[:, 1] != start_line[:, 1]) & (end_line[:, 1] > start_line[:, 1]))
+    a = (end_line[diff_col_pos[0], 0] - start_line[diff_col_pos[0], 0]) / (end_line[diff_col_pos[0], 1] -
+                                                                           start_line[diff_col_pos[0], 1])
+    alpha[diff_col_pos] = np.arctan(a)
+
+    # Different columns, negative direction
+    diff_col_neg = np.where((end_line[:, 1] != start_line[:, 1]) & (end_line[:, 1] <= start_line[:, 1]))
+    a = (end_line[diff_col_neg[0], 0] - start_line[diff_col_neg[0], 0]) / (end_line[diff_col_neg[0], 1]
+                                                                           - start_line[diff_col_neg[0], 1])
+    alpha[diff_col_neg[0]] = math.pi + np.arctan(a)
+
+    return np.squeeze(alpha)
 
 
 def get_local_altitude(use_dem):
@@ -266,7 +277,7 @@ def moving_to_next_line(geom_model_left, geom_model_right, current_line, mean_sp
     :type geom_model_right: shareloc.grid or  shareloc.rpc
     :param current_line: current line in the left epipolar geometry
     :type current_line: 1D np.array [row, col, altitude]
-    :param mean_spacing: TODO
+    :param mean_spacing: mean spacing of epipolar grids
     :type mean_spacing: int
     :param epi_step: epipolar step
     :type epi_step: int
@@ -308,7 +319,7 @@ def moving_along_lines(geom_model_left, geom_model_right, current_left_coords, m
     :type geom_model_right: shareloc.grid or  shareloc.rpc
     :param current_left_coords: current georeferenced coordinates in left epipolare line
     :type current_left_coords: 2D numpy array (number rows in epipolar geometry, [row, col, altitude])
-    :param mean_spacing: TODO
+    :param mean_spacing: mean spacing of epipolar grids
     :type mean_spacing: int
     :param epi_step: epipolare step
     :type epi_step: int
@@ -395,11 +406,10 @@ def compute_stereorectification_epipolar_grids(left_im, geom_model_left, right_i
     for row in range(grid_size[0]-1):
         # --- Compute left local epipolar line, useful for moving to the next line ---
         local_epi_start, local_epi_end = compute_local_epipolar_line(geom_model_left, geom_model_right,
-                                                                     left_epi_lines[-1], elevation_offset)
+                                                                          left_epi_lines[-1], elevation_offset)
 
         # epipolar angle using the begin and the end of the left local epipolar line
         alpha = compute_epipolar_angle(local_epi_end, local_epi_start)
-
         # Find the start of next line in epipolar geometry
         next_epi_line_left, next_epi_line_right = moving_to_next_line(geom_model_left, geom_model_right,
                                                                       left_epi_lines[-1], mean_spacing, epi_step, alpha)
@@ -428,7 +438,6 @@ def compute_stereorectification_epipolar_grids(left_im, geom_model_left, right_i
         # Compute left local epipolar line, useful to estimate the local baseline ratio and moving to the next pixels
         local_epi_start, local_epi_end = compute_local_epipolar_line(geom_model_left, geom_model_right, left_epi_coords,
                                                                      elevation_offset)
-
         # Estimate the local baseline ratio
         local_baseline_ratio = np.sqrt((local_epi_end[:, 1] - local_epi_start[:, 1]) *
                                        (local_epi_end[:, 1] - local_epi_start[:, 1]) +
@@ -437,7 +446,7 @@ def compute_stereorectification_epipolar_grids(left_im, geom_model_left, right_i
         mean_baseline_ratio += np.sum(local_baseline_ratio)
 
         # epipolar angle using the begin and the end of the left local epipolar lines
-        alphas = [compute_epipolar_angle(local_epi_end[row, :], local_epi_start[row, :]) for row in range(grid_size[0])]
+        alphas = compute_epipolar_angle(local_epi_end, local_epi_start)
 
         # Move to the next pixels in the epipolar line (moving along lines)
         left_epi_coords, right_epi_coords = moving_along_lines(geom_model_left, geom_model_right, left_epi_coords,

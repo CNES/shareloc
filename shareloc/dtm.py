@@ -58,7 +58,7 @@ class DTM:
 
         #lecture mnt
         self.load()
-        self.InitMinMax()
+        self.init_min_max()
         self.alt_max = self.alt_data.max()
         self.alt_min = self.alt_data.min()
 
@@ -178,50 +178,50 @@ class DTM:
               (1-delta_u)*delta_v*self.alt_data[row_sup, col_inf] + delta_u*delta_v*self.alt_data[row_sup, col_sup]
         return alt
 
-    def InitMinMax(self):
+    def init_min_max(self):
         """
         initialize min/max at each dtm cell
         """
-        NC = self.column_nb-1
-        NL = self.row_nb-1
+        column_nb_minus = self.column_nb-1
+        row_nb_minus = self.row_nb-1
 
-        self.alt_max_cell = np.zeros((NL,NC))
-        self.alt_min_cell = np.zeros((NL,NC))
+        self.alt_max_cell = np.zeros((row_nb_minus, column_nb_minus))
+        self.alt_min_cell = np.zeros((row_nb_minus, column_nb_minus))
 
         # On calcule les altitudes min et max du MNT
-        nMin =  32000
-        nMax = -32000
+        n_min = 32000
+        n_max = -32000
 
-        for i in range(NL):
+        for i in range(row_nb_minus):
             k = 0
-            for j in range(NC):
-                k +=1
-                dAltMin = nMin
-                dAltMax = nMax
+            for j in range(column_nb_minus):
+                k += 1
+                d_alt_min = n_min
+                d_alt_max = n_max
 
-                dZ1 = self.alt_data[i, j]
-                if dZ1 < dAltMin:
-                    dAltMin = dZ1
-                if dZ1 > dAltMax:
-                    dAltMax = dZ1
+                d_z1 = self.alt_data[i, j]
+                if d_z1 < d_alt_min:
+                    d_alt_min = d_z1
+                if d_z1 > d_alt_max:
+                    d_alt_max = d_z1
 
-                dZ2 =  self.alt_data[i, j+1]
-                if dZ2 < dAltMin:
-                    dAltMin = dZ2
-                if dZ2 > dAltMax:
-                    dAltMax = dZ2
+                d_z2 = self.alt_data[i, j+1]
+                if d_z2 < d_alt_min:
+                    d_alt_min = d_z2
+                if d_z2 > d_alt_max:
+                    d_alt_max = d_z2
 
-                dZ3 = self.alt_data[i+1, j]
-                if dZ3 < dAltMin:
-                    dAltMin = dZ3
-                if dZ3 > dAltMax:
-                    dAltMax = dZ3
+                d_z3 = self.alt_data[i+1, j]
+                if d_z3 < d_alt_min:
+                    d_alt_min = d_z3
+                if d_z3 > d_alt_max:
+                    d_alt_max = d_z3
 
-                dZ4 = self.alt_data[i+1, j+1]
-                if dZ4 < dAltMin:
-                    dAltMin = dZ4
-                if dZ4 > dAltMax:
-                    dAltMax = dZ4
+                d_z4 = self.alt_data[i+1, j+1]
+                if d_z4 < d_alt_min:
+                    d_alt_min = d_z4
+                if d_z4 > d_alt_max:
+                    d_alt_max = d_z4
 
                 # GDN Correction BUG Interesctor
                 # Il ne faut surtout pas prendre l'arrondi pour plusieurs raisons
@@ -232,8 +232,8 @@ class DTM:
                 #    car si l'altitude min de l'une correspond a l'altitude max de l'autre il faut les distinguer
                 #    par un ceil et un floor pour que les cubes se chevauchent legerement en altitude
                 #    et non pas jointifs strictement
-                i_altmin = np.floor(dAltMin)
-                i_altmax = np.ceil(dAltMax)
+                i_altmin = np.floor(d_alt_min)
+                i_altmax = np.ceil(d_alt_max)
                 self.alt_min_cell[i, j] = i_altmin
                 self.alt_max_cell[i, j] = i_altmax
 

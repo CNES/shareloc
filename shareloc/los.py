@@ -19,13 +19,18 @@
 # limitations under the License.
 #
 
+"""
+This module contains the LOS class to handle line of sights.
+"""
+
+
 import numpy as np
 from shareloc.proj_utils import coordinates_conversion
 
 class LOS:
     """ line of sight class
     """
-    def __init__(self, sensor_positions, geometrical_model, alt_min_max  = None, fill_nan = False):
+    def __init__(self, sensor_positions, geometrical_model, alt_min_max = None, fill_nan = False):
         """
         Constructor
         :param sensor_positions: sensor_positions
@@ -51,8 +56,8 @@ class LOS:
         """
 
         self.los_nb = self.sensors_positions.shape[0]
-        if(alt_min_max is None):
-            (alt_min,alt_max) = self.geometrical_model.get_alt_min_max()
+        if alt_min_max is None:
+            alt_min, alt_max = self.geometrical_model.get_alt_min_max()
 
         # los construction right
         los_extrema = np.zeros([2 * self.los_nb, 3])
@@ -73,6 +78,3 @@ class LOS:
         vis_norm = np.linalg.norm(vis, axis=1)
         rep_vis_norm = np.tile(vis_norm,(3,1)).transpose()
         self.vis = vis / rep_vis_norm
-
-
-

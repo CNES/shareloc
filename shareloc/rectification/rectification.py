@@ -456,4 +456,4 @@ def compute_stereorectification_epipolar_grids(left_im, geom_model_left, right_i
     # Compute the mean baseline ratio
     mean_baseline_ratio /= (grid_size[0] * grid_size[1])
 
-    return left_grid, right_grid, grid_size[0], grid_size[1], mean_baseline_ratio
+    return left_grid, right_grid, rectified_image_size[0], rectified_image_size[1], mean_baseline_ratio

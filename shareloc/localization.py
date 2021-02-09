@@ -107,7 +107,7 @@ def coloc(model1, model2, row, col, alt):
         ground_coord = np.expand_dims(ground_coord, 0)
 
     # Estimate sensor position (row, col, altitude) using inverse localization with model2
-    sensor_coord = np.zeros((row.shape[0], 3), dtype=np.float32)
+    sensor_coord = np.zeros((row.shape[0], 3), dtype=np.float64)
     sensor_coord[:, 0], sensor_coord[:, 1], sensor_coord[:, 2] = geometric_model2.inverse(ground_coord[:, 0],
                                                                                           ground_coord[:, 1],
                                                                                           ground_coord[:, 2])

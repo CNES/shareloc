@@ -45,7 +45,7 @@ def write_epipolar_grid(grid, filename, xy_convention=True):
     """
     band, row, col = grid.data.shape
 
-    with rasterio.open(filename, 'w', driver='GTiff', dtype=np.float32, width=col, height=row, count=band,
+    with rasterio.open(filename, 'w', driver='GTiff', dtype=np.float64, width=col, height=row, count=band,
                        transform=grid.transform) as source_ds:
         if xy_convention:
             source_ds.write(grid.data[1, :, :], 1)
@@ -187,7 +187,7 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, epi_step, 
     mean_spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
     # Pixel size (spacing) of the epipolar grids, convention [row, col]
-    grid_pixel_size = np.full(shape=2, fill_value=epi_step, dtype=np.float32)
+    grid_pixel_size = np.full(shape=2, fill_value=epi_step, dtype=np.float64)
     grid_pixel_size *= mean_spacing
 
     local_altitude = get_local_altitude(False)
@@ -195,7 +195,7 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, epi_step, 
     # Georeferenced coordinates of the upper-left origin of left image : [row, col, altitude]
     origin_row, origin_col = left_im.transform_index_to_physical_point(0, 0)
     left_origin = np.array([origin_row, origin_row, local_altitude])
-    
+
     # --- Compute the parameters of the local epipolar line at the left image origin ---
     local_epi_start, local_epi_end = compute_local_epipolar_line(geom_model_left, geom_model_right, left_origin,
                                                                  elevation_offset)
@@ -257,12 +257,12 @@ def initialize_grids(epi_step, nb_row, nb_col):
     # | col pixel size, row rotation , origin col upper-left|
     # | col rotation,   row pixel size,  , origin row upper-left|
     left_grid_geo_transform = np.array([epi_step, 0, -(epi_step * 0.5), 0, epi_step, -(epi_step * 0.5)],
-                                       dtype=np.float32)
+                                       dtype=np.float64)
     left_grid.set_metadata(nb_row, nb_col, 2, left_grid_geo_transform)
 
     right_grid = Image(image_path=None)
     right_grid_geo_transform = np.array([epi_step, 0, -(epi_step * 0.5), 0, epi_step, -(epi_step * 0.5)],
-                                        dtype=np.float32)
+                                        dtype=np.float64)
     right_grid.set_metadata(nb_row, nb_col, 2, right_grid_geo_transform)
 
     return left_grid, right_grid

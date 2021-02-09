@@ -19,6 +19,10 @@
 # limitations under the License.
 #
 
+"""
+This module contains the DTM class to handle dtm intersection.
+DTM files must be in BSQ format.
+"""
 
 import numpy as np
 from shareloc.readwrite import read_hdbabel_header, read_bsq_grid
@@ -248,7 +252,7 @@ class DTM:
         #los: (n,3):
         point_b = None
         h_intersect = None
-        (ui, vi, zi, hi) = ([], [], [], [])
+        (u_i, v_i, z_i, h_i) = ([], [], [], [])
         nbalt = los.shape[0]
         los_index = self.ters_to_indexs(los)
         # -----------------------------------------------------------------------
@@ -256,86 +260,87 @@ class DTM:
         nbi = 0
         # -----------------------------------------------------------------------
         # On boucle sur les plans du cube DTM
-        for f in range(6):
+        for plane_index in range(6):
             # -----------------------------------------------------------------------
             # Initialisation du sommet de la visee
-            sB = los_index[0,:]
+            los_hat = los_index[0,:]
             # -----------------------------------------------------------------------
             # Initialisation de la position par / au plan
-            #print self.plans[f,:-1]
-            #posB = (self.plans[f,:-1]*sB).sum() - self.d[f]
-            #print posB
-            posB = self.eq_plan(f,sB)
+            #print self.plans[plane_index,:-1]
+            #los_hat_onplane = (self.plans[plane_index,:-1]*los_hat).sum() - self.d[plane_index]
+            #print los_hat_onplane
+            los_hat_onplane = self.eq_plan(plane_index,los_hat)
             # -----------------------------------------------------------------------
             # On boucle sur les segments de la visee et on controle
-            # si on traverse ou pas la face courante f du cube DTM
-            for p in range(nbalt):
+            # si on traverse ou pas la face courante plane_index du cube DTM
+            for alti_layer in range(nbalt):
                 # -----------------------------------------------------------------------
                 # Transfert du point B dans le point A
-                posA = posB
-                sA = sB.copy()
+                los_a = los_hat_onplane
+                s_a = los_hat.copy()
                 # -----------------------------------------------------------------------
                 # Reinit du point B
-                sB = los_index[p,:] #dg on itere sur les differents points de la visee
-                #print sB
+                los_hat = los_index[alti_layer,:] #dg on itere sur les differents points de la visee
+                #print los_hat
                 # -----------------------------------------------------------------------
                 # Initialisation de la position par / au plan
-                posB = self.eq_plan(f,sB)
-                #print 'posAposB',posA,posB
+                los_hat_onplane = self.eq_plan(plane_index,los_hat)
+                #print 'posAposB',los_a,los_hat_onplane
                 # -----------------------------------------------------------------------
-                # Test d'intersection : posA et posB de signes opposes
-                if posA * posB <= 0:
+                # Test d'intersection : los_a et los_hat_onplane de signes opposes
+                if los_a * los_hat_onplane <= 0:
                     # -----------------------------------------------------------------------
-                    if not posA and not posB:
+                    if not los_a and not los_hat_onplane:
                         # Trop de solutions !! (A et B sont sur le plan) #comment on le gere ??
+                        print("too many solutions")
                         continue
                     # -----------------------------------------------------------------------
-                    elif not posA :
+                    elif not los_a:
                         # A est solution (il est sur le plan)
-                        ui.append(sA[0])
-                        vi.append(sA[1])
-                        zi.append(sA[2])
-                        hi.append(p - 1)
+                        u_i.append(s_a[0])
+                        v_i.append(s_a[1])
+                        z_i.append(s_a[2])
+                        h_i.append(alti_layer - 1)
                     # -----------------------------------------------------------------------
-                    elif not posB:
+                    elif not los_hat_onplane:
                         # B est solution (il est sur le plan)
-                        ui.append(sB[0])
-                        vi.append(sB[1])
-                        zi.append(sB[2])
-                        hi.append(p)
+                        u_i.append(los_hat[0])
+                        v_i.append(los_hat[1])
+                        z_i.append(los_hat[2])
+                        h_i.append(alti_layer)
                     # -----------------------------------------------------------------------
                     else:
                         # -----------------------------------------------------------------------
                         # A et B sont de part et d'autre du plan
                         # Coefficients d'interpolation de l'intersection
                         # entre A et B
-                        cA = posB / (posB - posA)
-                        cB = -posA / (posB - posA)
+                        interp_coef_a = los_hat_onplane / (los_hat_onplane - los_a)
+                        interp_coef_b = -los_a / (los_hat_onplane - los_a)
                         # Affectation ou interpolation
                         # NB : pour eviter les pb lors du test
                         #      <estSurCube> (voir + loin)
                         # . coordonn?e <u> (ligne)
                         # -----------------------------------------------------------------------
-                        if f < 2:
-                            ui.append(self.plane_coef_d[f])
+                        if plane_index < 2:
+                            u_i.append(self.plane_coef_d[plane_index])
                         # -----------------------------------------------------------------------
                         else:
-                            ui.append(cA * sA[0] + cB * sB[0])
+                            u_i.append(interp_coef_a * s_a[0] + interp_coef_b * los_hat[0])
                         # -----------------------------------------------------------------------
                         # . coordonnee <v> (colonne)
-                        if f > 1 and f < 4:
-                            vi.append(self.plane_coef_d[f])
+                        if plane_index > 1 and plane_index < 4:
+                            v_i.append(self.plane_coef_d[plane_index])
                         else:
-                            vi.append(cA * sA[1] + cB * sB[1])
+                            v_i.append(interp_coef_a * s_a[1] + interp_coef_b * los_hat[1])
                         # -----------------------------------------------------------------------
                         # . coordonn?e <z> (altitude)
-                        if f > 3:
-                            zi.append(self.plane_coef_d[f])
+                        if plane_index > 3:
+                            z_i.append(self.plane_coef_d[plane_index])
                         # -----------------------------------------------------------------------
                         else:
-                            zi.append(cA * sA[2] + cB * sB[2])
+                            z_i.append(interp_coef_a * s_a[2] + interp_coef_b * los_hat[2])
                         # . coordonn?e <h> (abscisse visee)
-                        hi.append(p - cA) #index non entier de l'intersection
+                        h_i.append(alti_layer - interp_coef_a) #index non entier de l'intersection
                     # -----------------------------------------------------------------------
                     # Incrementation du nombre d'intersections trouvees
                     nbi += 1
@@ -346,58 +351,58 @@ class DTM:
         # -----------------------------------------------------------------------
         # Tri des points le long de la visee (il y en a au moins deux)
         #on les range par ordre decroissant en altitude
-        for p in range(nbi):
-            for q in range(p+1,nbi):
-                if hi[q] < hi[p]:
-                    dtmp = ui[p]
-                    ui[p] = ui[q]
-                    ui[q] = dtmp
-                    dtmp = vi[p]
-                    vi[p] = vi[q]
-                    vi[q] = dtmp
-                    dtmp = zi[p]
-                    zi[p] = zi[q]
-                    zi[q] = dtmp
-                    dtmp = hi[p]
-                    hi[p] = hi[q]
-                    hi[q] = dtmp
+        for alti_layer in range(nbi):
+            for next_alti_layer in range(alti_layer+1,nbi):
+                if h_i[next_alti_layer] < h_i[alti_layer]:
+                    dtmp = u_i[alti_layer]
+                    u_i[alti_layer] = u_i[next_alti_layer]
+                    u_i[next_alti_layer] = dtmp
+                    dtmp = v_i[alti_layer]
+                    v_i[alti_layer] = v_i[next_alti_layer]
+                    v_i[next_alti_layer] = dtmp
+                    dtmp = z_i[alti_layer]
+                    z_i[alti_layer] = z_i[next_alti_layer]
+                    z_i[next_alti_layer] = dtmp
+                    dtmp = h_i[alti_layer]
+                    h_i[alti_layer] = h_i[next_alti_layer]
+                    h_i[next_alti_layer] = dtmp
 
         # -----------------------------------------------------------------------
         # Filtrage des points non situes sur le cube
-        p = 0
-        while p < nbi:
+        alti_layer = 0
+        while alti_layer < nbi:
             #test a l'interieur du cube
-            test_on_cube = (ui[p] >= self.plane_coef_d[0]) and (ui[p] <= self.plane_coef_d[1]) and \
-                         (vi[p] >= self.plane_coef_d[2]) and (vi[p] <= self.plane_coef_d[3]) and \
-                         (zi[p] >= self.plane_coef_d[4]) and (zi[p] <= self.plane_coef_d[5])
+            test_on_cube = (u_i[alti_layer] >= self.plane_coef_d[0]) and (u_i[alti_layer] <= self.plane_coef_d[1]) and \
+                           (v_i[alti_layer] >= self.plane_coef_d[2]) and (v_i[alti_layer] <= self.plane_coef_d[3]) and \
+                           (z_i[alti_layer] >= self.plane_coef_d[4]) and (z_i[alti_layer] <= self.plane_coef_d[5])
             if not test_on_cube:
                 # On translate tous les points suivants (on ecrase ce point non valide)
-                for q in range(p+1, nbi):
-                    ui[q - 1] = ui[q]
-                    vi[q - 1] = vi[q]
-                    zi[q - 1] = zi[q]
-                    hi[q - 1] = hi[q]
+                for next_alti_layer in range(alti_layer+1, nbi):
+                    u_i[next_alti_layer - 1] = u_i[next_alti_layer]
+                    v_i[next_alti_layer - 1] = v_i[next_alti_layer]
+                    z_i[next_alti_layer - 1] = z_i[next_alti_layer]
+                    h_i[next_alti_layer - 1] = h_i[next_alti_layer]
                 nbi -= 1
             else:
-                p += 1
+                alti_layer += 1
         # -----------------------------------------------------------------------
         # Pas de solution si 0 ou 1 seul point trouve (on a tangente le cube)
         if nbi < 2:
-            bTrouve = False
-            return True, bTrouve, point_b, h_intersect
+            b_trouve = False
+            return True, b_trouve, point_b, h_intersect
         # -----------------------------------------------------------------------
         # Il ne reste que 2 points donc on traverse le cube
         # LAIG-FA-MAJA-2168-CNES: plus de filtrage sur les point identiques. Il peut y avoir un nombre depoints > 2
         # Initialisation du point courant
         # Coordonnees DTM
         point_dtm = np.zeros(3)
-        point_dtm[0] = ui[0]
-        point_dtm[1] = vi[0]
-        point_dtm[2] = zi[0]
+        point_dtm[0] = u_i[0]
+        point_dtm[1] = v_i[0]
+        point_dtm[2] = z_i[0]
         #PointDTM est la premiere intersection avec le cube (lig, col)
         # -----------------------------------------------------------------------
         # h dans gld 3D
-        h_intersect = hi[0]
+        h_intersect = h_i[0]
         #h_intersect correspond a l'index (non entier) d'interpolation en h
         # -----------------------------------------------------------------------
         # Coordonnees terrain
@@ -405,8 +410,8 @@ class DTM:
         #point_b est le point Terrain (lon,lat)
         # -----------------------------------------------------------------------
         # Fin, retour
-        bTrouve = True
-        return (True, bTrouve, point_b,h_intersect)
+        b_trouve = True
+        return (True, b_trouve, point_b, h_intersect)
 
     def intersection(self, los, point_b, h_intersect):
         """
@@ -421,428 +426,427 @@ class DTM:
         :rtype tuple (bool, bool, numpy.array)
         """
         los_index = self.ters_to_indexs(los)
-        point_b_DTM = self.ter_to_index(point_b)
-        PointR = np.zeros(3)
+        point_b_dtm = self.ter_to_index(point_b)
+        point_r = np.zeros(3)
         (npl, _) = los.shape
-        H3D = range(npl, -1, -1)
+        alti = range(npl, -1, -1)
 
-        p1 = point_b_DTM.copy() #[p1[0],p1[1],p1[2]]
+        p_1 = point_b_dtm.copy() #[p_1[0],p_1[1],p_1[2]]
 
         h_intersect_p1 = h_intersect
 
-        nu = self.row_nb
-        nv = self.column_nb
+        n_u = self.row_nb
+        n_v = self.column_nb
 
         #1 - Initilialisation et tests prealables
         #   1.1 - Test si le sommet est au-dessu du DTM
         #       - Calcul de l'altitude du DTM ? la position du sommet
-        h1 = self.interpolate(p1[0], p1[1])
+        h_1 = self.interpolate(p_1[0], p_1[1])
         #       - Calcul de l'ecart d'altitude au DTM
-        d1 = p1[2] - h1
+        d_1 = p_1[2] - h_1
 
         #       - Test si le nouveau point haut est au dessus du DTM
-        if d1 < 0:
+        if d_1 < 0:
         #       - Point situ? en dessous du DTM
         #          . ceci signifie que la vis?e rentre dans le DTM par le c?t?
         #          . donc en dessous, pas de solution
-            bTrouve = False
-            return (True, bTrouve, PointR)
+            b_trouve = False
+            return True, b_trouve, point_r
 
 
         #   1.2 - Initialisation du rang du premier sommet de la visee
-        i0 = int(np.floor(h_intersect_p1))
+        i_0 = int(np.floor(h_intersect_p1))
 
-        #   1.3 - Initialisation du point de depart (dans p2)
-        p2 = point_b_DTM.copy()
+        #   1.3 - Initialisation du point de depart (dans p_2)
+        p_2 = point_b_dtm.copy()
         h_intersect_p2 = h_intersect
 
         #2. - Boucle sur les plans de grille
-        while i0 < (los_index.size - 1):
+        while i_0 < (los_index.size - 1):
             #2.1 - Initialisation du sommet courant de la visee
-            u0 = los_index[i0][0]
-            v0 = los_index[i0][1]
-            z0 = los_index[i0][2]
-            z1 = los_index[i0 + 1][2]
+            u_0 = los_index[i_0][0]
+            v_0 = los_index[i_0][1]
+            z_0 = los_index[i_0][2]
+            z_1 = los_index[i_0 + 1][2]
 
             #2.2 - Initialisation de la visee DTM
-            VM = los_index[i0 + 1] - los_index[i0]
+            los_dtm = los_index[i_0 + 1] - los_index[i_0]
 
             #2.3 - Test si visee verticale
-            if (VM[0]==0 and VM[1]==0):
+            if (los_dtm[0]==0 and los_dtm[1]==0):
                 #2.3.1 - La vis?e est verticale :
                 #    - Calcul de l'altitude du DTM ? la position du sommet
-                h1 = self.interpolate(u0, v0)
+                h_1 = self.interpolate(u_0, v_0)
 
                 #    Test si le plan suivant est en dessous du DTM
-                if los_index[i0 + 1][2] <= h1:
+                if los_index[i_0 + 1][2] <= h_1:
                     #Init point de sortie
-                    p1[0] = u0
-                    p1[1] = v0
-                    p1[2] = h1
-                    bTrouve = True
-                    self.index_to_ter(p1, PointR)
-                    return (True, bTrouve, PointR)
-                else:
-                    #Positionnement sur le sommet suivant
-                    i0 += 1
+                    p_1[0] = u_0
+                    p_1[1] = v_0
+                    p_1[2] = h_1
+                    b_trouve = True
+                    self.index_to_ter(p_1, point_r)
+                    return True, b_trouve, point_r
+                #Positionnement sur le sommet suivant
+                i_0 += 1
             else:
                 #2.3.2 - La visee n'est pas verticale :
-                #         elle va donc survoler le DTM
+                #         elle v_a donc survoler le DTM
                 #         . on peut donc poursuivre
                 #         . reste ? d?montrer que la vis?e se crashe sur le DTM...
                 #
                 # Initialisation du point de d?part
                 # Initialisation de son abscisse sur la vis?e
-                a2 = h_intersect_p2 - i0
+                a_2 = h_intersect_p2 - i_0
 
-                # Correction d'un bug FA DG 10, a la reinitialisation a2 peut valoir 1
+                # Correction d'un bug FA DG 10, a la reinitialisation a_2 peut valoir 1
                 # Ce qui a pour consequence de sauter au segment suivant de la visee
                 # Ainsi, on peut perdre des points sur une tranche d'altitude
                 # Pour etre sur de scanner le segment de visee, on reinitialise
-                # le point au depart du segment, soit a2 = 0
-                if a2 >= 1.:
-                    a2 = 0.
+                # le point au depart du segment, soit a_2 = 0
+                if a_2 >= 1.:
+                    a_2 = 0.
 
                 # Initialisation de la premi?re maille DTM intersect?e
                 #  - Initialisation des indices de la maille
-                uc = int(np.floor(p2[0]))
-                vc = int(np.floor(p2[1]))
+                u_c = int(np.floor(p_2[0]))
+                v_c = int(np.floor(p_2[1]))
 
                 # NB :    pr?caution avant de d?marrer :
                 #        . on se met du bon cote de la maille
                 #        . en principe, on ne doit pas sortir du DTM
                 # On rentre par le bas, la maille DTM est la precedente
-                if (p2[0] == uc) and (VM[0] < 0):
-                    uc -= 1
+                if (p_2[0] == u_c) and (los_dtm[0] < 0):
+                    u_c -= 1
 
                 # On rentre par la gauche, la maille DTM est la precedente
-                if (p2[1] == vc) and (VM[1] < 0):
-                    vc -= 1
+                if (p_2[1] == v_c) and (los_dtm[1] < 0):
+                    v_c -= 1
 
                 # LDD - On est deja en dehors des limites, on s'arrete
-                if not((a2 < 1) and (uc > -1) and (uc < (nu - 1)) and (vc > -1) and (vc < (nv - 1)) ) and (a2 < 1):
-                    bTrouve = False
-                    (True, bTrouve, PointR)
+                if not((a_2 < 1) and (u_c > -1) and (u_c < (n_u - 1))
+                       and (v_c > -1) and (v_c < (n_v - 1)) ) and (a_2 < 1):
+                    b_trouve = False
+                    return True, b_trouve, point_r
 
                 # Boucle de recherche iterative de la maille intersectee
-                while (a2 < 1) and (uc > -1) and (uc < (nu - 1)) and (vc > -1) and (vc < (nv - 1)):
+                while (a_2 < 1) and (u_c > -1) and (u_c < (n_u - 1)) and (v_c > -1) and (v_c < (n_v - 1)):
                     # - Altitudes min et max de la maille
-                    hi = self.alt_min_cell[uc, vc]
-                    hs = self.alt_max_cell[uc, vc]
+                    h_i = self.alt_min_cell[u_c, v_c]
+                    h_s = self.alt_max_cell[u_c, v_c]
 
                     # - Transfert : le point bas devient le point haut
-                    #a1 = a2;
-                    # p1 devient p2
-                    p1 = p2.copy()
+                    #a1 = a_2;
+                    # p_1 devient p_2
+                    p_1 = p_2.copy()
                     h_intersect_p1 = h_intersect_p2.copy()
 
                     # 4.2 - D?termination d'un nouveau point bas
                     #      - Test d'orientation de la vis?e
-                    if not VM[0]:
+                    if not los_dtm[0]:
                         # 4.2.1 - La vis?e est orientee pile poil est-ouest
-                        #   p2[0] = p1[0] ; // inutile, est deja initialise
+                        #   p_2[0] = p_1[0] ; // inutile, est deja initialise
                         #       - Test d'orientation de la visee
-                        if VM[1] < 0:
+                        if los_dtm[1] < 0:
                             # 4.2.1.1 - La vis?e part plein ouest
-                            p2[1] = vc
-                            vc -= 1
+                            p_2[1] = v_c
+                            v_c -= 1
                         else:
                             # 4.2.1.2 - La vis?e part plein est
-                            vc += 1
-                            p2[1] = vc
+                            v_c += 1
+                            p_2[1] = v_c
 
-                        a2 = (p2[1] - v0) / VM[1]
-                        p2[2] = z0 + a2 * VM[2]
+                        a_2 = (p_2[1] - v_0) / los_dtm[1]
+                        p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                    elif not VM[1]:
+                    elif not los_dtm[1]:
                         # 4.2.2 - La vis?e est orient?e nord-sud
-                        #  p2[1] = p1[1] ;
+                        #  p_2[1] = p_1[1] ;
                         #       - Test d'orientation de la visee
-                        if VM[0] < 0:
+                        if los_dtm[0] < 0:
                             # 4.2.2.1 - La vis?e part plein nord
-                            p2[0] = uc
-                            uc -= 1
+                            p_2[0] = u_c
+                            u_c -= 1
                         else:
                             # 4.2.2.2 - La vis?e part plein sud
-                            uc += 1
-                            p2[0] = uc
+                            u_c += 1
+                            p_2[0] = u_c
 
-                        a2 = (p2[0] - u0) / VM[0]
-                        p2[2] = z0 + a2 * VM[2]
+                        a_2 = (p_2[0] - u_0) / los_dtm[0]
+                        p_2[2] = z_0 + a_2 * los_dtm[2]
                     else:
                         # 4.2.3 - La vis?e est quelconque
                         #            - D?termination du cot? de sortie
-                        if (VM[0] < 0) and (VM[0] <= VM[1]) and (VM[0] <= -VM[1]):
+                        if (los_dtm[0] < 0) and (los_dtm[0] <= los_dtm[1]) and (los_dtm[0] <= -los_dtm[1]):
                             # 4.2.3.1 - Vis?e principalement orient?e nord
                             #             - Intersection avec le c?t? nord
-                            a2    = (uc - u0) / VM[0]
-                            p2[1] = v0 + a2 * VM[1]
+                            a_2 = (u_c - u_0) / los_dtm[0]
+                            p_2[1] = v_0 + a_2 * los_dtm[1]
 
-                            if (p2[1] > vc) and (p2[1] < (vc + 1)):
+                            if (p_2[1] > v_c) and (p_2[1] < (v_c + 1)):
                                 # La vis?e sort par le nord
-                                p2[0] = uc
-                                p2[2] = z0 + a2 * VM[2]
-                                uc-=1
+                                p_2[0] = u_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                u_c -= 1
 
-                            elif p2[1] < vc:
+                            elif p_2[1] < v_c:
                                 # La vis?e sort par l'ouest
-                                a2 = (vc - v0) / VM[1]
-                                p2[0] = u0 + a2 * VM[0]
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                vc -= 1
+                                a_2 = (v_c - v_0) / los_dtm[1]
+                                p_2[0] = u_0 + a_2 * los_dtm[0]
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                v_c -= 1
 
-                            elif p2[1] > (vc + 1):
+                            elif p_2[1] > (v_c + 1):
                                 # La vis?e sort par l'est
-                                vc += 1
-                                a2 = (vc - v0) / VM[1]
-                                p2[0] = u0 + a2 * VM[0]
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
+                                v_c += 1
+                                a_2 = (v_c - v_0) / los_dtm[1]
+                                p_2[0] = u_0 + a_2 * los_dtm[0]
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                            elif p2[1] == vc:
+                            elif p_2[1] == v_c:
                                 # La vis?e sort par le coin nord-ouest
-                                p2[0] = uc
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                uc -= 1
-                                vc -= 1
+                                p_2[0] = u_c
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                u_c -= 1
+                                v_c -= 1
 
-                            elif p2[1] == (vc + 1):
+                            elif p_2[1] == (v_c + 1):
                                 # La vis?e sort par le coin nord-est
-                                p2[0] = uc
-                                vc += 1
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                uc -= 1
+                                p_2[0] = u_c
+                                v_c += 1
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                u_c -= 1
 
-                        elif (VM[1] > 0) and (VM[1] >= VM[0]) and (VM[1] >= -VM[0]):
+                        elif (los_dtm[1] > 0) and (los_dtm[1] >= los_dtm[0]) and (los_dtm[1] >= -los_dtm[0]):
                             # 4.2.3.2 - Vis?e principalement orient?e est
                             #         - Intersection avec le c?t? est
-                            a2 = (vc + 1 - v0) / VM[1]
-                            p2[0] = u0 + a2 * VM[0]
+                            a_2 = (v_c + 1 - v_0) / los_dtm[1]
+                            p_2[0] = u_0 + a_2 * los_dtm[0]
 
-                            if (p2[0] > uc) and (p2[0] < (uc + 1)):
+                            if (p_2[0] > u_c) and (p_2[0] < (u_c + 1)):
                                 #  La vis?e sort par l'est
-                                vc += 1
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
+                                v_c += 1
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                            elif p2[0] < uc:
+                            elif p_2[0] < u_c:
                                 # La vis?e sort par le nord
-                                p2[0] = uc
-                                a2 = (uc - u0) / VM[0]
-                                p2[1] = v0 + a2 * VM[1]
-                                p2[2] = z0 + a2 * VM[2]
-                                uc -= 1
+                                p_2[0] = u_c
+                                a_2 = (u_c - u_0) / los_dtm[0]
+                                p_2[1] = v_0 + a_2 * los_dtm[1]
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                u_c -= 1
 
-                            elif p2[0] > (uc + 1):
-
+                            elif p_2[0] > (u_c + 1):
                                 # La vis?e sort par le sud
-                                uc += 1
-                                p2[0] = uc
-                                a2 = (uc - u0) / VM[0]
-                                p2[1] = v0 + a2 * VM[1]
-                                p2[2] = z0 + a2 * VM[2]
+                                u_c += 1
+                                p_2[0] = u_c
+                                a_2 = (u_c - u_0) / los_dtm[0]
+                                p_2[1] = v_0 + a_2 * los_dtm[1]
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                            elif p2[0] == uc:
+                            elif p_2[0] == u_c:
                                 # La vis?e sort par le coin nord-est
-                                vc += 1
-                                p2[0] = uc
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                uc -= 1
+                                v_c += 1
+                                p_2[0] = u_c
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                u_c -= 1
 
-                            elif p2[0] == (uc + 1):
+                            elif p_2[0] == (u_c + 1):
                                 # La vis?e sort par le coin sud-est
-                                uc += 1
-                                vc += 1
-                                p2[0] = uc
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
+                                u_c += 1
+                                v_c += 1
+                                p_2[0] = u_c
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                        elif (VM[0] > 0) and (VM[0] >= VM[1]) and (VM[0] >= -VM[1]):
+                        elif (los_dtm[0] > 0) and (los_dtm[0] >= los_dtm[1]) and (los_dtm[0] >= -los_dtm[1]):
                             # 4.2.3.3 - Vis?e principalement orient?e sud
                             #         - Intersection avec le c?t? sud
-                            a2 = (uc + 1 - u0) / VM[0]
-                            p2[1] = v0 + a2 * VM[1]
+                            a_2 = (u_c + 1 - u_0) / los_dtm[0]
+                            p_2[1] = v_0 + a_2 * los_dtm[1]
 
-                            if (p2[1] > vc) and (p2[1] < (vc + 1)):
+                            if (p_2[1] > v_c) and (p_2[1] < (v_c + 1)):
                                 # La vis?e sort par le sud
-                                uc += 1
-                                p2[0] = uc
-                                p2[2] = z0 + a2 * VM[2]
+                                u_c += 1
+                                p_2[0] = u_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                            elif p2[1] < vc:
+                            elif p_2[1] < v_c:
                                 # La vis?e sort par l'ouest
-                                a2 = (vc - v0) / VM[1]
-                                p2[0] = u0 + a2 * VM[0]
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                vc -= 1
+                                a_2 = (v_c - v_0) / los_dtm[1]
+                                p_2[0] = u_0 + a_2 * los_dtm[0]
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                v_c -= 1
 
-                            elif p2[1] > vc + 1:
+                            elif p_2[1] > v_c + 1:
                                 # La vis?e sort par l'est
-                                vc+=1
-                                a2 = (vc - v0) / VM[1]
-                                p2[0] = u0 + a2 * VM[0]
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
+                                v_c += 1
+                                a_2 = (v_c - v_0) / los_dtm[1]
+                                p_2[0] = u_0 + a_2 * los_dtm[0]
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                            elif p2[1] == vc:
+                            elif p_2[1] == v_c:
                                 # La vis?e sort par le coin sud-ouest
-                                uc += 1
-                                p2[0] = uc
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                vc -= 1
+                                u_c += 1
+                                p_2[0] = u_c
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                v_c -= 1
 
-                            elif p2[1] == vc + 1:
+                            elif p_2[1] == v_c + 1:
                                 # La vis?e sort par le coin sud-est
-                                uc += 1
-                                vc += 1
-                                p2[0] = uc
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
+                                u_c += 1
+                                v_c += 1
+                                p_2[0] = u_c
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                        elif (VM[1] < 0) and (VM[1] <= VM[0]) and (VM[1] <= -VM[0]):
+                        elif (los_dtm[1] < 0) and (los_dtm[1] <= los_dtm[0]) and (los_dtm[1] <= -los_dtm[0]):
                             #  4.2.3.4 - Vis?e principalement orient?e ouest
                             #          - Intersection avec le c?t? ouest
-                            a2 = (vc - v0) / VM[1]
-                            p2[0] = u0 + a2 * VM[0]
+                            a_2 = (v_c - v_0) / los_dtm[1]
+                            p_2[0] = u_0 + a_2 * los_dtm[0]
 
-                            if (p2[0] > uc) and (p2[0] < uc + 1):
+                            if (p_2[0] > u_c) and (p_2[0] < u_c + 1):
                                 # La vis?e sort par l'ouest
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                vc -= 1
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                v_c -= 1
 
-                            elif p2[0] < uc:
+                            elif p_2[0] < u_c:
                                 # La vis?e sort par le nord
-                                p2[0] = uc
-                                a2 = (uc - u0) / VM[0]
-                                p2[1] = v0 + a2 * VM[1]
-                                p2[2] = z0 + a2 * VM[2]
-                                uc -= 1
+                                p_2[0] = u_c
+                                a_2 = (u_c - u_0) / los_dtm[0]
+                                p_2[1] = v_0 + a_2 * los_dtm[1]
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                u_c -= 1
 
-                            elif p2[0] > (uc + 1):
+                            elif p_2[0] > (u_c + 1):
                                 # La vis?e sort par le sud
-                                uc += 1
-                                p2[0] = uc
-                                a2 = (uc - u0) / VM[0]
-                                p2[1] = v0 + a2 * VM[1]
-                                p2[2] = z0 + a2 * VM[2]
+                                u_c += 1
+                                p_2[0] = u_c
+                                a_2 = (u_c - u_0) / los_dtm[0]
+                                p_2[1] = v_0 + a_2 * los_dtm[1]
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
 
-                            elif p2[0] == uc:
+                            elif p_2[0] == u_c:
                                 # La vis?e sort par le coin nord-ouest
-                                p2[0] = uc
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                uc -= 1
-                                vc -= 1
+                                p_2[0] = u_c
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                u_c -= 1
+                                v_c -= 1
 
-                            elif p2[0] == (uc + 1):
+                            elif p_2[0] == (u_c + 1):
                                 # La vis?e sort par le coin sud-ouest
-                                uc += 1
-                                p2[0] = uc
-                                p2[1] = vc
-                                p2[2] = z0 + a2 * VM[2]
-                                vc -= 1
+                                u_c += 1
+                                p_2[0] = u_c
+                                p_2[1] = v_c
+                                p_2[2] = z_0 + a_2 * los_dtm[2]
+                                v_c -= 1
 
                     # LDD - Verification des bornes min et max de la "couche"
-                    bIntersect = False
+                    b_intersect = False
 
-                    if p2[2] > z0:
+                    if p_2[2] > z_0:
                         # On est remonte trop haut, et ca c'est pas bon !!!
-                        bIntersect = not(((p1[2] > hs) and (z0 > hs)) or ((p1[2] < hi) and (z0 < hi)))
+                        b_intersect = not(((p_1[2] > h_s) and (z_0 > h_s)) or ((p_1[2] < h_i) and (z_0 < h_i)))
 
-                    elif p2[2] < z1:
+                    elif p_2[2] < z_1:
                         # On est descendu trop bas, et ca c'est pas bon non plus !!! (m?me si c'est d?j? plus logique)
-                        bIntersect = not(((p1[2] > hs) and (z1 > hs)) or ((p1[2] < hi) and (z1 < hi)))
+                        b_intersect = not(((p_1[2] > h_s) and (z_1 > h_s)) or ((p_1[2] < h_i) and (z_1 < h_i)))
 
                     else:
-                        bIntersect = not(((p1[2] > hs) and (p2[2] > hs)) or ((p1[2] < hi) and (p2[2] < hi)))
+                        b_intersect = not(((p_1[2] > h_s) and (p_2[2] > h_s)) or ((p_1[2] < h_i) and (p_2[2] < h_i)))
 
                     # 5. Test d'intersection de la vis?e avec le cube
-                    if bIntersect:
+                    if b_intersect:
                         # Il y a intersection entre la vis?e et le cube
                         # 5.1 - Altitudes du DTM
-                        h1 = self.interpolate(p1[0], p1[1])
-                        h2 = self.interpolate(p2[0], p2[1])
+                        h_1 = self.interpolate(p_1[0], p_1[1])
+                        h_2 = self.interpolate(p_2[0], p_2[1])
 
                         # 5.2 - Diff?rences d'altitude avec le DTM
-                        d1 = p1[2] - h1
-                        d2 = p2[2] - h2
+                        d_1 = p_1[2] - h_1
+                        d_2 = p_2[2] - h_2
 
                         # 5.3 - Test d'intersection avec le DTM
-                        if d1 * d2 <= 0:
+                        if d_1 * d_2 <= 0:
                             # Il y a intersection entre la vis?e et le DTM
                             # 5.3.1 - Calcul de la solution approch?e
-                            d2 = 2 * self.tol_z # Init de d2 > TOL_Z
-                            ua = p2[0]
-                            va = p2[1]
-                            za = h2
+                            d_2 = 2 * self.tol_z # Init de d_2 > TOL_Z
+                            u_a = p_2[0]
+                            v_a = p_2[1]
+                            z_a = h_2
 
-                            while abs(d2) > self.tol_z:
+                            while abs(d_2) > self.tol_z:
                                 # 5.3.1.1 - Coefficient d'interpolation lin?aire de h
-                                ch = (p1[2] - h1) / ((h2 - h1) - (p2[2] - p1[2]))
+                                c_h = (p_1[2] - h_1) / ((h_2 - h_1) - (p_2[2] - p_1[2]))
 
                                 # 5.3.1.2 - Position du point interpole
-                                ua = p1[0] + ch * (p2[0] - p1[0])
-                                va = p1[1] + ch * (p2[1] - p1[1])
-                                za = p1[2] + ch * (p2[2] - p1[2])
+                                u_a = p_1[0] + c_h * (p_2[0] - p_1[0])
+                                v_a = p_1[1] + c_h * (p_2[1] - p_1[1])
+                                z_a = p_1[2] + c_h * (p_2[2] - p_1[2])
 
                                 # 5.3.1.3 - Altitude du point interpole
-                                zv = self.interpolate(ua, va)
+                                z_v = self.interpolate(u_a, v_a)
 
                                 # 5.3.1.4 - Ecart d'altitude au point interpole
-                                d2 = zv - za
+                                d_2 = z_v - z_a
 
                                 # 5.3.1.5 - Mise a jour
-                                if d2 < 0:
+                                if d_2 < 0:
                                     # Mise a jour du point haut
-                                    p1[0] = ua
-                                    p1[1] = va
-                                    p1[2] = za
-                                    h1 = zv
+                                    p_1[0] = u_a
+                                    p_1[1] = v_a
+                                    p_1[2] = z_a
+                                    h_1 = z_v
 
                                 else:
                                     # Mise ? jour du point bas
-                                    p2[0] = ua
-                                    p2[1] = va
-                                    p2[2] = za
-                                    h2 = zv
+                                    p_2[0] = u_a
+                                    p_2[1] = v_a
+                                    p_2[2] = z_a
+                                    h_2 = z_v
 
                             #// Fin, retour
-                            p1[0] = ua
-                            p1[1] = va
-                            p1[2] = za
+                            p_1[0] = u_a
+                            p_1[1] = v_a
+                            p_1[2] = z_a
 
-                            bTrouve = True
-                            PointR = self.index_to_ter(p1)
-                            return (True, bTrouve, PointR)
+                            b_trouve = True
+                            point_r = self.index_to_ter(p_1)
+                            return True, b_trouve, point_r
 
                 # Fin boucle sur les mailles
 
                 # Test si on est toujours dans le cube DTM
-                if a2 >= 1:
+                if a_2 >= 1:
                     # Changement de plan
-                    i0 += 1
+                    i_0 += 1
 
-                    # Chargement dans p2 du nouveau sommet
-                    p2 = los_index[i0].copy()
-                    h_intersect_p2 = H3D[i0].copy()
+                    # Chargement dans p_2 du nouveau sommet
+                    p_2 = los_index[i_0].copy()
+                    h_intersect_p2 = alti[i_0].copy()
 
                 else:
 
                     # LDD - On a boucl? sur les mailles, on n'a rien trouv? et on n'a pas atteint le plan suivant
                     # Ca veut dire qu'on sort de l'emprise, pas la peine de continuer
-                    bTrouve = False
-                    return True, bTrouve, PointR
+                    b_trouve = False
+                    return True, b_trouve, point_r
             # Fin cas general (visee non verticale)
 
         # Fin boucle sur les sommets
 
         # Fin, retour
-        bTrouve = False
-        return True, PointR
+        b_trouve = False
+        return True, point_r

@@ -193,8 +193,9 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, epi_step, 
     local_altitude = get_local_altitude(False)
 
     # Georeferenced coordinates of the upper-left origin of left image : [row, col, altitude]
-    left_origin = np.array([left_im.origin_row, left_im.origin_col, local_altitude])
-
+    origin_row, origin_col = left_im.transform_index_to_physical_point(0, 0)
+    left_origin = np.array([origin_row, origin_row, local_altitude])
+    
     # --- Compute the parameters of the local epipolar line at the left image origin ---
     local_epi_start, local_epi_end = compute_local_epipolar_line(geom_model_left, geom_model_right, left_origin,
                                                                  elevation_offset)

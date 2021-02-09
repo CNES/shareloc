@@ -26,7 +26,7 @@ import xarray as xr
 
 import time
 from shareloc.localization import Localization
-from shareloc.grid import grid
+from shareloc.grid import Grid
 from shareloc.dtm import DTM
 from shareloc.triangulation.triangulation import distance_point_los,sensor_triangulation
 from shareloc.triangulation.triangulation import epipolar_triangulation, transform_disp_to_matches
@@ -36,7 +36,7 @@ from shareloc.rpc.rpc import RPC
 import rasterio as rio
 
 
-def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
+def prepare_loc(alti = "geoide", id_scene="P1BP--2017030824934340CP"):
     """
     Read multiH grid
 
@@ -44,18 +44,16 @@ def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
     :param id_scene: scene euclidium ID
     :return: multi H grid
     :rtype: str
-    """   
+    """
     data_folder = test_path(alti, id_scene)
-    
     #chargement du mnt
-    fic = os.path.join(data_folder,'MNT_extrait/mnt_extrait.c1')
+    fic = os.path.join(data_folder,"MNT_extrait/mnt_extrait.c1")
     dtmbsq = DTM(fic)
     
     #chargement des grilles
-    gld = os.path.join(data_folder,'grilles_gld_xH/{}_H1.hd'.format(id_scene))
-    gri = grid(gld)
-    
-   
+    gld = os.path.join(data_folder,"grilles_gld_xH/{}_H1.hd".format(id_scene))
+    gri = Grid(gld)
+
     return dtmbsq,gri
 
     
@@ -66,9 +64,9 @@ def test_sensor_triangulation(row, col, h):
     Test sensor triangulation
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    ___,gri_right = prepare_loc('ellipsoide',id_scene_right)
+    ___,gri_right = prepare_loc("ellipsoide",id_scene_right)
     id_scene_left = "P1BP--2017092838284574CP"
-    ___, gri_left = prepare_loc('ellipsoide',id_scene_left)
+    ___, gri_left = prepare_loc("ellipsoide",id_scene_left)
     #init des predicteurs
     gri_right.estimate_inverse_loc_predictor()
     lonlatalt = gri_left.direct_loc_h(row, col, h)
@@ -110,39 +108,21 @@ def test_epi_triangulation_sift():
     Test epipolar triangulation
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    ___,gri_right = prepare_loc('ellipsoide',id_scene_right)
+    ___,gri_right = prepare_loc("ellipsoide",id_scene_right)
     id_scene_left = "P1BP--2017092838284574CP"
-    ___, gri_left = prepare_loc('ellipsoide',id_scene_left)
+    ___, gri_left = prepare_loc("ellipsoide",id_scene_left)
 
-    #row = 10.0
-    #col = 1000.0
-    #h = 10.0
-    #loc_left = Localization(grid=gri_left, dtm=None)
-    #lonlatalt = loc_left.forward(row, col, h)
-    #print("left {:.15f} {:.15f} {:.2f} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
-    #loc_right = Localization(grid=gri_right, dtm=None)
-    #lonlatalt = loc_right.forward(row, col, h)
-    #print("right {:.15f} {:.15f} {:.2f} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "right_epipolar_grid.tif")
 
 
-
-    #grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_left))
-    #grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_right))
-
-    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid.tif")
-
-
-
-    matches_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.npy")
+    matches_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "matches-crop.npy")
     matches = np.load(matches_filename)
-    #print(matches.shape)
-    #fname = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.tif")
-    #with rio.open(fname, 'w', height=matches.shape[0], width=matches.shape[1], count=1, driver='GTiff', dtype=matches.dtype) as dst:
-    #    dst.write_band(1, matches)
-    #print("matches {}".format(matches[1:10,0:2]))
 
-    point_ecef, point_wgs84, __ = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename)
+
+    point_ecef, point_wgs84, __ = epipolar_triangulation(matches,
+                                                         None,"sift",
+                                                         gri_left,gri_right,grid_left_filename,grid_right_filename)
 
     valid = [4584341.53073309455066919326782, 572313.952957414789125323295593, 4382784.34314652625471353530884]
     print(valid - point_ecef[0,:])
@@ -158,41 +138,22 @@ def test_epi_triangulation_sift_rpc():
     """
 
     data_folder = test_path()
-    id_scene = 'PHR1B_P_201709281038045_SEN_PRG_FC_178608-001'
-    file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
+    id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
+    file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
     geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
-    id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
-    file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
+    id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
+    file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
     geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
 
-    #row = 10.0
-    #col = 1000.0
-    #h = 10.0
-    #loc_left = Localization(grid=gri_left, dtm=None)
-    #lonlatalt = loc_left.forward(row, col, h)
-    #print("left {:.15f} {:.15f} {:.2f} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
-    #loc_right = Localization(grid=gri_right, dtm=None)
-    #lonlatalt = loc_right.forward(row, col, h)
-    #print("right {:.15f} {:.15f} {:.2f} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "right_epipolar_grid.tif")
 
-
-
-    #grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_left))
-    #grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_right))
-
-    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid.tif")
-
-
-
-    matches_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.npy")
+    matches_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "matches-crop.npy")
     matches = np.load(matches_filename)
-    #print(matches.shape)
-    #fname = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.tif")
-    #with rio.open(fname, 'w', height=matches.shape[0], width=matches.shape[1], count=1, driver='GTiff', dtype=matches.dtype) as dst:
-    #    dst.write_band(1, matches)
 
-    point_ecef, point_wgs84, __ = epipolar_triangulation(matches, None,'sift',geom_model_left,geom_model_right,grid_left_filename,grid_right_filename)
+    point_ecef, point_wgs84, __ = epipolar_triangulation(matches,
+                                                         None,"sift",geom_model_left,
+                                                         geom_model_right,grid_left_filename,grid_right_filename)
     valid = [4584341.53073309455066919326782, 572313.952957414789125323295593, 4382784.34314652625471353530884]
     #print(valid - point_ecef[0,:])
     assert(valid == pytest.approx(point_ecef[0,:],abs=1e-3))
@@ -205,39 +166,24 @@ def test_epi_triangulation_sift_distance():
     Test epipolar triangulation
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    ___,gri_right = prepare_loc('ellipsoide',id_scene_right)
+    ___,gri_right = prepare_loc("ellipsoide",id_scene_right)
     id_scene_left = "P1BP--2017092838284574CP"
-    ___, gri_left = prepare_loc('ellipsoide',id_scene_left)
+    ___, gri_left = prepare_loc("ellipsoide",id_scene_left)
 
-    #row = 10.0
-    #col = 1000.0
-    #h = 10.0
-    #loc_left = Localization(grid=gri_left, dtm=None)
-    #lonlatalt = loc_left.forward(row, col, h)
-    #print("left {:.15f} {:.15f} {:.2f} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
-    #loc_right = Localization(grid=gri_right, dtm=None)
-    #lonlatalt = loc_right.forward(row, col, h)
-    #print("right {:.15f} {:.15f} {:.2f} ".format(lonlatalt[0],lonlatalt[1],lonlatalt[2]))
+
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "right_epipolar_grid.tif")
 
 
 
-    #grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_left))
-    #grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_right))
-
-    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid.tif")
-
-
-
-    matches_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.npy")
+    matches_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "matches-crop.npy")
     matches = np.load(matches_filename)
     print(matches.shape)
-    fname = os.path.join(os.environ["TESTPATH"], 'triangulation', "matches-crop.tif")
-    #with rio.open(fname, 'w', height=matches.shape[0], width=matches.shape[1], count=1, driver='GTiff', dtype=matches.dtype) as dst:
-    #    dst.write_band(1, matches)
-    #print("matches {}".format(matches[1:10,0:2]))
+    fname = os.path.join(os.environ["TESTPATH"], "triangulation", "matches-crop.tif")
 
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(matches, None,'sift',gri_left,gri_right,grid_left_filename,grid_right_filename, residues = True)
+    point_ecef, point_wgs84, residuals = epipolar_triangulation(matches,
+                                                                None,"sift",gri_left,gri_right,
+                                                                grid_left_filename,grid_right_filename, residues = True)
 
 def stats_diff(cloud,array_epi):
     coords_x = cloud.x.values
@@ -270,14 +216,14 @@ def create_dataset(disp,point_wgs84,point_ecef,residuals):
     array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1], 3))
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
     array_residuals = residuals.reshape((array_shape[0], array_shape[1]))
-    pc_dataset = xr.Dataset({'pc_wgs84_x': (['row', 'col'], array_epi_wgs84[:, :, 0]),
-                             'pc_wgs84_y': (['row', 'col'], array_epi_wgs84[:, :, 1]),
-                             'pc_wgs84_z': (['row', 'col'], array_epi_wgs84[:, :, 2]),
-                             'pc_ecef_x': (['row', 'col'], array_epi_ecef[:, :, 0]),
-                             'pc_ecef_y': (['row', 'col'], array_epi_ecef[:, :, 1]),
-                             'pc_ecef_z': (['row', 'col'], array_epi_ecef[:, :, 2]),
-                             'residues': (['row', 'col'], array_residuals)},
-                            coords={'row': disp.coords['row'], 'col': disp.coords['col'] })
+    pc_dataset = xr.Dataset({"pc_wgs84_x": (["row", "col"], array_epi_wgs84[:, :, 0]),
+                             "pc_wgs84_y": (["row", "col"], array_epi_wgs84[:, :, 1]),
+                             "pc_wgs84_z": (["row", "col"], array_epi_wgs84[:, :, 2]),
+                             "pc_ecef_x": (["row", "col"], array_epi_ecef[:, :, 0]),
+                             "pc_ecef_y": (["row", "col"], array_epi_ecef[:, :, 1]),
+                             "pc_ecef_z": (["row", "col"], array_epi_ecef[:, :, 2]),
+                             "residues": (["row", "col"], array_residuals)},
+                            coords={"row": disp.coords["row"], "col": disp.coords["col"] })
     return pc_dataset
 
 @pytest.mark.unit_tests
@@ -286,38 +232,39 @@ def test_epi_triangulation_disp_rpc():
      Test epipolar triangulation
     """
     data_folder = test_path()
-    id_scene = 'PHR1B_P_201709281038045_SEN_PRG_FC_178608-001'
-    file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
+    id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
+    file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
     geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
-    id_scene = 'PHR1B_P_201709281038393_SEN_PRG_FC_178609-001'
-    file_geom = os.path.join(data_folder, 'rpc/{}.geom'.format(id_scene))
+    id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
+    file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
     geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
 
 
 
-    #grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
+    #grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids",
     #                                  "grid_{}.tif".format(id_scene_left))
-    #grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
+    #grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids",
     #                                   "grid_{}.tif".format(id_scene_right))
 
-    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid.tif")
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "right_epipolar_grid.tif")
 
-    disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disparity-crop.nc")
+    disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "disparity-crop.nc")
     disp = xr.load_dataset(disp_filename)
 
     start = time.time()
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, 'disp', geom_model_left, geom_model_right, grid_left_filename,
+    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp,
+                                                None, "disp", geom_model_left, geom_model_right, grid_left_filename,
                                                    grid_right_filename, residues = True)
     end = time.time()
     print("elapsed time {}".format(end - start))
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
-    out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation_rpc.nc")
+    out_disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "out_disparity_triangulation_rpc.nc")
     disp.to_netcdf(out_disp_filename)
 
     #open cloud
-    cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
+    cloud_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "cloud_ECEF.nc")
     cloud = xr.load_dataset(cloud_filename)
     array_shape = disp.disp.values.shape
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
@@ -336,36 +283,36 @@ def test_epi_triangulation_disp_rpc_roi():
      Test epipolar triangulation
     """
     data_folder = test_path()
-    file_geom = os.path.join(data_folder, 'rpc/phr_ventoux/left_image.geom')
+    file_geom = os.path.join(data_folder, "rpc/phr_ventoux/left_image.geom")
     geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
-    file_geom = os.path.join(data_folder, 'rpc/phr_ventoux/right_image.geom')
+    file_geom = os.path.join(data_folder, "rpc/phr_ventoux/right_image.geom")
     geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
 
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid_ventoux.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "right_epipolar_grid_ventoux.tif")
 
-    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid_ventoux.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid_ventoux.tif")
-
-    disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disp1_ref.nc")
+    disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "disp1_ref.nc")
     disp = xr.load_dataset(disp_filename)
 
     start = time.time()
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, 'disp', geom_model_left, geom_model_right, grid_left_filename,
+    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, "disp",
+                                                    geom_model_left, geom_model_right, grid_left_filename,
                                                    grid_right_filename, residues = True, fill_nan = True)
     end = time.time()
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
 
     #open cloud
-    cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "triangulation1_ref.nc")
+    cloud_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "triangulation1_ref.nc")
     cloud = xr.load_dataset(cloud_filename)
     array_shape = disp.disp.values.shape
     array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1], 3))
     stats = stats_diff(cloud, array_epi_wgs84)
     #1492 first non masked index
     index = 100
-    assert(point_wgs84[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-8))
-    assert(point_wgs84[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=1e-8))
-    assert(point_wgs84[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=1e-3))
-    assert (stats[:,2] == pytest.approx([0,0,0], abs=6e-4))
+    assert point_wgs84[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-8)
+    assert point_wgs84[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=1e-8)
+    assert point_wgs84[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=1e-3)
+    assert stats[:,2] == pytest.approx([0,0,0], abs=6e-4)
 
 
 
@@ -377,33 +324,34 @@ def test_epi_triangulation_disp_grid():
     """
     id_scene_left = "P1BP--2017092838284574CP"
     id_scene_right = "P1BP--2017092838319324CP"
-    ___, gri_right = prepare_loc('ellipsoide', id_scene_right)
+    ___, gri_right = prepare_loc("ellipsoide", id_scene_right)
 
-    ___, gri_left = prepare_loc('ellipsoide', id_scene_left)
+    ___, gri_left = prepare_loc("ellipsoide", id_scene_left)
 
-    #grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
+    #grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids",
     #                                  "grid_{}.tif".format(id_scene_left))
-    #grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
+    #grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids",
     #                                   "grid_{}.tif".format(id_scene_right))
 
-    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid.tif")
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "right_epipolar_grid.tif")
 
-    disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disparity-crop.nc")
+    disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "disparity-crop.nc")
     disp = xr.load_dataset(disp_filename)
 
     start = time.time()
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, 'disp', gri_left, gri_right, grid_left_filename,
+    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, "disp",
+                                                                gri_left, gri_right, grid_left_filename,
                                                    grid_right_filename, residues = True)
     end = time.time()
     print("elapsed time {}".format(end - start))
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
-    out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation.nc")
+    out_disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "out_disparity_triangulation.nc")
     disp.to_netcdf(out_disp_filename)
 
     #open cloud
-    cloud_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "cloud_ECEF.nc")
+    cloud_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "cloud_ECEF.nc")
     cloud = xr.load_dataset(cloud_filename)
     array_shape = disp.disp.values.shape
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
@@ -411,10 +359,10 @@ def test_epi_triangulation_disp_grid():
     stats = stats_diff(cloud, array_epi_ecef)
     #1492 first non masked index
     index = 1492
-    assert(point_ecef[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-1))
-    assert(point_ecef[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=0.3))
-    assert(point_ecef[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=0.6))
-    assert (stats[:,2] == pytest.approx([0,0,0], abs=0.5))
+    assert point_ecef[index,0] == pytest.approx(cloud.x.values.flatten()[index],abs=1e-1)
+    assert point_ecef[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=0.3)
+    assert point_ecef[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=0.6)
+    assert stats[:,2] == pytest.approx([0,0,0], abs=0.5)
 
 
 @pytest.mark.unit_tests
@@ -424,28 +372,26 @@ def test_epi_triangulation_disp_grid_masked():
     """
     id_scene_left = "P1BP--2017092838284574CP"
     id_scene_right = "P1BP--2017092838319324CP"
-    ___, gri_right = prepare_loc('ellipsoide', id_scene_right)
+    ___, gri_right = prepare_loc("ellipsoide", id_scene_right)
 
-    ___, gri_left = prepare_loc('ellipsoide', id_scene_left)
+    ___, gri_left = prepare_loc("ellipsoide", id_scene_left)
 
-    #grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
-    #                                  "grid_{}.tif".format(id_scene_left))
-    #grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids',
-    #                                   "grid_{}.tif".format(id_scene_right))
+    grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid.tif")
+    grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "right_epipolar_grid.tif")
 
-    grid_left_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "left_epipolar_grid.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "right_epipolar_grid.tif")
-
-    disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "disparity-crop.nc")
+    disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "disparity-crop.nc")
     disp = xr.load_dataset(disp_filename)
     mask_array = disp.msk.values
     start = time.time()
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, mask_array, 'disp', gri_left, gri_right, grid_left_filename,
-                                                   grid_right_filename, residues = True)
+    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp,
+                                                                mask_array, "disp",
+                                                                gri_left, gri_right,
+                                                                grid_left_filename,
+                                                                grid_right_filename, residues = True)
     end = time.time()
     print("elapsed time {}".format(end - start))
     #pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     #disp = xr.merge((disp, pc_dataset))
-    #out_disp_filename = os.path.join(os.environ["TESTPATH"], 'triangulation', "out_disparity_triangulation_masked.nc")
+    #out_disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "out_disparity_triangulation_masked.nc")
     #disp.to_netcdf(out_disp_filename)
-    assert (np.array_equal(point_ecef[0,:],[0,0,0]))
+    assert np.array_equal(point_ecef[0,:],[0,0,0])

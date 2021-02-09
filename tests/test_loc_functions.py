@@ -29,7 +29,7 @@ import pytest
 import numpy as np
 from utils import test_path
 
-from shareloc.grid import grid, coloc
+from shareloc.grid import Grid, coloc
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC
 from shareloc.localization import Localization
@@ -49,7 +49,7 @@ def prepare_loc(alti = "geoide", id_scene="P1BP--2017030824934340CP"):
     dtmbsq = DTM(fic)
     #chargement des grilles
     gld = os.path.join(data_folder, "grilles_gld_xH/{}_H1.hd".format(id_scene))
-    gri = grid(gld)
+    gri = Grid(gld)
     return dtmbsq, gri
 
 @pytest.mark.parametrize("idxcol,idxrow", [(20,10)])
@@ -337,7 +337,7 @@ def test_coloc(l0_src, c0_src,steprow_src,stepcol_src,nbrow_src,nbcol_src,row,co
     dtmbsq,gri = prepare_loc()
     gri.estimate_inverse_loc_predictor()
 
-    gricol = coloc(gri, gri, dtmbsq, l0_src, c0_src, steprow_src, stepcol_src, nbrow_src, nbcol_src)
+    gricol = coloc(gri, gri, dtmbsq, [l0_src, c0_src], [steprow_src, stepcol_src], [nbrow_src, nbcol_src])
 
     assert gricol[0, row, col] == pytest.approx(row * steprow_src + l0_src,1e-6)
     assert gricol[1, row, col] == pytest.approx(col * stepcol_src + c0_src, 1e-6)

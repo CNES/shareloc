@@ -59,7 +59,7 @@ def identify_dimap(xml_file):
     :return dimap info : dimap_version and None if not an dimap file
     :rtype str
     """
-    try :
+    try:
         xmldoc = minidom.parse(xml_file)
         mtd = xmldoc.getElementsByTagName('Metadata_Identification')
         mtd_format = mtd[0].getElementsByTagName('METADATA_FORMAT')[0].firstChild.data
@@ -68,9 +68,10 @@ def identify_dimap(xml_file):
         else:
             version_tag = 'METADATA_FORMAT'
         version = mtd[0].getElementsByTagName(version_tag)[0].attributes.items()[0][1]
-        return version
-    except:
+    except Exception:
         return None
+    else:
+        return version
 
 
 def identify_euclidium_rpc(eucl_file):
@@ -88,9 +89,10 @@ def identify_euclidium_rpc(eucl_file):
         for line in content:
             if not line.startswith('>>') and line !='\n':
                 is_eucl = False
-            return is_eucl
-    except:
+    except Exception:
         return False
+    else:
+        return is_eucl
 
 def identify_ossim_kwl(ossim_kwl_file):
     """
@@ -113,7 +115,7 @@ def identify_ossim_kwl(ossim_kwl_file):
                 return geom_dict['type'].strip()
             else:
                 return None
-    except:
+    except Exception:
         return None
 
 def identify_geotiff_rpc(image_filename):
@@ -131,7 +133,7 @@ def identify_geotiff_rpc(image_filename):
             return None
         else:
             return rpc_dict
-    except:
+    except Exception:
         return None
 
 

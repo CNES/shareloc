@@ -258,12 +258,12 @@ def initialize_grids(epi_step, nb_row, nb_col):
     # | col rotation,   row pixel size,  , origin row upper-left|
     left_grid_geo_transform = np.array([epi_step, 0, -(epi_step * 0.5), 0, epi_step, -(epi_step * 0.5)],
                                        dtype=np.float64)
-    left_grid.set_metadata(nb_row, nb_col, 2, left_grid_geo_transform)
+    left_grid.set_metadata(nb_row, nb_col, 2, left_grid_geo_transform, type=np.float64)
 
     right_grid = Image(image_path=None)
     right_grid_geo_transform = np.array([epi_step, 0, -(epi_step * 0.5), 0, epi_step, -(epi_step * 0.5)],
                                         dtype=np.float64)
-    right_grid.set_metadata(nb_row, nb_col, 2, right_grid_geo_transform)
+    right_grid.set_metadata(nb_row, nb_col, 2, right_grid_geo_transform, type=np.float64)
 
     return left_grid, right_grid
 

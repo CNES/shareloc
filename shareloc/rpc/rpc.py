@@ -362,7 +362,7 @@ class RPC:
 	    :type dimap_filepath  : str
         :param topleftconvention  : [0,0] position
 	    :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel 
+        If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         rpc_params = dict()
@@ -470,7 +470,7 @@ class RPC:
         """ Load from a geom file
         :param topleftconvention  : [0,0] position
 	    :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel 
+        If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         rpc_params = dict()
@@ -533,7 +533,7 @@ class RPC:
         :param secondary_euclidium_coeff  : optional secondary euclidium coeff coefficients file
             (can be either direct or inverse)
         :type secondary_euclidium_coeff  : str
-        If False : [0,0] is at the center of the Top Left pixel 
+        If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         rpc_params = dict()
@@ -629,8 +629,13 @@ class RPC:
         Znorm = (alt - self.offset_ALT) / self.scale_ALT
 
         if lon.shape[0] > 1:
-            DCdx, DCdy, DLdx, DLdy = calcule_derivees_inv_numba(Xnorm, Ynorm, Znorm, np.array(self.Num_COL), np.array(self.Den_COL), np.array(self.Num_LIG), np.array(self.Den_LIG),
-                                       self.scale_COL, self.scale_X, self.scale_LIG, self.scale_Y)
+            num_c = np.array(self.Num_COL)
+            den_c = np.array(self.Den_COL)
+            num_l = np.array(self.Num_LIG)
+            den_l = np.array(self.Den_LIG)
+            DCdx, DCdy, DLdx, DLdy = calcule_derivees_inv_numba(Xnorm, Ynorm, Znorm, num_c, den_c, num_l, den_l,
+                                                                self.scale_COL, self.scale_X, self.scale_LIG,
+                                                                self.scale_Y)
         else:
             monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
                       np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
@@ -695,6 +700,12 @@ class RPC:
             col = np.array([col])
             row = np.array([row])
 
+        if not isinstance(alt, (list, np.ndarray)):
+            alt = np.array([alt])
+
+        if alt.shape[0] != col.shape[0]:
+            alt = np.full(col.shape[0], fill_value=alt[0])
+
         P = np.zeros((col.size, 3))
         filter_nan, P[:,0], P[:,1] = self.filter_coordinates(row, col, fill_nan)
         row = row[filter_nan]
@@ -706,19 +717,34 @@ class RPC:
             Xnorm = (col - self.offset_COL)/self.scale_COL
             Ynorm = (row - self.offset_LIG)/self.scale_LIG
             Znorm = (alt - self.offset_ALT)/self.scale_ALT
-
+            '''
             if np.sum(abs(Xnorm) > self.lim_extrapol) == Xnorm.shape[0]:
                 print("!!!!! l'evaluation au point est extrapolee en colonne ", Xnorm, col)
             if np.sum(abs(Ynorm) > self.lim_extrapol) == Ynorm.shape[0]:
                 print("!!!!! l'evaluation au point est extrapolee en ligne ", Ynorm, row)
             if abs(Znorm) > self.lim_extrapol:
                 print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
+            '''
 
-            monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
-                      np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
+            if col.shape[0] > 1:
+                # Direct localization using numba to reduce calculation time
+                num_x = np.array(self.Num_X)
+                den_x = np.array(self.Den_X)
+                num_y = np.array(self.Num_Y)
+                den_y = np.array(self.Den_Y)
+                P[filter_nan, 1], P[filter_nan, 0] = compute_rational_function_polynomial(Xnorm, Ynorm, Znorm, num_x,
+                                                                                          den_x, num_y, den_y,
+                                                                                          self.scale_X, self.offset_X,
+                                                                                          self.scale_Y, self.offset_Y)
+            else:
+                monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
+                          np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
 
-            P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes)/np.dot(np.array(self.Den_X), monomes)*self.scale_X+self.offset_X
-            P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes)/np.dot(np.array(self.Den_Y), monomes)*self.scale_Y+self.offset_Y
+                P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes) / np.dot(np.array(self.Den_X),
+                                                                                  monomes) * self.scale_X + self.offset_X
+                P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes) / np.dot(np.array(self.Den_Y),
+                                                                                  monomes) * self.scale_Y + self.offset_Y
+
         # Direct localization using inverse RPC
         else:
             #TODO log info
@@ -787,9 +813,13 @@ class RPC:
 
             if lon.shape[0] > 1:
                 # Inverse localization using numba to reduce calculation time
-                Lout, Cout = inverse_loc_numba(Xnorm, Ynorm, Znorm, np.array(self.Num_COL), np.array(self.Den_COL),
-                                               np.array(self.Num_LIG), np.array(self.Den_LIG), self.scale_COL,
-                                               self.offset_COL, self.scale_LIG, self.offset_LIG)
+                num_c = np.array(self.Num_COL)
+                den_c = np.array(self.Den_COL)
+                num_l = np.array(self.Num_LIG)
+                den_l = np.array(self.Den_LIG)
+                Lout, Cout = compute_rational_function_polynomial(Xnorm, Ynorm, Znorm, num_c, den_c, num_l, den_l,
+                                                                  self.scale_COL, self.offset_COL, self.scale_LIG,
+                                                                  self.offset_LIG)
             else:
                 monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
                           np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
@@ -979,14 +1009,15 @@ def polynomial_equation(Xnorm, Ynorm, Znorm, coeff):
 
 @njit('Tuple((f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)', parallel=True,
       cache=True, fastmath=True)
-def inverse_loc_numba(Xnorm, Ynorm, Znorm, Num_COL, Den_COL, Num_LIG, Den_LIG, scale_COL, offset_COL, scale_LIG,
-                  offset_LIG):
+def compute_rational_function_polynomial(Xnorm, Ynorm, Znorm, Num_COL, Den_COL, Num_LIG, Den_LIG, scale_COL,
+                                         offset_COL, scale_LIG, offset_LIG):
     """
-    Inverse localization using numba to reduce calculation time on multiple points
+    Compute rational function polynomial using numba to reduce calculation time on multiple points.
+    useful to compute direct and inverse localization using direct or inverse RPC.
 
-    :param Xnorm: Normalized longitude position
+    :param Xnorm: Normalized longitude (for inverse) or column (for direct) position
     :type Xnorm: 1D np.array dtype np.float 64
-    :param Ynorm: Normalized latitude position
+    :param Ynorm: Normalized latitude (for inverse) or line (for direct) position
     :type Ynorm: 1D np.array dtype np.float 64
     :param Znorm: Normalized altitude position
     :type Znorm: 1D np.array dtype np.float 64
@@ -1009,6 +1040,8 @@ def inverse_loc_numba(Xnorm, Ynorm, Znorm, Num_COL, Den_COL, Num_LIG, Den_LIG, s
     :return: sensor position (row, col)
     :rtype Tuple(np.ndarray, np.ndarray)
     """
+    assert Xnorm.shape == Znorm.shape
+
     Cout = np.zeros((Xnorm.shape[0]), dtype=np.float64)
     Lout = np.zeros((Xnorm.shape[0]), dtype=np.float64)
 

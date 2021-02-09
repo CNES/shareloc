@@ -237,20 +237,20 @@ class DTM:
                 self.alt_min_cell[i, j] = i_altmin
                 self.alt_max_cell[i, j] = i_altmax
 
-    def checkCubeDTM(self,LOS):
+    def intersect_dtm_cube(self, los):
         """
         DTM cube intersection
-        :param LOS :  line of sight
-        :type LOS : numpy.array
+        :param los :  line of sight
+        :type los : numpy.array
         :return intersection information (True,an intersection has been found ?, (lon,lat) of dtm position, altitude)
         :rtype tuple (bool, bool, numpy.array, float)
         """
-        #LOS: (n,3):
-        PointB = None
-        dH3D = None
+        #los: (n,3):
+        point_b = None
+        h_intersect = None
         (ui, vi, zi, hi) = ([], [], [], [])
-        nbalt = LOS.shape[0]
-        LOSDTM = self.ters_to_indexs(LOS)
+        nbalt = los.shape[0]
+        los_index = self.ters_to_indexs(los)
         # -----------------------------------------------------------------------
         # Nombre d'intersections valides trouvees
         nbi = 0
@@ -259,7 +259,7 @@ class DTM:
         for f in range(6):
             # -----------------------------------------------------------------------
             # Initialisation du sommet de la visee
-            sB = LOSDTM[0,:]
+            sB = los_index[0,:]
             # -----------------------------------------------------------------------
             # Initialisation de la position par / au plan
             #print self.plans[f,:-1]
@@ -276,7 +276,7 @@ class DTM:
                 sA = sB.copy()
                 # -----------------------------------------------------------------------
                 # Reinit du point B
-                sB = LOSDTM[p,:] #dg on itere sur les differents points de la visee
+                sB = los_index[p,:] #dg on itere sur les differents points de la visee
                 #print sB
                 # -----------------------------------------------------------------------
                 # Initialisation de la position par / au plan
@@ -384,7 +384,7 @@ class DTM:
         # Pas de solution si 0 ou 1 seul point trouve (on a tangente le cube)
         if nbi < 2:
             bTrouve = False
-            return (True, bTrouve, PointB, dH3D)
+            return True, bTrouve, point_b, h_intersect
         # -----------------------------------------------------------------------
         # Il ne reste que 2 points donc on traverse le cube
         # LAIG-FA-MAJA-2168-CNES: plus de filtrage sur les point identiques. Il peut y avoir un nombre depoints > 2
@@ -397,38 +397,38 @@ class DTM:
         #PointDTM est la premiere intersection avec le cube (lig, col)
         # -----------------------------------------------------------------------
         # h dans gld 3D
-        dH3D = hi[0]
-        #dH3D correspond a l'index (non entier) d'interpolation en h
+        h_intersect = hi[0]
+        #h_intersect correspond a l'index (non entier) d'interpolation en h
         # -----------------------------------------------------------------------
         # Coordonnees terrain
         point_b = self.index_to_ter(point_dtm)
-        #PointB est le point Terrain (lon,lat)
+        #point_b est le point Terrain (lon,lat)
         # -----------------------------------------------------------------------
         # Fin, retour
         bTrouve = True
-        return (True, bTrouve, point_b,dH3D)
+        return (True, bTrouve, point_b,h_intersect)
 
-    def intersection(self, LOS, PointB, dH3D):
+    def intersection(self, los, point_b, h_intersect):
         """
         DTM intersection
-        :param LOS :  line of sight
-        :type LOS : numpy.array
-        :param PointB :  position of intersection in DTM cube
-        :type PointB : numpy.array
-        :param dH3D :  altitude in DTM cube
-        :type dH3D : float
+        :param los :  line of sight
+        :type los : numpy.array
+        :param point_b :  position of intersection in DTM cube
+        :type point_b : numpy.array
+        :param h_intersect :  altitude in DTM cube
+        :type h_intersect : float
         :return intersection information (True,an intersection has been found ?, position of intersection)
         :rtype tuple (bool, bool, numpy.array)
         """
-        LOSDTM = self.ters_to_indexs(LOS)
-        PointB_DTM = self.ter_to_index(PointB)
+        los_index = self.ters_to_indexs(los)
+        point_b_DTM = self.ter_to_index(point_b)
         PointR = np.zeros(3)
-        (npl, _) = LOS.shape
+        (npl, _) = los.shape
         H3D = range(npl, -1, -1)
 
-        p1 = PointB_DTM.copy() #[p1[0],p1[1],p1[2]]
+        p1 = point_b_DTM.copy() #[p1[0],p1[1],p1[2]]
 
-        dH3D_p1 = dH3D
+        h_intersect_p1 = h_intersect
 
         nu = self.row_nb
         nv = self.column_nb
@@ -450,22 +450,22 @@ class DTM:
 
 
         #   1.2 - Initialisation du rang du premier sommet de la visee
-        i0 = int(np.floor(dH3D_p1))
+        i0 = int(np.floor(h_intersect_p1))
 
         #   1.3 - Initialisation du point de depart (dans p2)
-        p2 = PointB_DTM.copy()
-        dH3D_p2 = dH3D
+        p2 = point_b_DTM.copy()
+        h_intersect_p2 = h_intersect
 
         #2. - Boucle sur les plans de grille
-        while i0 < (LOSDTM.size - 1):
+        while i0 < (los_index.size - 1):
             #2.1 - Initialisation du sommet courant de la visee
-            u0 = LOSDTM[i0][0]
-            v0 = LOSDTM[i0][1]
-            z0 = LOSDTM[i0][2]
-            z1 = LOSDTM[i0 + 1][2]
+            u0 = los_index[i0][0]
+            v0 = los_index[i0][1]
+            z0 = los_index[i0][2]
+            z1 = los_index[i0 + 1][2]
 
             #2.2 - Initialisation de la visee DTM
-            VM = LOSDTM[i0 + 1] - LOSDTM[i0]
+            VM = los_index[i0 + 1] - los_index[i0]
 
             #2.3 - Test si visee verticale
             if (VM[0]==0 and VM[1]==0):
@@ -474,7 +474,7 @@ class DTM:
                 h1 = self.interpolate(u0, v0)
 
                 #    Test si le plan suivant est en dessous du DTM
-                if LOSDTM[i0 + 1][2] <= h1:
+                if los_index[i0 + 1][2] <= h1:
                     #Init point de sortie
                     p1[0] = u0
                     p1[1] = v0
@@ -493,7 +493,7 @@ class DTM:
                 #
                 # Initialisation du point de d?part
                 # Initialisation de son abscisse sur la vis?e
-                a2 = dH3D_p2 - i0
+                a2 = h_intersect_p2 - i0
 
                 # Correction d'un bug FA DG 10, a la reinitialisation a2 peut valoir 1
                 # Ce qui a pour consequence de sauter au segment suivant de la visee
@@ -534,7 +534,7 @@ class DTM:
                     #a1 = a2;
                     # p1 devient p2
                     p1 = p2.copy()
-                    dH3D_p1 = dH3D_p2.copy()
+                    h_intersect_p1 = h_intersect_p2.copy()
 
                     # 4.2 - D?termination d'un nouveau point bas
                     #      - Test d'orientation de la vis?e
@@ -624,7 +624,7 @@ class DTM:
 
                             if (p2[0] > uc) and (p2[0] < (uc + 1)):
                                 #  La vis?e sort par l'est
-                                vc+=1
+                                vc += 1
                                 p2[1] = vc
                                 p2[2] = z0 + a2 * VM[2]
 
@@ -830,19 +830,19 @@ class DTM:
                     i0 += 1
 
                     # Chargement dans p2 du nouveau sommet
-                    p2 = LOSDTM[i0].copy()
-                    dH3D_p2 = H3D[i0].copy()
+                    p2 = los_index[i0].copy()
+                    h_intersect_p2 = H3D[i0].copy()
 
                 else:
 
                     # LDD - On a boucl? sur les mailles, on n'a rien trouv? et on n'a pas atteint le plan suivant
                     # Ca veut dire qu'on sort de l'emprise, pas la peine de continuer
                     bTrouve = False
-                    return (True, bTrouve, PointR)
+                    return True, bTrouve, PointR
             # Fin cas general (visee non verticale)
 
         # Fin boucle sur les sommets
 
         # Fin, retour
         bTrouve = False
-        return (True, PointR)
+        return True, PointR

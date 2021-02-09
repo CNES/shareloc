@@ -83,7 +83,7 @@ def test_gld_dtm(idxrow,idxcol,row0,col0,steprow,stepcol,nbrow,nbcol):
 @pytest.mark.parametrize("col,row", [(50.5,100.5)])
 @pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.21700176041541,21.959197148974,238.0)])
 @pytest.mark.unit_tests
-def test_loc_dir_check_cube_dtm(col,row,valid_lon,valid_lat,valid_alt):
+def test_loc_dir_instersect_cube_dtm(col,row,valid_lon,valid_lat,valid_alt):
     """
     Test direct localization check dtm cube
     """
@@ -95,7 +95,7 @@ def test_loc_dir_check_cube_dtm(col,row,valid_lon,valid_lat,valid_alt):
     visee[1,:] = vislonlat[1]
     visee[2,:] = gri.alts_down
     v = visee.T
-    (code1, code2, PointB, dH3D) = dtmbsq.checkCubeDTM(v)
+    (code1, code2, PointB, dH3D) = dtmbsq.intersect_dtm_cube(v)
     assert(PointB[0] == pytest.approx(valid_lon,abs=1e-12))
     assert(PointB[1] == pytest.approx(valid_lat,abs=1e-12))
     assert(PointB[2] == pytest.approx(valid_alt,abs=1e-12))
@@ -298,7 +298,7 @@ def test_loc_intersection(row,col,valid_lon,valid_lat,valid_alt):
     visee[1,:] = vislonlat[1]
     visee[2,:] = gri.alts_down
     v = visee.T
-    (code1, code2, PointB, dH3D) = dtmbsq.checkCubeDTM(v)
+    (code1, code2, PointB, dH3D) = dtmbsq.intersect_dtm_cube(v)
     (code3,code4,Point_dtm) = dtmbsq.intersection(v, PointB, dH3D)
     assert(Point_dtm[0] == pytest.approx(valid_lon,abs=1e-12))
     assert(Point_dtm[1] == pytest.approx(valid_lat,abs=1e-12))

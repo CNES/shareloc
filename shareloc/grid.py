@@ -165,9 +165,9 @@ class grid:
         visee[1,:] = vislonlat[1]
         visee[2,:] = self.alts_down
         v = visee.T
-        (code1, code2, PointB, dH3D) = dtm.checkCubeDTM(v)
-        (code3,code4,Point_dtm) = dtm.intersection(v, PointB, dH3D)
-        return Point_dtm
+        (__, __, point_b, alti) = dtm.intersect_dtm_cube(v)
+        (__, __, point_dtm) = dtm.intersection(v, point_b, alti)
+        return point_dtm
 
     def los_extrema(self,row,col,alt_min,alt_max):
         """
@@ -207,8 +207,7 @@ class grid:
         visee[1,:] = vislonlat[1]
         visee[2,:] = self.alts_down
         v = visee.T
-        (code, code2, PointB, dH3D) = dtm.checkCubeDTM(v)
-        #(code,code4,Point_dtm) = self.intersection(v, PointB, dH3D,dtm)
+        (code, code2, PointB, dH3D) = dtm.intersect_dtm_cube(v)
         return code
 
 
@@ -294,7 +293,7 @@ class grid:
                 visee[1,:] = vislonlat[1]
                 visee[2,:] = self.alts_down
                 v = visee.T
-                (code1, code2, PointB, dH3D) = dtm.checkCubeDTM(v)
+                (code1, code2, PointB, dH3D) = dtm.intersect_dtm_cube(v)
                 (code3,code4,PointR) = dtm.intersection(v, PointB, dH3D)
                 glddtm[:,i,j] = PointR
         return glddtm

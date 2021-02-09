@@ -113,8 +113,7 @@ def identify_ossim_kwl(ossim_kwl_file):
         if 'type' in geom_dict.keys():
             if geom_dict['type'].strip().startswith('ossim'):
                 return geom_dict['type'].strip()
-            else:
-                return None
+        return None
     except Exception:
         return None
 
@@ -129,13 +128,9 @@ def identify_geotiff_rpc(image_filename):
     try :
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns='RPC')
-        if not rpc_dict:
-            return None
-        else:
-            return rpc_dict
+        return rpc_dict
     except Exception:
         return None
-
 
 def read_eucl_file(eucl_file):
     """
@@ -289,7 +284,7 @@ class RPC:
         if identify_dimap(dimap_filepath) is not None:
             if float(dimap_version) < 2.0:
                 return cls.from_dimap_v1(dimap_filepath, topleftconvention)
-            else:
+            if float(dimap_version) >= 2.0:
                 return cls.from_dimap_v2(dimap_filepath, topleftconvention)
         else:
             ValueError("can''t read dimap file")
@@ -606,7 +601,7 @@ class RPC:
             if dimap_version is not None :
                 if float(dimap_version)<2.0 :
                     return cls.from_dimap_v1(primary_file, topleftconvention)
-                else:
+                if float(dimap_version) >= 2.0:
                     return cls.from_dimap_v2(primary_file, topleftconvention)
         ossim_model = identify_ossim_kwl(primary_file)
         if ossim_model is not None:
@@ -670,22 +665,6 @@ class RPC:
 
         return (dcol_dlon,dcol_dlat,drow_dlon,drow_dlat)
 
-
-    def direct_loc_dtm(self, row, col, dtm):
-        """
-        direct localization on dtm
-        :param row :  line sensor position
-        :type row : float
-        :param col :  column sensor position
-        :type col : float
-        :param dtm : dtm model
-        :type dtm  : shareloc.dtm
-        :return ground position (lon,lat,h)
-        :rtype numpy.array
-        """
-        print('direct localization not yet implemented for RPC model')
-        return None
-
     def direct_loc_h(self,row,col,alt,fill_nan = False):
         """
         direct localization at constant altitude
@@ -734,7 +713,6 @@ class RPC:
                                self.scale_Y+self.offset_Y
         # Direct localization using inverse RPC
         else:
-            #TODO log info
             print('direct localisation from inverse iterative')
             (points[filter_nan, 0], points[filter_nan, 1], points[filter_nan, 2]) = self.direct_loc_inverse_iterative\
                 (row, col, alt, 10, fill_nan)

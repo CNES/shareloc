@@ -22,7 +22,7 @@ import os
 import pytest
 import numpy as np
 
-from shareloc.rectification.rectification_grid import rectification_grid
+from shareloc.rectification.rectification_grid import RectificationGrid
 
 
 
@@ -36,7 +36,7 @@ def test_rectification_grid_interpolation_one_point(row,col):
     id_scene_right = "P1BP--2017092838319324CP"
     grid_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_right))
 
-    rectif_grid = rectification_grid(grid_filename)
+    rectif_grid = RectificationGrid(grid_filename)
     #value at position [15,15]
     value_row = np.sum(rectif_grid.row_positions[0,0:2]) / 2.0
     value_col = np.sum(rectif_grid.col_positions[0,0:2]) / 2.0
@@ -53,7 +53,7 @@ def test_rectification_grid_interpolation():
     id_scene_right = "P1BP--2017092838319324CP"
     grid_filename = os.path.join(os.environ["TESTPATH"], 'rectification_grids', "grid_{}.tif".format(id_scene_right))
 
-    rectif_grid = rectification_grid(grid_filename)
+    rectif_grid = RectificationGrid(grid_filename)
     #value at position [15,15]
 
     value_row = np.sum(rectif_grid.row_positions[0:2,0:2]) / 4.0
@@ -72,7 +72,7 @@ def test_rectification_grid_extrapolation():
     Test interpolation on rectification grid
     """
     grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid_ventoux.tif")
-    rectif_grid = rectification_grid(grid_filename)
+    rectif_grid = RectificationGrid(grid_filename)
 
     sensor_positions = np.zeros((2,2))
     sensor_positions[0,:] = [30.0,-10.0]

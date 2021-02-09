@@ -30,7 +30,7 @@ from shareloc.grid import grid
 from shareloc.dtm import DTM
 from shareloc.triangulation.triangulation import distance_point_los,sensor_triangulation
 from shareloc.triangulation.triangulation import epipolar_triangulation, transform_disp_to_matches
-from shareloc.rectification.rectification_grid import rectification_grid
+from shareloc.rectification.rectification_grid import RectificationGrid
 from shareloc.rpc.rpc import RPC
 
 import rasterio as rio

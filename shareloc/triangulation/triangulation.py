@@ -20,7 +20,7 @@
 #
 
 import numpy as np
-from shareloc.rectification.rectification_grid import rectification_grid
+from shareloc.rectification.rectification_grid import RectificationGrid
 from shareloc.proj_utils import coordinates_conversion
 from shareloc.los import LOS
 
@@ -201,8 +201,8 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
                 'matches type should be sift or disp')
 
     #interpolate left
-    rectif_grid_left = rectification_grid(grid_left)
-    rectif_grid_right = rectification_grid(grid_right)
+    rectif_grid_left = RectificationGrid(grid_left)
+    rectif_grid_right = RectificationGrid(grid_right)
     #interpolate_right
     #print("epi  left 0 {}".format(epi_pos_left[0,:]))
     #print("epi right 0 {}".format(epi_pos_right[0,:]))

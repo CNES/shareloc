@@ -20,11 +20,15 @@
 # limitations under the License.
 #
 
+"""
+This module contains the rectification_grids class to handle CARS rectification grids.
+"""
+
 import rasterio as rio
 import numpy as np
 from scipy import interpolate
 
-class rectification_grid:
+class RectificationGrid:
     """ rectification grid
     """
     def __init__(self, grid_filename):
@@ -51,11 +55,10 @@ class rectification_grid:
         self.row_dep = dataset.read(2).transpose()
         self.col_dep = dataset.read(1).transpose()
 
-        #TODO change notations
-        x = np.arange(ori_x, last_x, step_x)
-        y = np.arange(ori_y, last_y, step_y)
+        cols = np.arange(ori_x, last_x, step_x)
+        rows = np.arange(ori_y, last_y, step_y)
         self.grid_y, self.grid_x = np.mgrid[ori_x:last_x:step_x, ori_y:last_y:step_y]
-        self.points = (x,y)
+        self.points = (cols, rows)
         self.row_positions = self.row_dep + self.grid_x
         self.col_positions = self.col_dep + self.grid_y
 
@@ -68,9 +71,9 @@ class rectification_grid:
         :return interpolated positions : array  Nx2 [col,row]
         :rtype  np.array
         """
-        # TODO: interpn to be replaced by math_utils.interpol_bilin_vectorized
-        interp_row = interpolate.interpn(self.points, self.row_positions, positions, method='linear', bounds_error=False, fill_value=None)
-        interp_col = interpolate.interpn(self.points, self.col_positions, positions, method='linear', bounds_error=False, fill_value=None)
+        interp_row = interpolate.interpn(self.points, self.row_positions,
+                                         positions, method='linear', bounds_error=False, fill_value=None)
+        interp_col = interpolate.interpn(self.points, self.col_positions,
+                                         positions, method='linear', bounds_error=False, fill_value=None)
         interp_pos = np.stack((interp_col,interp_row)).transpose()
         return interp_pos
-

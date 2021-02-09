@@ -23,7 +23,10 @@ import rasterio as rio
 from xml.dom import minidom
 from os.path import basename
 import numpy as np
-from numba import njit, prange
+from numba import njit, prange, config
+
+# Set numba type of threading layer before parallel target compilation
+config.THREADING_LAYER = 'omp'
 
 
 def renvoie_linesep(txt_liste_lines):
@@ -265,6 +268,23 @@ class RPC:
                  [2,1,1,0],[0,1,0,2],[1,2,0,0],
                  [3,0,2,0],[1,0,0,2],[0,2,0,1],
                  [2,0,1,1],[0,0,0,3]])
+
+        self.inverse_coefficient = False
+        self.direct_coefficient = False
+
+        if self.Num_COL:
+            self.inverse_coefficient = True
+            self.Num_COL = np.array(self.Num_COL)
+            self.Den_COL = np.array(self.Den_COL)
+            self.Num_LIG = np.array(self.Num_LIG)
+            self.Den_LIG = np.array(self.Den_LIG)
+
+        if self.Num_X:
+            self.direct_coefficient = True
+            self.Num_X = np.array(self.Num_X)
+            self.Den_X = np.array(self.Den_X)
+            self.Num_Y = np.array(self.Num_Y)
+            self.Den_Y = np.array(self.Den_Y)
 
     @classmethod
     def from_dimap(cls, dimap_filepath, topleftconvention=True):
@@ -628,42 +648,9 @@ class RPC:
         Ynorm = (lat - self.offset_Y) / self.scale_Y
         Znorm = (alt - self.offset_ALT) / self.scale_ALT
 
-        if lon.shape[0] > 1:
-            num_c = np.array(self.Num_COL)
-            den_c = np.array(self.Den_COL)
-            num_l = np.array(self.Num_LIG)
-            den_l = np.array(self.Den_LIG)
-            DCdx, DCdy, DLdx, DLdy = calcule_derivees_inv_numba(Xnorm, Ynorm, Znorm, num_c, den_c, num_l, den_l,
-                                                                self.scale_COL, self.scale_X, self.scale_LIG,
-                                                                self.scale_Y)
-        else:
-            monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
-                      np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
-
-            NumDC = np.dot(self.Num_COL, monomes)
-            DenDC = np.dot(self.Den_COL, monomes)
-            NumDL = np.dot(self.Num_LIG, monomes)
-            DenDL = np.dot(self.Den_LIG, monomes)
-            monomes_deriv_x = self.monomes_deriv_1[:, 0:1] * np.power(Xnorm, self.monomes_deriv_1[:, 1:2]) * \
-                              np.power(Ynorm, self.monomes_deriv_1[:, 2:3]) * np.power(Znorm, self.monomes_deriv_1[:, 3:])
-
-            NumDCdx = np.dot(self.Num_COL, monomes_deriv_x)
-            DenDCdx = np.dot(self.Den_COL, monomes_deriv_x)
-            NumDLdx = np.dot(self.Num_LIG, monomes_deriv_x)
-            DenDLdx = np.dot(self.Den_LIG, monomes_deriv_x)
-
-            monomes_deriv_y = self.monomes_deriv_2[:, 0:1] * np.power(Xnorm, self.monomes_deriv_2[:, 1:2]) * \
-                      np.power(Ynorm, self.monomes_deriv_2[:, 2:3]) * np.power(Znorm, self.monomes_deriv_2[:, 3:])
-
-            NumDCdy = np.dot(self.Num_COL, monomes_deriv_y)
-            DenDCdy = np.dot(self.Den_COL, monomes_deriv_y)
-            NumDLdy = np.dot(self.Num_LIG, monomes_deriv_y)
-            DenDLdy = np.dot(self.Den_LIG, monomes_deriv_y)
-
-            DCdx = self.scale_COL/self.scale_X*(NumDCdx*DenDC - DenDCdx*NumDC)/DenDC**2
-            DCdy = self.scale_COL/self.scale_Y*(NumDCdy*DenDC - DenDCdy*NumDC)/DenDC**2
-            DLdx = self.scale_LIG/self.scale_X*(NumDLdx*DenDL - DenDLdx*NumDL)/DenDL**2
-            DLdy = self.scale_LIG/self.scale_Y*(NumDLdy*DenDL - DenDLdy*NumDL)/DenDL**2
+        DCdx, DCdy, DLdx, DLdy = calcule_derivees_inv_numba(Xnorm, Ynorm, Znorm, self.Num_COL, self.Den_COL,
+                                                            self.Num_LIG, self.Den_LIG, self.scale_COL, self.scale_X,
+                                                            self.scale_LIG, self.scale_Y)
 
         return (DCdx,DCdy,DLdx,DLdy)
 
@@ -712,7 +699,7 @@ class RPC:
         col = col[filter_nan]
 
         # Direct localization using direct RPC
-        if self.Num_X:
+        if self.direct_coefficient:
             # ground position
             Xnorm = (col - self.offset_COL)/self.scale_COL
             Ynorm = (row - self.offset_LIG)/self.scale_LIG
@@ -726,29 +713,14 @@ class RPC:
                 print("!!!!! l'evaluation au point est extrapolee en altitude ", Znorm, alt)
             '''
 
-            if col.shape[0] > 1:
-                # Direct localization using numba to reduce calculation time
-                num_x = np.array(self.Num_X)
-                den_x = np.array(self.Den_X)
-                num_y = np.array(self.Num_Y)
-                den_y = np.array(self.Den_Y)
-                P[filter_nan, 1], P[filter_nan, 0] = compute_rational_function_polynomial(Xnorm, Ynorm, Znorm, num_x,
-                                                                                          den_x, num_y, den_y,
-                                                                                          self.scale_X, self.offset_X,
-                                                                                          self.scale_Y, self.offset_Y)
-            else:
-                monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
-                          np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
-
-                P[filter_nan, 0] = np.dot(np.array(self.Num_X), monomes) / np.dot(np.array(self.Den_X),
-                                                                                  monomes) * self.scale_X + self.offset_X
-                P[filter_nan, 1] = np.dot(np.array(self.Num_Y), monomes) / np.dot(np.array(self.Den_Y),
-                                                                                  monomes) * self.scale_Y + self.offset_Y
-
+            P[filter_nan, 1], P[filter_nan, 0] = compute_rational_function_polynomial(Xnorm, Ynorm, Znorm, self.Num_X,
+                                                                                      self.Den_X, self.Num_Y, self.Den_Y,
+                                                                                      self.scale_X, self.offset_X,
+                                                                                      self.scale_Y, self.offset_Y)
         # Direct localization using inverse RPC
         else:
             #TODO log info
-            print("direct localisation from inverse iterative")
+            # print("direct localisation from inverse iterative")
             (P[filter_nan, 0], P[filter_nan, 1], P[filter_nan, 2]) = self.direct_loc_inverse_iterative(row, col, alt, 10, fill_nan)
         P[:, 2] = alt
         return np.squeeze(P)
@@ -795,7 +767,7 @@ class RPC:
         :return: sensor position (row, col, alt)
         :rtype numpy.ndarray
         """
-        if self.Num_COL:
+        if self.inverse_coefficient:
             if not isinstance(lon, (list, np.ndarray)):
                 lon = np.array([lon])
                 lat = np.array([lat])
@@ -811,21 +783,9 @@ class RPC:
             Ynorm = (lat - self.offset_Y) / self.scale_Y
             Znorm = (alt - self.offset_ALT) / self.scale_ALT
 
-            if lon.shape[0] > 1:
-                # Inverse localization using numba to reduce calculation time
-                num_c = np.array(self.Num_COL)
-                den_c = np.array(self.Den_COL)
-                num_l = np.array(self.Num_LIG)
-                den_l = np.array(self.Den_LIG)
-                Lout, Cout = compute_rational_function_polynomial(Xnorm, Ynorm, Znorm, num_c, den_c, num_l, den_l,
-                                                                  self.scale_COL, self.offset_COL, self.scale_LIG,
-                                                                  self.offset_LIG)
-            else:
-                monomes = self.Monomes[:, 0:1] * np.power(Xnorm, self.Monomes[:, 1:2]) * \
-                          np.power(Ynorm, self.Monomes[:, 2:3]) * np.power(Znorm, self.Monomes[:, 3:])
-
-                Cout = np.dot(self.Num_COL, monomes) / np.dot(self.Den_COL, monomes) * self.scale_COL + self.offset_COL
-                Lout = np.dot(self.Num_LIG, monomes) / np.dot(self.Den_LIG, monomes) * self.scale_LIG + self.offset_LIG
+            Lout, Cout = compute_rational_function_polynomial(Xnorm, Ynorm, Znorm, self.Num_COL, self.Den_COL, self.Num_LIG, self.Den_LIG,
+                                                              self.scale_COL, self.offset_COL, self.scale_LIG,
+                                                              self.offset_LIG)
         else:
             print("inverse localisation can't be performed, inverse coefficients have not been defined")
             (Cout, Lout) = (None, None)
@@ -883,7 +843,7 @@ class RPC:
         :return: ground position (lon,lat,h)
         :rtype list of numpy.array
         """
-        if self.Num_COL:
+        if self.inverse_coefficient:
             if not isinstance(row, (list, np.ndarray)):
                 col = np.array([col])
                 row = np.array([row])

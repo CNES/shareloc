@@ -480,8 +480,8 @@ class RPC:
         rpc_params = dict()
         #OSSIM keyword list
         rpc_params['driver_type'] = 'ossim_kwl'
-        with open(ossim_kwl_filename) as file:
-            content = file.readlines()
+        with open(ossim_kwl_filename) as ossim_file:
+            content = ossim_file.readlines()
 
         geom_dict = dict()
         for line in content:

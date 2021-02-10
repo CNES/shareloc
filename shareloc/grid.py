@@ -31,6 +31,8 @@ from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 class Grid:
     """ multi H direct localization grid handling class
     """
+
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, grid_filename, grid_format="bsq"):
         """
         Constructor
@@ -147,9 +149,8 @@ class Grid:
         position[:, 2] = alt
         pos_row = (row - self.row0)/self.steprow
         pos_col = (col - self.col0)/self.stepcol
-        interp_lonlat = interpol_bilin_vectorized(mats, self.nbrow, self.nbcol, pos_row, pos_col)
-        vlon = interp_lonlat[0]
-        vlat = interp_lonlat[1]
+        # pylint: disable=unbalanced-tuple-unpacking
+        [vlon,vlat] = interpol_bilin_vectorized(mats, self.nbrow, self.nbcol, pos_row, pos_col)
         position[:, 0] = (alti_coef*vlon[0, :] + (1-alti_coef)*vlon[1, :])
         position[:, 1] = (alti_coef*vlat[0, :] + (1-alti_coef)*vlat[1, :])
 
@@ -340,6 +341,7 @@ class Grid:
             for col_index in range(nbcol):
                 col = col0 + stepcol*col_index
                 pos_col = (col - self.col0)/self.stepcol
+                # pylint: disable=unbalanced-tuple-unpacking
                 [vlon,vlat] = interpol_bilin(mats,self.nbrow,self.nbcol,pos_row,pos_col)
                 position[0] = (alti_coef*vlon[0] +(1-alti_coef)*vlon[1])
                 position[1] = (alti_coef*vlat[0] +(1-alti_coef)*vlat[1])

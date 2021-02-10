@@ -84,15 +84,15 @@ def compute_epipolar_angle(end_line, start_line):
 
     # Different columns, positive direction
     diff_col_pos = np.where((end_line[:, 1] != start_line[:, 1]) & (end_line[:, 1] > start_line[:, 1]))
-    a = (end_line[diff_col_pos[0], 0] - start_line[diff_col_pos[0], 0]) / (end_line[diff_col_pos[0], 1] -
-                                                                           start_line[diff_col_pos[0], 1])
-    alpha[diff_col_pos] = np.arctan(a)
+    slope = (end_line[diff_col_pos[0], 0] - start_line[diff_col_pos[0], 0]) / (end_line[diff_col_pos[0], 1] -
+                                                                               start_line[diff_col_pos[0], 1])
+    alpha[diff_col_pos] = np.arctan(slope)
 
     # Different columns, negative direction
     diff_col_neg = np.where((end_line[:, 1] != start_line[:, 1]) & (end_line[:, 1] <= start_line[:, 1]))
-    a = (end_line[diff_col_neg[0], 0] - start_line[diff_col_neg[0], 0]) / (end_line[diff_col_neg[0], 1]
-                                                                           - start_line[diff_col_neg[0], 1])
-    alpha[diff_col_neg[0]] = math.pi + np.arctan(a)
+    slope = (end_line[diff_col_neg[0], 0] - start_line[diff_col_neg[0], 0]) / (end_line[diff_col_neg[0], 1] -
+                                                                               start_line[diff_col_neg[0], 1])
+    alpha[diff_col_neg[0]] = math.pi + np.arctan(slope)
 
     return np.squeeze(alpha)
 

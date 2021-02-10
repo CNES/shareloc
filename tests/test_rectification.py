@@ -23,7 +23,7 @@ import pytest
 import numpy as np
 
 from shareloc.rectification.rectification_grid import rectification_grid
-from shareloc.rectification.rectification import prepare_rectification, compute_stereorectification_epipolar_grids
+from shareloc.rectification.rectification import *
 from shareloc.image.image import Image
 from shareloc.rpc.rpc import RPC
 import rasterio
@@ -84,6 +84,7 @@ def test_rectification_grid_extrapolation():
     assert(4883.84894205729142413474619389 == pytest.approx(coords[1,1],abs=1e-10))
 
 
+@pytest.mark.unit_tests
 def test_prepare_rectification():
     """
     Test prepare rectification : check grids size, epipolar image size, and left epipolar starting point
@@ -119,6 +120,7 @@ def test_prepare_rectification():
     assert left_epi_origin[2] == otb_OutputOriginInLeftImage[2]
 
 
+@pytest.mark.unit_tests
 def test_compute_stereorectification_epipolar_grids():
     """
     Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
@@ -156,3 +158,104 @@ def test_compute_stereorectification_epipolar_grids():
     # ground truth mean baseline ratio from OTB
     gt_mean_br = 0.704004705
     assert (mean_br == pytest.approx(gt_mean_br, abs=1e-5))
+
+
+@pytest.mark.unit_tests
+def test_rectification_moving_along_line():
+    """
+    Test moving along line in epipolar geometry
+    """
+    geom_model_left = RPC.from_any(os.path.join(os.environ["TESTPATH"], "rectification", "left_image.geom"),
+                                   topleftconvention=True)
+    geom_model_right = RPC.from_any(os.path.join(os.environ["TESTPATH"], "rectification", "right_image.geom"),
+                                    topleftconvention=True)
+
+    current_left_coords = np.array([[5000.5, 5000.5, 0.]], dtype=np.float64)
+    mean_spacing = 1
+    epi_step = 1
+    alphas = 0
+
+    # ground truth next pixel
+    # col pixel size of the image
+    col_pixel_size = 1.
+    gt_next_cords = np.array([[5000.5, 5000.5 + col_pixel_size, 0.]], dtype=np.float64)
+
+    next_cords, _ = moving_along_lines(geom_model_left, geom_model_right, current_left_coords, mean_spacing, epi_step,
+                                       alphas)
+
+    np.testing.assert_array_equal(gt_next_cords, next_cords)
+
+
+@pytest.mark.unit_tests
+def test_rectification_moving_to_next_line():
+    """
+    Test moving to next line in epipolar geometry
+    """
+    geom_model_left = RPC.from_any(os.path.join(os.environ["TESTPATH"], "rectification", "left_image.geom"),
+                                   topleftconvention=True)
+    geom_model_right = RPC.from_any(os.path.join(os.environ["TESTPATH"], "rectification", "right_image.geom"),
+                                    topleftconvention=True)
+
+    current_left_coords = np.array([5000.5, 5000.5, 0.], dtype=np.float64)
+    mean_spacing = 1
+    epi_step = 1
+    alphas = 0
+
+    # ground truth next pixel
+    # row pixel size of the image
+    row_pixel_size = 1.
+    gt_next_cords = np.array([5000.5 + row_pixel_size, 5000.5, 0.], dtype=np.float64)
+
+    next_cords, _ = moving_to_next_line(geom_model_left, geom_model_right, current_left_coords, mean_spacing, epi_step,
+                                        alphas)
+
+    np.testing.assert_array_equal(gt_next_cords, next_cords)
+
+
+@pytest.mark.unit_tests
+def test_epipolar_angle():
+    """
+    test epipolar angle computation
+    """
+    # First case : same column, positive direction [row, col, alt]
+    start_line_1 = np.array([1, 0, 0])
+    end_line_1 = np.array([2, 0, 0])
+
+    gt_alpha_1 = math.pi / 2.
+    alpha = compute_epipolar_angle(end_line_1, start_line_1)
+    assert alpha == gt_alpha_1
+
+    # Second case : same column, negative direction [row, col, alt]
+    start_line_2 = np.array([2, 0, 0])
+    end_line_2 = np.array([1, 0, 0])
+
+    gt_alpha_2 = - (math.pi / 2.)
+    alpha = compute_epipolar_angle(end_line_2, start_line_2)
+    assert alpha == gt_alpha_2
+
+    # Third case : different column, positive direction [row, col, alt]
+    start_line_3 = np.array([2, 0, 0])
+    end_line_3 = np.array([1, 1, 0])
+
+    slope = (1 - 2) / (1 - 0)
+
+    gt_alpha_3 = np.arctan(slope)
+    alpha = compute_epipolar_angle(end_line_3, start_line_3)
+    assert alpha == gt_alpha_3
+
+    # Fourth case : different column, negative direction [row, col, alt]
+    start_line_4 = np.array([2, 1, 0])
+    end_line_4 = np.array([1, 0, 0])
+
+    slope = (1 - 2) / (0 - 1)
+    gt_alpha_4 = math.pi + np.arctan(slope)
+    alpha = compute_epipolar_angle(end_line_4, start_line_4)
+    assert alpha == gt_alpha_4
+
+    # With multiple point
+    start_lines = np.stack((start_line_1, start_line_2, start_line_3, start_line_4))
+    end_lines = np.stack((end_line_1, end_line_2, end_line_3, end_line_4))
+    gt_alphas = np.stack((gt_alpha_1, gt_alpha_2, gt_alpha_3, gt_alpha_4))
+
+    alphas = compute_epipolar_angle(end_lines, start_lines)
+    np.testing.assert_array_equal(alphas, gt_alphas)

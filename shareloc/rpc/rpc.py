@@ -942,183 +942,184 @@ class RPC:
 
 
 @njit('f8(f8, f8, f8, f8[:])', cache=True, fastmath=True)
-def polynomial_equation(Xnorm, Ynorm, Znorm, coeff):
+def polynomial_equation(xnorm, ynorm, znorm, coeff):
     """
     Compute polynomial equation
 
-    :param Xnorm: Normalized longitude position
-    :type Xnorm: float 64
-    :param Ynorm: Normalized latitude position
-    :type Ynorm: float 64
-    :param Znorm: Normalized altitude position
-    :type Znorm: float 64
+    :param xnorm: Normalized longitude (for inverse) or column (for direct) position
+    :type xnorm: float 64
+    :param ynorm: Normalized latitude (for inverse) or line (for direct) position
+    :type ynorm: float 64
+    :param znorm: Normalized altitude position
+    :type znorm: float 64
     :param coeff: coefficients
     :type coeff: 1D np.array dtype np.float 64
     :return: rational
     :rtype: float 64
     """
-    rational = coeff[0] + coeff[1] * Xnorm + coeff[2] * Ynorm + coeff[3] * Znorm + coeff[4] * Xnorm * Ynorm + \
-        coeff[5] * Xnorm * Znorm + coeff[6] * Ynorm * Znorm + coeff[7] * Xnorm ** 2 + coeff[8] * Ynorm ** 2 + \
-        coeff[9] * Znorm ** 2 + coeff[10] * Xnorm * Ynorm * Znorm + coeff[11] * Xnorm ** 3 + \
-        coeff[12] * Xnorm * Ynorm ** 2 + coeff[13] * Xnorm * Znorm ** 2 + coeff[14] * Xnorm ** 2 * Ynorm + \
-        coeff[15] * Ynorm ** 3 + coeff[16] * Ynorm * Znorm ** 2 + coeff[17] * Xnorm ** 2 * Znorm + \
-        coeff[18] * Ynorm ** 2 * Znorm + coeff[19] * Znorm ** 3
+    rational = coeff[0] + coeff[1] * xnorm + coeff[2] * ynorm + coeff[3] * znorm + coeff[4] * xnorm * ynorm + \
+        coeff[5] * xnorm * znorm + coeff[6] * ynorm * znorm + coeff[7] * xnorm ** 2 + coeff[8] * ynorm ** 2 + \
+        coeff[9] * znorm ** 2 + coeff[10] * xnorm * ynorm * znorm + coeff[11] * xnorm ** 3 + \
+        coeff[12] * xnorm * ynorm ** 2 + coeff[13] * xnorm * znorm ** 2 + coeff[14] * xnorm ** 2 * ynorm + \
+        coeff[15] * ynorm ** 3 + coeff[16] * ynorm * znorm ** 2 + coeff[17] * xnorm ** 2 * znorm + \
+        coeff[18] * ynorm ** 2 * znorm + coeff[19] * znorm ** 3
 
     return rational
 
 
 @njit('Tuple((f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)', parallel=True,
       cache=True, fastmath=True)
-def compute_rational_function_polynomial(Xnorm, Ynorm, Znorm, Num_COL, Den_COL, Num_LIG, Den_LIG, scale_COL,
-                                         offset_COL, scale_LIG, offset_LIG):
+def compute_rational_function_polynomial(lon_col_norm, lat_row_norm, alt_norm, num_col, den_col, num_lin, den_lin,
+                                         scale_col, offset_col, scale_lin, offset_lin):
     """
     Compute rational function polynomial using numba to reduce calculation time on multiple points.
     useful to compute direct and inverse localization using direct or inverse RPC.
 
-    :param Xnorm: Normalized longitude (for inverse) or column (for direct) position
-    :type Xnorm: 1D np.array dtype np.float 64
-    :param Ynorm: Normalized latitude (for inverse) or line (for direct) position
-    :type Ynorm: 1D np.array dtype np.float 64
-    :param Znorm: Normalized altitude position
-    :type Znorm: 1D np.array dtype np.float 64
-    :param Num_COL: Column numerator coefficients
-    :type Num_COL: 1D np.array dtype np.float 64
-    :param Den_COL: Column denominator coefficients
-    :type Den_COL: 1D np.array dtype np.float 64
-    :param Num_LIG: Line numerator coefficients
-    :type Num_LIG: 1D np.array dtype np.float 64
-    :param Den_LIG: Line denominator coefficients
-    :type Den_LIG: 1D np.array dtype np.float 64
-    :param scale_COL: Column scale
-    :type scale_COL: float 64
-    :param offset_COL: Column offset
-    :type offset_COL: float 64
-    :param scale_LIG: Line scale
-    :type scale_LIG: float 64
-    :param offset_LIG: Line offset
-    :type offset_LIG: float 64
-    :return: sensor position (row, col)
+    :param lon_col_norm: Normalized longitude (for inverse) or column (for direct) position
+    :type lon_col_norm: 1D np.array dtype np.float 64
+    :param lat_row_norm: Normalized latitude (for inverse) or line (for direct) position
+    :type lat_row_norm: 1D np.array dtype np.float 64
+    :param alt_norm: Normalized altitude position
+    :type alt_norm: 1D np.array dtype np.float 64
+    :param num_col: Column numerator coefficients
+    :type num_col: 1D np.array dtype np.float 64
+    :param den_col: Column denominator coefficients
+    :type den_col: 1D np.array dtype np.float 64
+    :param num_lin: Line numerator coefficients
+    :type num_lin: 1D np.array dtype np.float 64
+    :param den_lin: Line denominator coefficients
+    :type den_lin: 1D np.array dtype np.float 64
+    :param scale_col: Column scale
+    :type scale_col: float 64
+    :param offset_col: Column offset
+    :type offset_col: float 64
+    :param scale_lin: Line scale
+    :type scale_lin: float 64
+    :param offset_lin: Line offset
+    :type offset_lin: float 64
+    :return: for inverse localization : sensor position (row, col). for direct localization : ground position (lon, lat)
     :rtype Tuple(np.ndarray, np.ndarray)
     """
-    assert Xnorm.shape == Znorm.shape
+    assert lon_col_norm.shape == alt_norm.shape
 
-    Cout = np.zeros((Xnorm.shape[0]), dtype=np.float64)
-    Lout = np.zeros((Xnorm.shape[0]), dtype=np.float64)
+    col_lat_out = np.zeros((lon_col_norm.shape[0]), dtype=np.float64)
+    row_lon_out = np.zeros((lon_col_norm.shape[0]), dtype=np.float64)
 
-    for i in prange(Xnorm.shape[0]):
-        Pu = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Num_COL)
-        Qu = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Den_COL)
-        Pv = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Num_LIG)
-        Qv = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Den_LIG)
-        Cout[i] = Pu / Qu * scale_COL + offset_COL
-        Lout[i] = Pv / Qv * scale_LIG + offset_LIG
+    for i in prange(lon_col_norm.shape[0]):
+        poly_num_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], num_col)
+        poly_den_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], den_col)
+        poly_num_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], num_lin)
+        poly_den_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], den_lin)
+        col_lat_out[i] = poly_num_col / poly_den_col * scale_col + offset_col
+        row_lon_out[i] = poly_num_lin / poly_den_lin * scale_lin + offset_lin
 
-    return Lout, Cout
+    return row_lon_out, col_lat_out
 
 
 @njit('f8(f8, f8, f8, f8[:])', cache=True, fastmath=True)
-def derivative_polynomial_latitude(Xnorm, Ynorm, Znorm, coeff):
+def derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, coeff):
     """
     Compute latitude derivative polynomial equation
 
-    :param Xnorm: Normalized longitude position
-    :type Xnorm: float 64
-    :param Ynorm: Normalized latitude position
-    :type Ynorm: float 64
-    :param Znorm: Normalized altitude position
-    :type Znorm: float 64
+    :param lon_norm: Normalized longitude position
+    :type lon_norm: float 64
+    :param lat_norm: Normalized latitude position
+    :type lat_norm: float 64
+    :param alt_norm: Normalized altitude position
+    :type alt_norm: float 64
     :param coeff: coefficients
     :type coeff: 1D np.array dtype np.float 64
     :return: rational derivative
     :rtype: float 64
     """
-    dr = coeff[2] + coeff[4] * Xnorm + coeff[6] * Znorm + 2 * coeff[8] * Ynorm + \
-         coeff[10] * Xnorm * Znorm + 2 * coeff[12] * Xnorm * Ynorm + coeff[14] * Xnorm**2 + 3 * coeff[15] * Ynorm**2 + \
-         coeff[16] * Znorm**2 + 2 * coeff[18] * Ynorm * Znorm
+    derivate = coeff[2] + coeff[4] * lon_norm + coeff[6] * alt_norm + 2 * coeff[8] * lat_norm + \
+               coeff[10] * lon_norm * alt_norm + 2 * coeff[12] * lon_norm * lat_norm + coeff[14] * lon_norm**2 + \
+               3 * coeff[15] * lat_norm**2 + coeff[16] * alt_norm**2 + 2 * coeff[18] * lat_norm * alt_norm
 
-    return dr
+    return derivate
 
 
 @njit('f8(f8, f8, f8, f8[:])', cache=True, fastmath=True)
-def derivative_polynomial_longitude(Xnorm, Ynorm, Znorm, coeff):
+def derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, coeff):
     """
     Compute longitude derivative polynomial equation
 
-    :param Xnorm: Normalized longitude position
-    :type Xnorm: float 64
-    :param Ynorm: Normalized latitude position
-    :type Ynorm: float 64
-    :param Znorm: Normalized altitude position
-    :type Znorm: float 64
+    :param lon_norm: Normalized longitude position
+    :type lon_norm: float 64
+    :param lat_norm: Normalized latitude position
+    :type lat_norm: float 64
+    :param alt_norm: Normalized altitude position
+    :type alt_norm: float 64
     :param coeff: coefficients
     :type coeff: 1D np.array dtype np.float 64
     :return: rational derivative
     :rtype: float 64
     """
-    dr = coeff[1] + coeff[4] * Ynorm + coeff[5] * Znorm + 2 * coeff[7] * Xnorm + coeff[10] * Ynorm * Znorm + \
-         3 * coeff[11] * Xnorm**2 + coeff[12] * Ynorm**2 + coeff[13] * Znorm**2 + 2 * coeff[14] * Ynorm * Xnorm + \
-         2 * coeff[17] * Xnorm * Znorm
+    derivate = coeff[1] + coeff[4] * lat_norm + coeff[5] * alt_norm + 2 * coeff[7] * lon_norm + \
+               coeff[10] * lat_norm * alt_norm + 3 * coeff[11] * lon_norm**2 + coeff[12] * lat_norm**2 + \
+               coeff[13] * alt_norm**2 + 2 * coeff[14] * lat_norm * lon_norm + 2 * coeff[17] * lon_norm * alt_norm
 
-    return dr
+    return derivate
 
 
 @njit('Tuple((f8[:], f8[:], f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)',
       parallel=True, cache=True, fastmath=True)
-def calcule_derivees_inv_numba(Xnorm, Ynorm, Znorm, Num_COL, Den_COL, Num_LIG, Den_LIG, scale_COL, scale_X, scale_LIG, scale_Y):
+def calcule_derivees_inv_numba(lon_norm, lat_norm, alt_norm, num_col, den_col, num_lin, den_lin, scale_col, scale_lon,
+                               scale_lin, scale_lat):
     """
     Analytically compute the partials derivatives of inverse localization using numba to reduce calculation time on
     multiple points
 
-    :param Xnorm: Normalized longitude position
-    :type Xnorm: 1D np.array dtype np.float 64
-    :param Ynorm: Normalized latitude position
-    :type Ynorm: 1D np.array dtype np.float 64
-    :param Znorm: Normalized altitude position
-    :type Znorm: 1D np.array dtype np.float 64
-    :param Num_COL: Column numerator coefficients
-    :type Num_COL: 1D np.array dtype np.float 64
-    :param Den_COL: Column denominator coefficients
-    :type Den_COL: 1D np.array dtype np.float 64
-    :param Num_LIG: Line numerator coefficients
-    :type Num_LIG: 1D np.array dtype np.float 64
-    :param Den_LIG: Line denominator coefficients
-    :type Den_LIG: 1D np.array dtype np.float 64
-    :param scale_COL: Column scale
-    :type scale_COL: float 64
-    :param scale_X: Geodetic longitude scale
-    :type scale_X: float 64
-    :param scale_LIG: Line scale
-    :type scale_LIG: float 64
-    :param scale_Y: Geodetic latitude scale
-    :type scale_Y: float 64
+    :param lon_norm: Normalized longitude position
+    :type lon_norm: 1D np.array dtype np.float 64
+    :param lat_norm: Normalized latitude position
+    :type lat_norm: 1D np.array dtype np.float 64
+    :param alt_norm: Normalized altitude position
+    :type alt_norm: 1D np.array dtype np.float 64
+    :param num_col: Column numerator coefficients
+    :type num_col: 1D np.array dtype np.float 64
+    :param den_col: Column denominator coefficients
+    :type den_col: 1D np.array dtype np.float 64
+    :param num_lin: Line numerator coefficients
+    :type num_lin: 1D np.array dtype np.float 64
+    :param den_lin: Line denominator coefficients
+    :type den_lin: 1D np.array dtype np.float 64
+    :param scale_col: Column scale
+    :type scale_col: float 64
+    :param scale_lon: Geodetic longitude scale
+    :type scale_lon: float 64
+    :param scale_lin: Line scale
+    :type scale_lin: float 64
+    :param scale_lat: Geodetic latitude scale
+    :type scale_lat: float 64
     :return: partials derivatives of inverse localization
-    :rtype: Tuples(DCdx np.array, DCdy np.array, DLdx np.array, DLdy np.array)
+    :rtype: Tuples(dcol_dlon np.array, dcol_dlat np.array, drow_dlon np.array, drow_dlat np.array)
     """
 
-    DCdx = np.zeros((Xnorm.shape[0]), dtype=np.float64)
-    DCdy = np.zeros((Xnorm.shape[0]), dtype=np.float64)
-    DLdx = np.zeros((Xnorm.shape[0]), dtype=np.float64)
-    DLdy = np.zeros((Xnorm.shape[0]), dtype=np.float64)
+    dcol_dlon = np.zeros((lon_norm.shape[0]), dtype=np.float64)
+    dcol_dlat = np.zeros((lon_norm.shape[0]), dtype=np.float64)
+    drow_dlon = np.zeros((lon_norm.shape[0]), dtype=np.float64)
+    drow_dlat = np.zeros((lon_norm.shape[0]), dtype=np.float64)
 
-    for i in prange(Xnorm.shape[0]):
-        NumDC = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Num_COL)
-        DenDC = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Den_COL)
-        NumDL = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Num_LIG)
-        DenDL = polynomial_equation(Xnorm[i], Ynorm[i], Znorm[i], Den_LIG)
+    for i in prange(lon_norm.shape[0]):
+        num_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], num_col)
+        den_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], den_col)
+        num_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], num_lin)
+        den_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], den_lin)
 
-        NumDCdx = derivative_polynomial_longitude(Xnorm[i], Ynorm[i], Znorm[i], Num_COL)
-        DenDCdx = derivative_polynomial_longitude(Xnorm[i], Ynorm[i], Znorm[i], Den_COL)
-        NumDLdx = derivative_polynomial_longitude(Xnorm[i], Ynorm[i], Znorm[i], Num_LIG)
-        DenDLdx = derivative_polynomial_longitude(Xnorm[i], Ynorm[i], Znorm[i], Den_LIG)
+        num_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], num_col)
+        den_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], den_col)
+        num_drow_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], num_lin)
+        den_drow_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], den_lin)
 
-        NumDCdy = derivative_polynomial_latitude(Xnorm[i], Ynorm[i], Znorm[i], Num_COL)
-        DenDCdy = derivative_polynomial_latitude(Xnorm[i], Ynorm[i], Znorm[i], Den_COL)
-        NumDLdy = derivative_polynomial_latitude(Xnorm[i], Ynorm[i], Znorm[i], Num_LIG)
-        DenDLdy = derivative_polynomial_latitude(Xnorm[i], Ynorm[i], Znorm[i], Den_LIG)
+        num_dcol_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], num_col)
+        den_dcol_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], den_col)
+        num_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], num_lin)
+        den_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], den_lin)
 
-        DCdx[i] = scale_COL/scale_X * (NumDCdx*DenDC - DenDCdx*NumDC)/DenDC**2
-        DCdy[i] = scale_COL/scale_Y * (NumDCdy*DenDC - DenDCdy*NumDC)/DenDC**2
-        DLdx[i] = scale_LIG/scale_X * (NumDLdx*DenDL - DenDLdx*NumDL)/DenDL**2
-        DLdy[i] = scale_LIG/scale_Y * (NumDLdy*DenDL - DenDLdy*NumDL)/DenDL**2
+        dcol_dlon[i] = scale_col/scale_lon * (num_dcol_dlon*den_dcol - den_dcol_dlon*num_dcol)/den_dcol**2
+        dcol_dlat[i] = scale_col/scale_lat * (num_dcol_dlat*den_dcol - den_dcol_dlat*num_dcol)/den_dcol**2
+        drow_dlon[i] = scale_lin/scale_lon * (num_drow_dlon*den_drow - den_drow_dlon*num_drow)/den_drow**2
+        drow_dlat[i] = scale_lin/scale_lat * (num_drow_dlat*den_drow - den_drow_dlat*num_drow)/den_drow**2
 
-    return DCdx, DCdy, DLdx, DLdy
+    return dcol_dlon, dcol_dlat, drow_dlon, drow_dlat

@@ -18,23 +18,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+"""
+Test module for triangulation class shareloc/triangulation/triangulation.py
+"""
+
+
 import os
+import time
 import pytest
 import numpy as np
 from utils import test_path
 import xarray as xr
 
-import time
-from shareloc.localization import Localization
 from shareloc.grid import Grid
 from shareloc.dtm import DTM
 from shareloc.triangulation.triangulation import distance_point_los,sensor_triangulation
-from shareloc.triangulation.triangulation import epipolar_triangulation, transform_disp_to_matches
-from shareloc.rectification.rectification_grid import RectificationGrid
+from shareloc.triangulation.triangulation import epipolar_triangulation
 from shareloc.rpc.rpc import RPC
-
-import rasterio as rio
-
 
 def prepare_loc(alti = "geoide", id_scene="P1BP--2017030824934340CP"):
     """
@@ -49,14 +50,13 @@ def prepare_loc(alti = "geoide", id_scene="P1BP--2017030824934340CP"):
     #chargement du mnt
     fic = os.path.join(data_folder,"MNT_extrait/mnt_extrait.c1")
     dtmbsq = DTM(fic)
-    
+
     #chargement des grilles
     gld = os.path.join(data_folder,"grilles_gld_xH/{}_H1.hd".format(id_scene))
     gri = Grid(gld)
 
     return dtmbsq,gri
 
-    
 @pytest.mark.parametrize("col,row,h", [(1000.5,1500.5,10.0)])
 @pytest.mark.unit_tests
 def test_sensor_triangulation(row, col, h):
@@ -71,36 +71,51 @@ def test_sensor_triangulation(row, col, h):
     gri_right.estimate_inverse_loc_predictor()
     lonlatalt = gri_left.direct_loc_h(row, col, h)
 
-    inv_row,inv_col, alt, valid = gri_right.inverse_loc(lonlatalt[0],lonlatalt[1],lonlatalt[2])
+    inv_row,inv_col, __, __ = gri_right.inverse_loc(lonlatalt[0],lonlatalt[1],lonlatalt[2])
 
     matches = np.zeros([1,4])
     matches[0,:] = [col,row,inv_col,inv_row]
     #matches[1,:] = [lig + 10, col + 5, inv_lig + 12, inv_col + 7]
 
-    point_ecef, point_wgs84, distance  = sensor_triangulation(matches,gri_left,gri_right, residues = True)
+    __, point_wgs84, distance = sensor_triangulation(matches,gri_left,gri_right, residues = True)
 
-    assert(lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8))
-    assert(lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8))
-    assert(lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=8e-3))
-    assert(distance == pytest.approx(0.0,abs=1e-3))
-    #assert(valid == 1)
+    assert lonlatalt[0] == pytest.approx(point_wgs84[0,0],abs=1e-8)
+    assert lonlatalt[1] == pytest.approx(point_wgs84[0,1],abs=1e-8)
+    assert lonlatalt[2] == pytest.approx(point_wgs84[0,2],abs=8e-3)
+    assert distance == pytest.approx(0.0,abs=1e-3)
 
 @pytest.mark.unit_tests
 def test_triangulation_residues():
+    """
+    Test triangulation residues on simulated LOS
+    """
 
-    class simulatedLOS:
+    class SimulatedLOS:
         """ line of sight class
         """
 
         def __init__(self):
             self.sis=np.array([[100.0, 10.0, 200.0],[100.0, 10.0, 200.0]])
             self.vis=np.array([[0.0, 1., 0.0],[0.0, 1., 0.0] ])
-    los = simulatedLOS()
+
+        def print_sis(self):
+            """
+            print los hat
+            """
+            print(self.sis)
+
+        def print_vis(self):
+            """
+            print los viewing vector
+            """
+            print(self.vis)
+
+    los = SimulatedLOS()
 
     distance = 10.0
     point = los.sis + 100.0 * los.vis + distance* np.array([[0.0, 0.0, 1.0],[0.0, 0.0, 1.0]])
     residue = distance_point_los(los, point)
-    assert (distance == pytest.approx(residue, abs=1e-9))
+    assert distance == pytest.approx(residue, abs=1e-9)
 
 @pytest.mark.unit_tests
 def test_epi_triangulation_sift():
@@ -120,16 +135,13 @@ def test_epi_triangulation_sift():
     matches = np.load(matches_filename)
 
 
-    point_ecef, point_wgs84, __ = epipolar_triangulation(matches,
+    point_ecef, __, __ = epipolar_triangulation(matches,
                                                          None,"sift",
                                                          gri_left,gri_right,grid_left_filename,grid_right_filename)
 
     valid = [4584341.53073309455066919326782, 572313.952957414789125323295593, 4382784.34314652625471353530884]
     print(valid - point_ecef[0,:])
-    assert(valid == pytest.approx(point_ecef[0,:],abs=1.0))
-
-
-
+    assert valid == pytest.approx(point_ecef[0,:],abs=1.0)
 
 @pytest.mark.unit_tests
 def test_epi_triangulation_sift_rpc():
@@ -151,41 +163,23 @@ def test_epi_triangulation_sift_rpc():
     matches_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "matches-crop.npy")
     matches = np.load(matches_filename)
 
-    point_ecef, point_wgs84, __ = epipolar_triangulation(matches,
-                                                         None,"sift",geom_model_left,
-                                                         geom_model_right,grid_left_filename,grid_right_filename)
+    point_ecef, __, __ = epipolar_triangulation(matches,
+                                        None,"sift",geom_model_left,
+                                        geom_model_right,grid_left_filename,grid_right_filename)
     valid = [4584341.53073309455066919326782, 572313.952957414789125323295593, 4382784.34314652625471353530884]
     #print(valid - point_ecef[0,:])
-    assert(valid == pytest.approx(point_ecef[0,:],abs=1e-3))
+    assert valid == pytest.approx(point_ecef[0,:],abs=1e-3)
 
-
-
-@pytest.mark.unit_tests
-def test_epi_triangulation_sift_distance():
+def stats_diff(cloud, array_epi):
     """
-    Test epipolar triangulation
+    compute difference statistics between dataset and shareloc results
+    :param cloud :  CARS dataset
+    :type cloud : xarray dataset
+    :param array_epi :  shareloc array
+    :type array_epi : numpy.array
+    :return stats [mean,min, max]
+    :rtype numpy.array
     """
-    id_scene_right = "P1BP--2017092838319324CP"
-    ___,gri_right = prepare_loc("ellipsoide",id_scene_right)
-    id_scene_left = "P1BP--2017092838284574CP"
-    ___, gri_left = prepare_loc("ellipsoide",id_scene_left)
-
-
-    grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid.tif")
-    grid_right_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "right_epipolar_grid.tif")
-
-
-
-    matches_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "matches-crop.npy")
-    matches = np.load(matches_filename)
-    print(matches.shape)
-    fname = os.path.join(os.environ["TESTPATH"], "triangulation", "matches-crop.tif")
-
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(matches,
-                                                                None,"sift",gri_left,gri_right,
-                                                                grid_left_filename,grid_right_filename, residues = True)
-
-def stats_diff(cloud,array_epi):
     coords_x = cloud.x.values
     coords_y = cloud.y.values
     coords_z = cloud.z.values
@@ -212,6 +206,17 @@ def stats_diff(cloud,array_epi):
 
 
 def create_dataset(disp,point_wgs84,point_ecef,residuals):
+    """
+    create new dataset from existing one
+    :param point_wgs84 :  points WGS84
+    :type point_wgs84 : numpy.array
+    :param point_ecef :  points ECEF
+    :type point_ecef : numpy.array
+    :param residuals :  traingulations residuals
+    :type residuals : numpy.array
+    :return dataset
+    :rtype xarray.dataset
+    """
     array_shape = disp.disp.values.shape
     array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1], 3))
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
@@ -294,12 +299,10 @@ def test_epi_triangulation_disp_rpc_roi():
     disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "disp1_ref.nc")
     disp = xr.load_dataset(disp_filename)
 
-    start = time.time()
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp, None, "disp",
+    __, point_wgs84, __ = epipolar_triangulation(disp, None, "disp",
                                                     geom_model_left, geom_model_right, grid_left_filename,
                                                    grid_right_filename, residues = True, fill_nan = True)
-    end = time.time()
-    pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
+    #pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
 
     #open cloud
     cloud_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "triangulation1_ref.nc")
@@ -313,9 +316,6 @@ def test_epi_triangulation_disp_rpc_roi():
     assert point_wgs84[index,1] == pytest.approx(cloud.y.values.flatten()[index],abs=1e-8)
     assert point_wgs84[index,2] == pytest.approx(cloud.z.values.flatten()[index],abs=1e-3)
     assert stats[:,2] == pytest.approx([0,0,0], abs=6e-4)
-
-
-
 
 @pytest.mark.unit_tests
 def test_epi_triangulation_disp_grid():
@@ -383,7 +383,7 @@ def test_epi_triangulation_disp_grid_masked():
     disp = xr.load_dataset(disp_filename)
     mask_array = disp.msk.values
     start = time.time()
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(disp,
+    point_ecef, __, __ = epipolar_triangulation(disp,
                                                                 mask_array, "disp",
                                                                 gri_left, gri_right,
                                                                 grid_left_filename,

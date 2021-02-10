@@ -19,6 +19,11 @@
 # limitations under the License.
 #
 
+"""
+This module contains triangulation methods.
+"""
+
+
 import numpy as np
 from shareloc.rectification.rectification_grid import RectificationGrid
 from shareloc.proj_utils import coordinates_conversion
@@ -187,18 +192,18 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
     """
 
     # retrieve point matches in sensor geometry
-    if matches_type is 'sift':
+    if matches_type == "sift":
         epi_pos_left = matches[:,0:2]
         epi_pos_right= matches[:,2:4]
         values_ok = np.full((matches.shape[0]), True, dtype=bool)
-    elif matches_type is 'disp':
+    elif matches_type == "disp":
         [epi_pos_left, epi_pos_right, values_ok] = transform_disp_to_matches(matches,mask)
         #epi_pos_left = matches[:,0:2]
         #epi_disp_right= matches[:,2:4]
 
     else:
-            raise Exception(
-                'matches type should be sift or disp')
+        raise Exception(
+            "matches type should be sift or disp")
 
     #interpolate left
     rectif_grid_left = RectificationGrid(grid_left)

@@ -27,6 +27,7 @@ from shareloc.grid import grid, coloc
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC
 from shareloc.localization import Localization
+from shareloc.localization import coloc as coloc_rpc
 
 
 def prepare_loc(alti = 'geoide', id_scene='P1BP--2017030824934340CP'):
@@ -400,4 +401,19 @@ def test_loc_dir_loc_inv_couple(lig, col, h):
     #assert(valid == 1)
 
 
+@pytest.mark.parametrize("col,row,alt", [(600, 200, 125)])
+def test_colocalization(col, row, alt):
+    """
+    Test colocalization function using rpc
+    """
+    from shareloc.localization import coloc as coloc_rpc
 
+    data_folder = test_path()
+    id_scene = 'P1BP--2018122638935449CP'
+    file_dimap = os.path.join(data_folder, 'rpc/PHRDIMAP_{}.XML'.format(id_scene))
+    fctrat = RPC.from_dimap_v1(file_dimap)
+
+    row_coloc, col_coloc, _ = coloc_rpc(fctrat, fctrat, row, col, alt)
+
+    assert (row == pytest.approx(row_coloc, abs=1e-1))
+    assert (col == pytest.approx(col_coloc, abs=1e-1))

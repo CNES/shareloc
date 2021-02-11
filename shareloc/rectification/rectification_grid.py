@@ -62,6 +62,14 @@ class RectificationGrid:
         self.row_positions = self.row_dep + self.grid_x
         self.col_positions = self.col_dep + self.grid_y
 
+    def get_positions(self):
+        """
+        return grid positions
+        :return grid positions
+        :rtype  numpy array, numpy array
+        """
+        return self.row_positions, self.col_positions
+
     def interpolate(self, positions):
         """
         interpolate position

@@ -162,6 +162,8 @@ def transform_disp_to_matches(disp, mask=None):
     return (epi_left_pos.transpose(), epi_right_pos.transpose(), values_ok.flatten())
 
 
+# CARS API
+# pylint: disable=too-many-arguments
 def epipolar_triangulation(
     matches,
     mask,

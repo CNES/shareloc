@@ -38,31 +38,34 @@ def interpol_bilin(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col):
     """
     if delta_shift_row < 0:
         lower_shift_row = 0
-    elif delta_shift_row >= nb_rows-1:
+    elif delta_shift_row >= nb_rows - 1:
         lower_shift_row = nb_rows - 2
     else:
         lower_shift_row = int(np.floor(delta_shift_row))
-    upper_shift_row = lower_shift_row+1
+    upper_shift_row = lower_shift_row + 1
 
     if delta_shift_col < 0:
         lower_shift_col = 0
-    elif delta_shift_col >= nb_cols-1:
+    elif delta_shift_col >= nb_cols - 1:
         lower_shift_col = nb_cols - 2
     else:
         lower_shift_col = int(np.floor(delta_shift_col))
-    upper_shift_col = lower_shift_col+1
-    #(col_shift, row_shift) are subpixel distance to interpolate along each axis
+    upper_shift_col = lower_shift_col + 1
+    # (col_shift, row_shift) are subpixel distance to interpolate along each axis
     col_shift = delta_shift_col - lower_shift_col
     row_shift = delta_shift_row - lower_shift_row
-    #Altitude
+    # Altitude
     matis = []
     for mat in mats:
-        mati = (1-col_shift)*(1-row_shift)*mat[:, lower_shift_row, lower_shift_col] + \
-            col_shift*(1-row_shift)*mat[:, lower_shift_row, upper_shift_col] + \
-                (1-col_shift)*row_shift*mat[:, upper_shift_row, lower_shift_col] + \
-                    col_shift*row_shift*mat[:, upper_shift_row, upper_shift_col]
+        mati = (
+            (1 - col_shift) * (1 - row_shift) * mat[:, lower_shift_row, lower_shift_col]
+            + col_shift * (1 - row_shift) * mat[:, lower_shift_row, upper_shift_col]
+            + (1 - col_shift) * row_shift * mat[:, upper_shift_row, lower_shift_col]
+            + col_shift * row_shift * mat[:, upper_shift_row, upper_shift_col]
+        )
         matis.append(mati)
     return matis
+
 
 def interpol_bilin_vectorized(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col):
     """
@@ -83,24 +86,26 @@ def interpol_bilin_vectorized(mats, nb_rows, nb_cols, delta_shift_row, delta_shi
     lower_shift_row = np.floor(delta_shift_row).astype(int)
     lower_shift_row[delta_shift_row < 0] = 0
     lower_shift_row[delta_shift_row >= (nb_rows - 1)] = nb_rows - 2
-    upper_shift_row = np.copy(lower_shift_row)+1
+    upper_shift_row = np.copy(lower_shift_row) + 1
 
     lower_shift_col = np.floor(delta_shift_col).astype(int)
     lower_shift_col[delta_shift_col < 0] = 0
     lower_shift_col[delta_shift_col >= (nb_cols - 1)] = nb_cols - 2
-    upper_shift_col = np.copy(lower_shift_col)+1
+    upper_shift_col = np.copy(lower_shift_col) + 1
 
-    #(col_shift,row_shift) are subpixel distance to interpolate along each axis
+    # (col_shift,row_shift) are subpixel distance to interpolate along each axis
     col_shift = delta_shift_col - lower_shift_col
     row_shift = delta_shift_row - lower_shift_row
 
-    #Altitude
+    # Altitude
     matis = []
     for mat in mats:
-        mati = (1-col_shift)*(1-row_shift)*mat[:, lower_shift_row, lower_shift_col] + \
-            col_shift*(1-row_shift)*mat[:, lower_shift_row, upper_shift_col] +\
-                (1-col_shift)*row_shift*mat[:, upper_shift_row, lower_shift_col] + \
-                     col_shift*row_shift*mat[:, upper_shift_row, upper_shift_col]
+        mati = (
+            (1 - col_shift) * (1 - row_shift) * mat[:, lower_shift_row, lower_shift_col]
+            + col_shift * (1 - row_shift) * mat[:, lower_shift_row, upper_shift_col]
+            + (1 - col_shift) * row_shift * mat[:, upper_shift_row, lower_shift_col]
+            + col_shift * row_shift * mat[:, upper_shift_row, upper_shift_col]
+        )
         matis.append(mati)
 
     return matis

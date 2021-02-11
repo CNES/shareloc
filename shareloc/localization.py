@@ -23,10 +23,12 @@
 Localization class for localization functions.
 """
 
+
 class Localization:
-    """ base class for localization function.
+    """base class for localization function.
     Underlying model can be both multi layer localization grids or RPCs models
     """
+
     def __init__(self, model, dtm=None):
         """
         constructor
@@ -36,9 +38,8 @@ class Localization:
         :type dtm  : shareloc.dtm
         """
         self.dtm = dtm
-        self.use_rpc = model.type == 'rpc'
+        self.use_rpc = model.type == "rpc"
         self.model = model
-
 
     def direct(self, row, col, h=None):
         """
@@ -68,6 +69,6 @@ class Localization:
         :rtype numpy.array
         """
 
-        if not self.use_rpc and not hasattr(self.model, 'pred_ofset_scale_lon'):
+        if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
             self.model.estimate_inverse_loc_predictor()
         return self.model.inverse_loc(lon, lat, h)

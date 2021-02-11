@@ -29,10 +29,11 @@ from shareloc.readwrite import read_hdbabel_header, read_bsq_grid
 
 
 class DTM:
-    """ DTM class dedicated
-     works only with BSQ file format
-     we work in cell convention [0,0] is the first cell center (not [0.5,0.5])
+    """DTM class dedicated
+    works only with BSQ file format
+    we work in cell convention [0,0] is the first cell center (not [0.5,0.5])
     """
+
     def __init__(self, dtm_filename, dtm_format="bsq"):
         """
         Constructor
@@ -60,7 +61,7 @@ class DTM:
         self.alt_max_cell = None
         self.tol_z = 0.0001
 
-        #lecture mnt
+        # lecture mnt
         self.load()
         self.init_min_max()
         self.alt_max = self.alt_data.max()
@@ -69,14 +70,18 @@ class DTM:
         self.plane_coef_a = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0])
         self.plane_coef_b = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
         self.plane_coef_c = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
-        self.plane_coef_d = np.array([0.0, self.row_nb-1.0, 0.0, self.column_nb-1.0, self.alt_min, self.alt_max])
+        self.plane_coef_d = np.array([0.0, self.row_nb - 1.0, 0.0, self.column_nb - 1.0, self.alt_min, self.alt_max])
 
-        self.plans = np.array([[1.0, 0.0, 0.0, 0.0],
-                               [1.0, 0.0, 0.0, self.row_nb-1.0],
-                               [0.0, 1.0, 0.0, 0.0],
-                               [0.0, 1.0, 0.0, self.column_nb-1.0],
-                               [0.0, 0.0, 1.0, self.alt_min],
-                               [0.0, 0.0, 1.0, self.alt_max]])
+        self.plans = np.array(
+            [
+                [1.0, 0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0, self.row_nb - 1.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, self.column_nb - 1.0],
+                [0.0, 0.0, 1.0, self.alt_min],
+                [0.0, 0.0, 1.0, self.alt_max],
+            ]
+        )
 
     def load(self):
         """
@@ -100,8 +105,12 @@ class DTM:
         :return evaluation on the plan
         :rtype float
         """
-        return self.plane_coef_a[i]*position[0] + self.plane_coef_b[i]*position[1] + \
-               self.plane_coef_c[i]*position[2] - self.plane_coef_d[i]
+        return (
+            self.plane_coef_a[i] * position[0]
+            + self.plane_coef_b[i] * position[1]
+            + self.plane_coef_c[i] * position[2]
+            - self.plane_coef_d[i]
+        )
 
     def ter_to_index(self, vect_ter):
         """
@@ -154,40 +163,43 @@ class DTM:
         :rtype float
         """
 
-        #index clipping in [0, _row_nb -2]
+        # index clipping in [0, _row_nb -2]
         if pos_row < 0:
             row_inf = 0
-        elif pos_row >= self.row_nb-1:
+        elif pos_row >= self.row_nb - 1:
             row_inf = self.row_nb - 2
         else:
             row_inf = int(np.floor(pos_row))
 
         row_sup = row_inf + 1
 
-        #index clipping in [0, _nc -2]
+        # index clipping in [0, _nc -2]
         if pos_col < 0:
             col_inf = 0
-        elif pos_col >= self.column_nb-1:
+        elif pos_col >= self.column_nb - 1:
             col_inf = self.column_nb - 2
         else:
             col_inf = int(np.floor(pos_col))
 
         col_sup = col_inf + 1
-        #Coefficients d'interpolation bilineaire
+        # Coefficients d'interpolation bilineaire
         delta_u = pos_col - col_inf
         delta_v = pos_row - row_inf
-        #Altitude
-        alt = (1-delta_u)*(1-delta_v)*self.alt_data[row_inf, col_inf] + \
-              delta_u*(1-delta_v)*self.alt_data[row_inf, col_sup] +\
-              (1-delta_u)*delta_v*self.alt_data[row_sup, col_inf] + delta_u*delta_v*self.alt_data[row_sup, col_sup]
+        # Altitude
+        alt = (
+            (1 - delta_u) * (1 - delta_v) * self.alt_data[row_inf, col_inf]
+            + delta_u * (1 - delta_v) * self.alt_data[row_inf, col_sup]
+            + (1 - delta_u) * delta_v * self.alt_data[row_sup, col_inf]
+            + delta_u * delta_v * self.alt_data[row_sup, col_sup]
+        )
         return alt
 
     def init_min_max(self):
         """
         initialize min/max at each dtm cell
         """
-        column_nb_minus = self.column_nb-1
-        row_nb_minus = self.row_nb-1
+        column_nb_minus = self.column_nb - 1
+        row_nb_minus = self.row_nb - 1
 
         self.alt_max_cell = np.zeros((row_nb_minus, column_nb_minus))
         self.alt_min_cell = np.zeros((row_nb_minus, column_nb_minus))
@@ -209,19 +221,19 @@ class DTM:
                 if d_z1 > d_alt_max:
                     d_alt_max = d_z1
 
-                d_z2 = self.alt_data[i, j+1]
+                d_z2 = self.alt_data[i, j + 1]
                 if d_z2 < d_alt_min:
                     d_alt_min = d_z2
                 if d_z2 > d_alt_max:
                     d_alt_max = d_z2
 
-                d_z3 = self.alt_data[i+1, j]
+                d_z3 = self.alt_data[i + 1, j]
                 if d_z3 < d_alt_min:
                     d_alt_min = d_z3
                 if d_z3 > d_alt_max:
                     d_alt_max = d_z3
 
-                d_z4 = self.alt_data[i+1, j+1]
+                d_z4 = self.alt_data[i + 1, j + 1]
                 if d_z4 < d_alt_min:
                     d_alt_min = d_z4
                 if d_z4 > d_alt_max:
@@ -249,7 +261,7 @@ class DTM:
         :return intersection information (True,an intersection has been found ?, (lon,lat) of dtm position, altitude)
         :rtype tuple (bool, bool, numpy.array, float)
         """
-        #los: (n,3):
+        # los: (n,3):
         point_b = None
         h_intersect = None
         (u_i, v_i, z_i, h_i) = ([], [], [], [])
@@ -263,13 +275,13 @@ class DTM:
         for plane_index in range(6):
             # -----------------------------------------------------------------------
             # Initialisation du sommet de la visee
-            los_hat = los_index[0,:]
+            los_hat = los_index[0, :]
             # -----------------------------------------------------------------------
             # Initialisation de la position par / au plan
-            #print self.plans[plane_index,:-1]
-            #los_hat_onplane = (self.plans[plane_index,:-1]*los_hat).sum() - self.d[plane_index]
-            #print los_hat_onplane
-            los_hat_onplane = self.eq_plan(plane_index,los_hat)
+            # print self.plans[plane_index,:-1]
+            # los_hat_onplane = (self.plans[plane_index,:-1]*los_hat).sum() - self.d[plane_index]
+            # print los_hat_onplane
+            los_hat_onplane = self.eq_plan(plane_index, los_hat)
             # -----------------------------------------------------------------------
             # On boucle sur les segments de la visee et on controle
             # si on traverse ou pas la face courante plane_index du cube DTM
@@ -280,12 +292,12 @@ class DTM:
                 s_a = los_hat.copy()
                 # -----------------------------------------------------------------------
                 # Reinit du point B
-                los_hat = los_index[alti_layer,:] #dg on itere sur les differents points de la visee
-                #print los_hat
+                los_hat = los_index[alti_layer, :]  # dg on itere sur les differents points de la visee
+                # print los_hat
                 # -----------------------------------------------------------------------
                 # Initialisation de la position par / au plan
-                los_hat_onplane = self.eq_plan(plane_index,los_hat)
-                #print 'posAposB',los_a,los_hat_onplane
+                los_hat_onplane = self.eq_plan(plane_index, los_hat)
+                # print 'posAposB',los_a,los_hat_onplane
                 # -----------------------------------------------------------------------
                 # Test d'intersection : los_a et los_hat_onplane de signes opposes
                 if los_a * los_hat_onplane <= 0:
@@ -340,7 +352,7 @@ class DTM:
                         else:
                             z_i.append(interp_coef_a * s_a[2] + interp_coef_b * los_hat[2])
                         # . coordonn?e <h> (abscisse visee)
-                        h_i.append(alti_layer - interp_coef_a) #index non entier de l'intersection
+                        h_i.append(alti_layer - interp_coef_a)  # index non entier de l'intersection
                     # -----------------------------------------------------------------------
                     # Incrementation du nombre d'intersections trouvees
                     nbi += 1
@@ -350,9 +362,9 @@ class DTM:
 
         # -----------------------------------------------------------------------
         # Tri des points le long de la visee (il y en a au moins deux)
-        #on les range par ordre decroissant en altitude
+        # on les range par ordre decroissant en altitude
         for alti_layer in range(nbi):
-            for next_alti_layer in range(alti_layer+1,nbi):
+            for next_alti_layer in range(alti_layer + 1, nbi):
                 if h_i[next_alti_layer] < h_i[alti_layer]:
                     dtmp = u_i[alti_layer]
                     u_i[alti_layer] = u_i[next_alti_layer]
@@ -371,13 +383,18 @@ class DTM:
         # Filtrage des points non situes sur le cube
         alti_layer = 0
         while alti_layer < nbi:
-            #test a l'interieur du cube
-            test_on_cube = (u_i[alti_layer] >= self.plane_coef_d[0]) and (u_i[alti_layer] <= self.plane_coef_d[1]) and \
-                           (v_i[alti_layer] >= self.plane_coef_d[2]) and (v_i[alti_layer] <= self.plane_coef_d[3]) and \
-                           (z_i[alti_layer] >= self.plane_coef_d[4]) and (z_i[alti_layer] <= self.plane_coef_d[5])
+            # test a l'interieur du cube
+            test_on_cube = (
+                (u_i[alti_layer] >= self.plane_coef_d[0])
+                and (u_i[alti_layer] <= self.plane_coef_d[1])
+                and (v_i[alti_layer] >= self.plane_coef_d[2])
+                and (v_i[alti_layer] <= self.plane_coef_d[3])
+                and (z_i[alti_layer] >= self.plane_coef_d[4])
+                and (z_i[alti_layer] <= self.plane_coef_d[5])
+            )
             if not test_on_cube:
                 # On translate tous les points suivants (on ecrase ce point non valide)
-                for next_alti_layer in range(alti_layer+1, nbi):
+                for next_alti_layer in range(alti_layer + 1, nbi):
                     u_i[next_alti_layer - 1] = u_i[next_alti_layer]
                     v_i[next_alti_layer - 1] = v_i[next_alti_layer]
                     z_i[next_alti_layer - 1] = z_i[next_alti_layer]
@@ -399,15 +416,15 @@ class DTM:
         point_dtm[0] = u_i[0]
         point_dtm[1] = v_i[0]
         point_dtm[2] = z_i[0]
-        #PointDTM est la premiere intersection avec le cube (lig, col)
+        # PointDTM est la premiere intersection avec le cube (lig, col)
         # -----------------------------------------------------------------------
         # h dans gld 3D
         h_intersect = h_i[0]
-        #h_intersect correspond a l'index (non entier) d'interpolation en h
+        # h_intersect correspond a l'index (non entier) d'interpolation en h
         # -----------------------------------------------------------------------
         # Coordonnees terrain
         point_b = self.index_to_ter(point_dtm)
-        #point_b est le point Terrain (lon,lat)
+        # point_b est le point Terrain (lon,lat)
         # -----------------------------------------------------------------------
         # Fin, retour
         b_trouve = True
@@ -431,14 +448,14 @@ class DTM:
         (npl, _) = los.shape
         alti = range(npl, -1, -1)
 
-        p_1 = point_b_dtm.copy() #[p_1[0],p_1[1],p_1[2]]
+        p_1 = point_b_dtm.copy()  # [p_1[0],p_1[1],p_1[2]]
 
         h_intersect_p1 = h_intersect
 
         n_u = self.row_nb
         n_v = self.column_nb
 
-        #1 - Initilialisation et tests prealables
+        # 1 - Initilialisation et tests prealables
         #   1.1 - Test si le sommet est au-dessu du DTM
         #       - Calcul de l'altitude du DTM ? la position du sommet
         h_1 = self.interpolate(p_1[0], p_1[1])
@@ -447,12 +464,11 @@ class DTM:
 
         #       - Test si le nouveau point haut est au dessus du DTM
         if d_1 < 0:
-        #       - Point situ? en dessous du DTM
-        #          . ceci signifie que la vis?e rentre dans le DTM par le c?t?
-        #          . donc en dessous, pas de solution
+            #       - Point situ? en dessous du DTM
+            #          . ceci signifie que la vis?e rentre dans le DTM par le c?t?
+            #          . donc en dessous, pas de solution
             b_trouve = False
             return True, b_trouve, point_r
-
 
         #   1.2 - Initialisation du rang du premier sommet de la visee
         i_0 = int(np.floor(h_intersect_p1))
@@ -461,36 +477,36 @@ class DTM:
         p_2 = point_b_dtm.copy()
         h_intersect_p2 = h_intersect
 
-        #2. - Boucle sur les plans de grille
+        # 2. - Boucle sur les plans de grille
         while i_0 < (los_index.size - 1):
-            #2.1 - Initialisation du sommet courant de la visee
+            # 2.1 - Initialisation du sommet courant de la visee
             u_0 = los_index[i_0][0]
             v_0 = los_index[i_0][1]
             z_0 = los_index[i_0][2]
             z_1 = los_index[i_0 + 1][2]
 
-            #2.2 - Initialisation de la visee DTM
+            # 2.2 - Initialisation de la visee DTM
             los_dtm = los_index[i_0 + 1] - los_index[i_0]
 
-            #2.3 - Test si visee verticale
-            if (los_dtm[0]==0 and los_dtm[1]==0):
-                #2.3.1 - La vis?e est verticale :
+            # 2.3 - Test si visee verticale
+            if los_dtm[0] == 0 and los_dtm[1] == 0:
+                # 2.3.1 - La vis?e est verticale :
                 #    - Calcul de l'altitude du DTM ? la position du sommet
                 h_1 = self.interpolate(u_0, v_0)
 
                 #    Test si le plan suivant est en dessous du DTM
                 if los_index[i_0 + 1][2] <= h_1:
-                    #Init point de sortie
+                    # Init point de sortie
                     p_1[0] = u_0
                     p_1[1] = v_0
                     p_1[2] = h_1
                     b_trouve = True
                     self.index_to_ter(p_1, point_r)
                     return True, b_trouve, point_r
-                #Positionnement sur le sommet suivant
+                # Positionnement sur le sommet suivant
                 i_0 += 1
             else:
-                #2.3.2 - La visee n'est pas verticale :
+                # 2.3.2 - La visee n'est pas verticale :
                 #         elle v_a donc survoler le DTM
                 #         . on peut donc poursuivre
                 #         . reste ? d?montrer que la vis?e se crashe sur le DTM...
@@ -504,8 +520,8 @@ class DTM:
                 # Ainsi, on peut perdre des points sur une tranche d'altitude
                 # Pour etre sur de scanner le segment de visee, on reinitialise
                 # le point au depart du segment, soit a_2 = 0
-                if a_2 >= 1.:
-                    a_2 = 0.
+                if a_2 >= 1.0:
+                    a_2 = 0.0
 
                 # Initialisation de la premi?re maille DTM intersect?e
                 #  - Initialisation des indices de la maille
@@ -524,8 +540,9 @@ class DTM:
                     v_c -= 1
 
                 # LDD - On est deja en dehors des limites, on s'arrete
-                if not((a_2 < 1) and (u_c > -1) and (u_c < (n_u - 1))
-                       and (v_c > -1) and (v_c < (n_v - 1)) ) and (a_2 < 1):
+                if not ((a_2 < 1) and (u_c > -1) and (u_c < (n_u - 1)) and (v_c > -1) and (v_c < (n_v - 1))) and (
+                    a_2 < 1
+                ):
                     b_trouve = False
                     return True, b_trouve, point_r
 
@@ -536,7 +553,7 @@ class DTM:
                     h_s = self.alt_max_cell[u_c, v_c]
 
                     # - Transfert : le point bas devient le point haut
-                    #a1 = a_2;
+                    # a1 = a_2;
                     # p_1 devient p_2
                     p_1 = p_2.copy()
                     h_intersect_p1 = h_intersect_p2.copy()
@@ -758,14 +775,14 @@ class DTM:
 
                     if p_2[2] > z_0:
                         # On est remonte trop haut, et ca c'est pas bon !!!
-                        b_intersect = not(((p_1[2] > h_s) and (z_0 > h_s)) or ((p_1[2] < h_i) and (z_0 < h_i)))
+                        b_intersect = not (((p_1[2] > h_s) and (z_0 > h_s)) or ((p_1[2] < h_i) and (z_0 < h_i)))
 
                     elif p_2[2] < z_1:
                         # On est descendu trop bas, et ca c'est pas bon non plus !!! (m?me si c'est d?j? plus logique)
-                        b_intersect = not(((p_1[2] > h_s) and (z_1 > h_s)) or ((p_1[2] < h_i) and (z_1 < h_i)))
+                        b_intersect = not (((p_1[2] > h_s) and (z_1 > h_s)) or ((p_1[2] < h_i) and (z_1 < h_i)))
 
                     else:
-                        b_intersect = not(((p_1[2] > h_s) and (p_2[2] > h_s)) or ((p_1[2] < h_i) and (p_2[2] < h_i)))
+                        b_intersect = not (((p_1[2] > h_s) and (p_2[2] > h_s)) or ((p_1[2] < h_i) and (p_2[2] < h_i)))
 
                     # 5. Test d'intersection de la vis?e avec le cube
                     if b_intersect:
@@ -782,7 +799,7 @@ class DTM:
                         if d_1 * d_2 <= 0:
                             # Il y a intersection entre la vis?e et le DTM
                             # 5.3.1 - Calcul de la solution approch?e
-                            d_2 = 2 * self.tol_z # Init de d_2 > TOL_Z
+                            d_2 = 2 * self.tol_z  # Init de d_2 > TOL_Z
                             u_a = p_2[0]
                             v_a = p_2[1]
                             z_a = h_2
@@ -817,7 +834,7 @@ class DTM:
                                     p_2[2] = z_a
                                     h_2 = z_v
 
-                            #// Fin, retour
+                            # // Fin, retour
                             p_1[0] = u_a
                             p_1[1] = v_a
                             p_1[2] = z_a

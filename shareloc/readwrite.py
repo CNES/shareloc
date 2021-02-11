@@ -26,7 +26,7 @@ import os.path as op
 import numpy as np
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 def read_hdbabel_header(bsq_filename):
     """
     read bsq .hd_babel header
@@ -36,24 +36,25 @@ def read_hdbabel_header(bsq_filename):
     :rtype dict
     """
     path_header = op.dirname(bsq_filename)
-    name_header = op.basename(bsq_filename).split('.')[0] + '.hd_babel'
+    name_header = op.basename(bsq_filename).split(".")[0] + ".hd_babel"
     header = {}
     hd_babel = {}
-    with open(op.join(path_header, name_header), 'r') as fstream:
+    with open(op.join(path_header, name_header), "r") as fstream:
         txt_header = fstream.readlines()
     for row_header in txt_header:
-        if row_header.startswith('>>'):
-            rowsplit = row_header.split('\t')
+        if row_header.startswith(">>"):
+            rowsplit = row_header.split("\t")
             header[rowsplit[1]] = rowsplit[2]
-    hd_babel['origin_x'] = float(header['LON_REF'])
-    hd_babel['origin_y'] = float(header['LAT_REF'])
-    hd_babel['column_nb'] = int(header['NB_LON'])
-    hd_babel['row_nb'] = int(header['NB_LAT'])
-    hd_babel['pixel_size_x'] = float(header['PAS_LON'])
-    hd_babel['pixel_size_y'] = float(header['PAS_LAT'])
-    if int(header['TYPE_CODE']) == 2:
-        hd_babel['data_type'] = 'int16'
+    hd_babel["origin_x"] = float(header["LON_REF"])
+    hd_babel["origin_y"] = float(header["LAT_REF"])
+    hd_babel["column_nb"] = int(header["NB_LON"])
+    hd_babel["row_nb"] = int(header["NB_LAT"])
+    hd_babel["pixel_size_x"] = float(header["PAS_LON"])
+    hd_babel["pixel_size_y"] = float(header["PAS_LAT"])
+    if int(header["TYPE_CODE"]) == 2:
+        hd_babel["data_type"] = "int16"
     return hd_babel
+
 
 def read_bsq_grid(fic_bsq, nb_rows, nb_cols, data_type):
     """
@@ -72,6 +73,7 @@ def read_bsq_grid(fic_bsq, nb_rows, nb_cols, data_type):
     grid = np.fromfile(fic_bsq, dtype=data_type).reshape((nb_rows, nb_cols))
     return grid
 
+
 def read_bsq_hd(fic_hd, tag):
     """
     read bsq header
@@ -83,12 +85,12 @@ def read_bsq_hd(fic_hd, tag):
     :rtype dict
     """
     dico_out = {}
-    with open(op.join(fic_hd), 'r') as fstream:
+    with open(op.join(fic_hd), "r") as fstream:
         txt_header = fstream.readlines()
     header = {}
 
     for i in range(0, txt_header.__len__(), 2):
-        header[txt_header[i].strip()] = txt_header[i+1].strip()
+        header[txt_header[i].strip()] = txt_header[i + 1].strip()
 
     for var in tag:
         (nom, form) = tag[var]

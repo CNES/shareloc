@@ -105,13 +105,27 @@ def test_identify_dimap():
     assert dimap_version == "1.4"
 
 
-@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001",
-                                                                  7.048662660737769592, 43.72774839443545858, 0.0,
-                                                                  100.0, 200.0),
-                                                                 ("PHR1B_P_201709281038045_SEN_PRG_FC_178608-001",
-                                                                  7.11526088296757386331137240632,
-                                                                  43.684281179313565246502548689, 850.0,  10121.0657,
-                                                                  10235.9310)])
+@pytest.mark.parametrize(
+    "id_scene,lon,lat,alt, col_vt,row_vt",
+    [
+        (
+            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001",
+            7.048662660737769592,
+            43.72774839443545858,
+            0.0,
+            100.0,
+            200.0,
+        ),
+        (
+            "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001",
+            7.11526088296757386331137240632,
+            43.684281179313565246502548689,
+            850.0,
+            10121.0657,
+            10235.9310,
+        ),
+    ],
+)
 def test_rpc_ossim_kwl(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test inverse localization from ossim file
@@ -126,15 +140,43 @@ def test_rpc_ossim_kwl(id_scene, lon, lat, alt, row_vt, col_vt):
     assert row == pytest.approx(row_vt, abs=1e-2)
 
 
-@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt",
-                         [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt", 7.048662660737769592,
-                           43.72774839443545858, 0.0, 100.0, 200.0),
-                          ("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.geom", 7.048662660737769592,
-                           43.72774839443545858, 0.0, 100.0, 200.0),
-                          ("RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML", 7.048662660737769592,
-                           43.72774839443545858, 0.0, 100.0, 200.0),
-                          ("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif", 7.048662660737769592,
-                           43.72774839443545858, 0.0, 100.0, 200.0), ])
+@pytest.mark.parametrize(
+    "id_scene,lon,lat,alt, col_vt,row_vt",
+    [
+        (
+            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt",
+            7.048662660737769592,
+            43.72774839443545858,
+            0.0,
+            100.0,
+            200.0,
+        ),
+        (
+            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.geom",
+            7.048662660737769592,
+            43.72774839443545858,
+            0.0,
+            100.0,
+            200.0,
+        ),
+        (
+            "RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML",
+            7.048662660737769592,
+            43.72774839443545858,
+            0.0,
+            100.0,
+            200.0,
+        ),
+        (
+            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif",
+            7.048662660737769592,
+            43.72774839443545858,
+            0.0,
+            100.0,
+            200.0,
+        ),
+    ],
+)
 def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test inverse localization from any file
@@ -149,8 +191,10 @@ def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
     assert row == pytest.approx(row_vt, abs=1e-2)
 
 
-@pytest.mark.parametrize("id_scene,lon,lat,alt", [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt",
-                                                   7.048662660737769592, 43.72774839443545858, 0.0)])
+@pytest.mark.parametrize(
+    "id_scene,lon,lat,alt",
+    [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt", 7.048662660737769592, 43.72774839443545858, 0.0)],
+)
 def test_rpc_euclidium_direct_iterative(id_scene, lon, lat, alt):
     """
     test the sequence of a inverse localization followed by a direct localization using euclidium file
@@ -166,9 +210,19 @@ def test_rpc_euclidium_direct_iterative(id_scene, lon, lat, alt):
     assert lat == pytest.approx(lat2, abs=1e-2)
 
 
-@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt",
-                         [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_dir.txt", 7.048662660737769592,
-                           43.72774839443545858, 0.0, 100.0, 200.0)])
+@pytest.mark.parametrize(
+    "id_scene,lon,lat,alt, col_vt,row_vt",
+    [
+        (
+            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_dir.txt",
+            7.048662660737769592,
+            43.72774839443545858,
+            0.0,
+            100.0,
+            200.0,
+        )
+    ],
+)
 def test_rpc_euclidium_direct(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test direct and inverse localization using fake rpc file
@@ -184,14 +238,19 @@ def test_rpc_euclidium_direct(id_scene, lon, lat, alt, row_vt, col_vt):
     assert lon2 is None
 
 
-@pytest.mark.parametrize("prod, can_read", [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif", True),
-                                            ("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_nogeo.tif", False)])
+@pytest.mark.parametrize(
+    "prod, can_read",
+    [
+        ("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif", True),
+        ("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_nogeo.tif", False),
+    ],
+)
 def test_rpc_from_geotiff_without_rpc(prod, can_read):
     """
     test file without rpc
     """
     data_folder = test_path()
-    rpc_file = os.path.join(data_folder, "rpc",  prod)
+    rpc_file = os.path.join(data_folder, "rpc", prod)
     try:
         RPC.from_geotiff(rpc_file, topleftconvention=True)
         assert can_read
@@ -199,9 +258,10 @@ def test_rpc_from_geotiff_without_rpc(prod, can_read):
         assert not can_read
 
 
-@pytest.mark.parametrize("id_scene,lon,lat,alt, col_vt,row_vt", [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001",
-                                                                  7.048662660737769592, 43.72774839443545858, 0.0,
-                                                                  100.0, 200.0)])
+@pytest.mark.parametrize(
+    "id_scene,lon,lat,alt, col_vt,row_vt",
+    [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001", 7.048662660737769592, 43.72774839443545858, 0.0, 100.0, 200.0)],
+)
 def test_rpc_dimap_v2(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test inverse localization using ossim and dimap files
@@ -236,7 +296,7 @@ def test_rpc_phrdimap(col, row, alt):
     fctrat = RPC.from_dimap(file_dimap)
 
     (lon, lat, alt) = fctrat.direct_loc_h(row, col, alt)
-    print (lon, lat)
+    print(lon, lat)
 
     (row_ar, col_ar, __) = fctrat.inverse_loc(lon, lat, alt)
     print(col_ar, row_ar)
@@ -255,13 +315,13 @@ def test_rpc_direct_inverse_iterative_vs_direct(col, row, alt):
 
     fctrat = RPC.from_dimap_v1(file_dimap)
 
-    #(col,lig,alt)=(100,1000,400)
+    # (col,lig,alt)=(100,1000,400)
     (x_direct, y_direct, __) = fctrat.direct_loc_h(row, col, alt)
     (x_inv, y_inv, __) = fctrat.direct_loc_inverse_iterative(row, col, alt)
-    #print("comparaison loc directe RPC / loc inverse RPC iterative""")
-    #"""Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
-    assert x_direct == pytest.approx(x_inv, abs= 10.0/111111000)
-    assert y_direct == pytest.approx(y_inv, abs= 10.0/111111000)
+    # print("comparaison loc directe RPC / loc inverse RPC iterative""")
+    # """Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
+    assert x_direct == pytest.approx(x_inv, abs=10.0 / 111111000)
+    assert y_direct == pytest.approx(y_inv, abs=10.0 / 111111000)
 
 
 def test_rpc_direct_inverse_iterative_vs_direct_multiple_points():
@@ -279,9 +339,9 @@ def test_rpc_direct_inverse_iterative_vs_direct_multiple_points():
     (rowinv, colinv, __) = fctrat.inverse_loc(p_direct[:, 0], p_direct[:, 1], alt)
     p_direct_iterative = fctrat.direct_loc_inverse_iterative(rowinv, colinv, alt)
 
-    #print("comparaison loc directe RPC / loc inverse RPC iterative""")
-    #"""Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
-    #Point error col = 600, row = 200
+    # print("comparaison loc directe RPC / loc inverse RPC iterative""")
+    # """Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
+    # Point error col = 600, row = 200
     assert p_direct[0, 0] == p_direct_iterative[0][0]
     assert p_direct[0, 1] == p_direct_iterative[1][0]
 
@@ -303,7 +363,7 @@ def test_rpc_direct_iterative_nan():
     (col, row, alt) = (np.array([600, np.nan]), np.array([200, 210]), np.array([125]))
     p_direct0 = fctrat.direct_loc_inverse_iterative(row, col, alt, fill_nan=True)
     p_direct1 = fctrat.direct_loc_inverse_iterative(row[0], col[0], alt, fill_nan=True)
-    #Point error col = 600, row = 200
+    # Point error col = 600, row = 200
     assert p_direct0[0][0] == p_direct1[0]
     assert p_direct0[1][0] == p_direct1[1]
 
@@ -322,12 +382,12 @@ def test_rpc_direct_iterative_all_nan():
     (col, row, alt) = (np.array([600, np.nan]), np.array([200, 210]), np.array([125]))
     direct_loc_tab = fctrat.direct_loc_inverse_iterative(row, col, alt, fill_nan=True)
     direct_loc_one_value = fctrat.direct_loc_inverse_iterative(row[0], col[0], alt, fill_nan=True)
-    (col, row, alt) =(np.array([np.nan, np.nan]), np.array([np.nan, np.nan]), np.array([125]))
+    (col, row, alt) = (np.array([np.nan, np.nan]), np.array([np.nan, np.nan]), np.array([125]))
     direct_loc_nan = fctrat.direct_loc_inverse_iterative(row, col, alt, 10, False)
     assert np.all(np.isnan(direct_loc_nan[0]))
     assert np.all(np.isnan(direct_loc_nan[1]))
 
-    #Point error col = 600, row = 200
+    # Point error col = 600, row = 200
     assert direct_loc_tab[0][0] == direct_loc_one_value[0][0]
     assert direct_loc_tab[1][0] == direct_loc_one_value[1][0]
     assert direct_loc_tab[0][1] == fctrat.offset_X
@@ -358,7 +418,7 @@ def test_rpc_minmax():
     """
     data_folder = test_path()
     id_scene = "P1BP--2018122638935449CP"
-    fichier_dimap = os.path.join(data_folder,"rpc/PHRDIMAP_{}.XML".format(id_scene))
+    fichier_dimap = os.path.join(data_folder, "rpc/PHRDIMAP_{}.XML".format(id_scene))
     fctrat = RPC.from_any(fichier_dimap)
     (h_min, h_max) = fctrat.get_alt_min_max()
     assert h_min == 532.5

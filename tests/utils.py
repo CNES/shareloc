@@ -26,7 +26,8 @@ module for test utilities
 
 import os
 
-def test_path(alti="",id_scene = ""):
+
+def test_path(alti="", id_scene=""):
     """
     return the data folder
     :return: data path.

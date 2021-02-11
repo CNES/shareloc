@@ -23,7 +23,7 @@ VERSION = "0.1.0"
 EMAIL = "TBD"
 LICENSE = "TBD"
 REQUIREMENTS = ["numpy", "gdal", "rasterio", "xarray", "netCDF4"]
-REQUIREMENTS_EXTRA = {"dev": ["pytest", "pylint", "pre-commit"]}
+REQUIREMENTS_EXTRA = {"dev": ["pytest", "pylint", "pre-commit", "black"]}
 DESCRIPTION = """
 ShareLoc API
 """

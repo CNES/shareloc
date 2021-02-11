@@ -81,3 +81,19 @@ class LOS:
         vis_norm = np.linalg.norm(vis, axis=1)
         rep_vis_norm = np.tile(vis_norm, (3, 1)).transpose()
         self.vis = vis / rep_vis_norm
+
+    def get_sis(self):
+        """
+        returns los hat
+        :return sis
+        :rtype numpy array
+        """
+        return self.sis
+
+    def get_vis(self):
+        """
+        returns los viewing vector
+        :return vis
+        :rtype numpy array
+        """
+        return self.vis

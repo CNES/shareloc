@@ -34,6 +34,8 @@ class DTM:
     we work in cell convention [0,0] is the first cell center (not [0.5,0.5])
     """
 
+    # gitlab issue #56
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, dtm_filename, dtm_format="bsq"):
         """
         Constructor
@@ -253,6 +255,8 @@ class DTM:
                 self.alt_min_cell[i, j] = i_altmin
                 self.alt_max_cell[i, j] = i_altmax
 
+    # gitlab issue #56
+    # pylint: disable=too-many-branches
     def intersect_dtm_cube(self, los):
         """
         DTM cube intersection
@@ -301,13 +305,11 @@ class DTM:
                 # -----------------------------------------------------------------------
                 # Test d'intersection : los_a et los_hat_onplane de signes opposes
                 if los_a * los_hat_onplane <= 0:
-                    # -----------------------------------------------------------------------
                     if not los_a and not los_hat_onplane:
                         # Trop de solutions !! (A et B sont sur le plan) #comment on le gere ??
                         print("too many solutions")
-                        continue
                     # -----------------------------------------------------------------------
-                    elif not los_a:
+                    if not los_a:
                         # A est solution (il est sur le plan)
                         coord_col_i.append(s_a[0])
                         coord_row_i.append(s_a[1])
@@ -340,7 +342,7 @@ class DTM:
                             coord_col_i.append(interp_coef_a * s_a[0] + interp_coef_b * los_hat[0])
                         # -----------------------------------------------------------------------
                         # . coordonnee <v> (colonne)
-                        if plane_index > 1 and plane_index < 4:
+                        if 1 < plane_index < 4:
                             coord_row_i.append(self.plane_coef_d[plane_index])
                         else:
                             coord_row_i.append(interp_coef_a * s_a[1] + interp_coef_b * los_hat[1])
@@ -430,6 +432,11 @@ class DTM:
         b_trouve = True
         return (True, b_trouve, point_b, h_intersect)
 
+    # gitlab issue #56
+    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-function-args
+    # pylint: disable=too-many-nested-blocks
+    # pylint: disable=too-many-statements
     def intersection(self, los, point_b, h_intersect):
         """
         DTM intersection
@@ -540,14 +547,12 @@ class DTM:
                     row_c -= 1
 
                 # LDD - On est deja en dehors des limites, on s'arrete
-                if not (
-                    (a_2 < 1) and (col_c > -1) and (col_c < (n_row - 1)) and (row_c > -1) and (row_c < (n_col - 1))
-                ) and (a_2 < 1):
+                if not ((a_2 < 1) and -1 < col_c < (n_row - 1)) and -1 < row_c < (n_col - 1):
                     b_trouve = False
                     return True, b_trouve, point_r
 
                 # Boucle de recherche iterative de la maille intersectee
-                while (a_2 < 1) and (col_c > -1) and (col_c < (n_row - 1)) and (row_c > -1) and (row_c < (n_col - 1)):
+                while (a_2 < 1) and -1 < col_c < (n_row - 1) and -1 < row_c < (n_col - 1):
                     # - Altitudes min et max de la maille
                     h_i = self.alt_min_cell[col_c, row_c]
                     h_s = self.alt_max_cell[col_c, row_c]

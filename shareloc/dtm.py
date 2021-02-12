@@ -547,7 +547,7 @@ class DTM:
                     row_c -= 1
 
                 # LDD - On est deja en dehors des limites, on s'arrete
-                if not ((a_2 < 1) and -1 < col_c < (n_row - 1)) and -1 < row_c < (n_col - 1):
+                if not ((a_2 < 1) and -1 < col_c < (n_row - 1) and -1 < row_c < (n_col - 1)):
                     b_trouve = False
                     return True, b_trouve, point_r
 

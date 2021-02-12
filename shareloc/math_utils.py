@@ -18,85 +18,94 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import numpy as np
-
 """
 This module contains the mathematical functions for shareloc
 """
 
-#------------------------------------------------------------------------------
-def interpol_bilin(mats,nl,nc,dl,dc):
-        """
-        bilinear interpolation on multi layer  matrix
-        :param mats: multi layer grid (: , nl,nc)
-        :param nl: line number of mats
-        :param nc: column number of mats
-        :param dl: position (line)
-        :param dc: position (column)
-        :return interpolated value on each layer
-        :rtype list
-        """
-        if (dl < 0):
-            i1 = 0
-        elif (dl >= nl-1):
-            i1 = nl - 2
-        else:
-            i1 = int(np.floor(dl))
-        i2 = i1+1
+import numpy as np
 
-        if (dc < 0):
-            j1 = 0
-        elif (dc >= nc-1):
-            j1 = nc - 2
-        else:
-            j1 = int(np.floor(dc))
-        j2 = j1+1
-        #(u,v) are subpixel distance to interpolate along each axis
-        u = dc - j1
-        v = dl - i1
-        #Altitude
-        matis=[]
-        for mat in mats:
-            mati = (1-u)*(1-v)*mat[:,i1,j1] + u*(1-v)*mat[:,i1,j2] +\
-                   (1-u)*v*mat[:,i2,j1]     + u*v*mat[:,i2,j2]
-            matis.append(mati)
-        return matis
 
-def interpol_bilin_vectorized(mats,nl,nc,dl,dc):
-        """
-        bilinear interpolation on multi points and layer  matrix
-        :param mats: multi layer grid (: , nl,nc)
-        :type mats : list
-        :param nl: line number of mats
-        :type nl : int
-        :param nc: column number of mats
-        :type nc : int
-        :param dl: position (line)
-        :type dl: 1D numpy.ndarray, dtype=float64
-        :param dc: position (column)
-        :type dc: 1D numpy.ndarray, dtype=float64
-        :return interpolated value on each layer
-        :rtype list
-        """
-        i1 = np.floor(dl).astype(int)
-        i1[dl < 0] = 0
-        i1[dl >= (nl - 1)] =  nl - 2
-        i2 = np.copy(i1)+1
+def interpol_bilin(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col):
+    """
+    bilinear interpolation on multi layer  matrix
+    :param mats: multi layer grid (: , nb_rows,nb_cols)
+    :param nb_rows: line number of mats
+    :param nb_cols: column number of mats
+    :param delta_shift_row: position (line)
+    :param delta_shift_col: position (column)
+    :return interpolated value on each layer
+    :rtype list
+    """
+    if delta_shift_row < 0:
+        lower_shift_row = 0
+    elif delta_shift_row >= nb_rows - 1:
+        lower_shift_row = nb_rows - 2
+    else:
+        lower_shift_row = int(np.floor(delta_shift_row))
+    upper_shift_row = lower_shift_row + 1
 
-        j1 = np.floor(dc).astype(int)
-        j1[dc < 0] = 0
-        j1[dc >= (nc - 1)] =  nc - 2
-        j2 = np.copy(j1)+1
+    if delta_shift_col < 0:
+        lower_shift_col = 0
+    elif delta_shift_col >= nb_cols - 1:
+        lower_shift_col = nb_cols - 2
+    else:
+        lower_shift_col = int(np.floor(delta_shift_col))
+    upper_shift_col = lower_shift_col + 1
+    # (col_shift, row_shift) are subpixel distance to interpolate along each axis
+    col_shift = delta_shift_col - lower_shift_col
+    row_shift = delta_shift_row - lower_shift_row
+    # Altitude
+    matis = []
+    for mat in mats:
+        mati = (
+            (1 - col_shift) * (1 - row_shift) * mat[:, lower_shift_row, lower_shift_col]
+            + col_shift * (1 - row_shift) * mat[:, lower_shift_row, upper_shift_col]
+            + (1 - col_shift) * row_shift * mat[:, upper_shift_row, lower_shift_col]
+            + col_shift * row_shift * mat[:, upper_shift_row, upper_shift_col]
+        )
+        matis.append(mati)
+    return matis
 
-        #(u,v) are subpixel distance to interpolate along each axis
-        u = dc - j1
-        v = dl - i1
 
-        #Altitude
-        matis=[]
-        for mat in mats:
-            mati = (1-u)*(1-v)*mat[:,i1,j1] + u*(1-v)*mat[:,i1,j2] +\
-                   (1-u)*v*mat[:,i2,j1]     + u*v*mat[:,i2,j2]
-            matis.append(mati)
+def interpol_bilin_vectorized(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col):
+    """
+    bilinear interpolation on multi points and layer  matrix
+    :param mats: multi layer grid (: , nb_rows,nb_cols)
+    :type mats : list
+    :param nb_rows: line number of mats
+    :type nb_rows : int
+    :param nb_cols: column number of mats
+    :type nb_cols : int
+    :param delta_shift_row: position (line)
+    :type delta_shift_row: 1D numpy.ndarray, dtype=float64
+    :param delta_shift_col: position (column)
+    :type delta_shift_col: 1D numpy.ndarray, dtype=float64
+    :return interpolated value on each layer
+    :rtype list
+    """
+    lower_shift_row = np.floor(delta_shift_row).astype(int)
+    lower_shift_row[delta_shift_row < 0] = 0
+    lower_shift_row[delta_shift_row >= (nb_rows - 1)] = nb_rows - 2
+    upper_shift_row = np.copy(lower_shift_row) + 1
 
-        return matis
+    lower_shift_col = np.floor(delta_shift_col).astype(int)
+    lower_shift_col[delta_shift_col < 0] = 0
+    lower_shift_col[delta_shift_col >= (nb_cols - 1)] = nb_cols - 2
+    upper_shift_col = np.copy(lower_shift_col) + 1
+
+    # (col_shift,row_shift) are subpixel distance to interpolate along each axis
+    col_shift = delta_shift_col - lower_shift_col
+    row_shift = delta_shift_row - lower_shift_row
+
+    # Altitude
+    matis = []
+    for mat in mats:
+        mati = (
+            (1 - col_shift) * (1 - row_shift) * mat[:, lower_shift_row, lower_shift_col]
+            + col_shift * (1 - row_shift) * mat[:, lower_shift_row, upper_shift_col]
+            + (1 - col_shift) * row_shift * mat[:, upper_shift_row, lower_shift_col]
+            + col_shift * row_shift * mat[:, upper_shift_row, upper_shift_col]
+        )
+        matis.append(mati)
+
+    return matis

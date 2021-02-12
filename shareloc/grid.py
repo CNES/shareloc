@@ -158,6 +158,7 @@ class Grid:
         position[:, 2] = alt
         pos_row = (row - self.row0) / self.steprow
         pos_col = (col - self.col0) / self.stepcol
+        # pylint disable for code clarity interpol_bilin_vectorized returns one list of 2 element in this case
         # pylint: disable=unbalanced-tuple-unpacking
         [vlon, vlat] = interpol_bilin_vectorized(mats, self.nbrow, self.nbcol, pos_row, pos_col)
         position[:, 0] = alti_coef * vlon[0, :] + (1 - alti_coef) * vlon[1, :]
@@ -351,6 +352,7 @@ class Grid:
             for col_index in range(nbcol):
                 col = col0 + stepcol * col_index
                 pos_col = (col - self.col0) / self.stepcol
+                # pylint disable for code clarity interpol_bilin_vectorized returns one list of 2 element in this case
                 # pylint: disable=unbalanced-tuple-unpacking
                 [vlon, vlat] = interpol_bilin(mats, self.nbrow, self.nbcol, pos_row, pos_col)
                 position[0] = alti_coef * vlon[0] + (1 - alti_coef) * vlon[1]

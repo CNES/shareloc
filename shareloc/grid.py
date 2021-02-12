@@ -366,7 +366,7 @@ class Grid:
     def estimate_inverse_loc_predictor(self, nbrow_pred=3, nbcol_pred=3):
         """
         initialize inverse localization polynomial predictor
-        it composed of 4 polynoms estimated on 5x5 grid at hmin and hmax :
+        it composed of 4 polynoms estimated on a grid at hmin and hmax :
 
         col_min = a0 + a1*lon + a2*lat + a3*lon**2 + a4*lat**2 + a5*lon*lat
         row_min = b0 + b1*lon + b2*lat + b3*lon**2 + b4*lat**2 + b5*lon*lat
@@ -378,7 +378,6 @@ class Grid:
         :param nbcol_pred :  predictor nb col (3 by default)
         :type nbcol_pred : int
         """
-        # "why 5x5 grid ?"
         nb_alt = 2
         nb_coeff = 6
         nb_mes = nbcol_pred * nbrow_pred

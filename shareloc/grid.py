@@ -358,6 +358,8 @@ class Grid:
                 gldalt[:, row_index, col_index] = position
         return gldalt
 
+    # gitlab issue 58
+    # pylint: disable=too-many-locals
     def estimate_inverse_loc_predictor(self, nbrow_pred=3, nbcol_pred=3):
         """
         initialize inverse localization polynomial predictor
@@ -500,6 +502,8 @@ class Grid:
             col = self.col0
         return row, col, extrapol
 
+    # gitlab issue 58
+    # pylint: disable=too-many-locals
     def inverse_partial_derivative(self, row, col, alt=0):
         """
         calculate partial derivative at a given geographic position

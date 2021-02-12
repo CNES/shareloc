@@ -136,6 +136,8 @@ def identify_geotiff_rpc(image_filename):
         return None
 
 
+# gitlab issue #59
+# pylint: disable=too-many-branches
 def read_eucl_file(eucl_file):
     """
     read euclidium file and parse it

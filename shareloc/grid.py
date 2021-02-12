@@ -32,6 +32,7 @@ from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 class Grid:
     """multi H direct localization grid handling class"""
 
+    # gitlab issue #58
     # pylint: disable=too-many-instance-attributes
     def __init__(self, grid_filename, grid_format="bsq"):
         """

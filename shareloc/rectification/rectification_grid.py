@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # coding: utf8
 #
@@ -20,13 +19,18 @@
 # limitations under the License.
 #
 
+"""
+This module contains the rectification_grids class to handle CARS rectification grids.
+"""
+
 import rasterio as rio
 import numpy as np
 from scipy import interpolate
 
-class rectification_grid:
-    """ rectification grid
-    """
+
+class RectificationGrid:
+    """rectification grid"""
+
     def __init__(self, grid_filename):
         """
         Constructor
@@ -38,27 +42,33 @@ class rectification_grid:
         dataset = rio.open(grid_filename)
 
         transform = dataset.transform
-        step_x = transform[0]
-        step_y = transform[4]
+        step_col = transform[0]
+        step_row = transform[4]
         # 0 or 0.5
-        [ori_x, ori_y] = transform*(0.5, 0.5) # positions au centre pixel
+        [ori_col, ori_row] = transform * (0.5, 0.5)  # positions au centre pixel
 
-        #print("ori {} {} step {} {}".format(ori_x,ori_y,step_x,step_y))
-        last_x = ori_x + step_x * dataset.width
-        last_y = ori_y + step_y * dataset.height
+        # print("ori {} {} step {} {}".format(ori_col,ori_y,step_x,step_y))
+        last_col = ori_col + step_col * dataset.width
+        last_row = ori_row + step_row * dataset.height
 
-        #transform dep to positions
+        # transform dep to positions
         self.row_dep = dataset.read(2).transpose()
         self.col_dep = dataset.read(1).transpose()
 
-        #TODO change notations
-        x = np.arange(ori_x, last_x, step_x)
-        y = np.arange(ori_y, last_y, step_y)
-        self.grid_y, self.grid_x = np.mgrid[ori_x:last_x:step_x, ori_y:last_y:step_y]
-        self.points = (x,y)
-        self.row_positions = self.row_dep + self.grid_x
-        self.col_positions = self.col_dep + self.grid_y
+        cols = np.arange(ori_col, last_col, step_col)
+        rows = np.arange(ori_row, last_row, step_row)
+        self.grid_row, self.grid_col = np.mgrid[ori_col:last_col:step_col, ori_row:last_row:step_row]
+        self.points = (cols, rows)
+        self.row_positions = self.row_dep + self.grid_col
+        self.col_positions = self.col_dep + self.grid_row
 
+    def get_positions(self):
+        """
+        return grid positions
+        :return grid positions
+        :rtype  numpy array, numpy array
+        """
+        return self.row_positions, self.col_positions
 
     def interpolate(self, positions):
         """
@@ -68,9 +78,11 @@ class rectification_grid:
         :return interpolated positions : array  Nx2 [col,row]
         :rtype  np.array
         """
-        # TODO: interpn to be replaced by math_utils.interpol_bilin_vectorized
-        interp_row = interpolate.interpn(self.points, self.row_positions, positions, method='linear', bounds_error=False, fill_value=None)
-        interp_col = interpolate.interpn(self.points, self.col_positions, positions, method='linear', bounds_error=False, fill_value=None)
-        interp_pos = np.stack((interp_col,interp_row)).transpose()
+        interp_row = interpolate.interpn(
+            self.points, self.row_positions, positions, method="linear", bounds_error=False, fill_value=None
+        )
+        interp_col = interpolate.interpn(
+            self.points, self.col_positions, positions, method="linear", bounds_error=False, fill_value=None
+        )
+        interp_pos = np.stack((interp_col, interp_row)).transpose()
         return interp_pos
-

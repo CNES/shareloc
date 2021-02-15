@@ -19,39 +19,37 @@
 # limitations under the License.
 #
 
+"""
+This module contains the projection functions for shareloc
+"""
+
 import numpy as np
 import osgeo
 from osgeo import osr
 
 
-"""
-This module contains the projection functions for shareloc
-"""
-
 def coordinates_conversion(coords, epsg_in, epsg_out):
-        """
-        Convert coords from a SRS to another one.
-
-        :param coords: coords to project
-        :type coords: numpy array
-        :param epsg_in: EPSG code of the input SRS
-        :type epsg_in: int
-        :param epsg_out: EPSG code of the ouptut SRS
-        :type epsg_out: int
-        :returns: converted coordinates
-        :rtype: numpy array
-        """
-        srs_in = osr.SpatialReference()
-        srs_in.ImportFromEPSG(epsg_in)
-        srs_out = osr.SpatialReference()
-        srs_out.ImportFromEPSG(epsg_out)
-        # GDAL 3.0 Coordinate transformation (backwards compatibility)
-        # https://github.com/OSGeo/gdal/issues/1546
-        if int(osgeo.__version__[0]) >= 3:
-            srs_in.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
-            srs_out.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
-        conversion = osr.CoordinateTransformation(srs_in, srs_out)
-        coords = conversion.TransformPoints(coords)
-        coords = np.array(coords)
-
-        return coords
+    """
+    Convert coords from a SRS to another one.
+    :param coords: coords to project
+    :type coords: numpy array
+    :param epsg_in: EPSG code of the input SRS
+    :type epsg_in: int
+    :param epsg_out: EPSG code of the output SRS
+    :type epsg_out: int
+    :returns: converted coordinates
+    :rtype: numpy array
+    """
+    srs_in = osr.SpatialReference()
+    srs_in.ImportFromEPSG(epsg_in)
+    srs_out = osr.SpatialReference()
+    srs_out.ImportFromEPSG(epsg_out)
+    # GDAL 3.0 Coordinate transformation (backwards compatibility)
+    # https://github.com/OSGeo/gdal/issues/1546
+    if int(osgeo.__version__[0]) >= 3:
+        srs_in.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+        srs_out.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
+    conversion = osr.CoordinateTransformation(srs_in, srs_out)
+    coords = conversion.TransformPoints(coords)
+    coords = np.array(coords)
+    return coords

@@ -20,13 +20,18 @@
 # limitations under the License.
 #
 
+"""
+Image class to handle Image data.
+"""
 
 import rasterio
 import numpy as np
 from affine import Affine
-import math
+
 
 class Image:
+    """ class Image to handle image data """
+
     def __init__(self, image_path, read_data=False):
         """
         constructor
@@ -64,7 +69,7 @@ class Image:
                 # Data of shape (nb band, nb row, nb col)
                 self.data = self.dataset.read()
 
-    def set_metadata(self, nb_row, nb_col, nb_band, transform, type=np.float32):
+    def set_metadata(self, nb_row, nb_col, nb_band, transform, datatype=np.float32):
         """
         Set metadata and create data (np.array filled with zeros of shape (nb_band, nb_row, nb_col))
 
@@ -77,8 +82,8 @@ class Image:
         :param transform: geo-transform
         :type transform: 1D numpy array with convention :
                 | pixel size col, row rotation, origin col, col rotation, pixel size row, origin row |
-        :param type: data type
-        :type type: numpy type
+        :param datatype: data type
+        :type datatype: numpy type
         """
         self.transform = Affine(transform[0], transform[1], transform[2], transform[3], transform[4], transform[5])
 
@@ -94,7 +99,7 @@ class Image:
         self.pixel_size_row = transform[4]
         self.pixel_size_col = transform[0]
 
-        self.data = np.zeros((nb_band, nb_row, nb_col), dtype=type)
+        self.data = np.zeros((nb_band, nb_row, nb_col), dtype=datatype)
 
     def transform_index_to_physical_point(self, row, col):
         """
@@ -107,7 +112,7 @@ class Image:
         :return: Georeferenced coordinates (row, col)
         :rtype: Tuple(georeference row float or 1D np.array, georeference col float or 1D np.array)
         """
-        col_geo, row_geo = rasterio.transform.xy(self.transform, row, col, offset='center')
+        col_geo, row_geo = rasterio.transform.xy(self.transform, row, col, offset="center")
 
         return row_geo, col_geo
 

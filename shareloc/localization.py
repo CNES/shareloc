@@ -19,16 +19,17 @@
 # limitations under the License.
 #
 
-#-------------------------------------------------------------------------------
-
-import numpy as np
+"""
+Localization class for localization functions.
+"""
 
 
 class Localization:
-    """ base class for localization function.
+    """base class for localization function.
     Underlying model can be both multi layer localization grids or RPCs models
     """
-    def __init__(self, model, dtm = None):
+
+    def __init__(self, model, dtm=None):
         """
         constructor
         :param model : geometric model
@@ -37,11 +38,10 @@ class Localization:
         :type dtm  : shareloc.dtm
         """
         self.dtm = dtm
-        self.use_rpc = model.type is 'rpc'
+        self.use_rpc = model.type == "rpc"
         self.model = model
 
-
-    def direct(self, row, col, h = None):
+    def direct(self, row, col, h=None):
         """
         direct localization
         :param row :  sensor row
@@ -54,13 +54,12 @@ class Localization:
         """
 
         if h is not None:
-            return self.model.direct_loc_h(row,col,h)
-        elif self.dtm is not None:
-            return self.model.direct_loc_dtm(row,col, self.dtm)
-        else:
-            return self.model.direct_loc_h(row, col, 0.0)
+            return self.model.direct_loc_h(row, col, h)
+        if self.dtm is not None:
+            return self.model.direct_loc_dtm(row, col, self.dtm)
+        return self.model.direct_loc_h(row, col, 0.0)
 
-    def inverse(self,lon,lat,h):
+    def inverse(self, lon, lat, h):
         """
         inverse localization
         :param lat :  latitude
@@ -70,9 +69,6 @@ class Localization:
         :rtype numpy.array
         """
 
-        if self.use_rpc == False and not hasattr(self.model, 'pred_ofset_scale_lon'):
+        if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
             self.model.estimate_inverse_loc_predictor()
-        return self.model.inverse_loc(lon,lat,h)
-
-
-
+        return self.model.inverse_loc(lon, lat, h)

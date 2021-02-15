@@ -761,7 +761,7 @@ class RPC:
             col = np.array([col])
             row = np.array([row])
 
-        points = np.zeros((col.size, 3))
+        points = np.zeros((len(col), 3))
         filter_nan, points[:, 0], points[:, 1] = self.filter_coordinates(row, col, fill_nan)
         row = row[filter_nan]
         col = col[filter_nan]
@@ -799,6 +799,7 @@ class RPC:
                 np.dot(np.array(self.Num_Y), monomes) / np.dot(np.array(self.Den_Y), monomes) * self.scale_Y
                 + self.offset_Y
             )
+
         # Direct localization using inverse RPC
         else:
             print("direct localisation from inverse iterative")
@@ -853,7 +854,7 @@ class RPC:
         # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
         los = self.los_extrema(row, col, dtm.alt_min - 1.0, dtm.alt_max + 1.0)
         (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
-        (__, position) = dtm.intersection(los, position_cube, alti)
+        (__, __, position) = dtm.intersection(los, position_cube, alti)
         return position
 
     def inverse_loc(self, lon, lat, alt):
@@ -873,6 +874,7 @@ class RPC:
             if not isinstance(lon, (list, np.ndarray)):
                 lon = np.array([lon])
                 lat = np.array([lat])
+            if not isinstance(alt, (list, np.ndarray)):
                 alt = np.array([alt])
 
             lon_norm = (lon - self.offset_X) / self.scale_X
@@ -883,7 +885,7 @@ class RPC:
                 print("!!!!! l'evaluation au point est extrapolee en longitude ", lon_norm, lon)
             if np.sum(abs(lat_norm) > self.lim_extrapol) == lat_norm.shape[0]:
                 print("!!!!! l'evaluation au point est extrapolee en latitude ", lat_norm, lat)
-            if abs(alt_norm) > self.lim_extrapol:
+            if np.sum(abs(alt_norm) > self.lim_extrapol) == alt_norm.shape[0]:
                 print("!!!!! l'evaluation au point est extrapolee en altitude ", alt_norm, alt)
 
             monomes = np.array(
@@ -938,8 +940,8 @@ class RPC:
             out_x_nan_value = np.nan
             out_y_nan_value = np.nan
 
-        x_out = np.full(second_coord.size, out_x_nan_value)
-        y_out = np.full(second_coord.size, out_y_nan_value)
+        x_out = np.full(len(second_coord), out_x_nan_value)
+        y_out = np.full(len(second_coord), out_y_nan_value)
 
         return filter_nan, x_out, y_out
 
@@ -1049,6 +1051,7 @@ class RPC:
         if alt_min is None or alt_max is None:
             [alt_min, alt_max] = self.get_alt_min_max()
         los_edges = np.zeros([2, 3])
-        los_edges[:, :] = self.direct_loc_h([row, row], [col, col], [alt_max, alt_min], fill_nan)
-
+        los_edges = self.direct_loc_h(
+            np.array([row, row]), np.array([col, col]), np.array([alt_max, alt_min]), fill_nan
+        )
         return los_edges

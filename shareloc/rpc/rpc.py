@@ -1049,6 +1049,6 @@ class RPC:
         if alt_min is None or alt_max is None:
             [alt_min, alt_max] = self.get_alt_min_max()
         los_edges = np.zeros([2, 3])
-        los_edges[0, :] = self.direct_loc_h(row, col, alt_max, fill_nan)
-        los_edges[1, :] = self.direct_loc_h(row, col, alt_min, fill_nan)
+        los_edges[:, :] = self.direct_loc_h([row, row], [col, col], [alt_max, alt_min], fill_nan)
+
         return los_edges

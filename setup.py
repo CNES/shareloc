@@ -14,23 +14,25 @@ from codecs import open as copen
 from setuptools import setup, find_packages
 
 # Meta-data.
-NAME = 'shareloc'
-DESCRIPTION = 'ShareLoc API.'
-URL = 'https://gitlab.cnes.fr/OutilsCommuns/shareloc'
-AUTHOR = 'CNES'
-REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.0'
-EMAIL = 'TBD'
-LICENSE = 'TBD'
-REQUIREMENTS = ['numpy','gdal','rasterio','xarray','netCDF4', 'numba']
-DESCRIPTION = '''
+NAME = "shareloc"
+DESCRIPTION = "ShareLoc API."
+URL = "https://gitlab.cnes.fr/OutilsCommuns/shareloc"
+AUTHOR = "CNES"
+REQUIRES_PYTHON = ">=3.6.0"
+VERSION = "0.1.0"
+EMAIL = "TBD"
+LICENSE = "TBD"
+REQUIREMENTS = ["numpy", "gdal", "rasterio", "xarray", "netCDF4", "numba"]
+REQUIREMENTS_EXTRA = {"dev": ["pytest", "pylint", "pre-commit", "black"]}
+DESCRIPTION = """
 ShareLoc API
-'''
+"""
 
 
 def readme():
-    with copen('readme.md', 'r', 'utf-8') as fstream:
+    with copen("readme.md", "r", "utf-8") as fstream:
         return fstream.read()
+
 
 # Setup
 setup(
@@ -44,10 +46,6 @@ setup(
     long_description=DESCRIPTION,
     install_requires=REQUIREMENTS,
     python_requires=REQUIRES_PYTHON,
-    packages=find_packages())
-
-
-
-
-
-
+    extras_require=REQUIREMENTS_EXTRA,
+    packages=find_packages(),
+)

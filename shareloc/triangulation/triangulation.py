@@ -19,13 +19,26 @@
 # limitations under the License.
 #
 
+"""
+This module contains triangulation methods.
+"""
+
+
 import numpy as np
-from shareloc.rectification.rectification_grid import rectification_grid
+from shareloc.rectification.rectification_grid import RectificationGrid
 from shareloc.proj_utils import coordinates_conversion
 from shareloc.los import LOS
 
-def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right,left_min_max = None,
-                         right_min_max = None, residues = False, fill_nan = False):
+
+def sensor_triangulation(
+    matches,
+    geometrical_model_left,
+    geometrical_model_right,
+    left_min_max=None,
+    right_min_max=None,
+    residues=False,
+    fill_nan=False,
+):
     """
     triangulation in sensor geometry
 
@@ -54,23 +67,23 @@ def sensor_triangulation(matches, geometrical_model_left,geometrical_model_right
     :return intersections in cartesian crs, intersections in wgs84 crs and optionnaly residues
     :rtype (numpy.array,numpy,array,numpy.array)
     """
-    #los construction
-    matches_left = matches[:,0:2]
+    # los construction
+    matches_left = matches[:, 0:2]
     left_los = LOS(matches_left, geometrical_model_left, left_min_max, fill_nan)
     matches_right = matches[:, 2:4]
     right_los = LOS(matches_right, geometrical_model_right, right_min_max, fill_nan)
 
-    #los conversion
-    #los intersection
-    intersections_ecef = los_triangulation(left_los,right_los)
+    # los conversion
+    # los intersection
+    intersections_ecef = los_triangulation(left_los, right_los)
     in_crs = 4978
     out_crs = 4326
     intersections_wgs84 = coordinates_conversion(intersections_ecef, in_crs, out_crs)
-    #refine matches
+    # refine matches
     intersections_residues = None
     if residues is True:
-        intersections_residues = distance_point_los(left_los,intersections_ecef)
-    return intersections_ecef,intersections_wgs84, intersections_residues
+        intersections_residues = distance_point_los(left_los, intersections_ecef)
+    return intersections_ecef, intersections_wgs84, intersections_residues
 
 
 def distance_point_los(los, points):
@@ -89,11 +102,11 @@ def distance_point_los(los, points):
 
     vis = los.vis
     vect_sis_p = points - los.sis
-    dist = np.linalg.norm(np.cross(vect_sis_p, vis), axis = 1)
+    dist = np.linalg.norm(np.cross(vect_sis_p, vis), axis=1)
     return dist
 
 
-def los_triangulation(left_los,right_los):
+def los_triangulation(left_los, right_los):
     """
     los triangulation
 
@@ -105,8 +118,7 @@ def los_triangulation(left_los,right_los):
     :rtype numpy.array
     """
     vis = np.dstack((left_los.vis, right_los.vis))
-    vis = np.swapaxes(vis,1,2)
-
+    vis = np.swapaxes(vis, 1, 2)
 
     sis = np.dstack((left_los.sis, right_los.sis))
     sis = np.swapaxes(sis, 1, 2)
@@ -123,7 +135,7 @@ def los_triangulation(left_los,right_los):
     return intersection
 
 
-def transform_disp_to_matches(disp, mask = None):
+def transform_disp_to_matches(disp, mask=None):
     """
     transform disparity map to matches
 
@@ -135,8 +147,7 @@ def transform_disp_to_matches(disp, mask = None):
     :rtype list of numpy.arrray
     """
 
-
-    col,row  = np.meshgrid(disp.col,disp.row)
+    col, row = np.meshgrid(disp.col, disp.row)
     disp_array = disp.disp.values
     if mask is not None:
         values_ok = mask > 0
@@ -145,17 +156,27 @@ def transform_disp_to_matches(disp, mask = None):
         disp_array = disp_array[values_ok]
     else:
         values_ok = np.full_like(disp_array, True, dtype=bool)
-    epi_left_pos  = np.vstack((col.flatten(),row.flatten()))
+    epi_left_pos = np.vstack((col.flatten(), row.flatten()))
 
-    epi_right_pos = np.vstack((col.flatten() + disp_array.flatten(),row.flatten()))
-    return (epi_left_pos.transpose(),epi_right_pos.transpose(),values_ok.flatten())
-
-
+    epi_right_pos = np.vstack((col.flatten() + disp_array.flatten(), row.flatten()))
+    return (epi_left_pos.transpose(), epi_right_pos.transpose(), values_ok.flatten())
 
 
-def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,geometrical_model_right,
-                           grid_left,grid_right,left_min_max = None,right_min_max = None,residues = False,
-                           fill_nan = False):
+# CARS API
+# pylint: disable=too-many-arguments
+def epipolar_triangulation(
+    matches,
+    mask,
+    matches_type,
+    geometrical_model_left,
+    geometrical_model_right,
+    grid_left,
+    grid_right,
+    left_min_max=None,
+    right_min_max=None,
+    residues=False,
+    fill_nan=False,
+):
     """
     epipolar triangulation
 
@@ -187,43 +208,41 @@ def epipolar_triangulation(matches,mask, matches_type, geometrical_model_left,ge
     """
 
     # retrieve point matches in sensor geometry
-    if matches_type is 'sift':
-        epi_pos_left = matches[:,0:2]
-        epi_pos_right= matches[:,2:4]
+    if matches_type == "sift":
+        epi_pos_left = matches[:, 0:2]
+        epi_pos_right = matches[:, 2:4]
         values_ok = np.full((matches.shape[0]), True, dtype=bool)
-    elif matches_type is 'disp':
-        [epi_pos_left, epi_pos_right, values_ok] = transform_disp_to_matches(matches,mask)
-        #epi_pos_left = matches[:,0:2]
-        #epi_disp_right= matches[:,2:4]
+    elif matches_type == "disp":
+        [epi_pos_left, epi_pos_right, values_ok] = transform_disp_to_matches(matches, mask)
+        # epi_pos_left = matches[:,0:2]
+        # epi_disp_right= matches[:,2:4]
 
     else:
-            raise Exception(
-                'matches type should be sift or disp')
+        raise Exception("matches type should be sift or disp")
 
-    #interpolate left
-    rectif_grid_left = rectification_grid(grid_left)
-    rectif_grid_right = rectification_grid(grid_right)
-    #interpolate_right
-    #print("epi  left 0 {}".format(epi_pos_left[0,:]))
-    #print("epi right 0 {}".format(epi_pos_right[0,:]))
+    # interpolate left
+    rectif_grid_left = RectificationGrid(grid_left)
+    rectif_grid_right = RectificationGrid(grid_right)
+    # interpolate_right
+    # print("epi  left 0 {}".format(epi_pos_left[0,:]))
+    # print("epi right 0 {}".format(epi_pos_right[0,:]))
     matches_sensor_left = rectif_grid_left.interpolate(epi_pos_left)
-    matches_sensor_right = rectif_grid_right\
-        .interpolate(epi_pos_right)
-    #print("epi  left 0 {} sensor 0 {}".format(epi_pos_left[0,:], matches_sensor_left[0,:]))
-    #print("epi right 0 {} sensor 0 {}".format(epi_pos_right[0,:], matches_sensor_right[0,:]))
-    matches_sensor = np.concatenate((matches_sensor_left,matches_sensor_right),axis = 1)
-    #print("matches shape {}".format(matches_sensor.shape))
-    #print("matches  {}".format(matches_sensor[0,:]))
+    matches_sensor_right = rectif_grid_right.interpolate(epi_pos_right)
+    # print("epi  left 0 {} sensor 0 {}".format(epi_pos_left[0,:], matches_sensor_left[0,:]))
+    # print("epi right 0 {} sensor 0 {}".format(epi_pos_right[0,:], matches_sensor_right[0,:]))
+    matches_sensor = np.concatenate((matches_sensor_left, matches_sensor_right), axis=1)
+    # print("matches shape {}".format(matches_sensor.shape))
+    # print("matches  {}".format(matches_sensor[0,:]))
     # triangulate positions in sensor geometry
-    [intersections_ecef, intersections_wgs84, intersections_residues] = sensor_triangulation(matches_sensor,
-                                        geometrical_model_left, geometrical_model_right,
-                                        left_min_max, right_min_max, residues, fill_nan)
+    [intersections_ecef, intersections_wgs84, intersections_residues] = sensor_triangulation(
+        matches_sensor, geometrical_model_left, geometrical_model_right, left_min_max, right_min_max, residues, fill_nan
+    )
 
     tab_size = values_ok.shape[0]
-    intersections_ecef_masked = np.zeros((tab_size,3))
+    intersections_ecef_masked = np.zeros((tab_size, 3))
     intersections_wgs84_masked = np.zeros((tab_size, 3))
     intersections_residues_masked = np.zeros((tab_size, 1))
-    intersections_ecef_masked[values_ok,:] = intersections_ecef
+    intersections_ecef_masked[values_ok, :] = intersections_ecef
     intersections_wgs84_masked[values_ok, :] = intersections_wgs84
-    intersections_residues_masked[values_ok,0] = intersections_residues
+    intersections_residues_masked[values_ok, 0] = intersections_residues
     return intersections_ecef_masked, intersections_wgs84_masked, intersections_residues_masked

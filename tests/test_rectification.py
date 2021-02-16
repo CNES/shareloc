@@ -122,13 +122,13 @@ def test_prepare_rectification():
     assert rectified_image_size[0] == 612
     assert rectified_image_size[1] == 612
 
-    # check the first epipolare point in the left image
+    # check the first epipolar point in the left image
     # ground truth values from OTB
     otb_output_origin_in_left_image = [5625.78139593690139008685946465, 5034.15635707952696975553408265, 0]
 
     # OTB convention is [col, row, altitude], shareloc convention is [row, col, altitude]
-    assert otb_output_origin_in_left_image[1] == pytest.approx(left_epi_origin[0], abs=1e-1)
-    assert otb_output_origin_in_left_image[0] == pytest.approx(left_epi_origin[1], abs=1e-1)
+    assert otb_output_origin_in_left_image[1] == pytest.approx(left_epi_origin[0], abs=1e-5)
+    assert otb_output_origin_in_left_image[0] == pytest.approx(left_epi_origin[1], abs=1e-5)
 
     assert left_epi_origin[2] == otb_output_origin_in_left_image[2]
 

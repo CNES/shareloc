@@ -140,7 +140,7 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, e
     # Only one point, expand the shape of the array
     if len(left_point.shape) == 1:
         left_point = np.expand_dims(left_point, axis=0)
-
+    left_point[:, 2] = get_local_altitude(False)
     # Right correspondent of the left coordinates
     right_corr = np.zeros((left_point.shape[0], 3))
     right_corr[:, 0], right_corr[:, 1], right_corr[:, 2] = coloc(
@@ -320,9 +320,6 @@ def moving_to_next_line(geom_model_left, geom_model_right, current_line, mean_sp
     next_line_start_right[0], next_line_start_right[1], next_line_start_right[2] = coloc(
         geom_model_left, geom_model_right, next_line_start_left[0], next_line_start_left[1], next_line_start_left[2]
     )
-    next_line_start_right[
-        2
-    ] = local_altitude  # TODO : remove this line when localization return altitude and not boolean
     return next_line_start_left, next_line_start_right
 
 
@@ -363,10 +360,6 @@ def moving_along_lines(geom_model_left, geom_model_right, current_left_coords, m
     next_right_coords[:, 0], next_right_coords[:, 1], next_right_coords[:, 2] = coloc(
         geom_model_left, geom_model_right, next_left_coords[:, 0], next_left_coords[:, 1], next_left_coords[:, 2]
     )
-    next_right_coords[
-        :, 2
-    ] = local_altitude  # TODO : remove this line when localization return altitude and not boolean
-
     return next_left_coords, next_right_coords
 
 
@@ -406,15 +399,15 @@ def compute_stereorectification_epipolar_grids(
     mean_spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
     left_grid, right_grid = initialize_grids(epi_step, grid_size[0], grid_size[1])
-    local_altitude = get_local_altitude(False)
+
 
     # Starting points are the upper-left origin of the left epipolar image, and it's correspondent in the right image
     start_left = np.copy(left_epi_origin)
+    start_left[2] = get_local_altitude(False)
     start_right = np.zeros(3, dtype=start_left.dtype)
     start_right[0], start_right[1], start_right[2] = coloc(
         geom_model_left, geom_model_right, start_left[0], start_left[1], start_left[2]
     )
-    start_right[2] = local_altitude  # TODO : remove this line when localization return altitude and not boolean
 
     mean_baseline_ratio = 0
 

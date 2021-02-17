@@ -111,8 +111,10 @@ def test_prepare_rectification():
 
     epi_step = 30
     elevation_offset = 50
+    dem = None
+    default_elev = 0.0
     __, grid_size, rectified_image_size, left_epi_origin = prepare_rectification(
-        left_im, geom_model_left, geom_model_right, epi_step, elevation_offset
+        left_im, geom_model_left, geom_model_right, dem, default_elev, epi_step, elevation_offset
     )
     # check size of the epipolar grids
     assert grid_size[0] == 22
@@ -153,7 +155,7 @@ def test_compute_stereorectification_epipolar_grids():
     dem = None
     default_elev = 0.0
     left_grid, right_grid, img_size_row, img_size_col, mean_br = compute_stereorectification_epipolar_grids(
-        left_im, geom_model_left, right_im, geom_model_right, None, default_elev, epi_step, elevation_offset
+        left_im, geom_model_left, right_im, geom_model_right, dem, default_elev, epi_step, elevation_offset
     )
 
     gt_left_grid = rasterio.open(os.path.join(os.environ["TESTPATH"], "rectification", "gt_left_grid.tif")).read()
@@ -178,6 +180,50 @@ def test_compute_stereorectification_epipolar_grids():
 
 
 @pytest.mark.unit_tests
+def test_compute_stereorectification_epipolar_grids_alti():
+    """
+    Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
+    """
+    left_im = Image(os.path.join(os.environ["TESTPATH"], "rectification", "left_image.tif"))
+    right_im = Image(os.path.join(os.environ["TESTPATH"], "rectification", "right_image.tif"))
+
+    geom_model_left = RPC.from_any(
+        os.path.join(os.environ["TESTPATH"], "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(os.environ["TESTPATH"], "rectification", "right_image.geom"), topleftconvention=True
+    )
+
+    epi_step = 30
+    elevation_offset = 50
+    dem = None
+    default_elev = 100.0
+    left_grid, right_grid, img_size_row, img_size_col, mean_br = compute_stereorectification_epipolar_grids(
+        left_im, geom_model_left, right_im, geom_model_right, dem, default_elev, epi_step, elevation_offset
+    )
+
+    gt_left_grid = rasterio.open(os.path.join(os.environ["TESTPATH"], "rectification", "gt_left_grid_100.tif")).read()
+    gt_right_grid = rasterio.open(os.path.join(os.environ["TESTPATH"], "rectification", "gt_right_grid_100.tif")).read()
+
+    # Check epipolar grids
+    # OTB convention is [col, row], shareloc convention is [row, col]
+    assert gt_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
+    assert gt_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
+
+    assert gt_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
+    assert gt_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
+
+    #  Check size of rectified images
+    assert img_size_row == 612
+    assert img_size_col == 612
+
+    #  Check mean_baseline_ratio
+    # ground truth mean baseline ratio from OTB
+    gt_mean_br = 0.7039927244
+    assert mean_br == pytest.approx(gt_mean_br, abs=1e-5)
+
+
+@pytest.mark.unit_tests
 def test_rectification_moving_along_line():
     """
     Test moving along line in epipolar geometry
@@ -193,14 +239,15 @@ def test_rectification_moving_along_line():
     mean_spacing = 1
     epi_step = 1
     alphas = 0
-
+    dem = None
+    default_elev = 0.0
     # ground truth next pixel
     # col pixel size of the image
     col_pixel_size = 1.0
     gt_next_cords = np.array([[5000.5, 5000.5 + col_pixel_size, 0.0]], dtype=np.float64)
 
     next_cords, _ = moving_along_lines(
-        geom_model_left, geom_model_right, current_left_coords, mean_spacing, epi_step, alphas
+        geom_model_left, geom_model_right, current_left_coords, mean_spacing, dem, default_elev, epi_step, alphas
     )
 
     np.testing.assert_array_equal(gt_next_cords, next_cords)
@@ -222,14 +269,15 @@ def test_rectification_moving_to_next_line():
     mean_spacing = 1
     epi_step = 1
     alphas = 0
-
+    dem = None
+    default_elev = 0.0
     # ground truth next pixel
     # row pixel size of the image
     row_pixel_size = 1.0
     gt_next_cords = np.array([5000.5 + row_pixel_size, 5000.5, 0.0], dtype=np.float64)
 
     next_cords, _ = moving_to_next_line(
-        geom_model_left, geom_model_right, current_left_coords, mean_spacing, epi_step, alphas
+        geom_model_left, geom_model_right, current_left_coords, mean_spacing, dem, default_elev, epi_step, alphas
     )
 
     np.testing.assert_array_equal(gt_next_cords, next_cords)

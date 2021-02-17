@@ -170,6 +170,7 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, d
     return np.squeeze(epi_line_start), np.squeeze(epi_line_end)
 
 
+## pylint: disable=too-many-locals
 def prepare_rectification(left_im, geom_model_left, geom_model_right, dem, default_elev, epi_step, elevation_offset):
     """
     Determine size and spacing of the epipolar grids.
@@ -385,6 +386,9 @@ def moving_along_lines(
     return next_left_coords, next_right_coords
 
 
+# disable for api symmetry between left and right data
+## pylint: disable=unused-argument
+## pylint: disable=too-many-locals
 def compute_stereorectification_epipolar_grids(
     left_im, geom_model_left, right_im, geom_model_right, dem=None, default_elev=0.0, epi_step=1, elevation_offset=50.0
 ):

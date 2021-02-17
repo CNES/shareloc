@@ -364,7 +364,7 @@ def moving_along_lines(geom_model_left, geom_model_right, current_left_coords, m
 
 
 def compute_stereorectification_epipolar_grids(
-    left_im, geom_model_left, right_im, geom_model_right, epi_step, elevation_offset
+    left_im, geom_model_left, right_im, geom_model_right, epi_step=1, elevation_offset=50.0
 ):
     """
     Compute stereo-rectification epipolar grids
@@ -380,7 +380,7 @@ def compute_stereorectification_epipolar_grids(
     :param epi_step: epipolar step
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
-    :type elevation_offset: int
+    :type elevation_offset: float
     :return: return :
         - left epipolar grid, shareloc.image object convention [[row displacement, col displacement], nb rows, nb cols]
         - right epipolar grid, shareloc.image object convention [[row displacement, col displacement], nb rows, nb cols]

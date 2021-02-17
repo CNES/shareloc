@@ -364,7 +364,7 @@ def moving_along_lines(geom_model_left, geom_model_right, current_left_coords, m
 
 
 def compute_stereorectification_epipolar_grids(
-    left_im, geom_model_left, right_im, geom_model_right, epi_step=1, elevation_offset=50.0
+    left_im, geom_model_left, right_im, geom_model_right, dem=None, default_elev=0.0, epi_step=1, elevation_offset=50.0
 ):
     """
     Compute stereo-rectification epipolar grids
@@ -377,6 +377,10 @@ def compute_stereorectification_epipolar_grids(
     :type right_im: shareloc.image object
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: shareloc.grid or  shareloc.rpc
+    :param dem: use dem for localisation
+    :type dem: shareloc.dtm
+    :param default_elev: default elevation
+    :type default_elev: float
     :param epi_step: epipolar step
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
@@ -399,7 +403,6 @@ def compute_stereorectification_epipolar_grids(
     mean_spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
     left_grid, right_grid = initialize_grids(epi_step, grid_size[0], grid_size[1])
-
 
     # Starting points are the upper-left origin of the left epipolar image, and it's correspondent in the right image
     start_left = np.copy(left_epi_origin)

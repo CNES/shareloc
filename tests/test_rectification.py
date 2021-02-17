@@ -150,8 +150,10 @@ def test_compute_stereorectification_epipolar_grids():
 
     epi_step = 30
     elevation_offset = 50
+    dem = None
+    default_elev = 0.0
     left_grid, right_grid, img_size_row, img_size_col, mean_br = compute_stereorectification_epipolar_grids(
-        left_im, geom_model_left, right_im, geom_model_right, epi_step, elevation_offset
+        left_im, geom_model_left, right_im, geom_model_right, None, default_elev, epi_step, elevation_offset
     )
 
     gt_left_grid = rasterio.open(os.path.join(os.environ["TESTPATH"], "rectification", "gt_left_grid.tif")).read()

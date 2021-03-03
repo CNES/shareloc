@@ -119,7 +119,7 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     Test direct localization at constant altitude
     """
     ___, gri = prepare_loc()
-    loc = Localization(gri, dtm=None)
+    loc = Localization(gri, elevation=None)
     lonlatalt = loc.direct(row, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
@@ -169,7 +169,7 @@ def test_sensor_loc_dir_dtm(index_x, index_y):
     Test direct localization on DTM
     """
     dtmbsq, gri = prepare_loc()
-    loc = Localization(gri, dtm=dtmbsq)
+    loc = Localization(gri, elevation=dtmbsq)
 
     vect_index = [index_x, index_y]
     [lon, lat] = dtmbsq.index_to_ter(vect_index)

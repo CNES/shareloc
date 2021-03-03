@@ -100,7 +100,7 @@ def compute_epipolar_angle(end_line, start_line):
     return np.squeeze(alpha)
 
 
-def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, dem, default_elev, elevation_offset):
+def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, elevation, elevation_offset):
     """
     Estimate the beginning and the ending of local epipolar line in left image
 
@@ -111,10 +111,8 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, d
     :param left_point: georeferenced coordinates in the left image
     :type left_point: 1D numpy array : [row coord, col coord, altitude]
                       or 2D numpy array : (number of points, [row coord, col coord, altitude])
-    :param dem: use dem for localisation
-    :type dem: shareloc.dtm
-    :param default_elev: default elevation (if dem is not None default elev is ignored)
-    :type default_elev: float
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: int
     :return: Coordinates of the beginning and the ending of local epipolar line in the left image
@@ -127,18 +125,18 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, d
     # Right correspondent of the left coordinates
     right_corr = np.zeros((left_point.shape[0], 3))
     right_corr[:, 0], right_corr[:, 1], right_corr[:, 2] = coloc(
-        geom_model_left, geom_model_right, left_point[:, 0], left_point[:, 1], default_elev, dem
+        geom_model_left, geom_model_right, left_point[:, 0], left_point[:, 1], elevation
     )
-
+    ground_elev = np.array(right_corr[:, 2])
     # Find the beginning of the epipolar line in the left image, using right correspondent at lower elevation
-    right_corr[:, 2] = left_point[:, 2] - elevation_offset
+    right_corr[:, 2] = ground_elev - elevation_offset
     epi_line_start = np.zeros((left_point.shape[0], 3))
     epi_line_start[:, 0], epi_line_start[:, 1], epi_line_start[:, 2] = coloc(
         geom_model_right, geom_model_left, right_corr[:, 0], right_corr[:, 1], right_corr[:, 2]
     )
 
     # Find the ending of the epipolar line in the left image, using right correspondent at higher elevation
-    right_corr[:, 2] = left_point[:, 2] + elevation_offset
+    right_corr[:, 2] = ground_elev + elevation_offset
     epi_line_end = np.zeros((left_point.shape[0], 3))
     epi_line_end[:, 0], epi_line_end[:, 1], epi_line_end[:, 2] = coloc(
         geom_model_right, geom_model_left, right_corr[:, 0], right_corr[:, 1], right_corr[:, 2]
@@ -148,7 +146,7 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, d
 
 
 ## pylint: disable=too-many-locals
-def prepare_rectification(left_im, geom_model_left, geom_model_right, dem, default_elev, epi_step, elevation_offset):
+def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset):
     """
     Determine size and spacing of the epipolar grids.
     Determine size of the epipolare images and the upper-left origin of the stereo-rectified left image (starting point)
@@ -159,10 +157,8 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, dem, defau
     :type geom_model_left: shareloc.grid or shareloc.rpc
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: shareloc.grid or shareloc.rpc
-    :param dem: use dem for localisation
-    :type dem: shareloc.dtm
-    :param default_elev: default elevation (if dem is not None default elev is ignored)
-    :type default_elev: float
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
@@ -184,11 +180,11 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, dem, defau
 
     # Georeferenced coordinates of the upper-left origin of left image : [row, col, altitude]
     origin_row, origin_col = left_im.transform_index_to_physical_point(0, 0)
-    left_origin = np.array([origin_row, origin_col, default_elev])
+    left_origin = np.array([origin_row, origin_col])
 
     # --- Compute the parameters of the local epipolar line at the left image origin ---
     local_epi_start, local_epi_end = compute_local_epipolar_line(
-        geom_model_left, geom_model_right, left_origin, dem, default_elev, elevation_offset
+        geom_model_left, geom_model_right, left_origin, elevation, elevation_offset
     )
 
     # 2) Compute epipolar angle using the begin and the end of the left local epipolar line
@@ -270,9 +266,7 @@ def initialize_grids(epi_step, nb_row, nb_col):
     return left_grid, right_grid
 
 
-def moving_to_next_line(
-    geom_model_left, geom_model_right, current_line, mean_spacing, dem, default_elev, epi_step, alpha
-):
+def moving_to_next_line(geom_model_left, geom_model_right, current_line, mean_spacing, elevation, epi_step, alpha):
     """
     Moving to the next line in epipolar geometry
 
@@ -284,10 +278,8 @@ def moving_to_next_line(
     :type current_line: 1D np.array [row, col, altitude]
     :param mean_spacing: mean spacing of epipolar grids
     :type mean_spacing: int
-    :param dem: use dem for localisation
-    :type dem: shareloc.dtm
-    :param default_elev: default elevation (if dem is not None default elev is ignored)
-    :type default_elev: float
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
     :type epi_step: int
     :param alpha: epipolar angle
@@ -304,23 +296,17 @@ def moving_to_next_line(
 
     next_line_start_left[0] = np.copy(current_line[0]) + unit_vector_ortho_epi_y
     next_line_start_left[1] = np.copy(current_line[1]) + unit_vector_ortho_epi_x
-    next_line_start_left[2] = default_elev
 
     # Find the corresponding starting point in the right image
     next_line_start_right = np.zeros(3, dtype=np.float64)
     next_line_start_right[0], next_line_start_right[1], next_line_start_right[2] = coloc(
-        geom_model_left,
-        geom_model_right,
-        next_line_start_left[0],
-        next_line_start_left[1],
-        next_line_start_left[2],
-        dem,
+        geom_model_left, geom_model_right, next_line_start_left[0], next_line_start_left[1], elevation
     )
     return next_line_start_left, next_line_start_right
 
 
 def moving_along_lines(
-    geom_model_left, geom_model_right, current_left_coords, mean_spacing, dem, default_elev, epi_step, alphas
+    geom_model_left, geom_model_right, current_left_coords, mean_spacing, elevation, epi_step, alphas
 ):
     """
     Determine the position of next pixels in the epipolare lines
@@ -333,10 +319,8 @@ def moving_along_lines(
     :type current_left_coords: 2D numpy array (number rows in epipolar geometry, [row, col, altitude])
     :param mean_spacing: mean spacing of epipolar grids
     :type mean_spacing: int
-    :param dem: use dem for localisation
-    :type dem: shareloc.dtm
-    :param default_elev: default elevation (if dem is not None default elev is ignored)
-    :type default_elev: float
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
     :type epi_step: int
     :param alphas: epipolar angles of each local epipolar lines
@@ -354,12 +338,11 @@ def moving_along_lines(
     next_left_coords = np.copy(current_left_coords)
     next_left_coords[:, 0] += unit_vector_along_epi_y
     next_left_coords[:, 1] += unit_vector_along_epi_x
-    next_left_coords[:, 2] = default_elev
 
     # Find the corresponding next pixels in the right image
     next_right_coords = np.zeros(next_left_coords.shape, dtype=next_left_coords.dtype)
     next_right_coords[:, 0], next_right_coords[:, 1], next_right_coords[:, 2] = coloc(
-        geom_model_left, geom_model_right, next_left_coords[:, 0], next_left_coords[:, 1], next_left_coords[:, 2], dem
+        geom_model_left, geom_model_right, next_left_coords[:, 0], next_left_coords[:, 1], elevation
     )
     return next_left_coords, next_right_coords
 
@@ -368,7 +351,7 @@ def moving_along_lines(
 ## pylint: disable=unused-argument
 ## pylint: disable=too-many-locals
 def compute_stereorectification_epipolar_grids(
-    left_im, geom_model_left, right_im, geom_model_right, dem=None, default_elev=0.0, epi_step=1, elevation_offset=50.0
+    left_im, geom_model_left, right_im, geom_model_right, elevation=0.0, epi_step=1, elevation_offset=50.0
 ):
     """
     Compute stereo-rectification epipolar grids
@@ -381,10 +364,8 @@ def compute_stereorectification_epipolar_grids(
     :type right_im: shareloc.image object
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: shareloc.grid or  shareloc.rpc
-    :param dem: use dem for localisation
-    :type dem: shareloc.dtm
-    :param default_elev: default elevation (if dem is not None default elev is ignored)
-    :type default_elev: float
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
@@ -400,7 +381,7 @@ def compute_stereorectification_epipolar_grids(
     # Retrieve grids : spacing (pixel size) and size
     # Retrieve epipolar image : size and upper-left origin in the left image geometry (starting point)
     __, grid_size, rectified_image_size, left_epi_origin = prepare_rectification(
-        left_im, geom_model_left, geom_model_right, dem, default_elev, epi_step, elevation_offset
+        left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset
     )
 
     # Use the mean spacing as before
@@ -410,10 +391,9 @@ def compute_stereorectification_epipolar_grids(
 
     # Starting points are the upper-left origin of the left epipolar image, and it's correspondent in the right image
     start_left = np.copy(left_epi_origin)
-    start_left[2] = default_elev
     start_right = np.zeros(3, dtype=start_left.dtype)
     start_right[0], start_right[1], start_right[2] = coloc(
-        geom_model_left, geom_model_right, start_left[0], start_left[1], start_left[2], dem
+        geom_model_left, geom_model_right, start_left[0], start_left[1], elevation
     )
 
     mean_baseline_ratio = 0
@@ -427,14 +407,14 @@ def compute_stereorectification_epipolar_grids(
     for __ in range(grid_size[0] - 1):
         # --- Compute left local epipolar line, useful for moving to the next line ---
         local_epi_start, local_epi_end = compute_local_epipolar_line(
-            geom_model_left, geom_model_right, left_epi_lines[-1], dem, default_elev, elevation_offset
+            geom_model_left, geom_model_right, left_epi_lines[-1], elevation, elevation_offset
         )
 
         # epipolar angle using the begin and the end of the left local epipolar line
         alpha = compute_epipolar_angle(local_epi_end, local_epi_start)
         # Find the start of next line in epipolar geometry
         next_epi_line_left, next_epi_line_right = moving_to_next_line(
-            geom_model_left, geom_model_right, left_epi_lines[-1], mean_spacing, dem, default_elev, epi_step, alpha
+            geom_model_left, geom_model_right, left_epi_lines[-1], mean_spacing, elevation, epi_step, alpha
         )
 
         # Save the starting points, useful to be able to move along the lines in the next loop
@@ -460,7 +440,7 @@ def compute_stereorectification_epipolar_grids(
 
         # Compute left local epipolar line, useful to estimate the local baseline ratio and moving to the next pixels
         local_epi_start, local_epi_end = compute_local_epipolar_line(
-            geom_model_left, geom_model_right, left_epi_coords, dem, default_elev, elevation_offset
+            geom_model_left, geom_model_right, left_epi_coords, elevation, elevation_offset
         )
         # Estimate the local baseline ratio
         local_baseline_ratio = np.sqrt(
@@ -474,7 +454,7 @@ def compute_stereorectification_epipolar_grids(
 
         # Move to the next pixels in the epipolar line (moving along lines)
         left_epi_coords, right_epi_coords = moving_along_lines(
-            geom_model_left, geom_model_right, left_epi_coords, mean_spacing, dem, default_elev, epi_step, alphas
+            geom_model_left, geom_model_right, left_epi_coords, mean_spacing, elevation, epi_step, alphas
         )
 
     # Compute the mean baseline ratio

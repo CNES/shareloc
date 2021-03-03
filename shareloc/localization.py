@@ -23,6 +23,7 @@
 Localization class for localization functions.
 """
 
+import numbers
 import numpy as np
 
 
@@ -31,20 +32,22 @@ class Localization:
     Underlying model can be both multi layer localization grids or RPCs models
     """
 
-    def __init__(self, model, dtm=None, default_elevation=0.0):
+    def __init__(self, model, elevation=None):
         """
         constructor
         :param model : geometric model
         :type model  : shareloc.grid or  shareloc.rpc
-        :param dtm  : dtm (optional)
-        :type dtm  : shareloc.dtm
-        :param default_elevation  : default_elevation (optional)
-        :type default_elevation  : float
+        :param elevation  : dtm or default elevation over ellipsoid if None elevation is set to 0
+        :type elevation  : shareloc.dtm or float or np.ndarray
         """
-        self.dtm = dtm
         self.use_rpc = model.type == "rpc"
         self.model = model
-        self.default_elevation = default_elevation
+        self.default_elevation = 0.0
+        self.dtm = None
+        if isinstance(elevation, (numbers.Number, list, np.ndarray)):
+            self.default_elevation = elevation
+        else:
+            self.dtm = elevation
 
     def direct(self, row, col, h=None):
         """
@@ -79,7 +82,7 @@ class Localization:
         return self.model.inverse_loc(lon, lat, h)
 
 
-def coloc(model1, model2, row, col, alt=0.0, dem=None):
+def coloc(model1, model2, row, col, elevation=None):
     """
     Colocalization : direct localization with model1, then inverse localization with model2
 
@@ -91,15 +94,13 @@ def coloc(model1, model2, row, col, alt=0.0, dem=None):
     :type row: int or 1D numpy array
     :param col: sensor col
     :type col: int or 1D numpy array
-    :param dem  : dtm (optional)
-    :type dem  : shareloc.dtm
-    :param alt: altitude
-    :type alt: float or 1D numpy array
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float or 1D numpy array
     :return: Corresponding sensor position [row, col, True] in the geometric model 2
     :rtype : Tuple(1D np.array row position, 1D np.array col position, 1D np.array True)
     """
-    geometric_model1 = Localization(model1, dem, alt)
-    geometric_model2 = Localization(model2, dem, alt)
+    geometric_model1 = Localization(model1, elevation)
+    geometric_model2 = Localization(model2, elevation)
 
     if not isinstance(row, (list, np.ndarray)):
         row = np.array([row])

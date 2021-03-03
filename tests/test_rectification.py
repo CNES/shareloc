@@ -111,16 +111,15 @@ def test_prepare_rectification():
 
     epi_step = 30
     elevation_offset = 50
-    dem = None
     default_elev = 0.0
     __, grid_size, rectified_image_size, left_epi_origin = prepare_rectification(
-        left_im, geom_model_left, geom_model_right, dem, default_elev, epi_step, elevation_offset
+        left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
     )
     # check size of the epipolar grids
     assert grid_size[0] == 22
     assert grid_size[1] == 22
 
-    #  check size of rectified images
+    # check size of rectified images
     assert rectified_image_size[0] == 612
     assert rectified_image_size[1] == 612
 
@@ -152,10 +151,9 @@ def test_compute_stereorectification_epipolar_grids():
 
     epi_step = 30
     elevation_offset = 50
-    dem = None
     default_elev = 0.0
     left_grid, right_grid, img_size_row, img_size_col, mean_br = compute_stereorectification_epipolar_grids(
-        left_im, geom_model_left, right_im, geom_model_right, dem, default_elev, epi_step, elevation_offset
+        left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
     gt_left_grid = rasterio.open(os.path.join(os.environ["TESTPATH"], "rectification", "gt_left_grid.tif")).read()
@@ -196,10 +194,9 @@ def test_compute_stereorectification_epipolar_grids_alti():
 
     epi_step = 30
     elevation_offset = 50
-    dem = None
     default_elev = 100.0
     left_grid, right_grid, img_size_row, img_size_col, mean_br = compute_stereorectification_epipolar_grids(
-        left_im, geom_model_left, right_im, geom_model_right, dem, default_elev, epi_step, elevation_offset
+        left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
     gt_left_grid = rasterio.open(os.path.join(os.environ["TESTPATH"], "rectification", "gt_left_grid_100.tif")).read()
@@ -239,7 +236,6 @@ def test_rectification_moving_along_line():
     mean_spacing = 1
     epi_step = 1
     alphas = 0
-    dem = None
     default_elev = 0.0
     # ground truth next pixel
     # col pixel size of the image
@@ -247,7 +243,7 @@ def test_rectification_moving_along_line():
     gt_next_cords = np.array([[5000.5, 5000.5 + col_pixel_size, 0.0]], dtype=np.float64)
 
     next_cords, _ = moving_along_lines(
-        geom_model_left, geom_model_right, current_left_coords, mean_spacing, dem, default_elev, epi_step, alphas
+        geom_model_left, geom_model_right, current_left_coords, mean_spacing, default_elev, epi_step, alphas
     )
 
     np.testing.assert_array_equal(gt_next_cords, next_cords)
@@ -269,7 +265,6 @@ def test_rectification_moving_to_next_line():
     mean_spacing = 1
     epi_step = 1
     alphas = 0
-    dem = None
     default_elev = 0.0
     # ground truth next pixel
     # row pixel size of the image
@@ -277,7 +272,7 @@ def test_rectification_moving_to_next_line():
     gt_next_cords = np.array([5000.5 + row_pixel_size, 5000.5, 0.0], dtype=np.float64)
 
     next_cords, _ = moving_to_next_line(
-        geom_model_left, geom_model_right, current_left_coords, mean_spacing, dem, default_elev, epi_step, alphas
+        geom_model_left, geom_model_right, current_left_coords, mean_spacing, default_elev, epi_step, alphas
     )
 
     np.testing.assert_array_equal(gt_next_cords, next_cords)

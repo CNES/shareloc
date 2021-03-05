@@ -390,8 +390,8 @@ def test_rpc_direct_iterative_all_nan():
     # Point error col = 600, row = 200
     assert direct_loc_tab[0][0] == direct_loc_one_value[0][0]
     assert direct_loc_tab[1][0] == direct_loc_one_value[1][0]
-    assert direct_loc_tab[0][1] == fctrat.offset_X
-    assert direct_loc_tab[1][1] == fctrat.offset_Y
+    assert direct_loc_tab[0][1] == fctrat.offset_x
+    assert direct_loc_tab[1][1] == fctrat.offset_y
 
 
 @pytest.mark.parametrize("col,row,alt", [(600, 200, 125)])

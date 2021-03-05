@@ -23,23 +23,31 @@
 Localization class for localization functions.
 """
 
+import numbers
+import numpy as np
+
 
 class Localization:
     """base class for localization function.
     Underlying model can be both multi layer localization grids or RPCs models
     """
 
-    def __init__(self, model, dtm=None):
+    def __init__(self, model, elevation=None):
         """
         constructor
         :param model : geometric model
         :type model  : shareloc.grid or  shareloc.rpc
-        :param dtm  : dtm (optional)
-        :type dtm  : shareloc.dtm
+        :param elevation  : dtm or default elevation over ellipsoid if None elevation is set to 0
+        :type elevation  : shareloc.dtm or float or np.ndarray
         """
-        self.dtm = dtm
         self.use_rpc = model.type == "rpc"
         self.model = model
+        self.default_elevation = 0.0
+        self.dtm = None
+        if isinstance(elevation, (numbers.Number, list, np.ndarray)):
+            self.default_elevation = elevation
+        else:
+            self.dtm = elevation
 
     def direct(self, row, col, h=None):
         """
@@ -57,7 +65,7 @@ class Localization:
             return self.model.direct_loc_h(row, col, h)
         if self.dtm is not None:
             return self.model.direct_loc_dtm(row, col, self.dtm)
-        return self.model.direct_loc_h(row, col, 0.0)
+        return self.model.direct_loc_h(row, col, self.default_elevation)
 
     def inverse(self, lon, lat, h):
         """
@@ -72,3 +80,42 @@ class Localization:
         if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
             self.model.estimate_inverse_loc_predictor()
         return self.model.inverse_loc(lon, lat, h)
+
+
+def coloc(model1, model2, row, col, elevation=None):
+    """
+    Colocalization : direct localization with model1, then inverse localization with model2
+
+    :param model1: geometric model 1
+    :type model1: shareloc.grid or  shareloc.rpc
+    :param model2: geometric model 2
+    :type model2: shareloc.grid or  shareloc.rpc
+    :param row: sensor row
+    :type row: int or 1D numpy array
+    :param col: sensor col
+    :type col: int or 1D numpy array
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float or 1D numpy array
+    :return: Corresponding sensor position [row, col, True] in the geometric model 2
+    :rtype : Tuple(1D np.array row position, 1D np.array col position, 1D np.array True)
+    """
+    geometric_model1 = Localization(model1, elevation)
+    geometric_model2 = Localization(model2, elevation)
+
+    if not isinstance(row, (list, np.ndarray)):
+        row = np.array([row])
+        col = np.array([col])
+
+    # Estimate longitudes, latitudes, altitudes using direct localization with model1
+    ground_coord = geometric_model1.direct(row, col)
+
+    if len(ground_coord.shape) == 1:
+        ground_coord = np.expand_dims(ground_coord, 0)
+
+    # Estimate sensor position (row, col, altitude) using inverse localization with model2
+    sensor_coord = np.zeros((row.shape[0], 3), dtype=np.float64)
+    sensor_coord[:, 0], sensor_coord[:, 1], sensor_coord[:, 2] = geometric_model2.inverse(
+        ground_coord[:, 0], ground_coord[:, 1], ground_coord[:, 2]
+    )
+
+    return sensor_coord[:, 0], sensor_coord[:, 1], sensor_coord[:, 2]

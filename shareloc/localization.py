@@ -65,7 +65,7 @@ class Localization:
         :type using_geotransform : boolean
         :return coordinates : [lon,lat,h] (3D np.array)
         """
-        if using_geotransform:
+        if using_geotransform and self.image is not None:
             row, col = self.image.transform_index_to_physical_point(row, col)
         if h is not None:
             return self.model.direct_loc_h(row, col, h)
@@ -89,7 +89,7 @@ class Localization:
             self.model.estimate_inverse_loc_predictor()
         row, col, __ = self.model.inverse_loc(lon, lat, h)
 
-        if using_geotransform:
+        if using_geotransform and self.image is not None:
             row, col = self.image.transform_physical_point_to_index(row, col)
         return row, col, h
 

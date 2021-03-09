@@ -33,6 +33,7 @@ from shareloc.grid import Grid, coloc
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC
 from shareloc.localization import Localization
+from shareloc.localization import coloc as coloc_rpc
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
@@ -118,7 +119,7 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     Test direct localization at constant altitude
     """
     ___, gri = prepare_loc()
-    loc = Localization(gri, dtm=None)
+    loc = Localization(gri, elevation=None)
     lonlatalt = loc.direct(row, col, h)
 
     diff_lon = lonlatalt[0] - valid_lon
@@ -168,7 +169,8 @@ def test_sensor_loc_dir_dtm(index_x, index_y):
     Test direct localization on DTM
     """
     dtmbsq, gri = prepare_loc()
-    loc = Localization(gri, dtm=dtmbsq)
+    loc = Localization(gri, elevation=dtmbsq)
+
     vect_index = [index_x, index_y]
     [lon, lat] = dtmbsq.index_to_ter(vect_index)
     print([lon, lat])
@@ -388,9 +390,26 @@ def test_loc_dir_loc_inv_couple(lig, col, h):
     # init des predicteurs
     gri_right.estimate_inverse_loc_predictor()
     lonlatalt = gri_left.direct_loc_h(lig, col, h)
-    inv_lig, inv_col, alt, valid = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    inv_lig, inv_col, __, valid = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
 
-    print("lig {} col {} alt {} valid {}".format(inv_lig, inv_col, alt, valid))
+    print("lig {} col {} valid {}".format(inv_lig, inv_col, valid))
     # assert(lig == pytest.approx(inv_lig,abs=1e-2))
     # assert(col == pytest.approx(inv_col,abs=1e-2))
     # assert(valid == 1)
+
+
+@pytest.mark.parametrize("col,row,alt", [(600, 200, 125)])
+def test_colocalization(col, row, alt):
+    """
+    Test colocalization function using rpc
+    """
+
+    data_folder = test_path()
+    id_scene = "P1BP--2018122638935449CP"
+    file_dimap = os.path.join(data_folder, "rpc/PHRDIMAP_{}.XML".format(id_scene))
+    fctrat = RPC.from_dimap_v1(file_dimap)
+
+    row_coloc, col_coloc, _ = coloc_rpc(fctrat, fctrat, row, col, alt)
+
+    assert row == pytest.approx(row_coloc, abs=1e-1)
+    assert col == pytest.approx(col_coloc, abs=1e-1)

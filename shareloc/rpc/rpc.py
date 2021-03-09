@@ -27,6 +27,10 @@ from xml.dom import minidom
 from os.path import basename
 import rasterio as rio
 import numpy as np
+from numba import njit, prange, config
+
+# Set numba type of threading layer before parallel target compilation
+config.THREADING_LAYER = "omp"
 
 
 def renvoie_linesep(txt_liste_lines):
@@ -171,15 +175,15 @@ def read_eucl_file(eucl_file):
 
     poly_coeffs = dict()
     if parsed_file["type_fic"] == "I":
-        poly_coeffs["Num_COL"] = [float(coeff.split()[1]) for coeff in coeff_px_str]
-        poly_coeffs["Den_COL"] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
-        poly_coeffs["Num_LIG"] = [float(coeff.split()[1]) for coeff in coeff_py_str]
-        poly_coeffs["Den_LIG"] = [float(coeff.split()[1]) for coeff in coeff_qy_str]
+        poly_coeffs["num_col"] = [float(coeff.split()[1]) for coeff in coeff_px_str]
+        poly_coeffs["den_col"] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
+        poly_coeffs["num_row"] = [float(coeff.split()[1]) for coeff in coeff_py_str]
+        poly_coeffs["den_row"] = [float(coeff.split()[1]) for coeff in coeff_qy_str]
     else:
-        poly_coeffs["Num_X"] = [float(coeff.split()[1]) for coeff in coeff_px_str]
-        poly_coeffs["Den_X"] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
-        poly_coeffs["Num_Y"] = [float(coeff.split()[1]) for coeff in coeff_py_str]
-        poly_coeffs["Den_Y"] = [float(coeff.split()[1]) for coeff in coeff_qy_str]
+        poly_coeffs["num_x"] = [float(coeff.split()[1]) for coeff in coeff_px_str]
+        poly_coeffs["den_x"] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
+        poly_coeffs["num_y"] = [float(coeff.split()[1]) for coeff in coeff_py_str]
+        poly_coeffs["den_y"] = [float(coeff.split()[1]) for coeff in coeff_qy_str]
 
     parsed_file["poly_coeffs"] = poly_coeffs
     # list [offset , scale]
@@ -188,33 +192,33 @@ def read_eucl_file(eucl_file):
         if line.startswith(">>\tXIN_OFFSET"):
             lsplit = line.split()
             if parsed_file["type_fic"] == "I":
-                param = "X"
+                param = "x"
             else:
-                param = "COL"
+                param = "col"
             normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
         if line.startswith(">>\tYIN_OFFSET"):
             if parsed_file["type_fic"] == "I":
-                param = "Y"
+                param = "y"
             else:
-                param = "LIG"
+                param = "row"
             lsplit = line.split()
             normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
         if line.startswith(">>\tZIN_OFFSET"):
             lsplit = line.split()
-            normalisation_coeff["ALT"] = [float(lsplit[4]), float(lsplit[5])]
+            normalisation_coeff["alt"] = [float(lsplit[4]), float(lsplit[5])]
         if line.startswith(">>\tXOUT_OFFSET"):
             lsplit = line.split()
             if parsed_file["type_fic"] == "D":
-                param = "X"
+                param = "x"
             else:
-                param = "COL"
+                param = "col"
             normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
         if line.startswith(">>\tYOUT_OFFSET"):
             lsplit = line.split()
             if parsed_file["type_fic"] == "D":
-                param = "Y"
+                param = "y"
             else:
-                param = "LIG"
+                param = "row"
             normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
     parsed_file["normalisation_coeffs"] = normalisation_coeff
     return parsed_file
@@ -242,13 +246,15 @@ class RPC:
     RPC class including direct and inverse localization instance methods
     """
 
+    # gitlab issue #61
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, rpc_params):
         for key, value in rpc_params.items():
             setattr(self, key, value)
 
         self.type = "rpc"
         self.lim_extrapol = 1.0001
-        # chaque monome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
+        # chaque mononome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
         ordre_monomes_lai = [
             [1, 0, 0, 0],
             [1, 1, 0, 0],
@@ -272,55 +278,78 @@ class RPC:
             [1, 0, 0, 3],
         ]
 
-        self.monomes = ordre_monomes_lai
+        self.monomes = np.array(ordre_monomes_lai)
 
         # coefficient des degres monomes avec derivation 1ere variable
-        self.monomes_deriv_1 = [
-            [0, 0, 0, 0],
-            [1, 0, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1],
-            [1, 0, 1, 0],
-            [1, 0, 0, 1],
-            [0, 0, 1, 1],
-            [2, 1, 0, 0],
-            [0, 0, 2, 0],
-            [0, 0, 0, 2],
-            [1, 0, 1, 1],
-            [3, 2, 0, 0],
-            [1, 0, 2, 0],
-            [1, 0, 0, 2],
-            [2, 1, 1, 0],
-            [0, 0, 3, 0],
-            [0, 0, 1, 2],
-            [2, 1, 0, 1],
-            [0, 0, 2, 1],
-            [0, 0, 0, 3],
-        ]
+        self.monomes_deriv_1 = np.array(
+            [
+                [0, 0, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+                [1, 0, 1, 0],
+                [1, 0, 0, 1],
+                [0, 0, 1, 1],
+                [2, 1, 0, 0],
+                [0, 0, 2, 0],
+                [0, 0, 0, 2],
+                [1, 0, 1, 1],
+                [3, 2, 0, 0],
+                [1, 0, 2, 0],
+                [1, 0, 0, 2],
+                [2, 1, 1, 0],
+                [0, 0, 3, 0],
+                [0, 0, 1, 2],
+                [2, 1, 0, 1],
+                [0, 0, 2, 1],
+                [0, 0, 0, 3],
+            ]
+        )
 
         # coefficient des degres monomes avec derivation 1ere variable
-        self.monomes_deriv_2 = [
-            [0, 0, 0, 0],
-            [0, 1, 0, 0],
-            [1, 0, 0, 0],
-            [0, 0, 0, 1],
-            [1, 1, 0, 0],
-            [0, 1, 0, 1],
-            [1, 0, 0, 1],
-            [0, 2, 0, 0],
-            [2, 0, 1, 0],
-            [0, 0, 0, 2],
-            [1, 1, 0, 1],
-            [0, 3, 0, 0],
-            [2, 1, 1, 0],
-            [0, 1, 0, 2],
-            [1, 2, 0, 0],
-            [3, 0, 2, 0],
-            [1, 0, 0, 2],
-            [0, 2, 0, 1],
-            [2, 0, 1, 1],
-            [0, 0, 0, 3],
-        ]
+        self.monomes_deriv_2 = np.array(
+            [
+                [0, 0, 0, 0],
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1],
+                [1, 1, 0, 0],
+                [0, 1, 0, 1],
+                [1, 0, 0, 1],
+                [0, 2, 0, 0],
+                [2, 0, 1, 0],
+                [0, 0, 0, 2],
+                [1, 1, 0, 1],
+                [0, 3, 0, 0],
+                [2, 1, 1, 0],
+                [0, 1, 0, 2],
+                [1, 2, 0, 0],
+                [3, 0, 2, 0],
+                [1, 0, 0, 2],
+                [0, 2, 0, 1],
+                [2, 0, 1, 1],
+                [0, 0, 0, 3],
+            ]
+        )
+
+        self.inverse_coefficient = False
+        self.direct_coefficient = False
+
+        # pylint: disable=access-member-before-definition
+        if self.num_col:
+            self.inverse_coefficient = True
+            self.num_col = np.array(self.num_col)
+            self.den_col = np.array(self.den_col)
+            self.num_row = np.array(self.num_row)
+            self.den_row = np.array(self.den_row)
+
+        # pylint: disable=access-member-before-definition
+        if self.num_x:
+            self.direct_coefficient = True
+            self.num_x = np.array(self.num_x)
+            self.den_x = np.array(self.den_x)
+            self.num_y = np.array(self.num_y)
+            self.den_y = np.array(self.den_y)
 
     @classmethod
     def from_dimap(cls, dimap_filepath, topleftconvention=True):
@@ -365,56 +394,56 @@ class RPC:
         rpc_params["driver_type"] = "dimap_v" + version
         global_rfm = xmldoc.getElementsByTagName("Global_RFM")[0]
         direct_coeffs = global_rfm.getElementsByTagName("Direct_Model")[0]
-        rpc_params["Num_X"] = [
+        rpc_params["num_x"] = [
             float(direct_coeffs.getElementsByTagName("SAMP_NUM_COEFF_{}".format(index))[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["Den_X"] = [
+        rpc_params["den_x"] = [
             float(direct_coeffs.getElementsByTagName("SAMP_DEN_COEFF_{}".format(index))[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["Num_Y"] = [
+        rpc_params["num_y"] = [
             float(direct_coeffs.getElementsByTagName("LINE_NUM_COEFF_{}".format(index))[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["Den_Y"] = [
+        rpc_params["den_y"] = [
             float(direct_coeffs.getElementsByTagName("LINE_DEN_COEFF_{}".format(index))[0].firstChild.data)
             for index in range(1, 21)
         ]
         inverse_coeffs = global_rfm.getElementsByTagName("Inverse_Model")[0]
-        rpc_params["Num_COL"] = [
+        rpc_params["num_col"] = [
             float(inverse_coeffs.getElementsByTagName("SAMP_NUM_COEFF_{}".format(index))[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["Den_COL"] = [
+        rpc_params["den_col"] = [
             float(inverse_coeffs.getElementsByTagName("SAMP_DEN_COEFF_{}".format(index))[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["Num_LIG"] = [
+        rpc_params["num_row"] = [
             float(inverse_coeffs.getElementsByTagName("LINE_NUM_COEFF_{}".format(index))[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["Den_LIG"] = [
+        rpc_params["den_row"] = [
             float(inverse_coeffs.getElementsByTagName("LINE_DEN_COEFF_{}".format(index))[0].firstChild.data)
             for index in range(1, 21)
         ]
         normalisation_coeffs = global_rfm.getElementsByTagName("RFM_Validity")[0]
-        rpc_params["offset_COL"] = float(normalisation_coeffs.getElementsByTagName("SAMP_OFF")[0].firstChild.data)
-        rpc_params["scale_COL"] = float(normalisation_coeffs.getElementsByTagName("SAMP_SCALE")[0].firstChild.data)
-        rpc_params["offset_LIG"] = float(normalisation_coeffs.getElementsByTagName("LINE_OFF")[0].firstChild.data)
-        rpc_params["scale_LIG"] = float(normalisation_coeffs.getElementsByTagName("LINE_SCALE")[0].firstChild.data)
-        rpc_params["offset_ALT"] = float(normalisation_coeffs.getElementsByTagName("HEIGHT_OFF")[0].firstChild.data)
-        rpc_params["scale_ALT"] = float(normalisation_coeffs.getElementsByTagName("HEIGHT_SCALE")[0].firstChild.data)
-        rpc_params["offset_X"] = float(normalisation_coeffs.getElementsByTagName("LONG_OFF")[0].firstChild.data)
-        rpc_params["scale_X"] = float(normalisation_coeffs.getElementsByTagName("LONG_SCALE")[0].firstChild.data)
-        rpc_params["offset_Y"] = float(normalisation_coeffs.getElementsByTagName("LAT_OFF")[0].firstChild.data)
-        rpc_params["scale_Y"] = float(normalisation_coeffs.getElementsByTagName("LAT_SCALE")[0].firstChild.data)
-        rpc_params["offset_COL"] -= 1.5
-        rpc_params["offset_LIG"] -= 1.5
+        rpc_params["offset_col"] = float(normalisation_coeffs.getElementsByTagName("SAMP_OFF")[0].firstChild.data)
+        rpc_params["scale_col"] = float(normalisation_coeffs.getElementsByTagName("SAMP_SCALE")[0].firstChild.data)
+        rpc_params["offset_row"] = float(normalisation_coeffs.getElementsByTagName("LINE_OFF")[0].firstChild.data)
+        rpc_params["scale_row"] = float(normalisation_coeffs.getElementsByTagName("LINE_SCALE")[0].firstChild.data)
+        rpc_params["offset_alt"] = float(normalisation_coeffs.getElementsByTagName("HEIGHT_OFF")[0].firstChild.data)
+        rpc_params["scale_alt"] = float(normalisation_coeffs.getElementsByTagName("HEIGHT_SCALE")[0].firstChild.data)
+        rpc_params["offset_x"] = float(normalisation_coeffs.getElementsByTagName("LONG_OFF")[0].firstChild.data)
+        rpc_params["scale_x"] = float(normalisation_coeffs.getElementsByTagName("LONG_SCALE")[0].firstChild.data)
+        rpc_params["offset_y"] = float(normalisation_coeffs.getElementsByTagName("LAT_OFF")[0].firstChild.data)
+        rpc_params["scale_y"] = float(normalisation_coeffs.getElementsByTagName("LAT_SCALE")[0].firstChild.data)
+        rpc_params["offset_col"] -= 1.5
+        rpc_params["offset_row"] -= 1.5
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
-            rpc_params["offset_COL"] += 0.5
-            rpc_params["offset_LIG"] += 0.5
+            rpc_params["offset_col"] += 0.5
+            rpc_params["offset_row"] += 0.5
         return cls(rpc_params)
 
     @classmethod
@@ -456,30 +485,30 @@ class RPC:
         scale_row = float(rfm_validity[0].getElementsByTagName("Row")[0].getElementsByTagName("A")[0].firstChild.data)
         offset_row = float(rfm_validity[0].getElementsByTagName("Row")[0].getElementsByTagName("B")[0].firstChild.data)
 
-        rpc_params["offset_COL"] = offset_col
-        rpc_params["scale_COL"] = scale_col
-        rpc_params["offset_LIG"] = offset_row
-        rpc_params["scale_LIG"] = scale_row
-        rpc_params["offset_ALT"] = offset_alt
-        rpc_params["scale_ALT"] = scale_alt
-        rpc_params["offset_X"] = offset_lon
-        rpc_params["scale_X"] = scale_lon
-        rpc_params["offset_Y"] = offset_lat
-        rpc_params["scale_Y"] = scale_lat
-        rpc_params["Num_X"] = coeff_lon[0:20]
-        rpc_params["Den_X"] = coeff_lon[20::]
-        rpc_params["Num_Y"] = coeff_lat[0:20]
-        rpc_params["Den_Y"] = coeff_lat[20::]
-        rpc_params["Num_COL"] = coeff_col[0:20]
-        rpc_params["Den_COL"] = coeff_col[20::]
-        rpc_params["Num_LIG"] = coeff_lig[0:20]
-        rpc_params["Den_LIG"] = coeff_lig[20::]
-        rpc_params["offset_COL"] -= 1.5
-        rpc_params["offset_LIG"] -= 1.5
+        rpc_params["offset_col"] = offset_col
+        rpc_params["scale_col"] = scale_col
+        rpc_params["offset_row"] = offset_row
+        rpc_params["scale_row"] = scale_row
+        rpc_params["offset_alt"] = offset_alt
+        rpc_params["scale_alt"] = scale_alt
+        rpc_params["offset_x"] = offset_lon
+        rpc_params["scale_x"] = scale_lon
+        rpc_params["offset_y"] = offset_lat
+        rpc_params["scale_y"] = scale_lat
+        rpc_params["num_x"] = coeff_lon[0:20]
+        rpc_params["den_x"] = coeff_lon[20::]
+        rpc_params["num_y"] = coeff_lat[0:20]
+        rpc_params["den_y"] = coeff_lat[20::]
+        rpc_params["num_col"] = coeff_col[0:20]
+        rpc_params["den_col"] = coeff_col[20::]
+        rpc_params["num_row"] = coeff_lig[0:20]
+        rpc_params["den_row"] = coeff_lig[20::]
+        rpc_params["offset_col"] -= 1.5
+        rpc_params["offset_row"] -= 1.5
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
-            rpc_params["offset_COL"] += 0.5
-            rpc_params["offset_LIG"] += 0.5
+            rpc_params["offset_col"] += 0.5
+            rpc_params["offset_row"] += 0.5
         return cls(rpc_params)
 
     @classmethod
@@ -498,31 +527,31 @@ class RPC:
             print("{} does not contains RPCs ".format(image_filename))
             raise ValueError
         rpc_params = dict()
-        rpc_params["Den_LIG"] = parse_coeff_line(rpc_dict["LINE_DEN_COEFF"])
-        rpc_params["Num_LIG"] = parse_coeff_line(rpc_dict["LINE_NUM_COEFF"])
-        rpc_params["Num_COL"] = parse_coeff_line(rpc_dict["SAMP_NUM_COEFF"])
-        rpc_params["Den_COL"] = parse_coeff_line(rpc_dict["SAMP_DEN_COEFF"])
-        rpc_params["offset_COL"] = float(rpc_dict["SAMP_OFF"])
-        rpc_params["scale_COL"] = float(rpc_dict["SAMP_SCALE"])
-        rpc_params["offset_LIG"] = float(rpc_dict["LINE_OFF"])
-        rpc_params["scale_LIG"] = float(rpc_dict["LINE_SCALE"])
-        rpc_params["offset_ALT"] = float(rpc_dict["HEIGHT_OFF"])
-        rpc_params["scale_ALT"] = float(rpc_dict["HEIGHT_SCALE"])
-        rpc_params["offset_X"] = float(rpc_dict["LONG_OFF"])
-        rpc_params["scale_X"] = float(rpc_dict["LONG_SCALE"])
-        rpc_params["offset_Y"] = float(rpc_dict["LAT_OFF"])
-        rpc_params["scale_Y"] = float(rpc_dict["LAT_SCALE"])
+        rpc_params["den_row"] = parse_coeff_line(rpc_dict["LINE_DEN_COEFF"])
+        rpc_params["num_row"] = parse_coeff_line(rpc_dict["LINE_NUM_COEFF"])
+        rpc_params["num_col"] = parse_coeff_line(rpc_dict["SAMP_NUM_COEFF"])
+        rpc_params["den_col"] = parse_coeff_line(rpc_dict["SAMP_DEN_COEFF"])
+        rpc_params["offset_col"] = float(rpc_dict["SAMP_OFF"])
+        rpc_params["scale_col"] = float(rpc_dict["SAMP_SCALE"])
+        rpc_params["offset_row"] = float(rpc_dict["LINE_OFF"])
+        rpc_params["scale_row"] = float(rpc_dict["LINE_SCALE"])
+        rpc_params["offset_alt"] = float(rpc_dict["HEIGHT_OFF"])
+        rpc_params["scale_alt"] = float(rpc_dict["HEIGHT_SCALE"])
+        rpc_params["offset_x"] = float(rpc_dict["LONG_OFF"])
+        rpc_params["scale_x"] = float(rpc_dict["LONG_SCALE"])
+        rpc_params["offset_y"] = float(rpc_dict["LAT_OFF"])
+        rpc_params["scale_y"] = float(rpc_dict["LAT_SCALE"])
         # inverse coeff are not defined
-        rpc_params["Num_X"] = None
-        rpc_params["Den_X"] = None
-        rpc_params["Num_Y"] = None
-        rpc_params["Den_Y"] = None
+        rpc_params["num_x"] = None
+        rpc_params["den_x"] = None
+        rpc_params["num_y"] = None
+        rpc_params["den_y"] = None
         # If top left convention, 0.5 pixel shift added on col/row offsets
-        rpc_params["offset_COL"] -= 0.5
-        rpc_params["offset_LIG"] -= 0.5
+        rpc_params["offset_col"] -= 0.5
+        rpc_params["offset_row"] -= 0.5
         if topleftconvention:
-            rpc_params["offset_COL"] += 0.5
-            rpc_params["offset_LIG"] += 0.5
+            rpc_params["offset_col"] += 0.5
+            rpc_params["offset_row"] += 0.5
         return cls(rpc_params)
 
     @classmethod
@@ -544,43 +573,43 @@ class RPC:
             (key, val) = line.split(": ")
             geom_dict[key] = val.rstrip()
 
-        rpc_params["Den_LIG"] = [np.nan] * 20
-        rpc_params["Num_LIG"] = [np.nan] * 20
-        rpc_params["Den_COL"] = [np.nan] * 20
-        rpc_params["Num_COL"] = [np.nan] * 20
+        rpc_params["den_row"] = [np.nan] * 20
+        rpc_params["num_row"] = [np.nan] * 20
+        rpc_params["den_col"] = [np.nan] * 20
+        rpc_params["num_col"] = [np.nan] * 20
         for index in range(0, 20):
             axis = "line"
             num_den = "den"
             key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
-            rpc_params["Den_LIG"][index] = float(geom_dict[key])
+            rpc_params["den_row"][index] = float(geom_dict[key])
             num_den = "num"
             key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
-            rpc_params["Num_LIG"][index] = float(geom_dict[key])
+            rpc_params["num_row"][index] = float(geom_dict[key])
             axis = "samp"
             key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
-            rpc_params["Num_COL"][index] = float(geom_dict[key])
+            rpc_params["num_col"][index] = float(geom_dict[key])
             num_den = "den"
             key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
-            rpc_params["Den_COL"][index] = float(geom_dict[key])
-        rpc_params["offset_COL"] = float(geom_dict["samp_off"])
-        rpc_params["scale_COL"] = float(geom_dict["samp_scale"])
-        rpc_params["offset_LIG"] = float(geom_dict["line_off"])
-        rpc_params["scale_LIG"] = float(geom_dict["line_scale"])
-        rpc_params["offset_ALT"] = float(geom_dict["height_off"])
-        rpc_params["scale_ALT"] = float(geom_dict["height_scale"])
-        rpc_params["offset_X"] = float(geom_dict["long_off"])
-        rpc_params["scale_X"] = float(geom_dict["long_scale"])
-        rpc_params["offset_Y"] = float(geom_dict["lat_off"])
-        rpc_params["scale_Y"] = float(geom_dict["lat_scale"])
+            rpc_params["den_col"][index] = float(geom_dict[key])
+        rpc_params["offset_col"] = float(geom_dict["samp_off"])
+        rpc_params["scale_col"] = float(geom_dict["samp_scale"])
+        rpc_params["offset_row"] = float(geom_dict["line_off"])
+        rpc_params["scale_row"] = float(geom_dict["line_scale"])
+        rpc_params["offset_alt"] = float(geom_dict["height_off"])
+        rpc_params["scale_alt"] = float(geom_dict["height_scale"])
+        rpc_params["offset_x"] = float(geom_dict["long_off"])
+        rpc_params["scale_x"] = float(geom_dict["long_scale"])
+        rpc_params["offset_y"] = float(geom_dict["lat_off"])
+        rpc_params["scale_y"] = float(geom_dict["lat_scale"])
         # inverse coeff are not defined
-        rpc_params["Num_X"] = None
-        rpc_params["Den_X"] = None
-        rpc_params["Num_Y"] = None
-        rpc_params["Den_Y"] = None
+        rpc_params["num_x"] = None
+        rpc_params["den_x"] = None
+        rpc_params["num_y"] = None
+        rpc_params["den_y"] = None
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
-            rpc_params["offset_COL"] += 0.5
-            rpc_params["offset_LIG"] += 0.5
+            rpc_params["offset_col"] += 0.5
+            rpc_params["offset_row"] += 0.5
         return cls(rpc_params)
 
     @classmethod
@@ -605,14 +634,14 @@ class RPC:
         # info log
         print("primary euclidium file is of {} type".format(primary_coeffs["type_fic"]))
 
-        rpc_params["Num_X"] = None
-        rpc_params["Den_X"] = None
-        rpc_params["Num_Y"] = None
-        rpc_params["Den_Y"] = None
-        rpc_params["Num_COL"] = None
-        rpc_params["Den_COL"] = None
-        rpc_params["Num_LIG"] = None
-        rpc_params["Den_LIG"] = None
+        rpc_params["num_x"] = None
+        rpc_params["den_x"] = None
+        rpc_params["num_y"] = None
+        rpc_params["den_y"] = None
+        rpc_params["num_col"] = None
+        rpc_params["den_col"] = None
+        rpc_params["num_row"] = None
+        rpc_params["den_row"] = None
 
         for key, value in primary_coeffs["poly_coeffs"].items():
             rpc_params[key] = value
@@ -630,13 +659,13 @@ class RPC:
             for key, value in secondary_coeffs["poly_coeffs"].items():
                 rpc_params[key] = value
 
-        rpc_params["offset_COL"] -= 1
-        rpc_params["offset_LIG"] -= 1
+        rpc_params["offset_col"] -= 1
+        rpc_params["offset_row"] -= 1
         # If top left convention, 0.5 pixel shift added on col/row offsets
 
         if topleftconvention:
-            rpc_params["offset_COL"] += 0.5
-            rpc_params["offset_LIG"] += 0.5
+            rpc_params["offset_col"] += 0.5
+            rpc_params["offset_row"] += 0.5
 
         return cls(rpc_params)
 
@@ -675,71 +704,32 @@ class RPC:
 
     def calcule_derivees_inv(self, lon, lat, alt):
         """calcul analytiques des derivees partielles de la loc inverse
-        dcol_dlon: derivee de loc_inv_col p/r a lon
-        drow_dlat: derivee de loc_inv_row p/r a lat
+        DCdx: derivee de loc_inv_C p/r a X
+        DLdy: derivee de loc_inv_L p/r a Y
         """
+        if not isinstance(alt, (list, np.ndarray)):
+            alt = np.array([alt])
 
-        if self.Num_COL:
-            lon_norm = (lon - self.offset_X) / self.scale_X
-            lat_norm = (lat - self.offset_Y) / self.scale_Y
-            alt_norm = (alt - self.offset_ALT) / self.scale_ALT
-            monomes = np.array(
-                [
-                    self.monomes[i][0]
-                    * lon_norm ** int(self.monomes[i][1])
-                    * lat_norm ** int(self.monomes[i][2])
-                    * alt_norm ** int(self.monomes[i][3])
-                    for i in range(self.monomes.__len__())
-                ]
-            )
-            num_dcol = np.dot(np.array(self.Num_COL), monomes)
-            den_dcol = np.dot(np.array(self.Den_COL), monomes)
-            num_drow = np.dot(np.array(self.Num_LIG), monomes)
-            den_drow = np.dot(np.array(self.Den_LIG), monomes)
+        if alt.shape[0] != lon.shape[0]:
+            alt = np.full(lon.shape[0], fill_value=alt[0])
 
-            monomes_deriv_x = np.array(
-                [
-                    self.monomes_deriv_1[i][0]
-                    * lon_norm ** int(self.monomes_deriv_1[i][1])
-                    * lat_norm ** int(self.monomes_deriv_1[i][2])
-                    * alt_norm ** int(self.monomes_deriv_1[i][3])
-                    for i in range(self.monomes_deriv_1.__len__())
-                ]
-            )
+        lon_norm = (lon - self.offset_x) / self.scale_x
+        lat_norm = (lat - self.offset_y) / self.scale_y
+        alt_norm = (alt - self.offset_alt) / self.scale_alt
 
-            monomes_deriv_y = np.array(
-                [
-                    self.monomes_deriv_2[i][0]
-                    * lon_norm ** int(self.monomes_deriv_2[i][1])
-                    * lat_norm ** int(self.monomes_deriv_2[i][2])
-                    * alt_norm ** int(self.monomes_deriv_2[i][3])
-                    for i in range(self.monomes_deriv_2.__len__())
-                ]
-            )
-
-            num_dcol_dlon = np.dot(np.array(self.Num_COL), monomes_deriv_x)
-            den_dcol_dlon = np.dot(np.array(self.Den_COL), monomes_deriv_x)
-            num_drow_dlon = np.dot(np.array(self.Num_LIG), monomes_deriv_x)
-            den_drow_dlon = np.dot(np.array(self.Den_LIG), monomes_deriv_x)
-
-            num_dcol_dlat = np.dot(np.array(self.Num_COL), monomes_deriv_y)
-            den_dcol_dlat = np.dot(np.array(self.Den_COL), monomes_deriv_y)
-            num_drow_dlat = np.dot(np.array(self.Num_LIG), monomes_deriv_y)
-            den_drow_dlat = np.dot(np.array(self.Den_LIG), monomes_deriv_y)
-
-            # derive (u/v)' = (u'v - v'u)/(v*v)
-            dcol_dlon = (
-                self.scale_COL / self.scale_X * (num_dcol_dlon * den_dcol - den_dcol_dlon * num_dcol) / den_dcol ** 2
-            )
-            dcol_dlat = (
-                self.scale_COL / self.scale_Y * (num_dcol_dlat * den_dcol - den_dcol_dlat * num_dcol) / den_dcol ** 2
-            )
-            drow_dlon = (
-                self.scale_LIG / self.scale_X * (num_drow_dlon * den_drow - den_drow_dlon * num_drow) / den_drow ** 2
-            )
-            drow_dlat = (
-                self.scale_LIG / self.scale_Y * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / den_drow ** 2
-            )
+        dcol_dlon, dcol_dlat, drow_dlon, drow_dlat = calcule_derivees_inv_numba(
+            lon_norm,
+            lat_norm,
+            alt_norm,
+            self.num_col,
+            self.den_col,
+            self.num_row,
+            self.den_row,
+            self.scale_col,
+            self.scale_x,
+            self.scale_row,
+            self.scale_y,
+        )
 
         return (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat)
 
@@ -761,48 +751,41 @@ class RPC:
             col = np.array([col])
             row = np.array([row])
 
-        points = np.zeros((len(col), 3))
+        if not isinstance(alt, (list, np.ndarray)):
+            alt = np.array([alt])
+
+        if alt.shape[0] != col.shape[0]:
+            alt = np.full(col.shape[0], fill_value=alt[0])
+
+        points = np.zeros((col.size, 3))
         filter_nan, points[:, 0], points[:, 1] = self.filter_coordinates(row, col, fill_nan)
         row = row[filter_nan]
         col = col[filter_nan]
 
         # Direct localization using direct RPC
-        if self.Num_X:
+        if self.direct_coefficient:
             # ground position
+            col_norm = (col - self.offset_col) / self.scale_col
+            row_norm = (row - self.offset_row) / self.scale_row
+            alt_norm = (alt - self.offset_alt) / self.scale_alt
 
-            col_norm = (col - self.offset_COL) / self.scale_COL
-            row_norm = (row - self.offset_LIG) / self.scale_LIG
-            alt_norm = (alt - self.offset_ALT) / self.scale_ALT
-
-            if np.sum(abs(col_norm) > self.lim_extrapol) == col_norm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en colonne ", col_norm, col)
-            if np.sum(abs(row_norm) > self.lim_extrapol) == row_norm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en ligne ", row_norm, row)
-            if abs(alt_norm) > self.lim_extrapol:
-                print("!!!!! l'evaluation au point est extrapolee en altitude ", alt_norm, alt)
-
-            monomes = np.array(
-                [
-                    self.monomes[i][0]
-                    * col_norm ** int(self.monomes[i][1])
-                    * row_norm ** int(self.monomes[i][2])
-                    * alt_norm ** int(self.monomes[i][3])
-                    for i in range(self.monomes.__len__())
-                ]
-            )
-
-            points[filter_nan, 0] = (
-                np.dot(np.array(self.Num_X), monomes) / np.dot(np.array(self.Den_X), monomes) * self.scale_X
-                + self.offset_X
-            )
-            points[filter_nan, 1] = (
-                np.dot(np.array(self.Num_Y), monomes) / np.dot(np.array(self.Den_Y), monomes) * self.scale_Y
-                + self.offset_Y
+            points[filter_nan, 1], points[filter_nan, 0] = compute_rational_function_polynomial(
+                col_norm,
+                row_norm,
+                alt_norm,
+                self.num_x,
+                self.den_x,
+                self.num_y,
+                self.den_y,
+                self.scale_x,
+                self.offset_x,
+                self.scale_y,
+                self.offset_y,
             )
 
         # Direct localization using inverse RPC
         else:
-            print("direct localisation from inverse iterative")
+            # print("direct localisation from inverse iterative")
             (points[filter_nan, 0], points[filter_nan, 1], points[filter_nan, 2]) = self.direct_loc_inverse_iterative(
                 row, col, alt, 10, fill_nan
             )
@@ -870,41 +853,35 @@ class RPC:
         :return: sensor position (row, col, alt)
         :rtype numpy.ndarray
         """
-        if self.Num_COL:
+        if self.inverse_coefficient:
             if not isinstance(lon, (list, np.ndarray)):
                 lon = np.array([lon])
                 lat = np.array([lat])
             if not isinstance(alt, (list, np.ndarray)):
                 alt = np.array([alt])
 
-            lon_norm = (lon - self.offset_X) / self.scale_X
-            lat_norm = (lat - self.offset_Y) / self.scale_Y
-            alt_norm = (alt - self.offset_ALT) / self.scale_ALT
+            if not isinstance(alt, (list, np.ndarray)):
+                alt = np.array([alt])
 
-            if np.sum(abs(lon_norm) > self.lim_extrapol) == lon_norm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en longitude ", lon_norm, lon)
-            if np.sum(abs(lat_norm) > self.lim_extrapol) == lat_norm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en latitude ", lat_norm, lat)
-            if np.sum(abs(alt_norm) > self.lim_extrapol) == alt_norm.shape[0]:
-                print("!!!!! l'evaluation au point est extrapolee en altitude ", alt_norm, alt)
+            if alt.shape[0] != lon.shape[0]:
+                alt = np.full(lon.shape[0], fill_value=alt[0])
 
-            monomes = np.array(
-                [
-                    self.monomes[i][0]
-                    * lon_norm ** int(self.monomes[i][1])
-                    * lat_norm ** int(self.monomes[i][2])
-                    * alt_norm ** int(self.monomes[i][3])
-                    for i in range(self.monomes.__len__())
-                ]
-            )
+            lon_norm = (lon - self.offset_x) / self.scale_x
+            lat_norm = (lat - self.offset_y) / self.scale_y
+            alt_norm = (alt - self.offset_alt) / self.scale_alt
 
-            col_out = (
-                np.dot(np.array(self.Num_COL), monomes) / np.dot(np.array(self.Den_COL), monomes) * self.scale_COL
-                + self.offset_COL
-            )
-            row_out = (
-                np.dot(np.array(self.Num_LIG), monomes) / np.dot(np.array(self.Den_LIG), monomes) * self.scale_LIG
-                + self.offset_LIG
+            row_out, col_out = compute_rational_function_polynomial(
+                lon_norm,
+                lat_norm,
+                alt_norm,
+                self.num_col,
+                self.den_col,
+                self.num_row,
+                self.den_row,
+                self.scale_col,
+                self.offset_col,
+                self.scale_row,
+                self.offset_row,
             )
         else:
             print("inverse localisation can't be performed, inverse coefficients have not been defined")
@@ -931,11 +908,11 @@ class RPC:
 
         if fill_nan:
             if direction == "direct":
-                out_x_nan_value = self.offset_X
-                out_y_nan_value = self.offset_Y
+                out_x_nan_value = self.offset_x
+                out_y_nan_value = self.offset_y
             else:
-                out_x_nan_value = self.offset_COL
-                out_y_nan_value = self.offset_LIG
+                out_x_nan_value = self.offset_col
+                out_y_nan_value = self.offset_row
         else:
             out_x_nan_value = np.nan
             out_y_nan_value = np.nan
@@ -963,24 +940,29 @@ class RPC:
         :return: ground position (lon,lat,h)
         :rtype list of numpy.array
         """
-        if self.Num_COL:
-
+        if self.inverse_coefficient:
             if not isinstance(row, (list, np.ndarray)):
                 col = np.array([col])
                 row = np.array([row])
 
+            if not isinstance(alt, (list, np.ndarray)):
+                alt = np.array([alt])
+
+            if alt.shape[0] != col.shape[0]:
+                alt = np.full(col.shape[0], fill_value=alt[0])
+
             filter_nan, long_out, lat_out = self.filter_coordinates(row, col, fill_nan)
             row = row[filter_nan]
             col = col[filter_nan]
+            alt = alt[filter_nan]
 
-            # if all coord
-            #  contains Nan then return
+            # if all coord contains Nan then return
             if not np.any(filter_nan):
                 return long_out, lat_out, alt
 
             # inverse localization starting from the center of the scene
-            lon = np.array([self.offset_X])
-            lat = np.array([self.offset_Y])
+            lon = np.array([self.offset_x])
+            lat = np.array([self.offset_y])
             (row_start, col_start, __) = self.inverse_loc(lon, lat, alt)
 
             # desired precision in pixels
@@ -1000,7 +982,9 @@ class RPC:
                 iter_ = np.where((abs(delta_col) > eps) | (abs(delta_row) > eps))[0]
 
                 # partial derivatives
-                (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = self.calcule_derivees_inv(lon[iter_], lat[iter_], alt)
+                (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = self.calcule_derivees_inv(
+                    lon[iter_], lat[iter_], alt[iter_]
+                )
                 det = dcol_dlon * drow_dlat - drow_dlon * dcol_dlat
 
                 delta_lon = (drow_dlat * delta_col[iter_] - dcol_dlat * delta_row[iter_]) / det
@@ -1011,12 +995,13 @@ class RPC:
                 lat[iter_] += delta_lat
 
                 # inverse localization
-                (row_estim, col_estim, __) = self.inverse_loc(lon[iter_], lat[iter_], alt)
+                (row_estim, col_estim, __) = self.inverse_loc(lon[iter_], lat[iter_], alt[iter_])
 
                 # updating the residue between the sensor positions and those estimated by the inverse localization
                 delta_col[iter_] = col[iter_] - col_estim
                 delta_row[iter_] = row[iter_] - row_estim
                 iteration += 1
+
             long_out[filter_nan] = lon
             lat_out[filter_nan] = lat
 
@@ -1032,7 +1017,7 @@ class RPC:
         :return alt_min,lat_max
         :rtype list
         """
-        return [self.offset_ALT - self.scale_ALT / 2.0, self.offset_ALT + self.scale_ALT / 2.0]
+        return [self.offset_alt - self.scale_alt / 2.0, self.offset_alt + self.scale_alt / 2.0]
 
     def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False):
         """
@@ -1055,3 +1040,245 @@ class RPC:
             np.array([row, row]), np.array([col, col]), np.array([alt_max, alt_min]), fill_nan
         )
         return los_edges
+
+
+@njit("f8(f8, f8, f8, f8[:])", cache=True, fastmath=True)
+def polynomial_equation(xnorm, ynorm, znorm, coeff):
+    """
+    Compute polynomial equation
+
+    :param xnorm: Normalized longitude (for inverse) or column (for direct) position
+    :type xnorm: float 64
+    :param ynorm: Normalized latitude (for inverse) or line (for direct) position
+    :type ynorm: float 64
+    :param znorm: Normalized altitude position
+    :type znorm: float 64
+    :param coeff: coefficients
+    :type coeff: 1D np.array dtype np.float 64
+    :return: rational
+    :rtype: float 64
+    """
+    rational = (
+        coeff[0]
+        + coeff[1] * xnorm
+        + coeff[2] * ynorm
+        + coeff[3] * znorm
+        + coeff[4] * xnorm * ynorm
+        + coeff[5] * xnorm * znorm
+        + coeff[6] * ynorm * znorm
+        + coeff[7] * xnorm ** 2
+        + coeff[8] * ynorm ** 2
+        + coeff[9] * znorm ** 2
+        + coeff[10] * xnorm * ynorm * znorm
+        + coeff[11] * xnorm ** 3
+        + coeff[12] * xnorm * ynorm ** 2
+        + coeff[13] * xnorm * znorm ** 2
+        + coeff[14] * xnorm ** 2 * ynorm
+        + coeff[15] * ynorm ** 3
+        + coeff[16] * ynorm * znorm ** 2
+        + coeff[17] * xnorm ** 2 * znorm
+        + coeff[18] * ynorm ** 2 * znorm
+        + coeff[19] * znorm ** 3
+    )
+
+    return rational
+
+
+# pylint: disable=too-many-arguments
+@njit(
+    "Tuple((f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)",
+    parallel=True,
+    cache=True,
+    fastmath=True,
+)
+def compute_rational_function_polynomial(
+    lon_col_norm,
+    lat_row_norm,
+    alt_norm,
+    num_col,
+    den_col,
+    num_lin,
+    den_lin,
+    scale_col,
+    offset_col,
+    scale_lin,
+    offset_lin,
+):
+    """
+    Compute rational function polynomial using numba to reduce calculation time on multiple points.
+    useful to compute direct and inverse localization using direct or inverse RPC.
+
+    :param lon_col_norm: Normalized longitude (for inverse) or column (for direct) position
+    :type lon_col_norm: 1D np.array dtype np.float 64
+    :param lat_row_norm: Normalized latitude (for inverse) or line (for direct) position
+    :type lat_row_norm: 1D np.array dtype np.float 64
+    :param alt_norm: Normalized altitude position
+    :type alt_norm: 1D np.array dtype np.float 64
+    :param num_col: Column numerator coefficients
+    :type num_col: 1D np.array dtype np.float 64
+    :param den_col: Column denominator coefficients
+    :type den_col: 1D np.array dtype np.float 64
+    :param num_lin: Line numerator coefficients
+    :type num_lin: 1D np.array dtype np.float 64
+    :param den_lin: Line denominator coefficients
+    :type den_lin: 1D np.array dtype np.float 64
+    :param scale_col: Column scale
+    :type scale_col: float 64
+    :param offset_col: Column offset
+    :type offset_col: float 64
+    :param scale_lin: Line scale
+    :type scale_lin: float 64
+    :param offset_lin: Line offset
+    :type offset_lin: float 64
+    :return: for inverse localization : sensor position (row, col). for direct localization : ground position (lon, lat)
+    :rtype Tuple(np.ndarray, np.ndarray)
+    """
+    assert lon_col_norm.shape == alt_norm.shape
+
+    col_lat_out = np.zeros((lon_col_norm.shape[0]), dtype=np.float64)
+    row_lon_out = np.zeros((lon_col_norm.shape[0]), dtype=np.float64)
+
+    # pylint: disable=not-an-iterable
+    for i in prange(lon_col_norm.shape[0]):
+        poly_num_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], num_col)
+        poly_den_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], den_col)
+        poly_num_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], num_lin)
+        poly_den_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], den_lin)
+        col_lat_out[i] = poly_num_col / poly_den_col * scale_col + offset_col
+        row_lon_out[i] = poly_num_lin / poly_den_lin * scale_lin + offset_lin
+
+    return row_lon_out, col_lat_out
+
+
+@njit("f8(f8, f8, f8, f8[:])", cache=True, fastmath=True)
+def derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, coeff):
+    """
+    Compute latitude derivative polynomial equation
+
+    :param lon_norm: Normalized longitude position
+    :type lon_norm: float 64
+    :param lat_norm: Normalized latitude position
+    :type lat_norm: float 64
+    :param alt_norm: Normalized altitude position
+    :type alt_norm: float 64
+    :param coeff: coefficients
+    :type coeff: 1D np.array dtype np.float 64
+    :return: rational derivative
+    :rtype: float 64
+    """
+    derivate = (
+        coeff[2]
+        + coeff[4] * lon_norm
+        + coeff[6] * alt_norm
+        + 2 * coeff[8] * lat_norm
+        + coeff[10] * lon_norm * alt_norm
+        + 2 * coeff[12] * lon_norm * lat_norm
+        + coeff[14] * lon_norm ** 2
+        + 3 * coeff[15] * lat_norm ** 2
+        + coeff[16] * alt_norm ** 2
+        + 2 * coeff[18] * lat_norm * alt_norm
+    )
+
+    return derivate
+
+
+@njit("f8(f8, f8, f8, f8[:])", cache=True, fastmath=True)
+def derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, coeff):
+    """
+    Compute longitude derivative polynomial equation
+
+    :param lon_norm: Normalized longitude position
+    :type lon_norm: float 64
+    :param lat_norm: Normalized latitude position
+    :type lat_norm: float 64
+    :param alt_norm: Normalized altitude position
+    :type alt_norm: float 64
+    :param coeff: coefficients
+    :type coeff: 1D np.array dtype np.float 64
+    :return: rational derivative
+    :rtype: float 64
+    """
+    derivate = (
+        coeff[1]
+        + coeff[4] * lat_norm
+        + coeff[5] * alt_norm
+        + 2 * coeff[7] * lon_norm
+        + coeff[10] * lat_norm * alt_norm
+        + 3 * coeff[11] * lon_norm ** 2
+        + coeff[12] * lat_norm ** 2
+        + coeff[13] * alt_norm ** 2
+        + 2 * coeff[14] * lat_norm * lon_norm
+        + 2 * coeff[17] * lon_norm * alt_norm
+    )
+
+    return derivate
+
+
+# pylint: disable=too-many-arguments
+@njit(
+    "Tuple((f8[:], f8[:], f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)",
+    parallel=True,
+    cache=True,
+    fastmath=True,
+)
+def calcule_derivees_inv_numba(
+    lon_norm, lat_norm, alt_norm, num_col, den_col, num_lin, den_lin, scale_col, scale_lon, scale_lin, scale_lat
+):
+    """
+    Analytically compute the partials derivatives of inverse localization using numba to reduce calculation time on
+    multiple points
+
+    :param lon_norm: Normalized longitude position
+    :type lon_norm: 1D np.array dtype np.float 64
+    :param lat_norm: Normalized latitude position
+    :type lat_norm: 1D np.array dtype np.float 64
+    :param alt_norm: Normalized altitude position
+    :type alt_norm: 1D np.array dtype np.float 64
+    :param num_col: Column numerator coefficients
+    :type num_col: 1D np.array dtype np.float 64
+    :param den_col: Column denominator coefficients
+    :type den_col: 1D np.array dtype np.float 64
+    :param num_lin: Line numerator coefficients
+    :type num_lin: 1D np.array dtype np.float 64
+    :param den_lin: Line denominator coefficients
+    :type den_lin: 1D np.array dtype np.float 64
+    :param scale_col: Column scale
+    :type scale_col: float 64
+    :param scale_lon: Geodetic longitude scale
+    :type scale_lon: float 64
+    :param scale_lin: Line scale
+    :type scale_lin: float 64
+    :param scale_lat: Geodetic latitude scale
+    :type scale_lat: float 64
+    :return: partials derivatives of inverse localization
+    :rtype: Tuples(dcol_dlon np.array, dcol_dlat np.array, drow_dlon np.array, drow_dlat np.array)
+    """
+
+    dcol_dlon = np.zeros((lon_norm.shape[0]), dtype=np.float64)
+    dcol_dlat = np.zeros((lon_norm.shape[0]), dtype=np.float64)
+    drow_dlon = np.zeros((lon_norm.shape[0]), dtype=np.float64)
+    drow_dlat = np.zeros((lon_norm.shape[0]), dtype=np.float64)
+
+    # pylint: disable=not-an-iterable
+    for i in prange(lon_norm.shape[0]):
+        num_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], num_col)
+        den_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], den_col)
+        num_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], num_lin)
+        den_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], den_lin)
+
+        num_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], num_col)
+        den_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], den_col)
+        num_drow_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], num_lin)
+        den_drow_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], den_lin)
+
+        num_dcol_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], num_col)
+        den_dcol_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], den_col)
+        num_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], num_lin)
+        den_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], den_lin)
+
+        dcol_dlon[i] = scale_col / scale_lon * (num_dcol_dlon * den_dcol - den_dcol_dlon * num_dcol) / den_dcol ** 2
+        dcol_dlat[i] = scale_col / scale_lat * (num_dcol_dlat * den_dcol - den_dcol_dlat * num_dcol) / den_dcol ** 2
+        drow_dlon[i] = scale_lin / scale_lon * (num_drow_dlon * den_drow - den_drow_dlon * num_drow) / den_drow ** 2
+        drow_dlat[i] = scale_lin / scale_lat * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / den_drow ** 2
+
+    return dcol_dlon, dcol_dlat, drow_dlon, drow_dlat

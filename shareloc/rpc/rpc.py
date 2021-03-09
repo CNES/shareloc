@@ -835,7 +835,12 @@ class RPC:
         """
 
         # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
-        los = self.los_extrema(row, col, dtm.alt_min - 1.0, dtm.alt_max + 1.0)
+        (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
+        if min_dtm < self.offset_alt - self.scale_alt:
+            print("minimum dtm value is outside RPC validity domain")
+        if max_dtm > self.offset_alt + self.scale_alt:
+            print("maximum dtm value is outside RPC validity domain")
+        los = self.los_extrema(row, col, min_dtm, max_dtm)
         (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
         (__, __, position) = dtm.intersection(los, position_cube, alti)
         return position

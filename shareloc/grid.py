@@ -589,8 +589,8 @@ class Grid:
         :type alt: float
         :param nb_iterations : max number of iterations (15 by default)
         :type nb_iterations : int
-        :return sensor position (row,col,alt, is_valid)
-        :rtype tuple (float,float,float,boolean)
+        :return sensor position (row,col,alt)
+        :rtype tuple (float,float,float)
         """
 
         deg2mrad = np.deg2rad(1.0) * 1e6
@@ -616,7 +616,9 @@ class Grid:
                 row_i += -dimg[1]
                 iteration += 1
                 point_valide = 1
-        return (row_i, col_i, alt, point_valide)
+        if point_valide == 0:
+            (row_i, col_i) = (None, None)
+        return row_i, col_i, alt
 
 
 def coloc(multi_h_grid_src, multi_h_grid_dst, dtm, origin, step, size):
@@ -639,7 +641,7 @@ def coloc(multi_h_grid_src, multi_h_grid_dst, dtm, origin, step, size):
     [l0_src, c0_src] = origin
     [steprow_src, stepcol_src] = step
     [nbrow_src, nbcol_src] = size
-    gricoloc = np.zeros((4, nbrow_src, nbcol_src))
+    gricoloc = np.zeros((3, nbrow_src, nbcol_src))
     for index_row in range(nbrow_src):
         row = l0_src + steprow_src * index_row
         for index_col in range(nbcol_src):

@@ -316,14 +316,14 @@ def test_loc_dir_loc_inv(row, col, h):
 
 # delta vt 0.5 pixel shift between physical model and rpc OTB
 @pytest.mark.parametrize(
-    "id_scene, rpc, col,row, h, delta_vt",
+    "id_scene, rpc, col,row, h",
     [
-        ("P1BP--2018122638935449CP", "PHRDIMAP_P1BP--2018122638935449CP.XML", 150.5, 20.5, 10.0, 0.5),
-        ("P1BP--2017092838284574CP", "RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML", 150.5, 20.5, 10.0, 0.5),
+        ("P1BP--2018122638935449CP", "PHRDIMAP_P1BP--2018122638935449CP.XML", 150.5, 20.5, 10.0),
+        ("P1BP--2017092838284574CP", "RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML", 150.5, 20.5, 10.0),
     ],
 )
 @pytest.mark.unit_tests
-def test_loc_dir_loc_inv_rpc(id_scene, rpc, row, col, h, delta_vt):
+def test_loc_dir_loc_inv_rpc(id_scene, rpc, row, col, h):
     """
     Test direct localization followed by inverse one
     """
@@ -339,8 +339,8 @@ def test_loc_dir_loc_inv_rpc(id_scene, rpc, row, col, h, delta_vt):
     (inv_row, inv_col, __) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
     print("row {} col {}".format(inv_row, inv_col))
 
-    assert row == pytest.approx(inv_row + delta_vt, abs=1e-2)
-    assert col == pytest.approx(inv_col + delta_vt, abs=1e-2)
+    assert row == pytest.approx(inv_row, abs=1e-2)
+    assert col == pytest.approx(inv_col, abs=1e-2)
 
 
 @pytest.mark.parametrize("l0_src,c0_src, steprow_src, stepcol_src,nbrow_src,nbcol_src", [(0.5, 1.5, 10, 100, 20, 20)])

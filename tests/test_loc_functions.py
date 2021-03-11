@@ -151,8 +151,7 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     fctrat = RPC.from_any(fichier_dimap)
 
     loc_rpc = Localization(fctrat)
-    # grid (from physical model) and RP have 0.5 pixel shift
-    lonlatalt_rpc = loc_rpc.direct(row - 0.5, col - 0.5, h)
+    lonlatalt_rpc = loc_rpc.direct(row, col, h)
 
     diff_lon = lonlatalt[0] - lonlatalt_rpc[0]
     diff_lat = lonlatalt[1] - lonlatalt_rpc[1]
@@ -225,9 +224,9 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     [row_rpc, col_rpc, __] = loc_rpc.inverse(lon, lat, alt)
     diff_row = row_rpc - row
     diff_col = col_rpc - col
-    # delta vt 0.5 pixel shift between physical model and rpc OTB
-    assert diff_row == pytest.approx(-0.5, abs=1e-2)
-    assert diff_col == pytest.approx(-0.5, abs=1e-2)
+
+    assert diff_row == pytest.approx(0.0, abs=1e-2)
+    assert diff_col == pytest.approx(0.0, abs=1e-2)
 
 
 @pytest.mark.parametrize(

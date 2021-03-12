@@ -657,8 +657,8 @@ class RPC:
             for key, value in secondary_coeffs["poly_coeffs"].items():
                 rpc_params[key] = value
 
-        rpc_params["offset_col"] -= -0.5
-        rpc_params["offset_row"] -= -0.5
+        rpc_params["offset_col"] -= 0.5
+        rpc_params["offset_row"] -= 0.5
         # If top left convention, 0.5 pixel shift added on col/row offsets
 
         if topleftconvention:

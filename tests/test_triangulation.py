@@ -139,10 +139,9 @@ def test_epi_triangulation_sift():
     point_ecef, __, __ = epipolar_triangulation(
         matches, None, "sift", gri_left, gri_right, grid_left_filename, grid_right_filename
     )
-
-    valid = [4584341.53073309455066919326782, 572313.952957414789125323295593, 4382784.34314652625471353530884]
+    valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     print(valid - point_ecef[0, :])
-    assert valid == pytest.approx(point_ecef[0, :], abs=1.0)
+    assert valid == pytest.approx(point_ecef[0, :], abs=0.5)
 
 
 @pytest.mark.unit_tests
@@ -168,7 +167,7 @@ def test_epi_triangulation_sift_rpc():
     point_ecef, __, __ = epipolar_triangulation(
         matches, None, "sift", geom_model_left, geom_model_right, grid_left_filename, grid_right_filename
     )
-    valid = [4584341.53073309455066919326782, 572313.952957414789125323295593, 4382784.34314652625471353530884]
+    valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     # print(valid - point_ecef[0,:])
     assert valid == pytest.approx(point_ecef[0, :], abs=1e-3)
 
@@ -373,9 +372,9 @@ def test_epi_triangulation_disp_grid():
     stats = stats_diff(cloud, array_epi_ecef)
     # 1492 first non masked index
     index = 1492
-    assert point_ecef[index, 0] == pytest.approx(cloud.x.values.flatten()[index], abs=1e-1)
+    assert point_ecef[index, 0] == pytest.approx(cloud.x.values.flatten()[index], abs=0.3)
     assert point_ecef[index, 1] == pytest.approx(cloud.y.values.flatten()[index], abs=0.3)
-    assert point_ecef[index, 2] == pytest.approx(cloud.z.values.flatten()[index], abs=0.6)
+    assert point_ecef[index, 2] == pytest.approx(cloud.z.values.flatten()[index], abs=0.3)
     assert stats[:, 2] == pytest.approx([0, 0, 0], abs=0.5)
 
 

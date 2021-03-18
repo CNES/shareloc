@@ -48,8 +48,8 @@ def test_interp_dtm(index_x, index_y, valid_alt):
     lat_ref = 22.2166666667
     pas_lon = 0.00833333333333
     pas_lat = -0.00833333333333
-    assert coords[0] == lon_ref + index_y * pas_lon
-    assert coords[1] == lat_ref + index_x * pas_lat
+    assert coords[0] == pytest.approx(lon_ref + index_y * pas_lon, 1e-12)
+    assert coords[1] == pytest.approx(lat_ref + index_x * pas_lat, 1e-12)
     index = dtmbsq.ter_to_index(coords)
     assert index[0] == pytest.approx(index_x, 1e-12)
     assert index[1] == pytest.approx(index_y, 1e-12)

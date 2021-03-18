@@ -295,7 +295,7 @@ def test_loc_intersection(row, col, valid_lon, valid_lat, valid_alt):
     (__, __, point_dtm) = dtmbsq.intersection(visee, point_b, alti)
     assert point_dtm[0] == pytest.approx(valid_lon, abs=1e-12)
     assert point_dtm[1] == pytest.approx(valid_lat, abs=1e-12)
-    assert point_dtm[2] == pytest.approx(valid_alt, abs=1e-12)
+    assert point_dtm[2] == pytest.approx(valid_alt, abs=1e-10)
 
 
 @pytest.mark.parametrize("col,row,h", [(20.5, 150.5, 10.0)])

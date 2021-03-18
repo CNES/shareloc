@@ -27,6 +27,7 @@ import os
 import pytest
 from utils import test_path
 from shareloc.image.image import Image
+from shareloc.image.dtm_image import DTMImage
 
 
 @pytest.mark.parametrize(
@@ -57,3 +58,32 @@ def test_image_metadata(image_name, row, col, origin_row, origin_col, pixel_size
     row_index, col_index = my_image.transform_physical_point_to_index(phys_row, phys_col)
     assert row == row_index
     assert col == col_index
+
+
+@pytest.mark.parametrize(
+    "row,col, origin_row, origin_col, pixel_size_row, pixel_size_col",
+    [(100, 200.5, 43.74583333336666, 7.012500000003335, -0.00833333333333, 0.00833333333333)],
+)
+@pytest.mark.unit_tests
+def test_bsqimage_metadata(row, col, origin_row, origin_col, pixel_size_row, pixel_size_col):
+    """
+    Test  dtmimage class
+    """
+    data_folder = test_path("ellipsoide", "P1BP--2017092838319324CP")
+    # chargement du mnt
+    image_filename = os.path.join(data_folder, "MNT_extrait/mnt_extrait.c1")
+
+    my_image = DTMImage(image_filename)
+    assert my_image.origin_row == origin_row
+    assert my_image.origin_col == origin_col
+    assert my_image.pixel_size_row == pixel_size_row
+    assert my_image.pixel_size_col == pixel_size_col
+
+    [phys_row, phys_col] = my_image.transform_index_to_physical_point(row, col)
+    assert phys_row == origin_row + (row + 0.5) * pixel_size_row
+    assert phys_col == origin_col + (col + 0.5) * pixel_size_col
+
+    row_index, col_index = my_image.transform_physical_point_to_index(phys_row, phys_col)
+    assert row == pytest.approx(row_index, abs=1e-12)
+    assert col == pytest.approx(col_index, abs=1e-12)
+    assert my_image.datum == "ellipsoid"

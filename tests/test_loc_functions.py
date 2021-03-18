@@ -360,22 +360,6 @@ def test_coloc(l0_src, c0_src, steprow_src, stepcol_src, nbrow_src, nbcol_src, r
     assert gricol[1, row, col] == pytest.approx(col * stepcol_src + c0_src, 1e-6)
 
 
-@pytest.mark.parametrize("index_x,index_y", [(10.5, 20.5)])
-@pytest.mark.parametrize("valid_alt", [(198.0)])
-@pytest.mark.unit_tests
-def test_interp_dtm(index_x, index_y, valid_alt):
-    """
-    Test coloc function
-    """
-    dtmbsq, ___ = prepare_loc()
-
-    vect_index = [index_x, index_y]
-    coords = dtmbsq.index_to_ter(vect_index)
-    print(coords)
-    alti = dtmbsq.interpolate(index_x - 0.5, index_y - 0.5)
-    assert alti == valid_alt
-
-
 @pytest.mark.parametrize("col,lig,h", [(1000.5, 1500.5, 10.0)])
 @pytest.mark.unit_tests
 def test_loc_dir_loc_inv_couple(lig, col, h):

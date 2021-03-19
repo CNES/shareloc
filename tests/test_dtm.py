@@ -31,8 +31,7 @@ from utils import test_path
 from shareloc.dtm import DTM
 
 
-@pytest.mark.parametrize("index_x,index_y", [(10.5, 20.5)])
-@pytest.mark.parametrize("valid_alt", [(198.0)])
+@pytest.mark.parametrize("index_x,index_y, valid_alt", [(10.0, 20.0, 198.0), (20.5, 25.5, 205.5)])
 @pytest.mark.unit_tests
 def test_interp_dtm(index_x, index_y, valid_alt):
     """
@@ -53,5 +52,5 @@ def test_interp_dtm(index_x, index_y, valid_alt):
     index = dtmbsq.ter_to_index(coords)
     assert index[0] == pytest.approx(index_x, 1e-12)
     assert index[1] == pytest.approx(index_y, 1e-12)
-    alti = dtmbsq.interpolate(index_x - 0.5, index_y - 0.5)
+    alti = dtmbsq.interpolate(index_x, index_y)
     assert alti == valid_alt

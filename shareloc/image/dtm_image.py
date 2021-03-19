@@ -24,6 +24,7 @@
 Image class to handle Image data.
 """
 
+import numpy as np
 from affine import Affine
 from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid
 from shareloc.image.image import Image
@@ -52,7 +53,7 @@ class DTMImage(Image):
 
                 # Image size
                 self.nb_rows = babel_dict["row_nb"]
-                self.nb_cols = babel_dict["column_nb"]
+                self.nb_columns = babel_dict["column_nb"]
 
                 self.data_type = babel_dict["data_type"]
 
@@ -71,12 +72,12 @@ class DTMImage(Image):
                     print("unknown datum {}".format(babel_dict["gdlib_code"].split(":")[-1]))
                     self.datum = "ellipsoid"
 
-                self.data = None
+                self.data = np.zeros((1, self.nb_rows, self.nb_columns), dtype=self.data_type)
                 if read_data:
                     # Data of shape (nb band, nb row, nb col)
-                    self.data = read_bsq_grid(self.image_path, self.nb_rows, self.nb_cols, self.data_type)
+                    self.data[0, :, :] = read_bsq_grid(self.image_path, self.nb_rows, self.nb_columns, self.data_type)
         else:
-            super().__init__(image_path, read_data=False)
+            super().__init__(image_path, read_data=read_data)
             if datum is None:
                 self.datum = "ellipsoid"
             else:

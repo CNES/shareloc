@@ -61,8 +61,7 @@ class DTM:
 
         # lecture mnt
         self.dtm_image = DTMImage(self.dtm_file, read_data=True)
-        self.alt_data = self.dtm_image.data
-
+        self.alt_data = self.dtm_image.data[0, :, :]
         self.init_min_max()
         self.alt_max = self.alt_data.max()
         self.alt_min = self.alt_data.min()
@@ -71,7 +70,7 @@ class DTM:
         self.plane_coef_b = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
         self.plane_coef_c = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
         self.plane_coef_d = np.array(
-            [0.0, self.dtm_image.nb_rows - 1.0, 0.0, self.dtm_image.nb_cols - 1.0, self.alt_min, self.alt_max]
+            [0.0, self.dtm_image.nb_rows - 1.0, 0.0, self.dtm_image.nb_columns - 1.0, self.alt_min, self.alt_max]
         )
 
         self.plans = np.array(
@@ -79,7 +78,7 @@ class DTM:
                 [1.0, 0.0, 0.0, 0.0],
                 [1.0, 0.0, 0.0, self.dtm_image.nb_rows - 1.0],
                 [0.0, 1.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, self.dtm_image.nb_cols - 1.0],
+                [0.0, 1.0, 0.0, self.dtm_image.nb_columns - 1.0],
                 [0.0, 0.0, 1.0, self.alt_min],
                 [0.0, 0.0, 1.0, self.alt_max],
             ]
@@ -151,7 +150,7 @@ class DTM:
         :rtype float
         """
         alt = interpol_bilin(
-            [self.alt_data[np.newaxis, :, :]], self.dtm_image.nb_rows, self.dtm_image.nb_cols, pos_row, pos_col
+            [self.alt_data[np.newaxis, :, :]], self.dtm_image.nb_rows, self.dtm_image.nb_columns, pos_row, pos_col
         )[0][0]
         return alt
 
@@ -159,7 +158,7 @@ class DTM:
         """
         initialize min/max at each dtm cell
         """
-        column_nb_minus = self.dtm_image.nb_cols - 1
+        column_nb_minus = self.dtm_image.nb_columns - 1
         row_nb_minus = self.dtm_image.nb_rows - 1
 
         self.alt_max_cell = np.zeros((row_nb_minus, column_nb_minus))
@@ -419,7 +418,7 @@ class DTM:
         h_intersect_p1 = h_intersect
 
         n_row = self.dtm_image.nb_rows
-        n_col = self.dtm_image.nb_cols
+        n_col = self.dtm_image.nb_columns
 
         # 1 - Initilialisation et tests prealables
         #   1.1 - Test si le sommet est au-dessu du DTM

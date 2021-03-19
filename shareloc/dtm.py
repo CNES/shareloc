@@ -26,6 +26,7 @@ DTM files must be in BSQ format.
 
 import numpy as np
 from shareloc.image.dtm_image import DTMImage
+from shareloc.math_utils import interpol_bilin
 
 
 class DTM:
@@ -115,8 +116,7 @@ class DTM:
         :rtype array (1x2 or 1x3)
         """
         vect_dtm = vect_ter.copy()
-        vect_dtm[0] = (vect_ter[1] - self.dtm_image.origin_row) / self.dtm_image.pixel_size_row - 0.5
-        vect_dtm[1] = (vect_ter[0] - self.dtm_image.origin_col) / self.dtm_image.pixel_size_col - 0.5
+        (vect_dtm[0], vect_dtm[1]) = self.dtm_image.transform_physical_point_to_index(vect_ter[1], vect_ter[0])
         return vect_dtm
 
     def ters_to_indexs(self, vect_ters):
@@ -141,8 +141,7 @@ class DTM:
         :rtype array (1x2 or 1x3)
         """
         vect_ter = vect_dtm.copy()
-        vect_ter[0] = self.dtm_image.origin_col + self.dtm_image.pixel_size_col * (vect_dtm[1] + 0.5)
-        vect_ter[1] = self.dtm_image.origin_row + self.dtm_image.pixel_size_row * (vect_dtm[0] + 0.5)
+        (vect_ter[1], vect_ter[0]) = self.dtm_image.transform_index_to_physical_point(vect_dtm[0], vect_dtm[1])
         return vect_ter
 
     def interpolate(self, pos_row, pos_col):
@@ -156,36 +155,9 @@ class DTM:
         :return interpolated altitude
         :rtype float
         """
-
-        # index clipping in [0, _row_nb -2]
-        if pos_row < 0:
-            row_inf = 0
-        elif pos_row >= self.dtm_image.nb_rows - 1:
-            row_inf = self.dtm_image.nb_rows - 2
-        else:
-            row_inf = int(np.floor(pos_row))
-
-        row_sup = row_inf + 1
-
-        # index clipping in [0, _nc -2]
-        if pos_col < 0:
-            col_inf = 0
-        elif pos_col >= self.dtm_image.nb_cols - 1:
-            col_inf = self.dtm_image.nb_cols - 2
-        else:
-            col_inf = int(np.floor(pos_col))
-
-        col_sup = col_inf + 1
-        # Coefficients d'interpolation bilineaire
-        delta_u = pos_col - col_inf
-        delta_v = pos_row - row_inf
-        # Altitude
-        alt = (
-            (1 - delta_u) * (1 - delta_v) * self.alt_data[row_inf, col_inf]
-            + delta_u * (1 - delta_v) * self.alt_data[row_inf, col_sup]
-            + (1 - delta_u) * delta_v * self.alt_data[row_sup, col_inf]
-            + delta_u * delta_v * self.alt_data[row_sup, col_sup]
-        )
+        alt = interpol_bilin(
+            [self.alt_data[np.newaxis, :, :]], self.dtm_image.nb_rows, self.dtm_image.nb_cols, pos_row, pos_col
+        )[0][0]
         return alt
 
     def init_min_max(self):

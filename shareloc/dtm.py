@@ -37,16 +37,13 @@ class DTM:
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename, dtm_format="bsq"):
+    def __init__(self, dtm_filename):
         """
         Constructor
         :param dtm_filename: dtm filename
         :type dtm_filename: string
-        :param dtm_format: grid format (by default bsq)
-        :type dtm_format: string
         """
         self.dtm_file = dtm_filename
-        self.format = dtm_format
         self.alt_data = None
         self.alt_min = None
         self.alt_max = None

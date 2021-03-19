@@ -21,7 +21,6 @@
 
 """
 This module contains the DTM class to handle dtm intersection.
-DTM files must be in BSQ format.
 """
 
 import numpy as np
@@ -31,7 +30,6 @@ from shareloc.math_utils import interpol_bilin
 
 class DTM:
     """DTM class dedicated
-    works only with BSQ file format
     we work in cell convention [0,0] is the first cell center (not [0.5,0.5])
     """
 

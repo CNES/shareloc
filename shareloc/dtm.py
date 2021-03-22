@@ -26,6 +26,7 @@ This module contains the DTM class to handle dtm intersection.
 import numpy as np
 from shareloc.image.dtm_image import DTMImage
 from shareloc.math_utils import interpol_bilin
+from shareloc.geoid import interpolate_geoid_height
 
 
 class DTM:
@@ -35,11 +36,13 @@ class DTM:
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename):
+    def __init__(self, dtm_filename, geoid_filename=None):
         """
         Constructor
         :param dtm_filename: dtm filename
         :type dtm_filename: string
+        :param geoid_filename: geoid filename
+        :type geoid_filename: string
         """
         self.dtm_file = dtm_filename
         self.alt_data = None
@@ -61,6 +64,21 @@ class DTM:
 
         # lecture mnt
         self.dtm_image = DTMImage(self.dtm_file, read_data=True)
+        self.alt_data = self.dtm_image.data[0, :, :]
+        if self.dtm_image.datum == "geoid":
+            if geoid_filename is not None:
+                self.grid_row, self.grid_col = np.mgrid[
+                    0 : self.dtm_image.nb_columns : 1, 0 : self.dtm_image.nb_rows : 1
+                ]
+                lon, lat = self.dtm_image.transform_index_to_physical_point(self.grid_row, self.grid_col)
+                geoid_height = interpolate_geoid_height(geoid_filename, [lon, lat])
+                self.alt_data += geoid_height
+            else:
+                print(
+                    "DTM is relative to geoid but no geoid file is given, "
+                    "thus localizations will be done w.r.t geoid"
+                )
+
         self.alt_data = self.dtm_image.data[0, :, :]
         self.init_min_max()
         self.alt_max = self.alt_data.max()

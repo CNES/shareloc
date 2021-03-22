@@ -174,7 +174,7 @@ def test_sensor_loc_dir_dtm(index_x, index_y):
     vect_index = [index_x, index_y]
     [lon, lat] = dtmbsq.index_to_ter(vect_index)
     print([lon, lat])
-    alt = dtmbsq.interpolate(index_x - 0.5, index_y - 0.5)
+    alt = dtmbsq.interpolate(index_x, index_y)
 
     row, col, alt = loc.inverse(lon, lat, alt)
     print("row col ", row, col)

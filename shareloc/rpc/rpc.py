@@ -782,6 +782,7 @@ class RPC:
                 self.scale_y,
                 self.offset_y,
             )
+
         # Direct localization using inverse RPC
         else:
             # print("direct localisation from inverse iterative")
@@ -820,6 +821,30 @@ class RPC:
                 (gri_lon[line, column], gri_lat[line, column], __) = self.direct_loc_h(row, col, alt)
         return (gri_lon, gri_lat)
 
+    def direct_loc_dtm(self, row, col, dtm):
+        """
+        direct localization on dtm
+        :param row :  line sensor position
+        :type row : float
+        :param col :  column sensor position
+        :type col : float
+        :param dtm : dtm model
+        :type dtm  : shareloc.dtm
+        :return ground position (lon,lat,h)
+        :rtype numpy.array
+        """
+
+        # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
+        (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
+        if min_dtm < self.offset_alt - self.scale_alt:
+            print("minimum dtm value is outside RPC validity domain")
+        if max_dtm > self.offset_alt + self.scale_alt:
+            print("maximum dtm value is outside RPC validity domain")
+        los = self.los_extrema(row, col, min_dtm, max_dtm)
+        (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
+        (__, __, position) = dtm.intersection(los, position_cube, alti)
+        return position
+
     def inverse_loc(self, lon, lat, alt):
         """
         Inverse localization
@@ -837,6 +862,7 @@ class RPC:
             if not isinstance(lon, (list, np.ndarray)):
                 lon = np.array([lon])
                 lat = np.array([lat])
+            if not isinstance(alt, (list, np.ndarray)):
                 alt = np.array([alt])
 
             if not isinstance(alt, (list, np.ndarray)):
@@ -896,8 +922,8 @@ class RPC:
             out_x_nan_value = np.nan
             out_y_nan_value = np.nan
 
-        x_out = np.full(second_coord.size, out_x_nan_value)
-        y_out = np.full(second_coord.size, out_y_nan_value)
+        x_out = np.full(len(second_coord), out_x_nan_value)
+        y_out = np.full(len(second_coord), out_y_nan_value)
 
         return filter_nan, x_out, y_out
 
@@ -998,7 +1024,7 @@ class RPC:
         """
         return [self.offset_alt - self.scale_alt / 2.0, self.offset_alt + self.scale_alt / 2.0]
 
-    def los_extrema(self, row, col, alt_min, alt_max, fill_nan=False):
+    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False):
         """
         compute los extrema
         :param row  :  line sensor position
@@ -1012,9 +1038,12 @@ class RPC:
         :return los extrema
         :rtype numpy.array (2x3)
         """
+        if alt_min is None or alt_max is None:
+            [alt_min, alt_max] = self.get_alt_min_max()
         los_edges = np.zeros([2, 3])
-        los_edges[0, :] = self.direct_loc_h(row, col, alt_max, fill_nan)
-        los_edges[1, :] = self.direct_loc_h(row, col, alt_min, fill_nan)
+        los_edges = self.direct_loc_h(
+            np.array([row, row]), np.array([col, col]), np.array([alt_max, alt_min]), fill_nan
+        )
         return los_edges
 
 

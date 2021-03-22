@@ -870,4 +870,4 @@ class DTM:
         # Fin boucle sur les sommets
         # Fin, retour
         b_trouve = False
-        return True, point_r
+        return True, b_trouve, point_r

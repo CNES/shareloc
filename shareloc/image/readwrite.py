@@ -37,22 +37,27 @@ def read_hdbabel_header(bsq_filename):
     """
     path_header = op.dirname(bsq_filename)
     name_header = op.basename(bsq_filename).split(".")[0] + ".hd_babel"
+    babelheader = op.join(path_header, name_header)
     header = {}
     hd_babel = {}
-    with open(op.join(path_header, name_header), "r") as fstream:
-        txt_header = fstream.readlines()
-    for row_header in txt_header:
-        if row_header.startswith(">>"):
-            rowsplit = row_header.split("\t")
-            header[rowsplit[1]] = rowsplit[2]
-    hd_babel["origin_x"] = float(header["LON_REF"])
-    hd_babel["origin_y"] = float(header["LAT_REF"])
-    hd_babel["column_nb"] = int(header["NB_LON"])
-    hd_babel["row_nb"] = int(header["NB_LAT"])
-    hd_babel["pixel_size_x"] = float(header["PAS_LON"])
-    hd_babel["pixel_size_y"] = float(header["PAS_LAT"])
-    if int(header["TYPE_CODE"]) == 2:
-        hd_babel["data_type"] = "int16"
+    if not op.exists(babelheader):
+        print("missing hd_babel header")
+    else:
+        with open(babelheader, "r") as fstream:
+            txt_header = fstream.readlines()
+        for row_header in txt_header:
+            if row_header.startswith(">>"):
+                rowsplit = row_header.split("\t")
+                header[rowsplit[1]] = rowsplit[2]
+        hd_babel["origin_x"] = float(header["LON_REF"])
+        hd_babel["origin_y"] = float(header["LAT_REF"])
+        hd_babel["column_nb"] = int(header["NB_LON"])
+        hd_babel["row_nb"] = int(header["NB_LAT"])
+        hd_babel["pixel_size_x"] = float(header["PAS_LON"])
+        hd_babel["pixel_size_y"] = float(header["PAS_LAT"])
+        hd_babel["gdlib_code"] = str(header["REF"])
+        if int(header["TYPE_CODE"]) == 2:
+            hd_babel["data_type"] = "int16"
     return hd_babel
 
 

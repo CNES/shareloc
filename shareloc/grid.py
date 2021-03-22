@@ -25,7 +25,7 @@ localisations function from mutji h direct grids.
 """
 
 import numpy as np
-from shareloc.readwrite import read_bsq_hd
+from shareloc.image.readwrite import read_bsq_hd
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 
 

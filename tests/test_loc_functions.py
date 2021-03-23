@@ -34,6 +34,7 @@ from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC
 from shareloc.localization import Localization
 from shareloc.localization import coloc as coloc_rpc
+from shareloc.image.image import Image
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
@@ -131,6 +132,30 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     assert valid_lon == pytest.approx(lonlatalt[0], abs=1e-12)
     assert valid_lat == pytest.approx(lonlatalt[1], abs=1e-12)
     assert valid_alt == pytest.approx(lonlatalt[2], abs=1e-8)
+
+
+@pytest.mark.parametrize("col,row,h", [(50.0, 100.0, 100.0)])
+@pytest.mark.unit_tests
+def test_sensor_loc_dir_using_geotransform(col, row, h):
+    """
+    Test direct localization using image geotransform
+    """
+    data = os.path.join(os.environ["TESTPATH"], "rectification", "right_image")
+    geom_model_left = RPC.from_any(data + ".geom", topleftconvention=True)
+    image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "right_image_pixsize_0_5.tif")
+    image_right = Image(image_filename)
+
+    loc = Localization(geom_model_left, elevation=None, image=image_right)
+    lonlatalt_using_geo = loc.direct(row, col, h, using_geotransform=True)
+    origin = [5162.0, 4915.0]
+    pix_size = [0.5, 0.5]
+    row_phys = origin[0] + (row + 0.5) * pix_size[0]
+    col_phys = origin[1] + (col + 0.5) * pix_size[1]
+    lonlatalt = loc.direct(row_phys, col_phys, h)
+    row_inv, col_inv, __ = loc.inverse(lonlatalt[0], lonlatalt[1], lonlatalt[2], using_geotransform=True)
+    assert row == pytest.approx(row_inv[0], abs=1e-8)
+    assert col == pytest.approx(col_inv[0], abs=1e-8)
+    np.testing.assert_array_equal(lonlatalt_using_geo, lonlatalt)
 
 
 @pytest.mark.parametrize("col,row,h", [(150.5, 100, 100.0)])
@@ -396,3 +421,39 @@ def test_colocalization(col, row, alt):
 
     assert row == pytest.approx(row_coloc, abs=1e-1)
     assert col == pytest.approx(col_coloc, abs=1e-1)
+
+
+@pytest.mark.parametrize("col,row,h", [(500.0, 200.0, 100.0)])
+@pytest.mark.unit_tests
+def test_sensor_coloc_using_geotransform(col, row, h):
+    """
+    Test direct localization using image geotransform
+    """
+    data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    geom_model_left = RPC.from_any(data_left + ".geom", topleftconvention=True)
+    image_filename_left = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
+    image_left = Image(image_filename_left)
+
+    data_right = os.path.join(os.environ["TESTPATH"], "rectification", "right_image")
+    geom_model_right = RPC.from_any(data_right + ".geom", topleftconvention=True)
+    image_filename_right = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "right_image_pixsize_0_5.tif")
+    image_right = Image(image_filename_right)
+
+    row_coloc, col_coloc, _ = coloc_rpc(
+        geom_model_left, geom_model_right, row, col, h, image_left, image_right, using_geotransform=True
+    )
+    print(row)
+    origin_left = [5000.0, 5000.0]
+    pix_size_left = [0.5, 0.5]
+    row_phys = origin_left[0] + (row + 0.5) * pix_size_left[0]
+    col_phys = origin_left[1] + (col + 0.5) * pix_size_left[1]
+    loc_left = Localization(geom_model_left, elevation=None, image=image_left)
+    lonlath = loc_left.direct(row_phys, col_phys, h)
+    loc_right = Localization(geom_model_right, elevation=None, image=image_right)
+    row_inv, col_inv, h = loc_right.inverse(lonlath[0], lonlath[1], lonlath[2])
+    origin_right = [5162.0, 4915.0]
+    pix_size_right = [0.5, 0.5]
+    row_index = (row_inv - origin_right[0]) / pix_size_right[0] - 0.5
+    col_index = (col_inv - origin_right[1]) / pix_size_right[1] - 0.5
+    assert row_coloc == row_index
+    assert col_coloc == col_index

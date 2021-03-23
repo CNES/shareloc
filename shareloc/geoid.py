@@ -55,6 +55,5 @@ def interpolate_geoid_height(geoid_filename, positions, interpolation_method="li
     positions[:, 0] -= (positions[:, 0] - max_lon > 0) * 360.0
     if np.any(np.abs(positions[:, 1]) > 90.0):
         raise RuntimeError("Geoid can" "t handle latitudes greater than 90 deg.")
-    print(positions)
     indexes_geoid = geoid_image.transform_physical_point_to_index(positions[:, 1], positions[:, 0])
     return interpolate.interpn(points, geoid_image.data[0, :, :], indexes_geoid, method=interpolation_method)

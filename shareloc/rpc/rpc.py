@@ -351,6 +351,8 @@ class RPC:
             self.num_y = np.array(self.num_y)
             self.den_y = np.array(self.den_y)
 
+        self.alt_minmax = [self.offset_alt - self.scale_alt, self.offset_alt + self.scale_alt]
+
     @classmethod
     def from_dimap(cls, dimap_filepath, topleftconvention=True):
         """load from dimap
@@ -834,10 +836,10 @@ class RPC:
 
         # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
         (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
-        if min_dtm < self.offset_alt - self.scale_alt:
-            print("minimum dtm value is outside RPC validity domain")
-        if max_dtm > self.offset_alt + self.scale_alt:
-            print("maximum dtm value is outside RPC validity domain")
+        # if min_dtm < self.offset_alt - self.scale_alt:
+        #    print("minimum dtm value is outside RPC validity domain")
+        # if max_dtm > self.offset_alt + self.scale_alt:
+        #    print("maximum dtm value is outside RPC validity domain")
         los = self.los_extrema(row, col, min_dtm, max_dtm)
         (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
         (__, __, position) = dtm.intersection(los, position_cube, alti)
@@ -1036,12 +1038,24 @@ class RPC:
         :return los extrema
         :rtype numpy.array (2x3)
         """
+        extrapolate = False
         if alt_min is None or alt_max is None:
-            [alt_min, alt_max] = self.get_alt_min_max()
+            [los_alt_min, los_alt_max] = self.get_alt_min_max()
+        elif alt_min >= self.alt_minmax[0] and alt_max <= self.alt_minmax[1]:
+            los_alt_min = alt_min
+            los_alt_max = alt_max
+        else:
+            extrapolate = True
+            print("extrapolate")
+
         los_edges = np.zeros([2, 3])
         los_edges = self.direct_loc_h(
-            np.array([row, row]), np.array([col, col]), np.array([alt_max, alt_min]), fill_nan
+            np.array([row, row]), np.array([col, col]), np.array([los_alt_max, los_alt_min]), fill_nan
         )
+        if extrapolate:
+            diff = los_edges[0, :] - los_edges[1, :]
+            los_edges[0, :] = los_edges[1, :] + diff * (alt_max - los_edges[1, 2]) / (los_edges[0, 2] - los_edges[1, 2])
+
         return los_edges
 
 

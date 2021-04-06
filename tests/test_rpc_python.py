@@ -439,9 +439,9 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
     row, col, alt = fctrat.inverse_loc(lon, lat, alt)
     print("row col ", row, col)
     lonlath = fctrat.direct_loc_dtm(row[0], col[0], dtmbsq)
-    assert lon == pytest.approx(lonlath[0], abs=1e-7)
-    assert lat == pytest.approx(lonlath[1], abs=1e-7)
-    assert alt == pytest.approx(lonlath[2], abs=1e-4)
+    assert lon == pytest.approx(lonlath[0][0], abs=1e-7)
+    assert lat == pytest.approx(lonlath[0][1], abs=1e-7)
+    assert alt == pytest.approx(lonlath[0][2], abs=1e-4)
 
 
 def test_rpc_minmax():

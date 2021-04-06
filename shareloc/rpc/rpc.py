@@ -833,17 +833,28 @@ class RPC:
         :return ground position (lon,lat,h)
         :rtype numpy.array
         """
+        if isinstance(col, (list, np.ndarray)):
+            points_nb = len(col)
+        else:
+            points_nb = 1
+            row = np.array([row])
+            col = np.array([col])
+        direct_dtm = np.zeros((points_nb, 3))
 
-        # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
-        (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
-        # if min_dtm < self.offset_alt - self.scale_alt:
-        #    print("minimum dtm value is outside RPC validity domain")
-        # if max_dtm > self.offset_alt + self.scale_alt:
-        #    print("maximum dtm value is outside RPC validity domain")
-        los = self.los_extrema(row, col, min_dtm, max_dtm)
-        (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
-        (__, __, position) = dtm.intersection(los, position_cube, alti)
-        return position
+        for i in range(points_nb):
+            row_i = row[i]
+            col_i = col[i]
+            # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
+            (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
+            # if min_dtm < self.offset_alt - self.scale_alt:
+            #    print("minimum dtm value is outside RPC validity domain")
+            # if max_dtm > self.offset_alt + self.scale_alt:
+            #    print("maximum dtm value is outside RPC validity domain")
+            los = self.los_extrema(row_i, col_i, min_dtm, max_dtm)
+            (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
+            (__, __, position) = dtm.intersection(los, position_cube, alti)
+            direct_dtm[i, :] = position
+        return direct_dtm
 
     def inverse_loc(self, lon, lat, alt):
         """
@@ -1046,7 +1057,7 @@ class RPC:
             los_alt_max = alt_max
         else:
             extrapolate = True
-            print("extrapolate")
+            [los_alt_min, los_alt_max] = self.get_alt_min_max()
 
         los_edges = np.zeros([2, 3])
         los_edges = self.direct_loc_h(
@@ -1054,7 +1065,9 @@ class RPC:
         )
         if extrapolate:
             diff = los_edges[0, :] - los_edges[1, :]
-            los_edges[0, :] = los_edges[1, :] + diff * (alt_max - los_edges[1, 2]) / (los_edges[0, 2] - los_edges[1, 2])
+            delta_alt = diff[2]
+            los_edges[0, :] = los_edges[1, :] + diff * (alt_max - los_edges[1, 2]) / delta_alt
+            los_edges[1, :] = los_edges[1, :] + diff * (alt_min - los_edges[1, 2]) / delta_alt
 
         return los_edges
 

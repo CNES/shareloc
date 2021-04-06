@@ -134,28 +134,29 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     assert valid_alt == pytest.approx(lonlatalt[2], abs=1e-8)
 
 
-@pytest.mark.parametrize("col,row,h", [(50.0, 100.0, 100.0)])
+# LOC 3D EUCLIDIUM 5.17387725120693 44.2257086206228 365.643429880962
+@pytest.mark.parametrize(
+    "col,row,valid_coord", [(1999.5, 999.5, (5.17387725120693, 44.2257086206228, 365.643429880962))]
+)
 @pytest.mark.unit_tests
-def test_sensor_loc_dir_using_geotransform(col, row, h):
+def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     """
     Test direct localization using image geotransform
     """
-    data = os.path.join(os.environ["TESTPATH"], "rectification", "right_image")
+    data = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
     geom_model_left = RPC.from_any(data + ".geom", topleftconvention=True)
-    image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "right_image_pixsize_0_5.tif")
-    image_right = Image(image_filename)
+    image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image.tif")
+    image_left = Image(image_filename)
 
-    loc = Localization(geom_model_left, elevation=None, image=image_right)
-    lonlatalt_using_geo = loc.direct(row, col, h, using_geotransform=True)
-    origin = [5162.0, 4915.0]
-    pix_size = [0.5, 0.5]
-    row_phys = origin[0] + (row + 0.5) * pix_size[0]
-    col_phys = origin[1] + (col + 0.5) * pix_size[1]
-    lonlatalt = loc.direct(row_phys, col_phys, h)
-    row_inv, col_inv, __ = loc.inverse(lonlatalt[0], lonlatalt[1], lonlatalt[2], using_geotransform=True)
-    assert row == pytest.approx(row_inv[0], abs=1e-8)
-    assert col == pytest.approx(col_inv[0], abs=1e-8)
-    np.testing.assert_array_equal(lonlatalt_using_geo, lonlatalt)
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm30", "N44E005.hgt")
+    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_ventoux = DTM(dtm_file, geoid_file)
+    loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
+    lonlatalt = loc.direct(row, col, using_geotransform=False)
+    print(lonlatalt)
+    assert valid_coord[0] == pytest.approx(lonlatalt[0], abs=3.0 * 1e-6)
+    assert valid_coord[1] == pytest.approx(lonlatalt[1], abs=5.0 * 1e-6)
+    assert valid_coord[2] == pytest.approx(lonlatalt[2], abs=4.0)
 
 
 @pytest.mark.parametrize("col,row,h", [(150.5, 100, 100.0)])
@@ -207,6 +208,36 @@ def test_sensor_loc_dir_dtm(index_x, index_y):
     assert lon == pytest.approx(lonlath[0], abs=1e-8)
     assert lat == pytest.approx(lonlath[1], abs=1e-8)
     assert alt == pytest.approx(lonlath[2], abs=1e-4)
+
+
+@pytest.mark.parametrize(
+    "image_name, row,col, origin_row, origin_col, pixel_size_row, pixel_size_col",
+    [
+        ("right_image.tif", 100, 200.5, 5162, 4915.0, 1.0, 1.0),
+        ("right_image_resample.tif", 100.0, 200.0, 5162.0, 4915.0, 2.0, 0.5),
+    ],
+)
+@pytest.mark.unit_tests
+def test_image_metadata(image_name, row, col, origin_row, origin_col, pixel_size_row, pixel_size_col):
+    """
+    Test image class
+    """
+    data_folder = test_path()
+    image_filename = os.path.join(data_folder, "image/phr_ventoux/", image_name)
+
+    my_image = Image(image_filename)
+    assert my_image.origin_row == origin_row
+    assert my_image.origin_col == origin_col
+    assert my_image.pixel_size_row == pixel_size_row
+    assert my_image.pixel_size_col == pixel_size_col
+
+    [phys_row, phys_col] = my_image.transform_index_to_physical_point(row, col)
+    assert phys_row == origin_row + (row + 0.5) * pixel_size_row
+    assert phys_col == origin_col + (col + 0.5) * pixel_size_col
+
+    row_index, col_index = my_image.transform_physical_point_to_index(phys_row, phys_col)
+    assert row == row_index
+    assert col == col_index
 
 
 @pytest.mark.parametrize("valid_row,valid_col", [(50.5, 10.0)])

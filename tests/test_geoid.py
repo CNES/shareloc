@@ -31,7 +31,15 @@ import numpy as np
 from shareloc.geoid import interpolate_geoid_height
 
 
-@pytest.mark.parametrize("lon,lat, valid_alt", [(0.0, 0.0, 17.16157913), (10.125, 0.0, 8.72032166)])
+@pytest.mark.parametrize(
+    "lon,lat, valid_alt",
+    [
+        (0.0, 0.0, 17.16157913),
+        (10.125, 0.0, 8.72032166),
+        (5.19368066, 44.20749145, 50.8618354),
+        (5.17381589, 44.22559175, 50.87610),
+    ],
+)
 @pytest.mark.unit_tests
 def test_geoid_height(lon, lat, valid_alt):
     """
@@ -41,4 +49,3 @@ def test_geoid_height(lon, lat, valid_alt):
     positions = np.asarray([lon, lat])[np.newaxis, :]
     geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
     assert geoid_height == pytest.approx(valid_alt, abs=1e-6)
-    print(geoid_height)

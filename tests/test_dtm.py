@@ -31,9 +31,9 @@ from utils import test_path
 from shareloc.dtm import DTM
 
 
-@pytest.mark.parametrize("index_x,index_y, valid_alt", [(10.0, 20.0, 198.0), (20.5, 25.5, 205.5)])
+@pytest.mark.parametrize("index_col,index_row, valid_alt", [(10.0, 20.0, 196.0), (20.5, 25.5, 189.5)])
 @pytest.mark.unit_tests
-def test_interp_dtm(index_x, index_y, valid_alt):
+def test_interp_dtm(index_col, index_row, valid_alt):
     """
     Test interp function
     """
@@ -41,16 +41,34 @@ def test_interp_dtm(index_x, index_y, valid_alt):
     # chargement du mnt
     fic = os.path.join(data_folder, "MNT_extrait/mnt_extrait.c1")
     dtmbsq = DTM(fic)
-    vect_index = [index_x, index_y]
+    vect_index = [index_row, index_col]
     coords = dtmbsq.index_to_ter(vect_index)
+    print(coords)
     lon_ref = 57.2083333333
     lat_ref = 22.2166666667
     pas_lon = 0.00833333333333
     pas_lat = -0.00833333333333
-    assert coords[0] == pytest.approx(lon_ref + index_y * pas_lon, 1e-12)
-    assert coords[1] == pytest.approx(lat_ref + index_x * pas_lat, 1e-12)
+    assert dtmbsq.dtm_image.datum == "geoid"
+    assert coords[0] == pytest.approx(lon_ref + index_col * pas_lon, 1e-12)
+    assert coords[1] == pytest.approx(lat_ref + index_row * pas_lat, 1e-12)
     index = dtmbsq.ter_to_index(coords)
-    assert index[0] == pytest.approx(index_x, 1e-12)
-    assert index[1] == pytest.approx(index_y, 1e-12)
-    alti = dtmbsq.interpolate(index_x, index_y)
+    assert index[1] == pytest.approx(index_col, 1e-12)
+    assert index[0] == pytest.approx(index_row, 1e-12)
+    alti = dtmbsq.interpolate(index_row, index_col)
     assert alti == valid_alt
+
+
+# DTM value is 171, geoid value is 50.73
+@pytest.mark.parametrize("index_lon,index_lat, valid_alt", [(5.002777777777778, 44.99444444444445, 221.73)])
+@pytest.mark.unit_tests
+def test_interp_dtm_geoid(index_lon, index_lat, valid_alt):
+    """
+    Test interp function
+    """
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm30", "N44E005.hgt")
+    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_ventoux = DTM(dtm_file, geoid_file)
+    coords = [index_lon, index_lat]
+    index = dtm_ventoux.ter_to_index(coords)
+    alti = dtm_ventoux.interpolate(index[0], index[1])
+    assert alti == pytest.approx(valid_alt, 1e-2)

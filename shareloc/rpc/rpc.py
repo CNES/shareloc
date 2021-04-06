@@ -833,6 +833,9 @@ class RPC:
         :return ground position (lon,lat,h)
         :rtype numpy.array
         """
+        if isinstance(col, (list, np.ndarray)):
+            col = col[0]
+            row = row[0]
 
         # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
         (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)

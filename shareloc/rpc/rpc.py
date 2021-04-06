@@ -438,8 +438,8 @@ class RPC:
         rpc_params["scale_x"] = float(normalisation_coeffs.getElementsByTagName("LONG_SCALE")[0].firstChild.data)
         rpc_params["offset_y"] = float(normalisation_coeffs.getElementsByTagName("LAT_OFF")[0].firstChild.data)
         rpc_params["scale_y"] = float(normalisation_coeffs.getElementsByTagName("LAT_SCALE")[0].firstChild.data)
-        rpc_params["offset_col"] -= 1.5
-        rpc_params["offset_row"] -= 1.5
+        rpc_params["offset_col"] -= 1.0
+        rpc_params["offset_row"] -= 1.0
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
             rpc_params["offset_col"] += 0.5
@@ -503,8 +503,8 @@ class RPC:
         rpc_params["den_col"] = coeff_col[20::]
         rpc_params["num_row"] = coeff_lig[0:20]
         rpc_params["den_row"] = coeff_lig[20::]
-        rpc_params["offset_col"] -= 1.5
-        rpc_params["offset_row"] -= 1.5
+        rpc_params["offset_col"] -= 1.0
+        rpc_params["offset_row"] -= 1.0
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
             rpc_params["offset_col"] += 0.5
@@ -547,8 +547,6 @@ class RPC:
         rpc_params["num_y"] = None
         rpc_params["den_y"] = None
         # If top left convention, 0.5 pixel shift added on col/row offsets
-        rpc_params["offset_col"] -= 0.5
-        rpc_params["offset_row"] -= 0.5
         if topleftconvention:
             rpc_params["offset_col"] += 0.5
             rpc_params["offset_row"] += 0.5
@@ -659,8 +657,8 @@ class RPC:
             for key, value in secondary_coeffs["poly_coeffs"].items():
                 rpc_params[key] = value
 
-        rpc_params["offset_col"] -= 1
-        rpc_params["offset_row"] -= 1
+        rpc_params["offset_col"] -= 0.5
+        rpc_params["offset_row"] -= 0.5
         # If top left convention, 0.5 pixel shift added on col/row offsets
 
         if topleftconvention:

@@ -80,7 +80,7 @@ line_num_coeff_16:  0.000164910424389974
 line_num_coeff_17:  2.26464059524339e-06
 line_num_coeff_18:  1.78029600933359e-05
 line_num_coeff_19:  3.28894996895612e-06
-line_off:  11469
+line_off:  11469.5
 line_scale:  11469.5
 ll_lat:  43.6193834970131
 ll_lon:  7.04660331073869
@@ -141,7 +141,7 @@ samp_num_coeff_16:  -3.13481994353245e-07
 samp_num_coeff_17:  -2.93387312507297e-06
 samp_num_coeff_18:  -1.2042569869777e-05
 samp_num_coeff_19:  -1.08970866389161e-08
-samp_off:  19999
+samp_off:  19999.5
 samp_scale:  19999.5
 sensor:  PHR 1B
 support_data.across_track_incidence_angle:  """-10.622257744262 -10.7336736731665 -10.8391605227298 """

@@ -64,22 +64,23 @@ class DTM:
 
         # lecture mnt
         self.dtm_image = DTMImage(self.dtm_file, read_data=True)
-        self.alt_data = self.dtm_image.data[0, :, :]
+        self.alt_data = self.dtm_image.data[0, :, :].astype("float64")
         if self.dtm_image.datum == "geoid":
             if geoid_filename is not None:
+                print("remove geoid height")
                 self.grid_row, self.grid_col = np.mgrid[
                     0 : self.dtm_image.nb_columns : 1, 0 : self.dtm_image.nb_rows : 1
                 ]
-                lon, lat = self.dtm_image.transform_index_to_physical_point(self.grid_row, self.grid_col)
-                geoid_height = interpolate_geoid_height(geoid_filename, [lon, lat])
-                self.alt_data += geoid_height
+                lat, lon = self.dtm_image.transform_index_to_physical_point(self.grid_row, self.grid_col)
+                positions = np.vstack([lon.flatten(), lat.flatten()]).transpose()
+                geoid_height = interpolate_geoid_height(geoid_filename, positions)
+                self.alt_data += geoid_height.reshape(lon.shape)
             else:
                 print(
                     "DTM is relative to geoid but no geoid file is given, "
                     "thus localizations will be done w.r.t geoid"
                 )
 
-        self.alt_data = self.dtm_image.data[0, :, :]
         self.init_min_max()
         self.alt_max = self.alt_data.max()
         self.alt_min = self.alt_data.min()
@@ -122,9 +123,9 @@ class DTM:
     def ter_to_index(self, vect_ter):
         """
         terrain to index conversion
-        :param vect_ter: terrain coordinate
+        :param vect_ter: terrain coordinate (lon,lat)
         :type vect_ter: array (1x2 or 1x3) if dimension is 3 , last coordinate is unchanged (alt)
-        :return index coordinates
+        :return index coordinates (col,row)
         :rtype array (1x2 or 1x3)
         """
         vect_dtm = vect_ter.copy()
@@ -135,7 +136,7 @@ class DTM:
         """
         terrain to index conversion
         :param vect_ters: terrain coordinates
-        :type vect_ters: array (nx2 or nx3) if dimension is 3 , last coordinates is iuchanged (alt)
+        :type vect_ters: array (nx2 or nx3) if dimension is 3 , last coordinates is unchanged (alt)
         :return index coordinates
         :rtype array (nx2 or nx3)
         """
@@ -147,9 +148,9 @@ class DTM:
     def index_to_ter(self, vect_dtm):
         """
         index to terrain conversion
-        :param vect_dtm: index coordinate
+        :param vect_dtm: index coordinate (col,row)
         :type vect_dtm: array (1x2 or 1x3) if dimension is 3 , last coordinate is unchanged (alt)
-        :return terrain coordinates
+        :return terrain coordinates (lon,lat)
         :rtype array (1x2 or 1x3)
         """
         vect_ter = vect_dtm.copy()
@@ -430,7 +431,6 @@ class DTM:
         point_r = np.zeros(3)
         (npl, _) = los.shape
         alti = range(npl, -1, -1)
-
         p_1 = point_b_dtm.copy()  # [p_1[0],p_1[1],p_1[2]]
 
         h_intersect_p1 = h_intersect
@@ -460,8 +460,9 @@ class DTM:
         p_2 = point_b_dtm.copy()
         h_intersect_p2 = h_intersect
 
+        nb_planes = los_index.shape[0]
         # 2. - Boucle sur les plans de grille
-        while i_0 < (los_index.size - 1):
+        while i_0 < (nb_planes - 1):
             # 2.1 - Initialisation du sommet courant de la visee
             col_0 = los_index[i_0][0]
             row_0 = los_index[i_0][1]
@@ -828,12 +829,13 @@ class DTM:
 
                 # Test si on est toujours dans le cube DTM
                 if a_2 >= 1:
+                    print("changement de plan")
                     # Changement de plan
                     i_0 += 1
 
                     # Chargement dans p_2 du nouveau sommet
                     p_2 = los_index[i_0].copy()
-                    h_intersect_p2 = alti[i_0].copy()
+                    h_intersect_p2 = alti[i_0]
 
                 else:
 

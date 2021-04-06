@@ -135,9 +135,8 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
 
 
 # LOC 3D EUCLIDIUM 5.17387725120693 44.2257086206228 365.643429880962
-@pytest.mark.parametrize(
-    "col,row,valid_coord", [(1999.5, 999.5, (5.17387725120693, 44.2257086206228, 365.643429880962))]
-)
+# 5.17388499778903 44.2257233720898 376.864272617735
+@pytest.mark.parametrize("col,row,valid_coord", [(1999.5, 999.5, (5.17388499778903, 44.2257233720898, 376.86))])
 @pytest.mark.unit_tests
 def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     """
@@ -148,15 +147,15 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
 
-    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm30", "N44E005.hgt")
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file)
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
     print(lonlatalt)
-    assert valid_coord[0] == pytest.approx(lonlatalt[0], abs=3.0 * 1e-6)
-    assert valid_coord[1] == pytest.approx(lonlatalt[1], abs=5.0 * 1e-6)
-    assert valid_coord[2] == pytest.approx(lonlatalt[2], abs=4.0)
+    assert valid_coord[0] == pytest.approx(lonlatalt[0], abs=3.0 * 1e-5)
+    assert valid_coord[1] == pytest.approx(lonlatalt[1], abs=2.0 * 1e-4)
+    assert valid_coord[2] == pytest.approx(lonlatalt[2], abs=15.0)
 
 
 @pytest.mark.parametrize("col,row,h", [(150.5, 100, 100.0)])

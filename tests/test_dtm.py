@@ -58,14 +58,14 @@ def test_interp_dtm(index_col, index_row, valid_alt):
     assert alti == valid_alt
 
 
-# DTM value is 171, geoid value is 50.73
+#  geoid value is 50.73
 @pytest.mark.parametrize("index_lon,index_lat, valid_alt", [(5.002777777777778, 44.99444444444445, 221.73)])
 @pytest.mark.unit_tests
 def test_interp_dtm_geoid(index_lon, index_lat, valid_alt):
     """
     Test interp function
     """
-    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm30", "N44E005.hgt")
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file)
     coords = [index_lon, index_lat]

@@ -319,7 +319,7 @@ def test_loc_intersection(row, col, valid_lon, valid_lat, valid_alt):
     (__, __, point_dtm) = dtmbsq.intersection(visee, point_b, alti)
     assert point_dtm[0] == pytest.approx(valid_lon, abs=1e-12)
     assert point_dtm[1] == pytest.approx(valid_lat, abs=1e-12)
-    assert point_dtm[2] == pytest.approx(valid_alt, abs=1e-12)
+    assert point_dtm[2] == pytest.approx(valid_alt, abs=1e-10)
 
 
 @pytest.mark.parametrize("col,row,h", [(20.5, 150.5, 10.0)])
@@ -382,22 +382,6 @@ def test_coloc(l0_src, c0_src, steprow_src, stepcol_src, nbrow_src, nbcol_src, r
 
     assert gricol[0, row, col] == pytest.approx(row * steprow_src + l0_src, 1e-6)
     assert gricol[1, row, col] == pytest.approx(col * stepcol_src + c0_src, 1e-6)
-
-
-@pytest.mark.parametrize("index_x,index_y", [(10.5, 20.5)])
-@pytest.mark.parametrize("valid_alt", [(198.0)])
-@pytest.mark.unit_tests
-def test_interp_dtm(index_x, index_y, valid_alt):
-    """
-    Test coloc function
-    """
-    dtmbsq, ___ = prepare_loc()
-
-    vect_index = [index_x, index_y]
-    coords = dtmbsq.index_to_ter(vect_index)
-    print(coords)
-    alti = dtmbsq.interpolate(index_x - 0.5, index_y - 0.5)
-    assert alti == valid_alt
 
 
 @pytest.mark.parametrize("col,lig,h", [(1000.5, 1500.5, 10.0)])

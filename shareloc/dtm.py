@@ -21,31 +21,27 @@
 
 """
 This module contains the DTM class to handle dtm intersection.
-DTM files must be in BSQ format.
 """
 
 import numpy as np
-from shareloc.readwrite import read_hdbabel_header, read_bsq_grid
+from shareloc.image.dtm_image import DTMImage
+from shareloc.math_utils import interpol_bilin
 
 
 class DTM:
     """DTM class dedicated
-    works only with BSQ file format
     we work in cell convention [0,0] is the first cell center (not [0.5,0.5])
     """
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename, dtm_format="bsq"):
+    def __init__(self, dtm_filename):
         """
         Constructor
         :param dtm_filename: dtm filename
         :type dtm_filename: string
-        :param dtm_format: grid format (by default bsq)
-        :type dtm_format: string
         """
         self.dtm_file = dtm_filename
-        self.format = dtm_format
         self.alt_data = None
         self.alt_min = None
         self.alt_max = None
@@ -64,7 +60,8 @@ class DTM:
         self.tol_z = 0.0001
 
         # lecture mnt
-        self.load()
+        self.dtm_image = DTMImage(self.dtm_file, read_data=True)
+        self.alt_data = self.dtm_image.data[0, :, :]
         self.init_min_max()
         self.alt_max = self.alt_data.max()
         self.alt_min = self.alt_data.min()
@@ -72,30 +69,20 @@ class DTM:
         self.plane_coef_a = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0])
         self.plane_coef_b = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
         self.plane_coef_c = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
-        self.plane_coef_d = np.array([0.0, self.row_nb - 1.0, 0.0, self.column_nb - 1.0, self.alt_min, self.alt_max])
+        self.plane_coef_d = np.array(
+            [0.0, self.dtm_image.nb_rows - 1.0, 0.0, self.dtm_image.nb_columns - 1.0, self.alt_min, self.alt_max]
+        )
 
         self.plans = np.array(
             [
                 [1.0, 0.0, 0.0, 0.0],
-                [1.0, 0.0, 0.0, self.row_nb - 1.0],
+                [1.0, 0.0, 0.0, self.dtm_image.nb_rows - 1.0],
                 [0.0, 1.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, self.column_nb - 1.0],
+                [0.0, 1.0, 0.0, self.dtm_image.nb_columns - 1.0],
                 [0.0, 0.0, 1.0, self.alt_min],
                 [0.0, 0.0, 1.0, self.alt_max],
             ]
         )
-
-    def load(self):
-        """
-        load DTM infos
-        """
-        if self.format == "bsq":
-            hd_babel = read_hdbabel_header(self.dtm_file)
-            for key in hd_babel:
-                setattr(self, key, hd_babel[key])
-            self.alt_data = read_bsq_grid(self.dtm_file, self.row_nb, self.column_nb, self.data_type)
-        else:
-            print("dtm format not handled")
 
     def eq_plan(self, i, position):
         """
@@ -123,8 +110,7 @@ class DTM:
         :rtype array (1x2 or 1x3)
         """
         vect_dtm = vect_ter.copy()
-        vect_dtm[0] = (vect_ter[1] - self.origin_y) / self.pixel_size_y
-        vect_dtm[1] = (vect_ter[0] - self.origin_x) / self.pixel_size_x
+        (vect_dtm[0], vect_dtm[1]) = self.dtm_image.transform_physical_point_to_index(vect_ter[1], vect_ter[0])
         return vect_dtm
 
     def ters_to_indexs(self, vect_ters):
@@ -149,8 +135,7 @@ class DTM:
         :rtype array (1x2 or 1x3)
         """
         vect_ter = vect_dtm.copy()
-        vect_ter[0] = self.origin_x + self.pixel_size_x * vect_dtm[1]
-        vect_ter[1] = self.origin_y + self.pixel_size_y * vect_dtm[0]
+        (vect_ter[1], vect_ter[0]) = self.dtm_image.transform_index_to_physical_point(vect_dtm[0], vect_dtm[1])
         return vect_ter
 
     def interpolate(self, pos_row, pos_col):
@@ -164,44 +149,17 @@ class DTM:
         :return interpolated altitude
         :rtype float
         """
-
-        # index clipping in [0, _row_nb -2]
-        if pos_row < 0:
-            row_inf = 0
-        elif pos_row >= self.row_nb - 1:
-            row_inf = self.row_nb - 2
-        else:
-            row_inf = int(np.floor(pos_row))
-
-        row_sup = row_inf + 1
-
-        # index clipping in [0, _nc -2]
-        if pos_col < 0:
-            col_inf = 0
-        elif pos_col >= self.column_nb - 1:
-            col_inf = self.column_nb - 2
-        else:
-            col_inf = int(np.floor(pos_col))
-
-        col_sup = col_inf + 1
-        # Coefficients d'interpolation bilineaire
-        delta_u = pos_col - col_inf
-        delta_v = pos_row - row_inf
-        # Altitude
-        alt = (
-            (1 - delta_u) * (1 - delta_v) * self.alt_data[row_inf, col_inf]
-            + delta_u * (1 - delta_v) * self.alt_data[row_inf, col_sup]
-            + (1 - delta_u) * delta_v * self.alt_data[row_sup, col_inf]
-            + delta_u * delta_v * self.alt_data[row_sup, col_sup]
-        )
+        alt = interpol_bilin(
+            [self.alt_data[np.newaxis, :, :]], self.dtm_image.nb_rows, self.dtm_image.nb_columns, pos_row, pos_col
+        )[0][0]
         return alt
 
     def init_min_max(self):
         """
         initialize min/max at each dtm cell
         """
-        column_nb_minus = self.column_nb - 1
-        row_nb_minus = self.row_nb - 1
+        column_nb_minus = self.dtm_image.nb_columns - 1
+        row_nb_minus = self.dtm_image.nb_rows - 1
 
         self.alt_max_cell = np.zeros((row_nb_minus, column_nb_minus))
         self.alt_min_cell = np.zeros((row_nb_minus, column_nb_minus))
@@ -459,8 +417,8 @@ class DTM:
 
         h_intersect_p1 = h_intersect
 
-        n_row = self.row_nb
-        n_col = self.column_nb
+        n_row = self.dtm_image.nb_rows
+        n_col = self.dtm_image.nb_columns
 
         # 1 - Initilialisation et tests prealables
         #   1.1 - Test si le sommet est au-dessu du DTM

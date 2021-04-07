@@ -79,6 +79,6 @@ class DTMImage(Image):
         else:
             super().__init__(image_path, read_data=read_data)
             if datum is None:
-                self.datum = "ellipsoid"
+                self.datum = "geoid"
             else:
                 self.datum = datum

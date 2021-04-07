@@ -1064,7 +1064,6 @@ class RPC:
             np.array([row, row]), np.array([col, col]), np.array([los_alt_max, los_alt_min]), fill_nan
         )
         if extrapolate:
-
             diff = los_edges[0, :] - los_edges[1, :]
             delta_alt = diff[2]
             los_edges[0, :] = los_edges[1, :] + diff * (alt_max - los_edges[1, 2]) / delta_alt

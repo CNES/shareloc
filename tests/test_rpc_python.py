@@ -439,9 +439,29 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
     row, col, alt = fctrat.inverse_loc(lon, lat, alt)
     print("row col ", row, col)
     lonlath = fctrat.direct_loc_dtm(row[0], col[0], dtmbsq)
-    assert lon == pytest.approx(lonlath[0], abs=1e-7)
-    assert lat == pytest.approx(lonlath[1], abs=1e-7)
-    assert alt == pytest.approx(lonlath[2], abs=1e-4)
+    assert lon == pytest.approx(lonlath[0][0], abs=1e-7)
+    assert lat == pytest.approx(lonlath[0][1], abs=1e-7)
+    assert alt == pytest.approx(lonlath[0][2], abs=1e-4)
+
+
+@pytest.mark.parametrize(
+    "id_scene, col,row",
+    [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001", 100.5, 200.5)],
+)
+def test_rpc_los_extrapolation(id_scene, row, col):
+    """
+    test los extrapolation
+    """
+    data_folder = test_path()
+    file_dimap = os.path.join(data_folder, "rpc/RPC_{}.XML".format(id_scene))
+    fctrat = RPC.from_dimap(file_dimap, topleftconvention=True)
+    los_edges = fctrat.los_extrema(row, col)
+    altmin = -10
+    altmax = 2000
+    extrapoled_los_edges = fctrat.los_extrema(row, col, altmin, altmax)
+    diff = los_edges[0, :] - los_edges[1, :]
+    lon_extrapoled_max = los_edges[1, 0] + diff[0] * (altmax - los_edges[1, 2]) / diff[2]
+    assert lon_extrapoled_max == extrapoled_los_edges[0, 0]
 
 
 def test_rpc_minmax():

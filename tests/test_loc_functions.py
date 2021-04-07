@@ -153,9 +153,9 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
     print(lonlatalt)
-    assert valid_coord[0] == pytest.approx(lonlatalt[0], abs=3.0 * 1e-5)
-    assert valid_coord[1] == pytest.approx(lonlatalt[1], abs=2.0 * 1e-4)
-    assert valid_coord[2] == pytest.approx(lonlatalt[2], abs=15.0)
+    assert valid_coord[0] == pytest.approx(lonlatalt[0][0], abs=3.0 * 1e-5)
+    assert valid_coord[1] == pytest.approx(lonlatalt[0][1], abs=2.0 * 1e-4)
+    assert valid_coord[2] == pytest.approx(lonlatalt[0][2], abs=15.0)
 
 
 @pytest.mark.parametrize("col,row,h", [(150.5, 100, 100.0)])

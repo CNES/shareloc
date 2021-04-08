@@ -24,6 +24,7 @@
 localisations function from mutji h direct grids.
 """
 
+import logging
 import numpy as np
 from shareloc.image.readwrite import read_bsq_hd
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
@@ -113,7 +114,7 @@ class Grid:
             self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
             self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
         else:
-            print("dtm format is not handled")
+            logging.error("dtm format is not handled")
 
     def get_alt_min_max(self):
         """
@@ -139,7 +140,7 @@ class Grid:
         :rtype numpy.ndarray
         """
         if fill_nan:
-            print("fill nan {}".format(fill_nan))
+            logging.debug("fill nan {}", fill_nan)
         # faire une controle sur row / col !!!!
         # 0.5 < row < rowmax
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
@@ -477,10 +478,10 @@ class Grid:
         lon_n = (lon - self.pred_ofset_scale_lon[0]) / self.pred_ofset_scale_lon[1]
         lat_n = (lat - self.pred_ofset_scale_lat[0]) / self.pred_ofset_scale_lat[1]
         if abs(lon_n) > (1 + seuil_extrapol / 100.0):
-            # print "Attention, en extrapolation de 20% en longitude:",lon_n
+            logging.warning("Attention, en extrapolation de 20% en longitude:", lon_n)
             extrapol = True
         if abs(lat_n) > (1 + seuil_extrapol / 100.0):
-            # print "Attention, en extrapolation de 20% en latitude:",lat_n
+            logging.warning("Attention, en extrapolation de 20% en latitude:", lat_n)
             extrapol = True
 
         # application polynome
@@ -568,7 +569,7 @@ class Grid:
         if abs(det) > 0.000000000001:
             partial_derivative_mat = np.array([[dlat_l, -dlon_l], [-dlat_c, dlon_c]]) / det
         else:
-            print("nul determinant")
+            logging.error("nul determinant")
         return partial_derivative_mat
 
     def inverse_loc(self, lon, lat, alt=0.0, nb_iterations=15):
@@ -604,7 +605,6 @@ class Grid:
             # Processus iteratif
             # while erreur > seuil:1mm
             while (erreur_m2 > 1e-6) and (iteration < nb_iterations):
-                # print k,row_i,col_i
                 position = self.direct_loc_h(row_i, col_i, alt)
                 dlon_microrad = (position[0] - lon) * deg2mrad
                 dlat_microrad = (position[1] - lat) * deg2mrad

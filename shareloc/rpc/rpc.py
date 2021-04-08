@@ -25,6 +25,7 @@ RPC models covered are : DIMAP V1, DIMAP V2, Euclidium, ossim (geom file), geoti
 
 from xml.dom import minidom
 from os.path import basename
+import logging
 import rasterio as rio
 import numpy as np
 from numba import njit, prange, config
@@ -32,7 +33,7 @@ from numba import njit, prange, config
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
 
-
+# pylint: disable=too-many-lines
 def renvoie_linesep(txt_liste_lines):
     """
     Renvoie le separateur de ligne d'un texte sous forme de liste de lignes
@@ -235,9 +236,11 @@ def check_coeff_consistency(dict1, dict2):
     """
     for key, value in dict1.items():
         if dict2[key] != value:
-            print(
-                "normalisation coeffs are different between"
-                " direct en inverse one : {} : {} {}".format(key, value, dict2[key])
+            logging.warning(
+                "normalisation coeffs are different between" " direct en inverse one : {} : {} {}",
+                key,
+                value,
+                dict2[key],
             )
 
 
@@ -526,7 +529,7 @@ class RPC:
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns="RPC")
         if not rpc_dict:
-            print("{} does not contains RPCs ".format(image_filename))
+            logging.error("{} does not contains RPCs ", image_filename)
             raise ValueError
         rpc_params = dict()
         rpc_params["den_row"] = parse_coeff_line(rpc_dict["LINE_DEN_COEFF"])
@@ -632,7 +635,7 @@ class RPC:
         primary_coeffs = read_eucl_file(primary_euclidium_coeff)
 
         # info log
-        print("primary euclidium file is of {} type".format(primary_coeffs["type_fic"]))
+        logging.debug("primary euclidium file is of {} type", primary_coeffs["type_fic"])
 
         rpc_params["num_x"] = None
         rpc_params["den_x"] = None
@@ -653,7 +656,7 @@ class RPC:
 
         if secondary_euclidium_coeff is not None:
             secondary_coeffs = read_eucl_file(secondary_euclidium_coeff)
-            print("secondary euclidium file is of {} type".format(secondary_coeffs["type_fic"]))
+            logging.debug("secondary euclidium file is of {} type", secondary_coeffs["type_fic"])
             check_coeff_consistency(primary_coeffs["normalisation_coeffs"], secondary_coeffs["normalisation_coeffs"])
 
             for key, value in secondary_coeffs["poly_coeffs"].items():
@@ -662,7 +665,6 @@ class RPC:
         rpc_params["offset_col"] -= 0.5
         rpc_params["offset_row"] -= 0.5
         # If top left convention, 0.5 pixel shift added on col/row offsets
-
         if topleftconvention:
             rpc_params["offset_col"] += 0.5
             rpc_params["offset_row"] += 0.5
@@ -769,6 +771,13 @@ class RPC:
             row_norm = (row - self.offset_row) / self.scale_row
             alt_norm = (alt - self.offset_alt) / self.scale_alt
 
+            if np.sum(abs(col_norm) > self.lim_extrapol) > 0:
+                logging.debug("!!!!! column extrapolation in direct localization ")
+            if np.sum(abs(row_norm) > self.lim_extrapol) > 0:
+                logging.debug("!!!!! row extrapolation in direct localization ")
+            if np.sum(abs(alt_norm) > self.lim_extrapol) > 0:
+                logging.debug("!!!!! alt extrapolation in direct localization ")
+
             points[filter_nan, 1], points[filter_nan, 0] = compute_rational_function_polynomial(
                 col_norm,
                 row_norm,
@@ -785,7 +794,7 @@ class RPC:
 
         # Direct localization using inverse RPC
         else:
-            # print("direct localisation from inverse iterative")
+            logging.debug("direct localisation from inverse iterative")
             (points[filter_nan, 0], points[filter_nan, 1], points[filter_nan, 2]) = self.direct_loc_inverse_iterative(
                 row, col, alt, 10, fill_nan
             )
@@ -846,10 +855,10 @@ class RPC:
             col_i = col[i]
             # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
             (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
-            # if min_dtm < self.offset_alt - self.scale_alt:
-            #    print("minimum dtm value is outside RPC validity domain")
-            # if max_dtm > self.offset_alt + self.scale_alt:
-            #    print("maximum dtm value is outside RPC validity domain")
+            if min_dtm < self.offset_alt - self.scale_alt:
+                logging.debug("minimum dtm value is outside RPC validity domain, extrapolation will be done")
+            if max_dtm > self.offset_alt + self.scale_alt:
+                logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
             los = self.los_extrema(row_i, col_i, min_dtm, max_dtm)
             (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
             (__, __, position) = dtm.intersection(los, position_cube, alti)
@@ -886,6 +895,13 @@ class RPC:
             lat_norm = (lat - self.offset_y) / self.scale_y
             alt_norm = (alt - self.offset_alt) / self.scale_alt
 
+            if np.sum(abs(lon_norm) > self.lim_extrapol) > 0:
+                logging.debug("!!!!! longitude extrapolation in inverse localization ")
+            if np.sum(abs(lat_norm) > self.lim_extrapol) > 0:
+                logging.debug("!!!!! row extrapolation in inverse localization ")
+            if np.sum(abs(alt_norm) > self.lim_extrapol) > 0:
+                logging.debug("!!!!! alt extrapolation in inverse localization ")
+
             row_out, col_out = compute_rational_function_polynomial(
                 lon_norm,
                 lat_norm,
@@ -900,7 +916,7 @@ class RPC:
                 self.offset_row,
             )
         else:
-            print("inverse localisation can't be performed, inverse coefficients have not been defined")
+            logging.error("inverse localisation can't be performed, inverse coefficients have not been defined")
             (col_out, row_out) = (None, None)
         return row_out, col_out, alt
 
@@ -1022,7 +1038,7 @@ class RPC:
             lat_out[filter_nan] = lat
 
         else:
-            print("inverse localisation can't be performed, inverse coefficients have not been defined")
+            logging.error("inverse localisation can't be performed, inverse coefficients have not been defined")
             (long_out, lat_out) = (None, None)
 
         return long_out, lat_out, alt
@@ -1283,7 +1299,6 @@ def calcule_derivees_inv_numba(
     :return: partials derivatives of inverse localization
     :rtype: Tuples(dcol_dlon np.array, dcol_dlat np.array, drow_dlon np.array, drow_dlat np.array)
     """
-
     dcol_dlon = np.zeros((lon_norm.shape[0]), dtype=np.float64)
     dcol_dlat = np.zeros((lon_norm.shape[0]), dtype=np.float64)
     drow_dlon = np.zeros((lon_norm.shape[0]), dtype=np.float64)

@@ -22,6 +22,7 @@
 This module contains the input/output for shareloc
 """
 
+import logging
 import os.path as op
 import numpy as np
 
@@ -41,7 +42,7 @@ def read_hdbabel_header(bsq_filename):
     header = {}
     hd_babel = {}
     if not op.exists(babelheader):
-        print("missing hd_babel header")
+        logging.error("missing hd_babel header")
     else:
         with open(babelheader, "r") as fstream:
             txt_header = fstream.readlines()

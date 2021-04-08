@@ -23,6 +23,7 @@
 This module contains the DTM class to handle dtm intersection.
 """
 
+import logging
 import numpy as np
 from shareloc.image.dtm_image import DTMImage
 from shareloc.math_utils import interpol_bilin
@@ -67,7 +68,7 @@ class DTM:
         self.alt_data = self.dtm_image.data[0, :, :].astype("float64")
         if self.dtm_image.datum == "geoid":
             if geoid_filename is not None:
-                print("remove geoid height")
+                logging.info("remove geoid height")
                 self.grid_row, self.grid_col = np.mgrid[
                     0 : self.dtm_image.nb_columns : 1, 0 : self.dtm_image.nb_rows : 1
                 ]
@@ -76,7 +77,7 @@ class DTM:
                 geoid_height = interpolate_geoid_height(geoid_filename, positions)
                 self.alt_data += geoid_height.reshape(lon.shape)
             else:
-                print(
+                logging.warning(
                     "DTM is relative to geoid but no geoid file is given, "
                     "thus localizations will be done w.r.t geoid"
                 )
@@ -284,7 +285,7 @@ class DTM:
                 if los_a * los_hat_onplane <= 0:
                     if not los_a and not los_hat_onplane:
                         # Trop de solutions !! (A et B sont sur le plan) #comment on le gere ??
-                        print("too many solutions")
+                        logging.warning("too many solutions in DTM intersection")
                     # -----------------------------------------------------------------------
                     if not los_a:
                         # A est solution (il est sur le plan)
@@ -829,7 +830,7 @@ class DTM:
 
                 # Test si on est toujours dans le cube DTM
                 if a_2 >= 1:
-                    print("changement de plan")
+                    logging.debug("changement de plan")
                     # Changement de plan
                     i_0 += 1
 

@@ -224,15 +224,10 @@ def epipolar_triangulation(
     rectif_grid_left = RectificationGrid(grid_left)
     rectif_grid_right = RectificationGrid(grid_right)
     # interpolate_right
-    # print("epi  left 0 {}".format(epi_pos_left[0,:]))
-    # print("epi right 0 {}".format(epi_pos_right[0,:]))
     matches_sensor_left = rectif_grid_left.interpolate(epi_pos_left)
     matches_sensor_right = rectif_grid_right.interpolate(epi_pos_right)
-    # print("epi  left 0 {} sensor 0 {}".format(epi_pos_left[0,:], matches_sensor_left[0,:]))
-    # print("epi right 0 {} sensor 0 {}".format(epi_pos_right[0,:], matches_sensor_right[0,:]))
     matches_sensor = np.concatenate((matches_sensor_left, matches_sensor_right), axis=1)
-    # print("matches shape {}".format(matches_sensor.shape))
-    # print("matches  {}".format(matches_sensor[0,:]))
+
     # triangulate positions in sensor geometry
     [intersections_ecef, intersections_wgs84, intersections_residues] = sensor_triangulation(
         matches_sensor, geometrical_model_left, geometrical_model_right, left_min_max, right_min_max, residues, fill_nan

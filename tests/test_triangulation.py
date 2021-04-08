@@ -140,7 +140,6 @@ def test_epi_triangulation_sift():
         matches, None, "sift", gri_left, gri_right, grid_left_filename, grid_right_filename
     )
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
-    print(valid - point_ecef[0, :])
     assert valid == pytest.approx(point_ecef[0, :], abs=0.5)
 
 
@@ -278,7 +277,6 @@ def test_epi_triangulation_disp_rpc():
     array_shape = disp.disp.values.shape
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
     stats = stats_diff(cloud, array_epi_ecef)
-    print(stats)
     index = 1492
     assert point_ecef[index, 0] == pytest.approx(cloud.x.values.flatten()[index], abs=1e-3)
     assert point_ecef[index, 1] == pytest.approx(cloud.y.values.flatten()[index], abs=1e-3)

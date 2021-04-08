@@ -237,7 +237,7 @@ def check_coeff_consistency(dict1, dict2):
     for key, value in dict1.items():
         if dict2[key] != value:
             logging.warning(
-                "normalisation coeffs are different between" " direct en inverse one : {} : {} {}",
+                "normalisation coeffs are different between" " direct en inverse one : %s : %f %f",
                 key,
                 value,
                 dict2[key],
@@ -529,7 +529,7 @@ class RPC:
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns="RPC")
         if not rpc_dict:
-            logging.error("{} does not contains RPCs ", image_filename)
+            logging.error("%s does not contains RPCs ", image_filename)
             raise ValueError
         rpc_params = dict()
         rpc_params["den_row"] = parse_coeff_line(rpc_dict["LINE_DEN_COEFF"])
@@ -635,7 +635,7 @@ class RPC:
         primary_coeffs = read_eucl_file(primary_euclidium_coeff)
 
         # info log
-        logging.debug("primary euclidium file is of {} type", primary_coeffs["type_fic"])
+        logging.debug("primary euclidium file is of %s type", primary_coeffs["type_fic"])
 
         rpc_params["num_x"] = None
         rpc_params["den_x"] = None
@@ -656,7 +656,7 @@ class RPC:
 
         if secondary_euclidium_coeff is not None:
             secondary_coeffs = read_eucl_file(secondary_euclidium_coeff)
-            logging.debug("secondary euclidium file is of {} type", secondary_coeffs["type_fic"])
+            logging.debug("secondary euclidium file is of %s type", secondary_coeffs["type_fic"])
             check_coeff_consistency(primary_coeffs["normalisation_coeffs"], secondary_coeffs["normalisation_coeffs"])
 
             for key, value in secondary_coeffs["poly_coeffs"].items():

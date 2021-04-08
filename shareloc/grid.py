@@ -140,7 +140,7 @@ class Grid:
         :rtype numpy.ndarray
         """
         if fill_nan:
-            logging.debug("fill nan {}", fill_nan)
+            logging.debug("fill nan %s", fill_nan)
         # faire une controle sur row / col !!!!
         # 0.5 < row < rowmax
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
@@ -478,10 +478,10 @@ class Grid:
         lon_n = (lon - self.pred_ofset_scale_lon[0]) / self.pred_ofset_scale_lon[1]
         lat_n = (lat - self.pred_ofset_scale_lat[0]) / self.pred_ofset_scale_lat[1]
         if abs(lon_n) > (1 + seuil_extrapol / 100.0):
-            logging.warning("Attention, en extrapolation de 20% en longitude:", lon_n)
+            logging.warning("Attention, en extrapolation de %1.8f en longitude:", lon_n)
             extrapol = True
         if abs(lat_n) > (1 + seuil_extrapol / 100.0):
-            logging.warning("Attention, en extrapolation de 20% en latitude:", lat_n)
+            logging.warning("Attention, en extrapolation de %1.8f en latitude:", lat_n)
             extrapol = True
 
         # application polynome

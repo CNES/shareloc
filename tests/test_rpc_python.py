@@ -53,7 +53,7 @@ def test_rpc_drivers():
     fctrat_geom = RPC.from_any(file_geom)
 
     file_dimap = os.path.join(data_folder, "rpc/RPC_{}.XML".format(id_scene))
-    print(file_dimap)
+
     fctrat_dimap_v2 = RPC.from_any(file_dimap, topleftconvention=True)
 
     fake_rpc = os.path.join(data_folder, "rpc/fake_rpc.txt")
@@ -134,9 +134,8 @@ def test_rpc_ossim_kwl(id_scene, lon, lat, alt, row_vt, col_vt):
     data_folder = test_path()
     file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
     fctrat_geom = RPC.from_any(file_geom, topleftconvention=True)
-    print("{} {} {}".format(lon, lat, alt))
+
     (row, col, __) = fctrat_geom.inverse_loc(lon, lat, alt)
-    print("col {} row {}".format(col, row))
     assert col == pytest.approx(col_vt, abs=1e-2)
     assert row == pytest.approx(row_vt, abs=1e-2)
 
@@ -185,9 +184,7 @@ def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
     data_folder = test_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
-    print("{} {} {}".format(lon, lat, alt))
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
-    print("col {} row {}".format(col, row))
     assert col == pytest.approx(col_vt, abs=1e-2)
     assert row == pytest.approx(row_vt, abs=1e-2)
 
@@ -203,9 +200,7 @@ def test_rpc_euclidium_direct_iterative(id_scene, lon, lat, alt):
     data_folder = test_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
-    print("{} {} {}".format(lon, lat, alt))
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
-    print("col {} row {}".format(col, row))
     (lon2, lat2, __) = fctrat.direct_loc_h(row, col, alt)
     assert lon == pytest.approx(lon2, abs=1e-2)
     assert lat == pytest.approx(lat2, abs=1e-2)
@@ -269,18 +264,15 @@ def test_rpc_dimap_v2(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     data_folder = test_path()
     file_dimap = os.path.join(data_folder, "rpc/RPC_{}.XML".format(id_scene))
-    print(file_dimap)
     fctrat_dimap = RPC.from_dimap(file_dimap, topleftconvention=True)
-    print("{} {} {}".format(lon, lat, alt))
+
     (row, col, __) = fctrat_dimap.inverse_loc(lon, lat, alt)
-    print("col {} row {} dimap".format(col, row))
     assert col == pytest.approx(col_vt, abs=1e-2)
     assert row == pytest.approx(row_vt, abs=1e-2)
 
     file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
     fctrat_geom = RPC.from_any(file_geom, topleftconvention=True)
     (row, col, __) = fctrat_geom.inverse_loc(lon, lat, alt)
-    print("col {} row {} geom".format(col, row))
     assert col == pytest.approx(col_vt, abs=1e-2)
     assert row == pytest.approx(row_vt, abs=1e-2)
 
@@ -297,10 +289,8 @@ def test_rpc_phrdimap(col, row, alt):
     fctrat = RPC.from_dimap(file_dimap)
 
     (lon, lat, alt) = fctrat.direct_loc_h(row, col, alt)
-    print(lon, lat)
 
     (row_ar, col_ar, __) = fctrat.inverse_loc(lon, lat, alt)
-    print(col_ar, row_ar)
     assert col_ar == pytest.approx(col, abs=2e-2)
     assert row_ar == pytest.approx(row, abs=2e-2)
 
@@ -433,11 +423,9 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
     fic = os.path.join(data_folder_mnt, "MNT_extrait/mnt_extrait.c1")
     dtmbsq = DTM(fic)
     [lon, lat] = dtmbsq.index_to_ter(vect_index)
-    print([lon, lat])
     alt = dtmbsq.interpolate(index_x, index_y)
 
     row, col, alt = fctrat.inverse_loc(lon, lat, alt)
-    print("row col ", row, col)
     lonlath = fctrat.direct_loc_dtm(row[0], col[0], dtmbsq)
     assert lon == pytest.approx(lonlath[0][0], abs=1e-7)
     assert lat == pytest.approx(lonlath[0][1], abs=1e-7)

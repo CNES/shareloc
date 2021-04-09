@@ -72,8 +72,6 @@ def test_gld_dtm(idxrow, idxcol, row0, col0, steprow, stepcol, nbrow, nbcol):
     col = col0 + stepcol * idxcol
 
     valid_lonlatalt = gri.direct_loc_dtm(row, col, dtmbsq)
-    print("lon {} lat {} alt {} ".format(lonlatalt[0], lonlatalt[1], lonlatalt[2]))
-    print("valid lon {} lat {} alt {} ".format(valid_lonlatalt[0], valid_lonlatalt[1], valid_lonlatalt[2]))
     assert lonlatalt == pytest.approx(valid_lonlatalt, abs=1e-12)
 
 
@@ -107,7 +105,6 @@ def test_loc_dir_interp_visee_unitaire_gld(row, col, valid_lon, valid_lat):
     """
     ___, gri = prepare_loc()
     visee = gri.interpolate_grid_in_plani(row, col)
-    print(visee)
     assert visee[0][1] == pytest.approx(valid_lon, abs=1e-12)
     assert visee[1][1] == pytest.approx(valid_lat, abs=1e-12)
 
@@ -123,12 +120,6 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     loc = Localization(gri, elevation=None)
     lonlatalt = loc.direct(row, col, h)
 
-    diff_lon = lonlatalt[0] - valid_lon
-    diff_lat = lonlatalt[1] - valid_lat
-    diff_alt = lonlatalt[2] - valid_alt
-    print("direct localization at constant altitude row : {} col {} alt {}".format(row, col, h))
-    print("lon {} lat {} alt {} ".format(lonlatalt[0], lonlatalt[1], lonlatalt[2]))
-    print("diff_lon {} diff_lat {} diff_alt {}".format(diff_lon, diff_lat, diff_alt))
     assert valid_lon == pytest.approx(lonlatalt[0], abs=1e-12)
     assert valid_lat == pytest.approx(lonlatalt[1], abs=1e-12)
     assert valid_alt == pytest.approx(lonlatalt[2], abs=1e-8)
@@ -152,7 +143,6 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     dtm_ventoux = DTM(dtm_file, geoid_file)
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
-    print(lonlatalt)
     assert valid_coord[0] == pytest.approx(lonlatalt[0, 0], abs=3.0 * 1e-5)
     assert valid_coord[1] == pytest.approx(lonlatalt[0, 1], abs=2.0 * 1e-4)
     assert valid_coord[2] == pytest.approx(lonlatalt[0, 2], abs=15.0)
@@ -197,11 +187,9 @@ def test_sensor_loc_dir_dtm(index_x, index_y):
 
     vect_index = [index_x, index_y]
     [lon, lat] = dtmbsq.index_to_ter(vect_index)
-    print([lon, lat])
     alt = dtmbsq.interpolate(index_x, index_y)
 
     row, col, alt = loc.inverse(lon, lat, alt)
-    print("row col ", row, col)
     lonlath = loc.direct(row, col)
     assert lon == pytest.approx(lonlath[0], abs=1e-8)
     assert lat == pytest.approx(lonlath[1], abs=1e-8)
@@ -250,10 +238,6 @@ def test_sensor_loc_inv(lon, lat, alt, valid_col, valid_row):
 
     loc = Localization(gri)
     inv_row, inv_col, h = loc.inverse(lon, lat, alt)
-
-    print("inverse localization  : lon {} lat {} alt {}".format(lon, lat, alt))
-    print("row {} col {}  ".format(inv_row, inv_col))
-    print("diff_row {} diff_col {} ".format(inv_row - valid_row, inv_col - valid_col))
     assert inv_row == pytest.approx(valid_row, abs=1e-2)
     assert inv_col == pytest.approx(valid_col, abs=1e-2)
     assert h == alt
@@ -364,7 +348,6 @@ def test_loc_dir_loc_inv(row, col, h):
     (lon, lat, alt) = gri.direct_loc_h(row, col, h)
     inv_row, inv_col, h = gri.inverse_loc(lon, lat, alt)
 
-    print("row {} col {} ".format(inv_row, inv_col))
     assert row == pytest.approx(inv_row, abs=1e-2)
     assert col == pytest.approx(inv_col, abs=1e-2)
 
@@ -392,8 +375,6 @@ def test_loc_dir_loc_inv_rpc(id_scene, rpc, row, col, h):
 
     fctrat = RPC.from_any(fichier_dimap, topleftconvention=True)
     (inv_row, inv_col, __) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
-    print("row {} col {}".format(inv_row, inv_col))
-
     assert row == pytest.approx(inv_row, abs=1e-2)
     assert col == pytest.approx(inv_col, abs=1e-2)
 
@@ -471,7 +452,6 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     row_coloc, col_coloc, _ = coloc_rpc(
         geom_model_left, geom_model_right, row, col, h, image_left, image_right, using_geotransform=True
     )
-    print(row)
     origin_left = [5000.0, 5000.0]
     pix_size_left = [0.5, 0.5]
     row_phys = origin_left[0] + (row + 0.5) * pix_size_left[0]

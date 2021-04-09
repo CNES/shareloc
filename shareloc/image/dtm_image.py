@@ -24,6 +24,7 @@
 Image class to handle Image data.
 """
 
+import logging
 import numpy as np
 from affine import Affine
 from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid
@@ -35,7 +36,7 @@ class DTMImage(Image):
 
     def __init__(self, image_path, read_data=False, datum=None):
         if image_path.split(".")[-1] == "c1":
-            print("bsq babel image")
+            logging.debug("bsq babel image")
             if image_path is not None:
                 # Image path
                 self.image_path = image_path
@@ -69,7 +70,9 @@ class DTMImage(Image):
                 elif "H-M" in babel_dict["gdlib_code"].split(":")[-1]:
                     self.datum = "geoid"
                 else:
-                    print("unknown datum {}".format(babel_dict["gdlib_code"].split(":")[-1]))
+                    logging.warning(
+                        "unknown datum {} ellipsoid " "will be used", babel_dict["gdlib_code"].split(":")[-1]
+                    )
                     self.datum = "ellipsoid"
 
                 self.data = np.zeros((1, self.nb_rows, self.nb_columns), dtype=self.data_type)

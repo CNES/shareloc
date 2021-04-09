@@ -43,7 +43,6 @@ def test_interp_dtm(index_col, index_row, valid_alt):
     dtmbsq = DTM(fic)
     vect_index = [index_row, index_col]
     coords = dtmbsq.index_to_ter(vect_index)
-    print(coords)
     lon_ref = 57.2083333333
     lat_ref = 22.2166666667
     pas_lon = 0.00833333333333

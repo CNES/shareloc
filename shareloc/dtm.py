@@ -42,7 +42,7 @@ class DTM:
         Constructor
         :param dtm_filename: dtm filename
         :type dtm_filename: string
-        :param geoid_filename: geoid filename
+        :param geoid_filename: geoid filename, if None datum is ellispoid
         :type geoid_filename: string
         """
         self.dtm_file = dtm_filename
@@ -64,11 +64,14 @@ class DTM:
         self.tol_z = 0.0001
 
         # lecture mnt
-        self.dtm_image = DTMImage(self.dtm_file, read_data=True)
+        datum = "ellipsoid"
+        if geoid_filename is not None:
+            datum = "geoid"
+        self.dtm_image = DTMImage(self.dtm_file, read_data=True, datum=datum)
         self.alt_data = self.dtm_image.data[0, :, :].astype("float64")
         if self.dtm_image.datum == "geoid":
+            logging.debug("remove geoid height")
             if geoid_filename is not None:
-                logging.info("remove geoid height")
                 self.grid_row, self.grid_col = np.mgrid[
                     0 : self.dtm_image.nb_columns : 1, 0 : self.dtm_image.nb_rows : 1
                 ]
@@ -77,10 +80,9 @@ class DTM:
                 geoid_height = interpolate_geoid_height(geoid_filename, positions)
                 self.alt_data += geoid_height.reshape(lon.shape)
             else:
-                logging.warning(
-                    "DTM is relative to geoid but no geoid file is given, "
-                    "thus localizations will be done w.r.t geoid"
-                )
+                logging.warning("dtm datum is geoid but no geoid file is given")
+        else:
+            logging.info("no geoid file is given dtm is assumed to be w.r.t ellipsoid")
 
         self.init_min_max()
         self.alt_max = self.alt_data.max()

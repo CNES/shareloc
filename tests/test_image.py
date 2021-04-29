@@ -59,6 +59,20 @@ def test_image_metadata(image_name, row, col, origin_row, origin_col, pixel_size
     assert row == row_index
     assert col == col_index
 
+    start_row = 10
+    start_col = 20
+    my_image_roi = Image(image_filename, roi=[start_row, start_col, 310, 320])
+    assert my_image_roi.pixel_size_row == pixel_size_row
+    assert my_image_roi.pixel_size_col == pixel_size_col
+
+    [phys_row, phys_col] = my_image_roi.transform_index_to_physical_point(row - start_row, col - start_col)
+    assert phys_row == origin_row + (row + 0.5) * pixel_size_row
+    assert phys_col == origin_col + (col + 0.5) * pixel_size_col
+
+    row_index, col_index = my_image_roi.transform_physical_point_to_index(phys_row, phys_col)
+    assert row == row_index + start_row
+    assert col == col_index + start_col
+
 
 @pytest.mark.parametrize(
     "row,col, origin_row, origin_col, pixel_size_row, pixel_size_col",

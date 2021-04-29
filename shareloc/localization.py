@@ -23,6 +23,7 @@
 Localization class for localization functions.
 """
 
+import logging
 import numbers
 import numpy as np
 
@@ -72,6 +73,28 @@ class Localization:
         if self.dtm is not None:
             return self.model.direct_loc_dtm(row, col, self.dtm)
         return self.model.direct_loc_h(row, col, self.default_elevation)
+
+    def extent(self):
+        """
+        returns model extent, whole validity domains if image is not given, image footprint otherwise
+        :return extent : [lon_min,lat_min,lon max,lat max] (2D np.array)
+        :rtype numpy.array
+        """
+        footprint = np.zeros([4, 2])
+        if self.image is not None:
+            logging.debug("image extent")
+            footprint[0, :] = [-0.5, -0.5]
+            footprint[1, :] = [-0.5 + self.image.nb_rows, -0.5 + self.image.nb_rows]
+            using_geotransform = True
+        else:
+            logging.debug("model extent")
+            footprint[0, :] = [self.model.row0, self.model.col0]
+            footprint[1, :] = [self.model.rowmax, self.model.colmax]
+            using_geotransform = False
+        on_ground_pos = self.direct(footprint[:, 0], footprint[:, 1], 0, using_geotransform=using_geotransform)
+        [lon_min, lat_min, __] = np.min(on_ground_pos, 0)
+        [lon_max, lat_max, __] = np.max(on_ground_pos, 0)
+        return np.array([lon_min, lat_min, lon_max, lat_max])
 
     def inverse(self, lon, lat, h, using_geotransform=False):
         """

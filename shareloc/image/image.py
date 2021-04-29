@@ -24,6 +24,7 @@
 Image class to handle Image data.
 """
 
+import logging
 import rasterio
 import numpy as np
 from affine import Affine
@@ -54,11 +55,16 @@ class Image:
             roi_window = None
             if roi is not None:
                 if roi_is_in_physical_space:
-                    print("roi in physical space conversion needed")
-                    row_off = 0
-                    col_off = 0
-                    width = 10
-                    height = 100
+                    transform = self.dataset.transform
+                    self.origin_row = transform[5]
+                    self.origin_col = transform[2]
+                    row_off = (roi[0] - transform[5]) / transform[4]
+                    col_off = (roi[1] - transform[2]) / transform[0]
+                    row_max = (roi[2] - transform[5]) / transform[4]
+                    col_max = (roi[3] - transform[2]) / transform[0]
+                    width = col_max - col_off
+                    height = row_max - row_off
+                    logging.info("roi in image , offset : %s %s size %s %s", col_off, row_off, width, height)
                 else:
                     row_off = roi[0]
                     col_off = roi[1]

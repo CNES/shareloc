@@ -61,7 +61,9 @@ def test_image_metadata(image_name, row, col, origin_row, origin_col, pixel_size
 
     start_row = 10
     start_col = 20
-    my_image_roi = Image(image_filename, roi=[start_row, start_col, 310, 320])
+    end_row = 310
+    end_col = 320
+    my_image_roi = Image(image_filename, roi=[start_row, start_col, end_row, end_col])
     assert my_image_roi.pixel_size_row == pixel_size_row
     assert my_image_roi.pixel_size_col == pixel_size_col
 
@@ -72,6 +74,18 @@ def test_image_metadata(image_name, row, col, origin_row, origin_col, pixel_size
     row_index, col_index = my_image_roi.transform_physical_point_to_index(phys_row, phys_col)
     assert row == row_index + start_row
     assert col == col_index + start_col
+
+    ## roi in physical space
+    start_phys_row = origin_row + start_row * pixel_size_row
+    start_phys_col = origin_col + start_col * pixel_size_col
+    end_phys_row = origin_row + end_row * pixel_size_row
+    end_phys_col = origin_col + end_col * pixel_size_col
+    roi = [start_phys_row, start_phys_col, end_phys_row, end_phys_col]
+    my_image_roi_phys = Image(image_filename, roi=roi, roi_is_in_physical_space=True)
+
+    [phys_row, phys_col] = my_image_roi_phys.transform_index_to_physical_point(row - start_row, col - start_col)
+    assert phys_row == origin_row + (row + 0.5) * pixel_size_row
+    assert phys_col == origin_col + (col + 0.5) * pixel_size_col
 
 
 @pytest.mark.parametrize(

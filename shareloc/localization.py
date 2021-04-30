@@ -74,7 +74,7 @@ class Localization:
             return self.model.direct_loc_dtm(row, col, self.dtm)
         return self.model.direct_loc_h(row, col, self.default_elevation)
 
-    def extent(self):
+    def extent(self, margin=0.0):
         """
         returns model extent, whole validity domains if image is not given, image footprint otherwise
         :return extent : [lon_min,lat_min,lon max,lat max] (2D np.array)
@@ -94,7 +94,7 @@ class Localization:
         on_ground_pos = self.direct(footprint[:, 0], footprint[:, 1], 0, using_geotransform=using_geotransform)
         [lon_min, lat_min, __] = np.min(on_ground_pos, 0)
         [lon_max, lat_max, __] = np.max(on_ground_pos, 0)
-        return np.array([lon_min, lat_min, lon_max, lat_max])
+        return np.array([lat_min - margin, lon_min - margin, lat_max + margin, lon_max + margin])
 
     def inverse(self, lon, lat, h, using_geotransform=False):
         """

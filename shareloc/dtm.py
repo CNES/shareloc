@@ -37,13 +37,18 @@ class DTM:
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename, geoid_filename=None):
+    def __init__(self, dtm_filename, geoid_filename=None, roi=None, roi_is_in_physical_space=True):
         """
         Constructor
         :param dtm_filename: dtm filename
         :type dtm_filename: string
         :param geoid_filename: geoid filename
         :type geoid_filename: string
+        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
+             roi_is_in_physical_space activated
+        :type roi  : list
+        :param roi_is_in_physical_space  : roi value in physical space
+        :type roi_is_in_physical_space  : bool
         """
         self.dtm_file = dtm_filename
         self.alt_data = None
@@ -64,13 +69,15 @@ class DTM:
         self.tol_z = 0.0001
 
         # lecture mnt
-        self.dtm_image = DTMImage(self.dtm_file, read_data=True)
+        self.dtm_image = DTMImage(
+            self.dtm_file, read_data=True, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space
+        )
         self.alt_data = self.dtm_image.data[0, :, :].astype("float64")
         if self.dtm_image.datum == "geoid":
             if geoid_filename is not None:
                 logging.info("remove geoid height")
                 self.grid_row, self.grid_col = np.mgrid[
-                    0 : self.dtm_image.nb_columns : 1, 0 : self.dtm_image.nb_rows : 1
+                    0 : self.dtm_image.nb_rows : 1, 0 : self.dtm_image.nb_columns : 1
                 ]
                 lat, lon = self.dtm_image.transform_index_to_physical_point(self.grid_row, self.grid_col)
                 positions = np.vstack([lon.flatten(), lat.flatten()]).transpose()

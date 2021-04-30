@@ -34,10 +34,27 @@ from shareloc.image.image import Image
 class DTMImage(Image):
     """ class DTM  Image to handle DTM image data """
 
-    def __init__(self, image_path, read_data=False, datum=None):
+    def __init__(self, image_path, read_data=False, datum=None, roi=None, roi_is_in_physical_space=False):
+        """
+        constructor
+        :param image_path : image path
+        :type image_path  : string or None
+        :param read_data  : read image data
+        :type read_data  : bool
+        :param datum  :  datum "geoid" or "ellipsoid", datum is auto identified from babel header if image format is BSQ
+           otherwise if None datum is set to "geoid"
+        :type datum  : str
+        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
+             roi_is_in_physical_space activated
+        :type roi  : list
+        :param roi_is_in_physical_space  : roi value in physical space
+        :type roi_is_in_physical_space  : bool
+        """
         if image_path.split(".")[-1] == "c1":
             logging.debug("bsq babel image")
             if image_path is not None:
+                if roi is not None:
+                    logging.warning("roi is not suported for bsq format")
                 # Image path
                 self.image_path = image_path
 
@@ -80,7 +97,9 @@ class DTMImage(Image):
                     # Data of shape (nb band, nb row, nb col)
                     self.data[0, :, :] = read_bsq_grid(self.image_path, self.nb_rows, self.nb_columns, self.data_type)
         else:
-            super().__init__(image_path, read_data=read_data)
+            super().__init__(
+                image_path, read_data=read_data, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space
+            )
             if datum is None:
                 self.datum = "geoid"
             else:

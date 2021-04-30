@@ -40,7 +40,7 @@ class Image:
         :type image_path  : string or None
         :param read_data  : read image data
         :type read_data  : bool
-        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
+        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [ymin,xmin,ymax,xmax] if
              roi_is_in_physical_space activated
         :type roi  : list
         :param roi_is_in_physical_space  : roi value in physical space
@@ -62,8 +62,13 @@ class Image:
                     col_off = (roi[1] - transform[2]) / transform[0]
                     row_max = (roi[2] - transform[5]) / transform[4]
                     col_max = (roi[3] - transform[2]) / transform[0]
-                    width = col_max - col_off
-                    height = row_max - row_off
+                    # in case of negative pixel size y
+                    if row_off > row_max:
+                        row_max, row_off = row_off, row_max
+                    row_off = np.floor(row_off)
+                    col_off = np.floor(col_off)
+                    width = int(np.ceil(col_max - col_off))
+                    height = int(np.ceil(row_max - row_off))
                     logging.info("roi in image , offset : %s %s size %s %s", col_off, row_off, width, height)
                 else:
                     row_off = roi[0]
@@ -72,6 +77,8 @@ class Image:
                     height = roi[2] - roi[0]
                 roi_window = rasterio.windows.Window(col_off, row_off, width, height)
                 self.transform = self.dataset.window_transform(roi_window)
+                self.nb_rows = height
+                self.nb_columns = width
             else:
                 # Geo-transform of type Affine with convention :
                 # | pixel size col,   row rotation, origin col |

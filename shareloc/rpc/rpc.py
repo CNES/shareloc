@@ -867,8 +867,12 @@ class RPC:
                 logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
             los = self.los_extrema(row_i, col_i, min_dtm, max_dtm)
             (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
-            (__, __, position) = dtm.intersection(los, position_cube, alti)
-            direct_dtm[i, :] = position
+            if position_cube is not None:
+                (__, __, position) = dtm.intersection(los, position_cube, alti)
+                direct_dtm[i, :] = position
+            else:
+                logging.warning("los doesn" "t intersect dtm cube")
+                direct_dtm[i, :] = None
         return direct_dtm
 
     def inverse_loc(self, lon, lat, alt):

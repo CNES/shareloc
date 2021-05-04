@@ -29,6 +29,7 @@ import logging
 import rasterio as rio
 import numpy as np
 from numba import njit, prange, config
+from shareloc.euclidium_utils import identify_gdlib_code
 
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
@@ -156,6 +157,10 @@ def read_eucl_file(eucl_file):
         txt = fid.readlines()
 
     for line in txt:
+        if line.startswith(">>\tREP_TERRAIN"):
+            epsg, datum = identify_gdlib_code(line.split()[-1])
+            parsed_file["epsg"] = epsg
+            parsed_file["datum"] = datum
         if line.startswith(">>\tTYPE_OBJET"):
             if line.split()[-1].endswith("Inverse"):
                 parsed_file["type_fic"] = "I"
@@ -252,10 +257,17 @@ class RPC:
     # gitlab issue #61
     # pylint: disable=too-many-instance-attributes
     def __init__(self, rpc_params):
+        self.epsg = None
+        self.datum = None
         for key, value in rpc_params.items():
             setattr(self, key, value)
 
         self.type = "rpc"
+        if self.epsg is None:
+            self.epsg = 4326
+        if self.datum is None:
+            self.datum = "ellipsoid"
+
         self.lim_extrapol = 1.0001
         # chaque mononome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
         ordre_monomes_lai = [
@@ -633,7 +645,8 @@ class RPC:
 
         # lecture fichier euclidium
         primary_coeffs = read_eucl_file(primary_euclidium_coeff)
-
+        rpc_params["epsg"] = primary_coeffs["epsg"]
+        rpc_params["datum"] = primary_coeffs["datum"]
         # info log
         logging.debug("primary euclidium file is of %s type", primary_coeffs["type_fic"])
 

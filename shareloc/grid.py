@@ -28,6 +28,7 @@ import logging
 import numpy as np
 from shareloc.image.readwrite import read_bsq_hd
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
+from shareloc.euclidium_utils import identify_gdlib_code
 
 
 class Grid:
@@ -60,6 +61,7 @@ class Grid:
         self.rowmax = None
         self.colmax = None
         self.load()
+        self.epsg, self.datum = identify_gdlib_code(self.repter)
         self.type = "multi H grid"
 
     def load(self):
@@ -89,7 +91,6 @@ class Grid:
 
             for var in dico_hd:
                 setattr(self, var, dico_hd[var])
-
             # """renvoie une structure 3D [i_alt][l,c]"""
             gld_lon = np.zeros((self.nbalt, self.nbrow, self.nbcol))
             gld_lat = np.zeros((self.nbalt, self.nbrow, self.nbcol))

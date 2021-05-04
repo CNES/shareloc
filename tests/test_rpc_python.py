@@ -185,6 +185,8 @@ def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
+    assert fctrat.epsg == 4326
+    assert fctrat.datum == "ellipsoid"
     assert col == pytest.approx(col_vt, abs=1e-2)
     assert row == pytest.approx(row_vt, abs=1e-2)
 

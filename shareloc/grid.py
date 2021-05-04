@@ -29,6 +29,7 @@ import numpy as np
 from shareloc.image.readwrite import read_bsq_hd
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 from shareloc.euclidium_utils import identify_gdlib_code
+from shareloc.proj_utils import coordinates_conversion
 
 
 class Grid:
@@ -169,6 +170,28 @@ class Grid:
 
         return np.squeeze(position)
 
+    def compute_los(self, row, col, epsg):
+        """
+        compute los
+        :param row :  line sensor position
+        :type row : float
+        :param col :  column sensor position
+        :type col : float
+        :param  epsg  : epsg code
+        :type epsg  : int
+        :return los
+        :rtype numpy.array
+        """
+        los = np.zeros((3, self.nbalt))
+        loslonlat = self.interpolate_grid_in_plani(row, col)
+        los[0, :] = loslonlat[0]
+        los[1, :] = loslonlat[1]
+        los[2, :] = self.alts_down
+        los = los.T
+        if epsg != self.epsg:
+            los = coordinates_conversion(los, self.epsg, epsg)
+        return los
+
     def direct_loc_dtm(self, row, col, dtm):
         """
         direct localization on dtm
@@ -181,12 +204,7 @@ class Grid:
         :return ground position (lon,lat,h)
         :rtype numpy.array
         """
-        los = np.zeros((3, self.nbalt))
-        loslonlat = self.interpolate_grid_in_plani(row, col)
-        los[0, :] = loslonlat[0]
-        los[1, :] = loslonlat[1]
-        los[2, :] = self.alts_down
-        los = los.T
+        los = self.compute_los(row, col, dtm.epsg)
         (__, __, point_b, alti) = dtm.intersect_dtm_cube(los)
         (__, __, point_dtm) = dtm.intersection(los, point_b, alti)
         return point_dtm
@@ -286,13 +304,9 @@ class Grid:
             for j in range(nbcol):
                 col = col0 + stepcol * j
                 row = row0 + steprow * i
-                loslonlat = self.interpolate_grid_in_plani(row, col)
-                los[0, :] = loslonlat[0]
-                los[1, :] = loslonlat[1]
-                los[2, :] = self.alts_down
-                los_t = los.T
-                (__, __, point_b, alti) = dtm.intersect_dtm_cube(los_t)
-                (__, __, point_r) = dtm.intersection(los_t, point_b, alti)
+                los = self.compute_los(row, col, dtm.epsg)
+                (__, __, point_b, alti) = dtm.intersect_dtm_cube(los)
+                (__, __, point_r) = dtm.intersection(los, point_b, alti)
                 glddtm[:, i, j] = point_r
         return glddtm
 

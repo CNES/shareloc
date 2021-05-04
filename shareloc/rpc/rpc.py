@@ -30,6 +30,7 @@ import rasterio as rio
 import numpy as np
 from numba import njit, prange, config
 from shareloc.euclidium_utils import identify_gdlib_code
+from shareloc.proj_utils import coordinates_conversion
 
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
@@ -872,7 +873,7 @@ class RPC:
                 logging.debug("minimum dtm value is outside RPC validity domain, extrapolation will be done")
             if max_dtm > self.offset_alt + self.scale_alt:
                 logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
-            los = self.los_extrema(row_i, col_i, min_dtm, max_dtm)
+            los = self.los_extrema(row_i, col_i, min_dtm, max_dtm, epsg=dtm.epsg)
             (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
             (__, __, position) = dtm.intersection(los, position_cube, alti)
             direct_dtm[i, :] = position
@@ -1064,7 +1065,7 @@ class RPC:
         """
         return [self.offset_alt - self.scale_alt / 2.0, self.offset_alt + self.scale_alt / 2.0]
 
-    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False):
+    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False, epsg=None):
         """
         compute los extrema
         :param row  :  line sensor position
@@ -1075,6 +1076,8 @@ class RPC:
         :type alt_min  : float
         :param alt_max : los alt max
         :type alt_max : float
+        :param epsg : epsg code of the dtm
+        :type epsg  : int
         :return los extrema
         :rtype numpy.array (2x3)
         """
@@ -1097,6 +1100,8 @@ class RPC:
             delta_alt = diff[2]
             los_edges[0, :] = los_edges[1, :] + diff * (alt_max - los_edges[1, 2]) / delta_alt
             los_edges[1, :] = los_edges[1, :] + diff * (alt_min - los_edges[1, 2]) / delta_alt
+        if epsg is not None and epsg != self.epsg:
+            los_edges = coordinates_conversion(los_edges, self.epsg, epsg)
 
         return los_edges
 

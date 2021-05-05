@@ -853,7 +853,7 @@ class RPC:
         :type col : float
         :param dtm : dtm model
         :type dtm  : shareloc.dtm
-        :return ground position (lon,lat,h)
+        :return ground position (lon,lat,h) in dtm coordinates system
         :rtype numpy.array
         """
         if isinstance(col, (list, np.ndarray)):
@@ -877,8 +877,6 @@ class RPC:
             (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
             (__, __, position) = dtm.intersection(los, position_cube, alti)
             direct_dtm[i, :] = position
-            if self.epsg != dtm.epsg:
-                direct_dtm = coordinates_conversion(direct_dtm, dtm.epsg, self.epsg)
         return direct_dtm
 
     def inverse_loc(self, lon, lat, alt):
@@ -898,9 +896,6 @@ class RPC:
             if not isinstance(lon, (list, np.ndarray)):
                 lon = np.array([lon])
                 lat = np.array([lat])
-            if not isinstance(alt, (list, np.ndarray)):
-                alt = np.array([alt])
-
             if not isinstance(alt, (list, np.ndarray)):
                 alt = np.array([alt])
 

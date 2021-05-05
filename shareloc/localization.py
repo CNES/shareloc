@@ -74,12 +74,15 @@ class Localization:
 
         if h is not None:
             coords = self.model.direct_loc_h(row, col, h)
+            epsg = self.model.epsg
         elif self.dtm is not None:
             coords = self.model.direct_loc_dtm(row, col, self.dtm)
+            epsg = self.dtm.epsg
         else:
             coords = self.model.direct_loc_h(row, col, self.default_elevation)
-        if self.epsg is not None and self.epsg != self.model.epsg:
-            return coordinates_conversion(coords, self.model.epsg, self.epsg)
+            epsg = self.model.epsg
+        if self.epsg is not None and self.epsg != epsg:
+            return coordinates_conversion(coords, epsg, self.epsg)
         return coords
 
     def inverse(self, lon, lat, h=None, using_geotransform=False):

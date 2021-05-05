@@ -207,6 +207,8 @@ class Grid:
         los = self.compute_los(row, col, dtm.epsg)
         (__, __, point_b, alti) = dtm.intersect_dtm_cube(los)
         (__, __, point_dtm) = dtm.intersection(los, point_b, alti)
+        if self.epsg != dtm.epsg:
+            point_dtm = coordinates_conversion(point_dtm, dtm.epsg, self.epsg)
         return point_dtm
 
     def los_extrema(self, row, col, alt_min, alt_max):
@@ -307,6 +309,9 @@ class Grid:
                 los = self.compute_los(row, col, dtm.epsg)
                 (__, __, point_b, alti) = dtm.intersect_dtm_cube(los)
                 (__, __, point_r) = dtm.intersection(los, point_b, alti)
+                # conversion of all tab
+                if self.epsg != dtm.epsg:
+                    point_r = coordinates_conversion(point_r, dtm.epsg, self.epsg)
                 glddtm[:, i, j] = point_r
         return glddtm
 

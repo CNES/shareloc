@@ -877,6 +877,8 @@ class RPC:
             (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
             (__, __, position) = dtm.intersection(los, position_cube, alti)
             direct_dtm[i, :] = position
+            if self.epsg != dtm.epsg:
+                direct_dtm = coordinates_conversion(direct_dtm, dtm.epsg, self.epsg)
         return direct_dtm
 
     def inverse_loc(self, lon, lat, alt):

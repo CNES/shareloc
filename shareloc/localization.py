@@ -82,7 +82,7 @@ class Localization:
             return coordinates_conversion(coords, self.model.epsg, self.epsg)
         return coords
 
-    def inverse(self, lon, lat, h, using_geotransform=False):
+    def inverse(self, lon, lat, h=None, using_geotransform=False):
         """
         inverse localization
         :param lat :  latitude (or y)
@@ -96,10 +96,19 @@ class Localization:
 
         if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
             self.model.estimate_inverse_loc_predictor()
+        if h is None:
+            h = self.default_elevation
 
         if self.epsg is not None and self.model.epsg != self.epsg:
-            [lon, lat, h] = coordinates_conversion([lon, lat, h], self.epsg, self.model.epsg)
-
+            if isinstance(lon, np.ndarray) and isinstance(lat, np.ndarray):
+                coords = np.full([lon.shape[0], 3], fill_value=0.0)
+                coords[:, 0] = lon
+                coords[:, 1] = lat
+                coords[:, 2] = h
+            converted_coords = coordinates_conversion(coords, self.epsg, self.model.epsg)
+            lon = converted_coords[:, 0]
+            lat = converted_coords[:, 1]
+            h = converted_coords[:, 2]
         row, col, __ = self.model.inverse_loc(lon, lat, h)
 
         if using_geotransform and self.image is not None:

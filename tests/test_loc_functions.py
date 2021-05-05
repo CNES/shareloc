@@ -35,6 +35,7 @@ from shareloc.rpc.rpc import RPC
 from shareloc.localization import Localization
 from shareloc.localization import coloc as coloc_rpc
 from shareloc.image.image import Image
+from shareloc.proj_utils import coordinates_conversion
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
@@ -493,3 +494,21 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     col_index = (col_inv - origin_right[1]) / pix_size_right[1] - 0.5
     assert row_coloc == row_index
     assert col_coloc == col_index
+
+
+@pytest.mark.parametrize("col,row", [(500.0, 200.0)])
+@pytest.mark.unit_tests
+def test_sensor_loc_utm(col, row):
+    """
+    Test direct localization using image geotransform
+    """
+    data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    geom_model = RPC.from_any(data_left + ".geom", topleftconvention=True)
+    epsg = 32631
+    loc_wgs = Localization(geom_model)
+    loc_utm = Localization(geom_model, epsg=epsg)
+    lonlath = loc_wgs.direct(np.array([row, row]), np.array([col, col]))
+    coord_utm = coordinates_conversion(lonlath, geom_model.epsg, epsg)
+    inv_row, inv_col, __ = loc_utm.inverse(coord_utm[:, 0], coord_utm[:, 1])
+    assert row == pytest.approx(inv_row[0], abs=1e-8)
+    assert col == pytest.approx(inv_col[0], abs=1e-8)

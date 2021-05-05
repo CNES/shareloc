@@ -24,7 +24,6 @@
 Image class to handle Image data.
 """
 
-import logging
 import rasterio
 import numpy as np
 from affine import Affine
@@ -74,8 +73,6 @@ class Image:
             if read_data:
                 # Data of shape (nb band, nb row, nb col)
                 self.data = self.dataset.read()
-        else:
-            logging.error("image path is set None")
 
     def set_metadata(self, nb_row, nb_col, nb_band, transform, datatype=np.float32):
         """

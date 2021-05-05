@@ -167,7 +167,7 @@ def test_sensor_loc_dir_dtm_geoid_utm(col, row, valid_coord):
     dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_resampled_UTM31", "N44E005_UTM.tif")
     geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file)
-    loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
+    loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left, epsg=4326)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
     assert valid_coord[0] == pytest.approx(lonlatalt[0, 0], abs=3.0 * 1e-5)
     assert valid_coord[1] == pytest.approx(lonlatalt[0, 1], abs=2.0 * 1e-4)

@@ -512,3 +512,27 @@ def test_sensor_loc_utm(col, row):
     inv_row, inv_col, __ = loc_utm.inverse(coord_utm[:, 0], coord_utm[:, 1])
     assert row == pytest.approx(inv_row[0], abs=1e-8)
     assert col == pytest.approx(inv_col[0], abs=1e-8)
+
+
+@pytest.mark.unit_tests
+def test_sensor_loc_dir_dtm_multi_points():
+    """
+    Test direct localization on DTM
+    """
+
+    left_im = Image(os.path.join(os.environ["TESTPATH"], "rectification", "left_image.tif"))
+
+    geom_model = RPC.from_any(
+        os.path.join(os.environ["TESTPATH"], "rectification", "left_image.geom"), topleftconvention=True
+    )
+
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_ventoux = DTM(dtm_file, geoid_file)
+
+    loc = Localization(geom_model, image=left_im, elevation=dtm_ventoux)
+
+    row = np.array([100.0, 200.0])
+    col = np.array([10.0, 20.5])
+    points = loc.direct(row, col)
+    print(points)

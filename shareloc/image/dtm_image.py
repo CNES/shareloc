@@ -29,6 +29,7 @@ import numpy as np
 from affine import Affine
 from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid
 from shareloc.image.image import Image
+from shareloc.euclidium_utils import identify_gdlib_code
 
 
 class DTMImage(Image):
@@ -65,15 +66,7 @@ class DTMImage(Image):
                     self.pixel_size_col, 0.0, self.origin_col, 0.0, self.pixel_size_row, self.origin_row
                 )
 
-                if "Z-M" in babel_dict["gdlib_code"].split(":")[-1]:
-                    self.datum = "ellipsoid"
-                elif "H-M" in babel_dict["gdlib_code"].split(":")[-1]:
-                    self.datum = "geoid"
-                else:
-                    logging.warning(
-                        "unknown datum {} ellipsoid " "will be used", babel_dict["gdlib_code"].split(":")[-1]
-                    )
-                    self.datum = "ellipsoid"
+                self.epsg, self.datum = identify_gdlib_code(babel_dict["gdlib_code"], default_datum="geoid")
 
                 self.data = np.zeros((1, self.nb_rows, self.nb_columns), dtype=self.data_type)
                 if read_data:

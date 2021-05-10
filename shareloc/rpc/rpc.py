@@ -29,6 +29,8 @@ import logging
 import rasterio as rio
 import numpy as np
 from numba import njit, prange, config
+from shareloc.euclidium_utils import identify_gdlib_code
+from shareloc.proj_utils import coordinates_conversion
 
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
@@ -156,6 +158,10 @@ def read_eucl_file(eucl_file):
         txt = fid.readlines()
 
     for line in txt:
+        if line.startswith(">>\tREP_TERRAIN"):
+            epsg, datum = identify_gdlib_code(line.split()[-1])
+            parsed_file["epsg"] = epsg
+            parsed_file["datum"] = datum
         if line.startswith(">>\tTYPE_OBJET"):
             if line.split()[-1].endswith("Inverse"):
                 parsed_file["type_fic"] = "I"
@@ -252,10 +258,17 @@ class RPC:
     # gitlab issue #61
     # pylint: disable=too-many-instance-attributes
     def __init__(self, rpc_params):
+        self.epsg = None
+        self.datum = None
         for key, value in rpc_params.items():
             setattr(self, key, value)
 
         self.type = "rpc"
+        if self.epsg is None:
+            self.epsg = 4326
+        if self.datum is None:
+            self.datum = "ellipsoid"
+
         self.lim_extrapol = 1.0001
         # chaque mononome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
         ordre_monomes_lai = [
@@ -633,7 +646,8 @@ class RPC:
 
         # lecture fichier euclidium
         primary_coeffs = read_eucl_file(primary_euclidium_coeff)
-
+        rpc_params["epsg"] = primary_coeffs["epsg"]
+        rpc_params["datum"] = primary_coeffs["datum"]
         # info log
         logging.debug("primary euclidium file is of %s type", primary_coeffs["type_fic"])
 
@@ -839,7 +853,7 @@ class RPC:
         :type col : float
         :param dtm : dtm model
         :type dtm  : shareloc.dtm
-        :return ground position (lon,lat,h)
+        :return ground position (lon,lat,h) in dtm coordinates system
         :rtype numpy.array
         """
         if isinstance(col, (list, np.ndarray)):
@@ -850,18 +864,17 @@ class RPC:
             col = np.array([col])
         direct_dtm = np.zeros((points_nb, 3))
 
+        # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
+        (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
+        if min_dtm < self.offset_alt - self.scale_alt:
+            logging.debug("minimum dtm value is outside RPC validity domain, extrapolation will be done")
+        if max_dtm > self.offset_alt + self.scale_alt:
+            logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
+        los = self.los_extrema(row, col, min_dtm, max_dtm, epsg=dtm.epsg)
         for i in range(points_nb):
-            row_i = row[i]
-            col_i = col[i]
-            # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
-            (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
-            if min_dtm < self.offset_alt - self.scale_alt:
-                logging.debug("minimum dtm value is outside RPC validity domain, extrapolation will be done")
-            if max_dtm > self.offset_alt + self.scale_alt:
-                logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
-            los = self.los_extrema(row_i, col_i, min_dtm, max_dtm)
-            (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
-            (__, __, position) = dtm.intersection(los, position_cube, alti)
+            los_i = los[2 * i : 2 * i + 2, :]
+            (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los_i)
+            (__, __, position) = dtm.intersection(los_i, position_cube, alti)
             direct_dtm[i, :] = position
         return direct_dtm
 
@@ -882,9 +895,6 @@ class RPC:
             if not isinstance(lon, (list, np.ndarray)):
                 lon = np.array([lon])
                 lat = np.array([lat])
-            if not isinstance(alt, (list, np.ndarray)):
-                alt = np.array([alt])
-
             if not isinstance(alt, (list, np.ndarray)):
                 alt = np.array([alt])
 
@@ -1051,7 +1061,7 @@ class RPC:
         """
         return [self.offset_alt - self.scale_alt / 2.0, self.offset_alt + self.scale_alt / 2.0]
 
-    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False):
+    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False, epsg=None):
         """
         compute los extrema
         :param row  :  line sensor position
@@ -1062,6 +1072,8 @@ class RPC:
         :type alt_min  : float
         :param alt_max : los alt max
         :type alt_max : float
+        :param epsg : epsg code of the dtm
+        :type epsg  : int
         :return los extrema
         :rtype numpy.array (2x3)
         """
@@ -1075,15 +1087,35 @@ class RPC:
             extrapolate = True
             [los_alt_min, los_alt_max] = self.get_alt_min_max()
 
-        los_edges = np.zeros([2, 3])
-        los_edges = self.direct_loc_h(
-            np.array([row, row]), np.array([col, col]), np.array([los_alt_max, los_alt_min]), fill_nan
-        )
+        #
+        if isinstance(row, (np.ndarray)):
+            los_nb = row.shape[0]
+            row_array = np.full([los_nb * 2], fill_value=0.0)
+            col_array = np.full([los_nb * 2], fill_value=0.0)
+            alt_array = np.full([los_nb * 2], fill_value=0.0)
+            row_array[0::2] = row
+            row_array[1::2] = row
+            col_array[0::2] = col
+            col_array[1::2] = col
+            alt_array[0::2] = los_alt_max
+            alt_array[1::2] = los_alt_min
+        else:
+            los_nb = 1
+            row_array = np.array([row, row])
+            col_array = np.array([col, col])
+            alt_array = np.array([los_alt_max, los_alt_min])
+        los_edges = self.direct_loc_h(row_array, col_array, alt_array, fill_nan)
         if extrapolate:
-            diff = los_edges[0, :] - los_edges[1, :]
-            delta_alt = diff[2]
-            los_edges[0, :] = los_edges[1, :] + diff * (alt_max - los_edges[1, 2]) / delta_alt
-            los_edges[1, :] = los_edges[1, :] + diff * (alt_min - los_edges[1, 2]) / delta_alt
+            diff = los_edges[0::2, :] - los_edges[1::2, :]
+            delta_alt = diff[:, 2]
+            coeff_alt_max = (alt_max - los_edges[1::2, 2]) / delta_alt
+            coeff_alt_max = np.tile(coeff_alt_max[:, np.newaxis], (1, 3))
+            coeff_alt_min = (alt_min - los_edges[1::2, 2]) / delta_alt
+            coeff_alt_min = np.tile(coeff_alt_min[:, np.newaxis], (1, 3))
+            los_edges[0::2, :] = los_edges[1::2, :] + diff * coeff_alt_max
+            los_edges[1::2, :] = los_edges[1::2, :] + diff * coeff_alt_min
+        if epsg is not None and epsg != self.epsg:
+            los_edges = coordinates_conversion(los_edges, self.epsg, epsg)
 
         return los_edges
 

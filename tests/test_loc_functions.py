@@ -133,16 +133,16 @@ def test_extent():
     ___, gri = prepare_loc()
     loc = Localization(gri, elevation=None)
 
-    np.testing.assert_allclose(loc.extent(), [57.216475, 21.958719, 57.529534, 22.17099], atol=1e-8)
+    np.testing.assert_allclose(loc.extent(), [21.958719, 57.216475, 22.17099, 57.529534], atol=1e-8)
 
     data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
     geom_model = RPC.from_any(data_left + ".geom", topleftconvention=True)
     image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
     image = Image(image_filename)
     loc_rpc_image = Localization(geom_model, elevation=None, image=image)
-    np.testing.assert_allclose(loc_rpc_image.extent(), [5.19307549, 44.20518231, 5.19629785, 44.20739814], atol=1e-8)
+    np.testing.assert_allclose(loc_rpc_image.extent(), [44.20518231, 5.19307549, 44.20739814, 5.19629785], atol=1e-8)
     loc_rpc = Localization(geom_model)
-    np.testing.assert_allclose(loc_rpc.extent(), [5.155808, 44.041678, 5.412923, 44.229592], atol=1e-8)
+    np.testing.assert_allclose(loc_rpc.extent(), [44.041678, 5.155808, 44.229592, 5.412923], atol=1e-8)
 
 
 # LOC 3D EUCLIDIUM 5.17387725120693 44.2257086206228 365.643429880962

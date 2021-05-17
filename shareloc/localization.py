@@ -105,9 +105,12 @@ class Localization:
         if self.epsg is not None and self.model.epsg != self.epsg:
             if isinstance(lon, np.ndarray) and isinstance(lat, np.ndarray):
                 coords = np.full([lon.shape[0], 3], fill_value=0.0)
-                coords[:, 0] = lon
-                coords[:, 1] = lat
-                coords[:, 2] = h
+            else:
+                coords = np.full([1, 3], fill_value=0.0)
+            coords[:, 0] = lon
+            coords[:, 1] = lat
+            coords[:, 2] = h
+
             converted_coords = coordinates_conversion(coords, self.epsg, self.model.epsg)
             lon = converted_coords[:, 0]
             lat = converted_coords[:, 1]

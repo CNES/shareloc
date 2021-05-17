@@ -50,6 +50,8 @@ def coordinates_conversion(coords, epsg_in, epsg_out):
         srs_in.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
         srs_out.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
     conversion = osr.CoordinateTransformation(srs_in, srs_out)
+    if coords.size / 3 == 1:
+        coords = coords[np.newaxis, :]
     coords = conversion.TransformPoints(coords)
     coords = np.array(coords)
     return coords

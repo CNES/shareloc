@@ -513,6 +513,10 @@ def test_sensor_loc_utm(col, row):
     assert row == pytest.approx(inv_row[0], abs=1e-8)
     assert col == pytest.approx(inv_col[0], abs=1e-8)
 
+    xyh = loc_utm.direct(np.array([row]), np.array([col]), np.array([10.0]))
+    assert xyh[0][0] == pytest.approx(6.72832643e05, abs=1e-3)
+    assert xyh[0][1] == pytest.approx(4.899552978865e06, abs=1e-3)
+
 
 @pytest.mark.unit_tests
 def test_sensor_loc_dir_dtm_multi_points():

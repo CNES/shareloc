@@ -87,7 +87,10 @@ class DTMImage(Image):
             logging.info("DTM contains %d nodata values ", np.sum(self.mask == 0))
         self.stats = dict()
         if read_data:
-            valid_data = self.data[0, self.mask[0, :, :] == 255]
+            if self.mask is not None:
+                valid_data = self.data[0, self.mask[0, :, :] == 255]
+            else:
+                valid_data = self.data
             self.stats["min"] = valid_data.min()
             self.stats["max"] = valid_data.max()
             self.stats["mean"] = valid_data.mean()

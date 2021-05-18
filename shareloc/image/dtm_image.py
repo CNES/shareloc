@@ -31,11 +31,11 @@ from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid
 from shareloc.image.image import Image
 from shareloc.euclidium_utils import identify_gdlib_code
 
-
+# pylint: disable=too-many-instance-attributes
 class DTMImage(Image):
     """ class DTM  Image to handle DTM image data """
 
-    def __init__(self, image_path, read_data=False, datum=None):
+    def __init__(self, image_path, read_data=False, datum=None, fill_nodata=True):
         if image_path.split(".")[-1] == "c1":
             logging.debug("bsq babel image")
             if image_path is not None:
@@ -69,6 +69,9 @@ class DTMImage(Image):
                 self.epsg, self.datum = identify_gdlib_code(babel_dict["gdlib_code"], default_datum="geoid")
 
                 self.data = np.zeros((1, self.nb_rows, self.nb_columns), dtype=self.data_type)
+
+                self.nodata = None
+
                 if read_data:
                     # Data of shape (nb band, nb row, nb col)
                     self.data[0, :, :] = read_bsq_grid(self.image_path, self.nb_rows, self.nb_columns, self.data_type)
@@ -78,3 +81,30 @@ class DTMImage(Image):
                 self.datum = "geoid"
             else:
                 self.datum = datum
+        self.mask = None
+        if self.nodata is not None:
+            self.mask = self.dataset.read_masks()
+            logging.info("DTM contains %d nodata values ", np.sum(self.mask == 0))
+        self.stats = dict()
+        if read_data:
+            valid_data = self.data[0, self.mask[0, :, :] == 255]
+            self.stats["min"] = valid_data.min()
+            self.stats["max"] = valid_data.max()
+            self.stats["mean"] = valid_data.mean()
+            self.stats["median"] = np.median(valid_data)
+        if fill_nodata:
+            self.fill_nodata()
+
+    def fill_nodata(self, strategy="mean"):
+        """
+        fill nodata in DTM image
+
+        :param strategy: fill strategy (mean)
+        :type strategy: str
+        """
+        if strategy != "mean":
+            logging.info("only mean strategy is available")
+        if self.mask is not None:
+            self.data[0, self.mask[0, :, :] == 0] = self.stats["mean"]
+        else:
+            logging.debug("no nodata mask has been defined")

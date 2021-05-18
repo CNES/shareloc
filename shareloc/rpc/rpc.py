@@ -874,7 +874,10 @@ class RPC:
         for i in range(points_nb):
             los_i = los[2 * i : 2 * i + 2, :]
             (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los_i)
-            (__, __, position) = dtm.intersection(los_i, position_cube, alti)
+            if position_cube is not None:
+                (__, __, position) = dtm.intersection(los_i, position_cube, alti)
+            else:
+                position = np.full(3, fill_value=np.nan)
             direct_dtm[i, :] = position
         return direct_dtm
 

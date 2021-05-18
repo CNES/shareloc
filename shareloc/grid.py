@@ -205,8 +205,11 @@ class Grid:
         :rtype numpy.array
         """
         los = self.compute_los(row, col, dtm.epsg)
-        (__, __, point_b, alti) = dtm.intersect_dtm_cube(los)
-        (__, __, point_dtm) = dtm.intersection(los, point_b, alti)
+        (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
+        if position_cube is not None:
+            (__, __, point_dtm) = dtm.intersection(los, position_cube, alti)
+        else:
+            point_dtm = np.full(3, fill_value=np.nan)
         # if self.epsg != dtm.epsg:
         #    point_dtm = coordinates_conversion(point_dtm, dtm.epsg, self.epsg)
         return point_dtm
@@ -307,12 +310,15 @@ class Grid:
                 col = col0 + stepcol * j
                 row = row0 + steprow * i
                 los = self.compute_los(row, col, dtm.epsg)
-                (__, __, point_b, alti) = dtm.intersect_dtm_cube(los)
-                (__, __, point_r) = dtm.intersection(los, point_b, alti)
+                (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
+                if position_cube is not None:
+                    (__, __, point_dtm) = dtm.intersection(los, position_cube, alti)
+                else:
+                    point_dtm = np.full(3, fill_value=np.nan)
                 # conversion of all tab
                 # if self.epsg != dtm.epsg:
                 #    point_r = coordinates_conversion(point_r, dtm.epsg, self.epsg)
-                glddtm[:, i, j] = point_r
+                glddtm[:, i, j] = point_dtm
         return glddtm
 
     def return_grid_index(self, alt):

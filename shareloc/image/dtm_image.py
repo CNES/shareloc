@@ -27,15 +27,28 @@ Image class to handle Image data.
 import logging
 import numpy as np
 from affine import Affine
+from rasterio.fill import fillnodata
 from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid
 from shareloc.image.image import Image
 from shareloc.euclidium_utils import identify_gdlib_code
+
 
 # pylint: disable=too-many-instance-attributes
 class DTMImage(Image):
     """ class DTM  Image to handle DTM image data """
 
-    def __init__(self, image_path, read_data=False, datum=None, fill_nodata=True):
+    def __init__(self, image_path, read_data=False, datum=None, fill_nodata="mean"):
+        """
+        constructor
+        :param image_path : image path
+        :type image_path  : string or None
+        :param read_data  : read image data
+        :type read_data  : bool
+        :param datum  : dtm datum (in geoid/ellipsoid) if None ellipsoid by default
+        :type datum  : str
+        :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
+        :type fill_nodata  : str
+        """
         if image_path.split(".")[-1] == "c1":
             logging.debug("bsq babel image")
             if image_path is not None:
@@ -95,19 +108,30 @@ class DTMImage(Image):
             self.stats["max"] = valid_data.max()
             self.stats["mean"] = valid_data.mean()
             self.stats["median"] = np.median(valid_data)
-        if fill_nodata:
-            self.fill_nodata()
+        if fill_nodata is not None:
+            self.fill_nodata(strategy=fill_nodata)
 
-    def fill_nodata(self, strategy="mean"):
+    def fill_nodata(self, strategy="mean", max_search_distance=100.0, smoothing_iterations=0):
         """
         fill nodata in DTM image
 
-        :param strategy: fill strategy (mean)
+        :param strategy: fill strategy (mean,rio_fillnodata)
         :type strategy: str
+
+
+        :param max_search_distance: fill max_search_distance
+        :type ma
+        x_search_distance: float
+        :param smoothing_iterations: smoothing_iterations
+        :type smoothing_iterations: int
+
         """
-        if strategy != "mean":
-            logging.info("only mean strategy is available")
         if self.mask is not None:
-            self.data[0, self.mask[0, :, :] == 0] = self.stats["mean"]
+            if strategy == "mean":
+                self.data[0, self.mask[0, :, :] == 0] = self.stats["mean"]
+            elif strategy == "rio_fillnodata":
+                self.data = fillnodata(self.data, self.mask[0, :, :], max_search_distance, smoothing_iterations)
+            else:
+                logging.warning("fill nodata strategy not available")
         else:
             logging.debug("no nodata mask has been defined")

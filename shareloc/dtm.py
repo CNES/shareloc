@@ -38,13 +38,15 @@ class DTM:
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename, geoid_filename=None):
+    def __init__(self, dtm_filename, geoid_filename=None, fill_nodata=None):
         """
         Constructor
         :param dtm_filename: dtm filename
         :type dtm_filename: string
         :param geoid_filename: geoid filename, if None datum is ellispoid
         :type geoid_filename: string
+        :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
+        :type fill_nodata : str
         """
         self.dtm_file = dtm_filename
         self.alt_data = None
@@ -68,7 +70,7 @@ class DTM:
         datum = "ellipsoid"
         if geoid_filename is not None:
             datum = "geoid"
-        self.dtm_image = DTMImage(self.dtm_file, read_data=True, datum=datum)
+        self.dtm_image = DTMImage(self.dtm_file, read_data=True, datum=datum, fill_nodata=fill_nodata)
         self.epsg = self.dtm_image.epsg
         self.alt_data = self.dtm_image.data[0, :, :].astype("float64")
         if self.dtm_image.datum == "geoid":

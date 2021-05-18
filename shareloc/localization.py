@@ -26,6 +26,7 @@ Localization class for localization functions.
 import logging
 import numbers
 import numpy as np
+from shareloc.proj_utils import coordinates_conversion
 
 
 class Localization:
@@ -33,7 +34,7 @@ class Localization:
     Underlying model can be both multi layer localization grids or RPCs models
     """
 
-    def __init__(self, model, elevation=None, image=None):
+    def __init__(self, model, elevation=None, image=None, epsg=None):
         """
         constructor
         :param model : geometric model
@@ -42,6 +43,8 @@ class Localization:
         :type elevation  : shareloc.dtm or float or np.ndarray
         :param image  : image class to handle geotransform
         :type image  : shareloc.image.image.Image
+        :param epsg  : coordinate system of world points, if None model coordiante system will be used
+        :type epsg  : int
         """
         self.use_rpc = model.type == "rpc"
         self.model = model
@@ -52,6 +55,7 @@ class Localization:
         else:
             self.dtm = elevation
         self.image = image
+        self.epsg = epsg
 
     def direct(self, row, col, h=None, using_geotransform=False):
         """
@@ -68,11 +72,19 @@ class Localization:
         """
         if using_geotransform and self.image is not None:
             row, col = self.image.transform_index_to_physical_point(row, col)
+
         if h is not None:
-            return self.model.direct_loc_h(row, col, h)
-        if self.dtm is not None:
-            return self.model.direct_loc_dtm(row, col, self.dtm)
-        return self.model.direct_loc_h(row, col, self.default_elevation)
+            coords = self.model.direct_loc_h(row, col, h)
+            epsg = self.model.epsg
+        elif self.dtm is not None:
+            coords = self.model.direct_loc_dtm(row, col, self.dtm)
+            epsg = self.dtm.epsg
+        else:
+            coords = self.model.direct_loc_h(row, col, self.default_elevation)
+            epsg = self.model.epsg
+        if self.epsg is not None and self.epsg != epsg:
+            return coordinates_conversion(coords, epsg, self.epsg)
+        return coords
 
     def extent(self, margin=0.0):
         """
@@ -96,11 +108,11 @@ class Localization:
         [lon_max, lat_max, __] = np.max(on_ground_pos, 0)
         return np.array([lat_min - margin, lon_min - margin, lat_max + margin, lon_max + margin])
 
-    def inverse(self, lon, lat, h, using_geotransform=False):
+    def inverse(self, lon, lat, h=None, using_geotransform=False):
         """
         inverse localization
-        :param lat :  latitude
-        :param lon : longitude
+        :param lat :  latitude (or y)
+        :param lon : longitude (or x)
         :param h : altitude
         :param using_geotransform: using_geotransform
         :type using_geotransform : boolean
@@ -110,6 +122,22 @@ class Localization:
 
         if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
             self.model.estimate_inverse_loc_predictor()
+        if h is None:
+            h = self.default_elevation
+
+        if self.epsg is not None and self.model.epsg != self.epsg:
+            if isinstance(lon, np.ndarray) and isinstance(lat, np.ndarray):
+                coords = np.full([lon.shape[0], 3], fill_value=0.0)
+            else:
+                coords = np.full([1, 3], fill_value=0.0)
+            coords[:, 0] = lon
+            coords[:, 1] = lat
+            coords[:, 2] = h
+
+            converted_coords = coordinates_conversion(coords, self.epsg, self.model.epsg)
+            lon = converted_coords[:, 0]
+            lat = converted_coords[:, 1]
+            h = converted_coords[:, 2]
         row, col, __ = self.model.inverse_loc(lon, lat, h)
 
         if using_geotransform and self.image is not None:

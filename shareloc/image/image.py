@@ -98,6 +98,11 @@ class Image:
             self.pixel_size_row = self.transform[4]
             self.pixel_size_col = self.transform[0]
 
+            if self.dataset.crs is not None:
+                self.epsg = self.dataset.crs.to_epsg()
+            else:
+                self.epsg = None
+
             self.data = None
             if read_data:
                 # Data of shape (nb band, nb row, nb col)

@@ -35,6 +35,7 @@ from shareloc.rpc.rpc import RPC
 from shareloc.localization import Localization
 from shareloc.localization import coloc as coloc_rpc
 from shareloc.image.image import Image
+from shareloc.proj_utils import coordinates_conversion
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
@@ -120,6 +121,8 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     loc = Localization(gri, elevation=None)
     lonlatalt = loc.direct(row, col, h)
 
+    assert gri.epsg == 4269
+    assert gri.datum == "geoid"
     assert valid_lon == pytest.approx(lonlatalt[0], abs=1e-12)
     assert valid_lat == pytest.approx(lonlatalt[1], abs=1e-12)
     assert valid_alt == pytest.approx(lonlatalt[2], abs=1e-8)
@@ -168,6 +171,29 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     assert valid_coord[2] == pytest.approx(lonlatalt[0, 2], abs=15.0)
 
 
+# LOC 3D EUCLIDIUM 5.17387725120693 44.2257086206228 365.643429880962
+# 5.17388499778903 44.2257233720898 376.864272617735
+@pytest.mark.parametrize("col,row,valid_coord", [(1999.5, 999.5, (5.17388499778903, 44.2257233720898, 376.86))])
+@pytest.mark.unit_tests
+def test_sensor_loc_dir_dtm_geoid_utm(col, row, valid_coord):
+    """
+    Test direct localization using image geotransform
+    """
+    data = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    geom_model_left = RPC.from_any(data + ".geom", topleftconvention=True)
+    image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image.tif")
+    image_left = Image(image_filename)
+
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_resampled_UTM31", "N44E005_UTM.tif")
+    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_ventoux = DTM(dtm_file, geoid_file)
+    loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left, epsg=4326)
+    lonlatalt = loc.direct(row, col, using_geotransform=False)
+    assert valid_coord[0] == pytest.approx(lonlatalt[0, 0], abs=3.0 * 1e-5)
+    assert valid_coord[1] == pytest.approx(lonlatalt[0, 1], abs=2.0 * 1e-4)
+    assert valid_coord[2] == pytest.approx(lonlatalt[0, 2], abs=15.0)
+
+
 @pytest.mark.parametrize("col,row,h", [(150.5, 100, 100.0)])
 @pytest.mark.unit_tests
 def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
@@ -176,6 +202,8 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     """
     id_scene = "P1BP--2018122638935449CP"
     ___, gri = prepare_loc("ellipsoide", id_scene)
+    assert gri.epsg == 4269
+    assert gri.datum == "ellipsoid"
     loc_grid = Localization(gri)
     # init des predicteurs
     lonlatalt = loc_grid.direct(row, col, h)
@@ -486,3 +514,49 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     col_index = (col_inv - origin_right[1]) / pix_size_right[1] - 0.5
     assert row_coloc == row_index
     assert col_coloc == col_index
+
+
+@pytest.mark.parametrize("col,row", [(500.0, 200.0)])
+@pytest.mark.unit_tests
+def test_sensor_loc_utm(col, row):
+    """
+    Test direct localization using image geotransform
+    """
+    data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    geom_model = RPC.from_any(data_left + ".geom", topleftconvention=True)
+    epsg = 32631
+    loc_wgs = Localization(geom_model)
+    loc_utm = Localization(geom_model, epsg=epsg)
+    lonlath = loc_wgs.direct(np.array([row, row]), np.array([col, col]))
+    coord_utm = coordinates_conversion(lonlath, geom_model.epsg, epsg)
+    inv_row, inv_col, __ = loc_utm.inverse(coord_utm[:, 0], coord_utm[:, 1])
+    assert row == pytest.approx(inv_row[0], abs=1e-8)
+    assert col == pytest.approx(inv_col[0], abs=1e-8)
+
+    xyh = loc_utm.direct(np.array([row]), np.array([col]), np.array([10.0]))
+    assert xyh[0][0] == pytest.approx(6.72832643e05, abs=1e-3)
+    assert xyh[0][1] == pytest.approx(4.899552978865e06, abs=1e-3)
+
+
+@pytest.mark.unit_tests
+def test_sensor_loc_dir_dtm_multi_points():
+    """
+    Test direct localization on DTM
+    """
+
+    left_im = Image(os.path.join(os.environ["TESTPATH"], "rectification", "left_image.tif"))
+
+    geom_model = RPC.from_any(
+        os.path.join(os.environ["TESTPATH"], "rectification", "left_image.geom"), topleftconvention=True
+    )
+
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_ventoux = DTM(dtm_file, geoid_file)
+
+    loc = Localization(geom_model, image=left_im, elevation=dtm_ventoux)
+
+    row = np.array([100.0, 200.0])
+    col = np.array([10.0, 20.5])
+    points = loc.direct(row, col)
+    print(points)

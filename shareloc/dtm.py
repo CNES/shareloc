@@ -28,6 +28,7 @@ import numpy as np
 from shareloc.image.dtm_image import DTMImage
 from shareloc.math_utils import interpol_bilin
 from shareloc.geoid import interpolate_geoid_height
+from shareloc.proj_utils import coordinates_conversion
 
 
 class DTM:
@@ -42,7 +43,7 @@ class DTM:
         Constructor
         :param dtm_filename: dtm filename
         :type dtm_filename: string
-        :param geoid_filename: geoid filename
+        :param geoid_filename: geoid filename, if None datum is ellispoid
         :type geoid_filename: string
         :param roi  : region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
              roi_is_in_physical_space activated
@@ -69,25 +70,30 @@ class DTM:
         self.tol_z = 0.0001
 
         # lecture mnt
+        datum = "ellipsoid"
+        if geoid_filename is not None:
+            datum = "geoid"
         self.dtm_image = DTMImage(
-            self.dtm_file, read_data=True, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space
+            self.dtm_file, read_data=True, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space, datum=datum
         )
+        self.epsg = self.dtm_image.epsg
         self.alt_data = self.dtm_image.data[0, :, :].astype("float64")
         if self.dtm_image.datum == "geoid":
+            logging.debug("remove geoid height")
             if geoid_filename is not None:
-                logging.info("remove geoid height")
                 self.grid_row, self.grid_col = np.mgrid[
                     0 : self.dtm_image.nb_rows : 1, 0 : self.dtm_image.nb_columns : 1
                 ]
                 lat, lon = self.dtm_image.transform_index_to_physical_point(self.grid_row, self.grid_col)
                 positions = np.vstack([lon.flatten(), lat.flatten()]).transpose()
+                if self.epsg != 4326:
+                    positions = coordinates_conversion(positions, self.epsg, 4326)[:, 0:2]
                 geoid_height = interpolate_geoid_height(geoid_filename, positions)
                 self.alt_data += geoid_height.reshape(lon.shape)
             else:
-                logging.warning(
-                    "DTM is relative to geoid but no geoid file is given, "
-                    "thus localizations will be done w.r.t geoid"
-                )
+                logging.warning("dtm datum is geoid but no geoid file is given")
+        else:
+            logging.info("no geoid file is given dtm is assumed to be w.r.t ellipsoid")
 
         self.init_min_max()
         self.alt_max = self.alt_data.max()

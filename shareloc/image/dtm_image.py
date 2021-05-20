@@ -37,7 +37,7 @@ from shareloc.euclidium_utils import identify_gdlib_code
 class DTMImage(Image):
     """ class DTM  Image to handle DTM image data """
 
-    def __init__(self, image_path, read_data=False, datum=None, fill_nodata="mean"):
+    def __init__(self, image_path, read_data=False, datum=None, fill_nodata="rio_fillnodata"):
         """
         constructor
         :param image_path : image path
@@ -111,7 +111,7 @@ class DTMImage(Image):
         if fill_nodata is not None:
             self.fill_nodata(strategy=fill_nodata)
 
-    def fill_nodata(self, strategy="mean", max_search_distance=100.0, smoothing_iterations=0):
+    def fill_nodata(self, strategy="rio_fillnodata", max_search_distance=100.0, smoothing_iterations=0):
         """
         fill nodata in DTM image
 

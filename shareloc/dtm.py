@@ -84,7 +84,7 @@ class DTM:
             fill_nodata=fill_nodata,
         )
         self.epsg = self.dtm_image.epsg
-        self.alt_data = self.dtm_image.data[0, :, :].astype("float64")
+        self.alt_data = self.dtm_image.data[:, :].astype("float64")
         if self.dtm_image.datum == "geoid":
             logging.debug("remove geoid height")
             if geoid_filename is not None:

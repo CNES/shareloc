@@ -97,14 +97,14 @@ class DTMImage(Image):
 
                 self.epsg, self.datum = identify_gdlib_code(babel_dict["gdlib_code"], default_datum="geoid")
 
-                self.data = np.zeros((1, self.nb_rows, self.nb_columns), dtype=self.data_type)
+                self.data = np.zeros((self.nb_rows, self.nb_columns), dtype=self.data_type)
 
                 self.nodata = None
                 self.mask = None
 
                 if read_data:
                     # Data of shape (nb band, nb row, nb col)
-                    self.data[0, :, :] = read_bsq_grid(self.image_path, self.nb_rows, self.nb_columns, self.data_type)
+                    self.data[:, :] = read_bsq_grid(self.image_path, self.nb_rows, self.nb_columns, self.data_type)
         else:
             super().__init__(
                 image_path, read_data=read_data, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space
@@ -117,7 +117,7 @@ class DTMImage(Image):
         self.stats = dict()
         if read_data:
             if self.mask is not None:
-                valid_data = self.data[0, self.mask[0, :, :] == 255]
+                valid_data = self.data[self.mask[:, :] == 255]
             else:
                 valid_data = self.data
             self.stats["min"] = valid_data.min()
@@ -141,11 +141,11 @@ class DTMImage(Image):
         """
         if self.mask is not None:
             if strategy == "mean":
-                self.data[0, self.mask[0, :, :] == 0] = self.stats["mean"]
+                self.data[self.mask[:, :] == 0] = self.stats["mean"]
             elif strategy == "rio_fillnodata":
-                self.data = fillnodata(self.data, self.mask[0, :, :], max_search_distance, smoothing_iterations)
-                print(np.sum(self.data[0, self.mask[0, :, :] == 0] == self.nodata))
-                if np.sum(self.data[0, self.mask[0, :, :] == 0] == self.nodata) != 0:
+                self.data = fillnodata(self.data, self.mask[:, :], max_search_distance, smoothing_iterations)
+                print(np.sum(self.data[self.mask[:, :] == 0] == self.nodata))
+                if np.sum(self.data[self.mask[:, :] == 0] == self.nodata) != 0:
                     logging.warning("not all nodata have been filled")
             else:
                 logging.warning("fill nodata strategy not available")

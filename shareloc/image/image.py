@@ -110,10 +110,10 @@ class Image:
             self.data = None
             if read_data:
                 # Data of shape (nb band, nb row, nb col)
-                self.data = self.dataset.read(window=roi_window)
+                self.data = np.squeeze(self.dataset.read(window=roi_window))
                 if self.nodata is not None:
-                    self.mask = self.dataset.read_masks(window=roi_window)
-                    logging.info("DTM contains %d nodata values ", np.sum(self.mask == 0))
+                    self.mask = np.squeeze(self.dataset.read_masks(window=roi_window))
+                    logging.info("image contains %d nodata values ", np.sum(self.mask == 0))
 
     def set_metadata(self, nb_row, nb_col, nb_band, transform, datatype=np.float32):
         """

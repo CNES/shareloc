@@ -26,6 +26,7 @@ Test module for localisation class shareloc/localisation.py
 
 import os
 import pytest
+import numpy as np
 from utils import test_path
 
 from shareloc.dtm import DTM
@@ -71,3 +72,21 @@ def test_interp_dtm_geoid(index_lon, index_lat, valid_alt):
     index = dtm_ventoux.ter_to_index(coords)
     alti = dtm_ventoux.interpolate(index[0], index[1])
     assert alti == pytest.approx(valid_alt, 1e-2)
+
+
+@pytest.mark.unit_tests
+def test_dtm_alt_min_max():
+    """
+    Test dtm alt min/max
+    """
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_ventoux = DTM(dtm_file, geoid_file)
+    alt_min = dtm_ventoux.alt_min_cell
+    alt_max = dtm_ventoux.alt_max_cell
+    alt_valid_min = os.path.join(os.environ["TESTPATH"], "srtm_ventoux_alt_min.npy")
+    alt_valid_max = os.path.join(os.environ["TESTPATH"], "srtm_ventoux_alt_max.npy")
+    alt_min_vt = np.load(alt_valid_min)
+    alt_max_vt = np.load(alt_valid_max)
+    np.testing.assert_array_equal(alt_min, alt_min_vt)
+    np.testing.assert_array_equal(alt_max, alt_max_vt)

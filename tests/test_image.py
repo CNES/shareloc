@@ -125,8 +125,8 @@ def test_dtm_fillnodata():
     dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     my_image_with_nodata = DTMImage(dtm_file, read_data=True, fill_nodata=None)
     nodata_index = np.argwhere(my_image_with_nodata.mask == 0)[0]
-    assert my_image_with_nodata.data[0, nodata_index[1], nodata_index[2]] == -32768
+    assert my_image_with_nodata.data[nodata_index[0], nodata_index[1]] == -32768
     my_image_rio_fillnodata = DTMImage(dtm_file, read_data=True, fill_nodata="rio_fillnodata")
-    assert my_image_rio_fillnodata.data[0, nodata_index[1], nodata_index[2]] == 783
+    assert my_image_rio_fillnodata.data[nodata_index[0], nodata_index[1]] == 783
     my_image_mean = DTMImage(dtm_file, read_data=True, fill_nodata="mean")
-    assert my_image_mean.data[0, nodata_index[1], nodata_index[2]] == 872
+    assert my_image_mean.data[nodata_index[0], nodata_index[1]] == 872

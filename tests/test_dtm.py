@@ -81,7 +81,7 @@ def test_dtm_alt_min_max():
     """
     dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTM(dtm_file, geoid_file, roi=[256, 256, 512, 512], roi_is_in_physical_space=False)
     alt_min = dtm_ventoux.alt_min_cell
     alt_max = dtm_ventoux.alt_max_cell
     alt_valid_min = os.path.join(os.environ["TESTPATH"], "srtm_ventoux_alt_min.npy")

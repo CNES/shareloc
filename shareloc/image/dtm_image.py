@@ -117,11 +117,8 @@ class DTMImage(Image):
 
         :param strategy: fill strategy (mean,rio_fillnodata)
         :type strategy: str
-
-
         :param max_search_distance: fill max_search_distance
-        :type ma
-        x_search_distance: float
+        :type max_search_distance: float
         :param smoothing_iterations: smoothing_iterations
         :type smoothing_iterations: int
 
@@ -131,6 +128,9 @@ class DTMImage(Image):
                 self.data[0, self.mask[0, :, :] == 0] = self.stats["mean"]
             elif strategy == "rio_fillnodata":
                 self.data = fillnodata(self.data, self.mask[0, :, :], max_search_distance, smoothing_iterations)
+                print(np.sum(self.data[0, self.mask[0, :, :] == 0] == self.nodata))
+                if np.sum(self.data[0, self.mask[0, :, :] == 0] == self.nodata) != 0:
+                    logging.warning("not all nodata have been filled")
             else:
                 logging.warning("fill nodata strategy not available")
         else:

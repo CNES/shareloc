@@ -69,6 +69,8 @@ class Image:
             else:
                 self.epsg = None
 
+            self.nodata = self.dataset.nodata
+
             self.data = None
             if read_data:
                 # Data of shape (nb band, nb row, nb col)

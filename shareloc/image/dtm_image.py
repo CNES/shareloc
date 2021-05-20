@@ -37,21 +37,37 @@ from shareloc.euclidium_utils import identify_gdlib_code
 class DTMImage(Image):
     """ class DTM  Image to handle DTM image data """
 
-    def __init__(self, image_path, read_data=False, datum=None, fill_nodata="mean"):
+    def __init__(
+        self,
+        image_path,
+        read_data=False,
+        datum=None,
+        roi=None,
+        roi_is_in_physical_space=False,
+        fill_nodata="rio_fillnodata",
+    ):
         """
         constructor
         :param image_path : image path
         :type image_path  : string or None
         :param read_data  : read image data
         :type read_data  : bool
-        :param datum  : dtm datum (in geoid/ellipsoid) if None ellipsoid by default
+        :param datum  :  datum "geoid" or "ellipsoid", datum is auto identified from babel header if image format is BSQ
+           otherwise if None datum is set to "geoid"
         :type datum  : str
+        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
+             roi_is_in_physical_space activated
+        :type roi  : list
+        :param roi_is_in_physical_space  : roi value in physical space
+        :type roi_is_in_physical_space  : bool
         :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
         :type fill_nodata  : str
         """
         if image_path.split(".")[-1] == "c1":
             logging.debug("bsq babel image")
             if image_path is not None:
+                if roi is not None:
+                    logging.warning("roi is not supported for bsq format")
                 # Image path
                 self.image_path = image_path
 
@@ -81,27 +97,27 @@ class DTMImage(Image):
 
                 self.epsg, self.datum = identify_gdlib_code(babel_dict["gdlib_code"], default_datum="geoid")
 
-                self.data = np.zeros((1, self.nb_rows, self.nb_columns), dtype=self.data_type)
+                self.data = np.zeros((self.nb_rows, self.nb_columns), dtype=self.data_type)
 
                 self.nodata = None
+                self.mask = None
 
                 if read_data:
                     # Data of shape (nb band, nb row, nb col)
-                    self.data[0, :, :] = read_bsq_grid(self.image_path, self.nb_rows, self.nb_columns, self.data_type)
+                    self.data[:, :] = read_bsq_grid(self.image_path, self.nb_rows, self.nb_columns, self.data_type)
         else:
-            super().__init__(image_path, read_data=read_data)
+            super().__init__(
+                image_path, read_data=read_data, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space
+            )
             if datum is None:
                 self.datum = "geoid"
             else:
                 self.datum = datum
-        self.mask = None
-        if self.nodata is not None:
-            self.mask = self.dataset.read_masks()
-            logging.info("DTM contains %d nodata values ", np.sum(self.mask == 0))
+
         self.stats = dict()
         if read_data:
             if self.mask is not None:
-                valid_data = self.data[0, self.mask[0, :, :] == 255]
+                valid_data = self.data[self.mask[:, :] == 255]
             else:
                 valid_data = self.data
             self.stats["min"] = valid_data.min()
@@ -111,7 +127,7 @@ class DTMImage(Image):
         if fill_nodata is not None:
             self.fill_nodata(strategy=fill_nodata)
 
-    def fill_nodata(self, strategy="mean", max_search_distance=100.0, smoothing_iterations=0):
+    def fill_nodata(self, strategy="rio_fillnodata", max_search_distance=100.0, smoothing_iterations=0):
         """
         fill nodata in DTM image
 
@@ -125,11 +141,11 @@ class DTMImage(Image):
         """
         if self.mask is not None:
             if strategy == "mean":
-                self.data[0, self.mask[0, :, :] == 0] = self.stats["mean"]
+                self.data[self.mask[:, :] == 0] = self.stats["mean"]
             elif strategy == "rio_fillnodata":
-                self.data = fillnodata(self.data, self.mask[0, :, :], max_search_distance, smoothing_iterations)
-                print(np.sum(self.data[0, self.mask[0, :, :] == 0] == self.nodata))
-                if np.sum(self.data[0, self.mask[0, :, :] == 0] == self.nodata) != 0:
+                self.data = fillnodata(self.data, self.mask[:, :], max_search_distance, smoothing_iterations)
+                print(np.sum(self.data[self.mask[:, :] == 0] == self.nodata))
+                if np.sum(self.data[self.mask[:, :] == 0] == self.nodata) != 0:
                     logging.warning("not all nodata have been filled")
             else:
                 logging.warning("fill nodata strategy not available")

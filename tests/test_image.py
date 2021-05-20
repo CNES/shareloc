@@ -60,6 +60,34 @@ def test_image_metadata(image_name, row, col, origin_row, origin_col, pixel_size
     assert row == row_index
     assert col == col_index
 
+    start_row = 10
+    start_col = 20
+    end_row = 310
+    end_col = 320
+    my_image_roi = Image(image_filename, roi=[start_row, start_col, end_row, end_col])
+    assert my_image_roi.pixel_size_row == pixel_size_row
+    assert my_image_roi.pixel_size_col == pixel_size_col
+
+    [phys_row, phys_col] = my_image_roi.transform_index_to_physical_point(row - start_row, col - start_col)
+    assert phys_row == origin_row + (row + 0.5) * pixel_size_row
+    assert phys_col == origin_col + (col + 0.5) * pixel_size_col
+
+    row_index, col_index = my_image_roi.transform_physical_point_to_index(phys_row, phys_col)
+    assert row == row_index + start_row
+    assert col == col_index + start_col
+
+    ## roi in physical space
+    start_phys_row = origin_row + start_row * pixel_size_row
+    start_phys_col = origin_col + start_col * pixel_size_col
+    end_phys_row = origin_row + end_row * pixel_size_row
+    end_phys_col = origin_col + end_col * pixel_size_col
+    roi = [start_phys_row, start_phys_col, end_phys_row, end_phys_col]
+    my_image_roi_phys = Image(image_filename, roi=roi, roi_is_in_physical_space=True)
+
+    [phys_row, phys_col] = my_image_roi_phys.transform_index_to_physical_point(row - start_row, col - start_col)
+    assert phys_row == origin_row + (row + 0.5) * pixel_size_row
+    assert phys_col == origin_col + (col + 0.5) * pixel_size_col
+
 
 @pytest.mark.parametrize(
     "row,col, origin_row, origin_col, pixel_size_row, pixel_size_col",
@@ -97,8 +125,8 @@ def test_dtm_fillnodata():
     dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     my_image_with_nodata = DTMImage(dtm_file, read_data=True, fill_nodata=None)
     nodata_index = np.argwhere(my_image_with_nodata.mask == 0)[0]
-    assert my_image_with_nodata.data[0, nodata_index[1], nodata_index[2]] == -32768
+    assert my_image_with_nodata.data[nodata_index[0], nodata_index[1]] == -32768
     my_image_rio_fillnodata = DTMImage(dtm_file, read_data=True, fill_nodata="rio_fillnodata")
-    assert my_image_rio_fillnodata.data[0, nodata_index[1], nodata_index[2]] == 783
+    assert my_image_rio_fillnodata.data[nodata_index[0], nodata_index[1]] == 783
     my_image_mean = DTMImage(dtm_file, read_data=True, fill_nodata="mean")
-    assert my_image_mean.data[0, nodata_index[1], nodata_index[2]] == 872
+    assert my_image_mean.data[nodata_index[0], nodata_index[1]] == 872

@@ -24,21 +24,28 @@
 Image class to handle Image data.
 """
 
+import logging
 import rasterio
 import numpy as np
 from affine import Affine
 
 
+# pylint: disable=too-many-instance-attributes
 class Image:
     """ class Image to handle image data """
 
-    def __init__(self, image_path, read_data=False):
+    def __init__(self, image_path, read_data=False, roi=None, roi_is_in_physical_space=False):
         """
         constructor
         :param image_path : image path
         :type image_path  : string or None
         :param read_data  : read image data
         :type read_data  : bool
+        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [ymin,xmin,ymax,xmax] if
+             roi_is_in_physical_space activated
+        :type roi  : list
+        :param roi_is_in_physical_space  : roi value in physical space
+        :type roi_is_in_physical_space  : bool
         """
         if image_path is not None:
             # Image path
@@ -46,23 +53,51 @@ class Image:
 
             # Rasterio dataset
             self.dataset = rasterio.open(image_path)
+            roi_window = None
+            if roi is not None:
+                if roi_is_in_physical_space:
+                    transform = self.dataset.transform
+                    self.origin_row = transform[5]
+                    self.origin_col = transform[2]
+                    row_off = (roi[0] - transform[5]) / transform[4]
+                    col_off = (roi[1] - transform[2]) / transform[0]
+                    row_max = (roi[2] - transform[5]) / transform[4]
+                    col_max = (roi[3] - transform[2]) / transform[0]
+                    # in case of negative pixel size y
+                    if row_off > row_max:
+                        row_max, row_off = row_off, row_max
+                    row_off = np.floor(row_off)
+                    col_off = np.floor(col_off)
+                    width = int(np.ceil(col_max - col_off))
+                    height = int(np.ceil(row_max - row_off))
+                    logging.info("roi in image , offset : %s %s size %s %s", col_off, row_off, width, height)
+                else:
+                    row_off = roi[0]
+                    col_off = roi[1]
+                    width = roi[3] - roi[1]
+                    height = roi[2] - roi[0]
+                roi_window = rasterio.windows.Window(col_off, row_off, width, height)
+                self.transform = self.dataset.window_transform(roi_window)
+                self.nb_rows = height
+                self.nb_columns = width
+            else:
+                # Geo-transform of type Affine with convention :
+                # | pixel size col,   row rotation, origin col |
+                # | col rotation  , pixel size row, origin row |
+                self.transform = self.dataset.transform
+
+                # Image size
+                self.nb_rows = self.dataset.height
+                self.nb_columns = self.dataset.width
+                roi_window = None
 
             # Georeferenced coordinates of the upper-left origin
-            self.origin_row = self.dataset.transform[5]
-            self.origin_col = self.dataset.transform[2]
-
-            # Image size
-            self.nb_rows = self.dataset.height
-            self.nb_columns = self.dataset.width
+            self.origin_row = self.transform[5]
+            self.origin_col = self.transform[2]
 
             # Pixel size
-            self.pixel_size_row = self.dataset.transform[4]
-            self.pixel_size_col = self.dataset.transform[0]
-
-            # Geo-transform of type Affine with convention :
-            # | pixel size col,   row rotation, origin col |
-            # | col rotation  , pixel size row, origin row |
-            self.transform = self.dataset.transform
+            self.pixel_size_row = self.transform[4]
+            self.pixel_size_col = self.transform[0]
 
             if self.dataset.crs is not None:
                 self.epsg = self.dataset.crs.to_epsg()
@@ -71,10 +106,14 @@ class Image:
 
             self.nodata = self.dataset.nodata
 
+            self.mask = None
             self.data = None
             if read_data:
                 # Data of shape (nb band, nb row, nb col)
-                self.data = self.dataset.read()
+                self.data = np.squeeze(self.dataset.read(window=roi_window))
+                if self.nodata is not None:
+                    self.mask = np.squeeze(self.dataset.read_masks(window=roi_window))
+                    logging.info("image contains %d nodata values ", np.sum(self.mask == 0))
 
     def set_metadata(self, nb_row, nb_col, nb_band, transform, datatype=np.float32):
         """

@@ -38,13 +38,18 @@ class DTM:
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename, geoid_filename=None, fill_nodata=None):
+    def __init__(self, dtm_filename, geoid_filename=None, roi=None, roi_is_in_physical_space=True, fill_nodata=None):
         """
         Constructor
         :param dtm_filename: dtm filename
         :type dtm_filename: string
         :param geoid_filename: geoid filename, if None datum is ellispoid
         :type geoid_filename: string
+        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
+             roi_is_in_physical_space activated
+        :type roi  : list
+        :param roi_is_in_physical_space  : roi value in physical space
+        :type roi_is_in_physical_space  : bool
         :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
         :type fill_nodata : str
         """
@@ -70,9 +75,16 @@ class DTM:
         datum = "ellipsoid"
         if geoid_filename is not None:
             datum = "geoid"
-        self.dtm_image = DTMImage(self.dtm_file, read_data=True, datum=datum, fill_nodata=fill_nodata)
+        self.dtm_image = DTMImage(
+            self.dtm_file,
+            read_data=True,
+            roi=roi,
+            roi_is_in_physical_space=roi_is_in_physical_space,
+            datum=datum,
+            fill_nodata=fill_nodata,
+        )
         self.epsg = self.dtm_image.epsg
-        self.alt_data = self.dtm_image.data[0, :, :].astype("float64")
+        self.alt_data = self.dtm_image.data[:, :].astype("float64")
         if self.dtm_image.datum == "geoid":
             logging.debug("remove geoid height")
             if geoid_filename is not None:

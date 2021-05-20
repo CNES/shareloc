@@ -128,6 +128,26 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     assert valid_alt == pytest.approx(lonlatalt[2], abs=1e-8)
 
 
+@pytest.mark.unit_tests
+def test_extent():
+    """
+    Test direct localization at constant altitude
+    """
+    ___, gri = prepare_loc()
+    loc = Localization(gri, elevation=None)
+
+    np.testing.assert_allclose(loc.extent(), [21.958719, 57.216475, 22.17099, 57.529534], atol=1e-8)
+
+    data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    geom_model = RPC.from_any(data_left + ".geom", topleftconvention=True)
+    image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
+    image = Image(image_filename)
+    loc_rpc_image = Localization(geom_model, elevation=None, image=image)
+    np.testing.assert_allclose(loc_rpc_image.extent(), [44.20518231, 5.19307549, 44.20739814, 5.19629785], atol=1e-8)
+    loc_rpc = Localization(geom_model)
+    np.testing.assert_allclose(loc_rpc.extent(), [44.041678, 5.155808, 44.229592, 5.412923], atol=1e-8)
+
+
 # LOC 3D EUCLIDIUM 5.17387725120693 44.2257086206228 365.643429880962
 # 5.17388499778903 44.2257233720898 376.864272617735
 @pytest.mark.parametrize("col,row,valid_coord", [(1999.5, 999.5, (5.17388499778903, 44.2257233720898, 376.86))])

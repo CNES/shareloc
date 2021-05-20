@@ -25,6 +25,7 @@ Test module for image class shareloc/image/image.py
 
 import os
 import pytest
+import numpy as np
 from utils import test_path
 from shareloc.image.image import Image
 from shareloc.image.dtm_image import DTMImage
@@ -115,3 +116,17 @@ def test_bsqimage_metadata(row, col, origin_row, origin_col, pixel_size_row, pix
     assert row == pytest.approx(row_index, abs=1e-12)
     assert col == pytest.approx(col_index, abs=1e-12)
     assert my_image.datum == "ellipsoid"
+
+
+def test_dtm_fillnodata():
+    """
+    Test dtm image fillnodata
+    """
+    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    my_image_with_nodata = DTMImage(dtm_file, read_data=True, fill_nodata=None)
+    nodata_index = np.argwhere(my_image_with_nodata.mask == 0)[0]
+    assert my_image_with_nodata.data[0, nodata_index[1], nodata_index[2]] == -32768
+    my_image_rio_fillnodata = DTMImage(dtm_file, read_data=True, fill_nodata="rio_fillnodata")
+    assert my_image_rio_fillnodata.data[0, nodata_index[1], nodata_index[2]] == 783
+    my_image_mean = DTMImage(dtm_file, read_data=True, fill_nodata="mean")
+    assert my_image_mean.data[0, nodata_index[1], nodata_index[2]] == 872

@@ -27,15 +27,25 @@ Image class to handle Image data.
 import logging
 import numpy as np
 from affine import Affine
+from rasterio.fill import fillnodata
 from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid
 from shareloc.image.image import Image
 from shareloc.euclidium_utils import identify_gdlib_code
 
 
+# pylint: disable=too-many-instance-attributes
 class DTMImage(Image):
     """ class DTM  Image to handle DTM image data """
 
-    def __init__(self, image_path, read_data=False, datum=None, roi=None, roi_is_in_physical_space=False):
+    def __init__(
+        self,
+        image_path,
+        read_data=False,
+        datum=None,
+        roi=None,
+        roi_is_in_physical_space=False,
+        fill_nodata="rio_fillnodata",
+    ):
         """
         constructor
         :param image_path : image path
@@ -50,12 +60,14 @@ class DTMImage(Image):
         :type roi  : list
         :param roi_is_in_physical_space  : roi value in physical space
         :type roi_is_in_physical_space  : bool
+        :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
+        :type fill_nodata  : str
         """
         if image_path.split(".")[-1] == "c1":
             logging.debug("bsq babel image")
             if image_path is not None:
                 if roi is not None:
-                    logging.warning("roi is not suported for bsq format")
+                    logging.warning("roi is not supported for bsq format")
                 # Image path
                 self.image_path = image_path
 
@@ -86,6 +98,10 @@ class DTMImage(Image):
                 self.epsg, self.datum = identify_gdlib_code(babel_dict["gdlib_code"], default_datum="geoid")
 
                 self.data = np.zeros((1, self.nb_rows, self.nb_columns), dtype=self.data_type)
+
+                self.nodata = None
+                self.mask = None
+
                 if read_data:
                     # Data of shape (nb band, nb row, nb col)
                     self.data[0, :, :] = read_bsq_grid(self.image_path, self.nb_rows, self.nb_columns, self.data_type)
@@ -97,3 +113,41 @@ class DTMImage(Image):
                 self.datum = "geoid"
             else:
                 self.datum = datum
+
+        self.stats = dict()
+        if read_data:
+            if self.mask is not None:
+                valid_data = self.data[0, self.mask[0, :, :] == 255]
+            else:
+                valid_data = self.data
+            self.stats["min"] = valid_data.min()
+            self.stats["max"] = valid_data.max()
+            self.stats["mean"] = valid_data.mean()
+            self.stats["median"] = np.median(valid_data)
+        if fill_nodata is not None:
+            self.fill_nodata(strategy=fill_nodata)
+
+    def fill_nodata(self, strategy="rio_fillnodata", max_search_distance=100.0, smoothing_iterations=0):
+        """
+        fill nodata in DTM image
+
+        :param strategy: fill strategy (mean,rio_fillnodata)
+        :type strategy: str
+        :param max_search_distance: fill max_search_distance
+        :type max_search_distance: float
+        :param smoothing_iterations: smoothing_iterations
+        :type smoothing_iterations: int
+
+        """
+        if self.mask is not None:
+            if strategy == "mean":
+                self.data[0, self.mask[0, :, :] == 0] = self.stats["mean"]
+            elif strategy == "rio_fillnodata":
+                self.data = fillnodata(self.data, self.mask[0, :, :], max_search_distance, smoothing_iterations)
+                print(np.sum(self.data[0, self.mask[0, :, :] == 0] == self.nodata))
+                if np.sum(self.data[0, self.mask[0, :, :] == 0] == self.nodata) != 0:
+                    logging.warning("not all nodata have been filled")
+            else:
+                logging.warning("fill nodata strategy not available")
+        else:
+            logging.debug("no nodata mask has been defined")

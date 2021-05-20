@@ -38,7 +38,7 @@ class DTM:
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename, geoid_filename=None, roi=None, roi_is_in_physical_space=True):
+    def __init__(self, dtm_filename, geoid_filename=None, roi=None, roi_is_in_physical_space=True, fill_nodata=None):
         """
         Constructor
         :param dtm_filename: dtm filename
@@ -50,6 +50,8 @@ class DTM:
         :type roi  : list
         :param roi_is_in_physical_space  : roi value in physical space
         :type roi_is_in_physical_space  : bool
+        :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
+        :type fill_nodata : str
         """
         self.dtm_file = dtm_filename
         self.alt_data = None
@@ -74,7 +76,12 @@ class DTM:
         if geoid_filename is not None:
             datum = "geoid"
         self.dtm_image = DTMImage(
-            self.dtm_file, read_data=True, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space, datum=datum
+            self.dtm_file,
+            read_data=True,
+            roi=roi,
+            roi_is_in_physical_space=roi_is_in_physical_space,
+            datum=datum,
+            fill_nodata=fill_nodata,
         )
         self.epsg = self.dtm_image.epsg
         self.alt_data = self.dtm_image.data[0, :, :].astype("float64")

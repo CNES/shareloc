@@ -30,6 +30,7 @@ import numpy as np
 from affine import Affine
 
 
+# pylint: disable=too-many-instance-attributes
 class Image:
     """ class Image to handle image data """
 
@@ -103,10 +104,16 @@ class Image:
             else:
                 self.epsg = None
 
+            self.nodata = self.dataset.nodata
+
+            self.mask = None
             self.data = None
             if read_data:
                 # Data of shape (nb band, nb row, nb col)
                 self.data = self.dataset.read(window=roi_window)
+                if self.nodata is not None:
+                    self.mask = self.dataset.read_masks(window=roi_window)
+                    logging.info("DTM contains %d nodata values ", np.sum(self.mask == 0))
 
     def set_metadata(self, nb_row, nb_col, nb_band, transform, datatype=np.float32):
         """

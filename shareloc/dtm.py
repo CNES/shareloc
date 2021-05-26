@@ -38,7 +38,15 @@ class DTM:
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename, geoid_filename=None, roi=None, roi_is_in_physical_space=True, fill_nodata=None):
+    def __init__(
+        self,
+        dtm_filename,
+        geoid_filename=None,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    ):
         """
         Constructor
         :param dtm_filename: dtm filename
@@ -50,8 +58,11 @@ class DTM:
         :type roi  : list
         :param roi_is_in_physical_space  : roi value in physical space
         :type roi_is_in_physical_space  : bool
-        :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
-        :type fill_nodata : str
+        :param fill_nodata  fill_nodata strategy in None/'constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/
+        :type fill_nodata  : str
+        :param fill_value  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
+        if None 'min' is used
+        :type fill_value  : float
         """
         self.dtm_file = dtm_filename
         self.alt_data = None
@@ -82,6 +93,7 @@ class DTM:
             roi_is_in_physical_space=roi_is_in_physical_space,
             datum=datum,
             fill_nodata=fill_nodata,
+            fill_value=fill_value,
         )
         self.epsg = self.dtm_image.epsg
         self.alt_data = self.dtm_image.data[:, :].astype("float64")

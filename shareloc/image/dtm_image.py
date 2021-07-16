@@ -174,7 +174,7 @@ def list_dtm_files(directory):
     """
     dtm_files = list()
     for file_path in os.listdir(directory):
-        complete_file_path = os.path.join(dir, file_path)
+        complete_file_path = os.path.join(directory, file_path)
         if rasterio_can_open(complete_file_path):
             dtm_files.append(complete_file_path)
     return dtm_files

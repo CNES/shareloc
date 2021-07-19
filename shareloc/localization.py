@@ -96,7 +96,7 @@ class Localization:
         if self.image is not None:
             logging.debug("image extent")
             footprint[0, :] = [-0.5, -0.5]
-            footprint[1, :] = [-0.5 + self.image.nb_rows, -0.5 + self.image.nb_rows]
+            footprint[1, :] = [-0.5 + self.image.nb_rows, -0.5 + self.image.nb_columns]
             using_geotransform = True
         else:
             logging.debug("model extent")

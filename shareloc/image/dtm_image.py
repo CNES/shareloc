@@ -164,20 +164,20 @@ class DTMImage(Image):
             logging.debug("no nodata mask has been defined")
 
 
-def list_dtm_files(directory):
+def list_dtm_tiles(directory):
     """
-    list dtm files
+    list dtm tiles
     :param directory: dtm dir
     :type directory: str
     :return list of files
     :rtype list
     """
-    dtm_files = list()
+    dtm_tiles = list()
     for file_path in os.listdir(directory):
         complete_file_path = os.path.join(directory, file_path)
         if rasterio_can_open(complete_file_path):
-            dtm_files.append(complete_file_path)
-    return dtm_files
+            dtm_tiles.append(complete_file_path)
+    return dtm_tiles
 
 
 def gather_dtm_tiles(directory, vrt):
@@ -188,8 +188,8 @@ def gather_dtm_tiles(directory, vrt):
     :param vrt: vrt output
     :type vrt: str
     """
-    dtm_files = list_dtm_files(directory)
-    if len(dtm_files) == 0:
+    dtm_tiles = list_dtm_tiles(directory)
+    if len(dtm_tiles) == 0:
         raise Exception("{} doesn't contain any dtm files".format(directory))
-    command = " ".join(["gdalbuildvrt ", vrt, " ".join(dtm_files)])
+    command = " ".join(["gdalbuildvrt ", vrt, " ".join(dtm_tiles)])
     os.system(command)

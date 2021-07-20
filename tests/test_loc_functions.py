@@ -129,15 +129,21 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
 
 
 @pytest.mark.unit_tests
-def test_extent():
+@pytest.mark.skip(reason="check must to be done #90")
+def test_grid_extent():
     """
-    Test direct localization at constant altitude
+    Test grid extent
     """
     ___, gri = prepare_loc()
     loc = Localization(gri, elevation=None)
-
     np.testing.assert_allclose(loc.extent(), [21.958719, 57.216475, 22.17099, 57.529534], atol=1e-8)
 
+
+@pytest.mark.unit_tests
+def test_extent():
+    """
+    Test  extent
+    """
     data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
     geom_model = RPC.from_any(data_left + ".geom", topleftconvention=True)
     image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image_pixsize_0_5.tif")

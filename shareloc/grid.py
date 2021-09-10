@@ -26,10 +26,11 @@ localisations function from mutji h direct grids.
 
 import logging
 import numpy as np
-from shareloc.image.readwrite import read_bsq_hd
+from shareloc.image.readwrite import read_bsq_hd, read_hdf_hd
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 from shareloc.euclidium_utils import identify_gdlib_code
 from shareloc.proj_utils import coordinates_conversion
+from pyhdf.SD import SD, SDC
 
 
 class Grid:
@@ -37,12 +38,12 @@ class Grid:
 
     # gitlab issue #58
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, grid_filename, grid_format="bsq"):
+    def __init__(self, grid_filename, grid_format = 'bsq'):
         """
         Constructor
         :param grid_filename: grid filename
         :type grid_filename: string
-        :param grid_format: grid format (by default bsq)
+        :param grid_format: grid format (default bsq, hdf also handled)
         :type grid_format: string
         """
         self.filename = grid_filename
@@ -71,7 +72,7 @@ class Grid:
         2 data cubes are defined :
         - gld_lon : [alt,row,col]
         - gld_lat : [alt,row,col]
-        bsq grids are stored by increasing altitude H0 ... Hx
+        bsq and hdf grids are stored by increasing altitude H0 ... Hx
         internal structure is decreasing one
         """
         if self.format == "bsq":
@@ -115,6 +116,48 @@ class Grid:
             self.alts_down = [self.index_alt[_] for _ in range(int(self.nbalt - 1), -1, -1)]
             self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
             self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
+
+        elif self.format == "hdf":
+            dico_a_lire = {
+                "nbrow": ("LINES", int),
+                "nbcol": ("COLUMNS", int),
+                "bpp": ("BITS PER PIXEL", int),
+                "nbalt": ("NB ALT", int),
+                "stepcol": ("PAS COL", float),
+                "steprow": ("PAS LIG", float),
+                "col0": ("Y0", float),
+                "row0": ("X0", float),
+                "repter": ("REFERENTIEL TERRESTRE", str),
+                "convention": ("CONVENTION", str),
+            }
+
+            nom_hd = self.filename[:-5] + "1.hdf"
+            dico_hd = read_hdf_hd(nom_hd, dico_a_lire)
+
+            for var in dico_hd:
+                setattr(self, var, dico_hd[var])
+            # """renvoie une structure 3D [i_alt][l,c]"""
+            gld_lon = np.zeros((self.nbalt, self.nbrow, self.nbcol))
+            gld_lat = np.zeros((self.nbalt, self.nbrow, self.nbcol))
+
+            for alt_layer in range(self.nbalt):
+                inverse_index = self.nbalt - alt_layer
+                hdf = SD(self.filename[:-5] + str(inverse_index) + ".hdf", SDC.READ)
+                gri_lon_obj = hdf.select('c1')
+                gri_lat_obj = hdf.select('c2')
+
+                gld_lon[alt_layer, :, :] = gri_lon_obj.get().reshape((self.nbrow, self.nbcol))
+                gld_lat[alt_layer, :, :] = gri_lat_obj.get().reshape((self.nbrow, self.nbcol))
+
+                dico_hd = read_hdf_hd(self.filename[:-5] + str(inverse_index) + ".hdf", {"index": ("ALT INDEX", int), "alt": ("ALTITUDE", float)})
+                self.index_alt[dico_hd["index"]] = dico_hd["alt"]
+
+            self.gld_lon = gld_lon
+            self.gld_lat = gld_lat
+            self.alts_down = [self.index_alt[_] for _ in range(int(self.nbalt - 1), -1, -1)]
+            self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
+            self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
+
         else:
             logging.error("dtm format is not handled")
 

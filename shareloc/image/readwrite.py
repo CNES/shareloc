@@ -26,6 +26,7 @@ import logging
 import os.path as op
 import numpy as np
 import rasterio as rio
+from pyhdf.SD import SD
 
 # ------------------------------------------------------------------------------
 def read_hdbabel_header(bsq_filename):
@@ -97,6 +98,27 @@ def read_bsq_hd(fic_hd, tag):
 
     for i in range(0, txt_header.__len__(), 2):
         header[txt_header[i].strip()] = txt_header[i + 1].strip()
+
+    for var in tag:
+        (nom, form) = tag[var]
+        dico_out[var] = form(header[nom])
+
+    return dico_out
+    
+def read_hdf_hd(fic_hd, tag):
+    """"
+    read hdf metadata from one of the _Hn files using pyhdf
+    :param fic_hd :  hdf filename
+    :type  fic_hd : str
+    :param tag :  dict of tags to read
+    :type  tag : dict
+    :return header infos
+    :rtype dict
+    """
+
+    dico_out = {}
+    hdf = SD(fic_hd)
+    header = hdf.attributes()
 
     for var in tag:
         (nom, form) = tag[var]

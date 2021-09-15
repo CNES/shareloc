@@ -72,8 +72,6 @@ class DTM:
         self.origin_y = None
         self.pixel_size_x = None
         self.pixel_size_y = None
-        self.column_nb = None
-        self.row_nb = None
         self.plane_coef_a = None
         self.plane_coef_b = None
         self.plane_coef_c = None
@@ -189,6 +187,27 @@ class DTM:
         vect_ter = vect_dtm.copy()
         (vect_ter[1], vect_ter[0]) = self.dtm_image.transform_index_to_physical_point(vect_dtm[0], vect_dtm[1])
         return vect_ter
+
+    def get_alt_offset(self, epsg):
+        """
+        returns min/amx altitude offset between dtm coordinates system and another one
+        :param epsg: epsg code to compare with
+        :type epsg: int
+        :return min/max diff coordinate in epsg - dtm alti
+        :rtype list of float (1x2)
+        """
+        if epsg != self.epsg:
+            alti_moy = (self.alt_min + self.alt_max) / 2.0
+            corners = np.zeros([4, 2])
+            corners[:, 0] = [0.0, 0.0, self.dtm_image.nb_rows, self.dtm_image.nb_rows]
+            corners[:, 1] = [0.0, self.dtm_image.nb_columns, self.dtm_image.nb_columns, 0.0]
+            corners -= 0.5  # index to corner
+            ground_corners = np.zeros([3, 4])
+            ground_corners[2, :] = alti_moy
+            ground_corners[1::-1, :] = self.dtm_image.transform_index_to_physical_point(corners[:, 0], corners[:, 1])
+            converted_corners = coordinates_conversion(ground_corners.transpose(), self.epsg, epsg)
+            return [np.min(converted_corners[:, 2]) - alti_moy, np.max(converted_corners[:, 2]) - alti_moy]
+        return [0.0, 0.0]
 
     def interpolate(self, pos_row, pos_col):
         """

@@ -88,15 +88,20 @@ class Localization:
 
     def extent(self, margin=0.0):
         """
-        returns model extent, whole validity domains if image is not given, image footprint otherwise
+        returns model extent:
+            * whole validity domains if image is not given
+            * image footprint if image is set
+            * epipolar footprint if right_model is set
+        :param margin: footprint margin (in degrees)
+        :type margin : float
         :return extent : [lon_min,lat_min,lon max,lat max] (2D np.array)
         :rtype numpy.array
         """
-        footprint = np.zeros([4, 2])
+        footprint = np.zeros([2, 2])
         if self.image is not None:
             logging.debug("image extent")
             footprint[0, :] = [-0.5, -0.5]
-            footprint[1, :] = [-0.5 + self.image.nb_rows, -0.5 + self.image.nb_rows]
+            footprint[1, :] = [-0.5 + self.image.nb_rows, -0.5 + self.image.nb_columns]
             using_geotransform = True
         else:
             logging.debug("model extent")

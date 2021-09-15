@@ -407,8 +407,7 @@ class RPC:
         """
 
         rpc_params = dict()
-
-        if not basename(dimap_filepath).endswith("XML".upper()):
+        if not basename(dimap_filepath).upper().endswith("XML"):
             raise ValueError("dimap must ends with .xml")
 
         xmldoc = minidom.parse(dimap_filepath)
@@ -482,7 +481,7 @@ class RPC:
         """
         rpc_params = dict()
 
-        if not basename(dimap_filepath).endswith("XML".upper()):
+        if not basename(dimap_filepath).upper().endswith("XML"):
             raise ValueError("dimap must ends with .xml")
 
         xmldoc = minidom.parse(dimap_filepath)

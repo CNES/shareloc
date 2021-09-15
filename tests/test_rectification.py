@@ -38,10 +38,10 @@ from shareloc.rectification.rectification import (
     moving_to_next_line,
     prepare_rectification,
     compute_stereorectification_epipolar_grids,
+    get_epipolar_extent,
     # write_epipolar_grid,
 )
 from shareloc.image.image import Image
-from shareloc.localization import Localization
 
 
 @pytest.mark.parametrize("row,col", [(15, 0)])
@@ -115,9 +115,10 @@ def test_prepare_rectification():
     epi_step = 30
     elevation_offset = 50
     default_elev = 0.0
-    __, grid_size, rectified_image_size, left_epi_origin = prepare_rectification(
+    __, grid_size, rectified_image_size, left_epi_origin, __ = prepare_rectification(
         left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
     )
+
     # check size of the epipolar grids
     assert grid_size[0] == 22
     assert grid_size[1] == 22
@@ -247,12 +248,10 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid_roi():
         os.path.join(os.environ["TESTPATH"], "rectification", "right_image.geom"), topleftconvention=True
     )
 
-    loc_left = Localization(geom_model_left, image=left_im)
-
     dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
-    print(loc_left.extent())
-    dtm_ventoux = DTM(dtm_file, geoid_file, roi=loc_left.extent(margin=0.005))
+    extent = get_epipolar_extent(left_im, geom_model_left, geom_model_right, margin=0.0016667)
+    dtm_ventoux = DTM(dtm_file, geoid_file, roi=extent)
 
     epi_step = 30
     elevation_offset = 50

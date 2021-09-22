@@ -702,7 +702,7 @@ class RPC:
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-        if basename(primary_file).endswith("XML".upper()):
+        if basename(primary_file.upper()).endswith("XML"):
             dimap_version = identify_dimap(primary_file)
             if dimap_version is not None:
                 if float(dimap_version) < 2.0:

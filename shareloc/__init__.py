@@ -36,7 +36,7 @@ if sys.version_info[:2] >= (3, 8):
 else:
     from importlib_metadata import PackageNotFoundError  # pragma: no cover
     from importlib_metadata import version
-# Get cars package version (installed from setuptools_scm)
+# Get shareloc package version (installed from setuptools_scm)
 try:
     __version__ = version("shareloc")
 except PackageNotFoundError:

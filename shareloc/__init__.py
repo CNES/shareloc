@@ -38,7 +38,7 @@ else:
     from importlib_metadata import version
 # Get cars package version (installed from setuptools_scm)
 try:
-    __version__ = version("cars")
+    __version__ = version("shareloc")
 except PackageNotFoundError:
     __version__ = "unknown"  # pragma: no cover
 finally:

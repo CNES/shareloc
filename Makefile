@@ -66,7 +66,7 @@ test: install ## run all tests + coverage html
 	@TESTPATH="${SHARELOCPATH}/valid" ${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --cov-config=.coveragerc --cov-report html --cov
 
 test-ci: install ## run all + coverage for ci to sonarqube
-	@TESTPATH="${SHARELOCPATH}/valid" @${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --junitxml=pytest-report.xml --cov-config=.coveragerc --cov-report xml --cov
+	@TESTPATH="${SHARELOCPATH}/valid" ${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --junitxml=pytest-report.xml --cov-config=.coveragerc --cov-report xml --cov
 
 lint: install ## run lint tools (depends install)
 	@echo "Linting isort check"

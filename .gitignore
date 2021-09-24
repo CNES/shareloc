@@ -16,3 +16,4 @@ venv/
 .eggs/
 shareloc.egg-info/
 pylint-report.txt
+/tmp.*

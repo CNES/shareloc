@@ -15,7 +15,9 @@ endif
 SHELL := /bin/bash
 
 # Set Virtualenv directory name
-VENV = "venv"
+ifndef VENV
+	VENV = "venv"
+endif
 
 # Check OTB and GDAL
 CHECK_OTB = $(shell command -v otbcli_ReadImageInfo 2> /dev/null)

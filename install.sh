@@ -20,21 +20,18 @@
 # Set venv name of shareloc venv.
 export VENV_NAME="venv"
 
-if [ ! -d $VENV_NAME ]
-then
-  printf 'ERROR: virtual environment has not been created yet\n' >&2
+# Load OTB for gdal and python3
+# TODO: move to hpc HAL specific doc or script.
+ml otb/7.0-python3.7.2
 
-else
-  # Load OTB for gdal and python3
-  # TODO: move to hpc HAL specific doc or script.
-  ml otb/7.0-python3.7.2
+echo "INFO: clean previous installation..."
+make clean
+# /tmp noexec configuration.
+# TODO: move to hpc HAL specific doc or script.
+TMPBUILDDIR=`mktemp -d -p .`
+echo "INFO: Shareloc installation..."
+TMPDIR=$TMPBUILDDIR VENV=${VENV_NAME} make install
+rmdir $TMPBUILDDIR
 
-  # Set TESTPATH for tests
-  # TODO: remove with tests evolution to set TESTPATH internally
-  export SHARELOCPATH="$( cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P )"
-  export TESTPATH=$SHARELOCPATH/valid
-  echo "TESTPATH: $TESTPATH"
-
-  # Activate virtualenv
-  source ./${VENV_NAME}/bin/activate
-fi
+# Activate virtualenv
+source ./${VENV_NAME}/bin/activate

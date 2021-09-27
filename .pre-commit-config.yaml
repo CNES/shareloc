@@ -3,7 +3,7 @@ repos:
     hooks:
     -   id: black
         name: black
-        entry: black --line-length=120
+        entry: black
         language: system
         files: \.py$
         stages: [commit]

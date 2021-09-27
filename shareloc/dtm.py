@@ -193,7 +193,7 @@ class DTM:
         returns min/amx altitude offset between dtm coordinates system and another one
         :param epsg: epsg code to compare with
         :type epsg: int
-        :return min/max diff coordinate in epsg - dtm alti
+        :return min/max altimetric difference between epsg in parameter minus dtm alti expressed in dtm epsg
         :rtype list of float (1x2)
         """
         if epsg != self.epsg:

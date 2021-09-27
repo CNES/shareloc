@@ -55,7 +55,7 @@ venv: check ## create virtualenv in "venv" dir if not exists
 install-deps: venv
 	@[ "${CHECK_NUMPY}" ] || ${VENV}/bin/python -m pip install --upgrade cython numpy
 	@[ "${CHECK_RASTERIO}" ] || ${VENV}/bin/python -m pip install --no-binary rasterio rasterio
-#	@[ "${CHECK_PYGDAL}" ] || ${VENV}/bin/python -m pip install pygdal==$(GDAL_VERSION).*
+	@[ "${CHECK_PYGDAL}" ] || ${VENV}/bin/python -m pip install pygdal==$(GDAL_VERSION).*
 
 install: install-deps ## install shareloc in dev mode
 	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[dev]

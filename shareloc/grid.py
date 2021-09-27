@@ -26,11 +26,11 @@ localisations function from mutji h direct grids.
 
 import logging
 import numpy as np
+from pyhdf.SD import SD, SDC
 from shareloc.image.readwrite import read_bsq_hd, read_hdf_hd
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 from shareloc.euclidium_utils import identify_gdlib_code
 from shareloc.proj_utils import coordinates_conversion
-from pyhdf.SD import SD, SDC
 
 
 class Grid:
@@ -38,12 +38,12 @@ class Grid:
 
     # gitlab issue #58
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, grid_filename, grid_format = 'bsq'):
+    def __init__(self, grid_filename, grid_format="bsq"):
         """
         Constructor
-        :param grid_filename: grid filename
+        :param grid_filename: grid filename (XXX_HX.hd(f))
         :type grid_filename: string
-        :param grid_format: grid format (default bsq, hdf also handled)
+        :param grid_format: grid format (default 'bsq' EUCLIDIUM, 'hdf' Libgeo is also handled)
         :type grid_format: string
         """
         self.filename = grid_filename
@@ -143,13 +143,16 @@ class Grid:
             for alt_layer in range(self.nbalt):
                 inverse_index = self.nbalt - alt_layer
                 hdf = SD(self.filename[:-5] + str(inverse_index) + ".hdf", SDC.READ)
-                gri_lon_obj = hdf.select('c1')
-                gri_lat_obj = hdf.select('c2')
+                gri_lon_obj = hdf.select("c1")
+                gri_lat_obj = hdf.select("c2")
 
                 gld_lon[alt_layer, :, :] = gri_lon_obj.get().reshape((self.nbrow, self.nbcol))
                 gld_lat[alt_layer, :, :] = gri_lat_obj.get().reshape((self.nbrow, self.nbcol))
 
-                dico_hd = read_hdf_hd(self.filename[:-5] + str(inverse_index) + ".hdf", {"index": ("ALT INDEX", int), "alt": ("ALTITUDE", float)})
+                dico_hd = read_hdf_hd(
+                    self.filename[:-5] + str(inverse_index) + ".hdf",
+                    {"index": ("ALT INDEX", int), "alt": ("ALTITUDE", float)},
+                )
                 self.index_alt[dico_hd["index"]] = dico_hd["alt"]
 
             self.gld_lon = gld_lon

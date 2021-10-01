@@ -24,34 +24,28 @@ This module contains the projection functions for shareloc
 """
 
 import numpy as np
-import osgeo
-from osgeo import osr
+from rasterio import crs, warp
 
 
 def coordinates_conversion(coords, epsg_in, epsg_out):
     """
     Convert coords from a SRS to another one.
     :param coords: coords to project
-    :type coords: numpy array
+    :type coords: numpy array of 2D coords  (shape  (2,) or (N,2) or 3D coords (shape  (3,) or (N,3))
     :param epsg_in: EPSG code of the input SRS
     :type epsg_in: int
     :param epsg_out: EPSG code of the output SRS
     :type epsg_out: int
     :returns: converted coordinates
-    :rtype: numpy array
+    :rtype: numpy array of 2D coord (N,2) or 3D coords (N,3)
     """
-    srs_in = osr.SpatialReference()
-    srs_in.ImportFromEPSG(epsg_in)
-    srs_out = osr.SpatialReference()
-    srs_out.ImportFromEPSG(epsg_out)
-    # GDAL 3.0 Coordinate transformation (backwards compatibility)
-    # https://github.com/OSGeo/gdal/issues/1546
-    if int(osgeo.__version__[0]) >= 3:
-        srs_in.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
-        srs_out.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
-    conversion = osr.CoordinateTransformation(srs_in, srs_out)
-    if (coords.size / 3 == 1) and (coords.ndim == 1):
+    srs_in = crs.CRS.from_epsg(epsg_in)
+    srs_out = crs.CRS.from_epsg(epsg_out)
+    if (coords.size / 3 == 1 or coords.size / 2 == 1) and (coords.ndim == 1):
         coords = coords[np.newaxis, :]
-    coords = conversion.TransformPoints(coords)
-    coords = np.array(coords)
+    alti = None
+    if coords.shape[1] == 3:
+        alti = coords[:, 2]
+    coords = np.array(warp.transform(srs_in, srs_out, coords[:, 0], coords[:, 1], alti))
+    coords = coords.transpose()
     return coords

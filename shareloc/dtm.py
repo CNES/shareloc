@@ -106,7 +106,7 @@ class DTM:
                 lat, lon = self.dtm_image.transform_index_to_physical_point(self.grid_row, self.grid_col)
                 positions = np.vstack([lon.flatten(), lat.flatten()]).transpose()
                 if self.epsg != 4326:
-                    positions = coordinates_conversion(positions, self.epsg, 4326)[:, 0:2]
+                    positions = coordinates_conversion(positions, self.epsg, 4326)
                 geoid_height = interpolate_geoid_height(geoid_filename, positions)
                 self.alt_data += geoid_height.reshape(lon.shape)
             else:

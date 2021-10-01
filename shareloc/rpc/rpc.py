@@ -869,8 +869,9 @@ class RPC:
             col = np.array([col])
         direct_dtm = np.zeros((points_nb, 3))
 
+        diff_alti_min, diff_alti_max = dtm.get_alt_offset(self.epsg)
         # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
-        (min_dtm, max_dtm) = (dtm.alt_min - 1.0, dtm.alt_max + 1.0)
+        (min_dtm, max_dtm) = (dtm.alt_min - 1.0 + diff_alti_min, dtm.alt_max + 1.0 + diff_alti_max)
         if min_dtm < self.offset_alt - self.scale_alt:
             logging.debug("minimum dtm value is outside RPC validity domain, extrapolation will be done")
         if max_dtm > self.offset_alt + self.scale_alt:
@@ -1125,7 +1126,6 @@ class RPC:
             los_edges[1::2, :] = los_edges[1::2, :] + diff * coeff_alt_min
         if epsg is not None and epsg != self.epsg:
             los_edges = coordinates_conversion(los_edges, self.epsg, epsg)
-
         return los_edges
 
 

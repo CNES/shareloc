@@ -26,7 +26,6 @@ GDAL_VERSION = $(shell gdal-config --version)
 # CHECK if dependencies are installed.
 CHECK_NUMPY = $(shell ${VENV}/bin/python -m pip list|grep numpy)
 CHECK_RASTERIO = $(shell ${VENV}/bin/python -m pip list|grep rasterio)
-CHECK_PYGDAL = $(shell ${VENV}/bin/python -m pip list|grep pygdal)
 
 # SHARELOC variables
 CHECK_SHARELOC = $(shell ${VENV}/bin/python -m pip list|grep shareloc)
@@ -55,7 +54,6 @@ venv: check ## create virtualenv in "venv" dir if not exists
 install-deps: venv
 	@[ "${CHECK_NUMPY}" ] || ${VENV}/bin/python -m pip install --upgrade cython numpy
 	@[ "${CHECK_RASTERIO}" ] || ${VENV}/bin/python -m pip install --no-binary rasterio rasterio
-	@[ "${CHECK_PYGDAL}" ] || ${VENV}/bin/python -m pip install pygdal==$(GDAL_VERSION).*
 
 install: install-deps ## install shareloc in dev mode
 	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[dev]

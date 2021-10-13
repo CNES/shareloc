@@ -51,7 +51,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     fic = os.path.join(data_folder, "MNT_extrait/mnt_extrait.c1")
     dtmbsq = DTM(fic)
     # chargement des grilles
-    gld = os.path.join(data_folder, "grilles_gld_xH/{}_H1.hd".format(id_scene))
+    gld = os.path.join(data_folder, f"grilles_gld_xH/{id_scene}_H1.hd")
     gri = Grid(gld)
     return dtmbsq, gri
 
@@ -215,7 +215,7 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     lonlatalt = loc_grid.direct(row, col, h)
 
     data_folder = test_path()
-    fichier_dimap = os.path.join(data_folder, "rpc/PHRDIMAP_{}.XML".format(id_scene))
+    fichier_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
     fctrat = RPC.from_any(fichier_dimap)
 
@@ -309,7 +309,7 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
 
     [row, col, __] = loc_grid.inverse(lon, lat, alt)
     data_folder = test_path()
-    fichier_dimap = os.path.join(data_folder, "rpc/PHRDIMAP_{}.XML".format(id_scene))
+    fichier_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
     fctrat = RPC.from_any(fichier_dimap, topleftconvention=True)
 
@@ -464,7 +464,7 @@ def test_loc_dir_loc_inv_couple(lig, col, h):
     lonlatalt = gri_left.direct_loc_h(lig, col, h)
     inv_lig, inv_col, __ = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
 
-    print("lig {} col {}".format(inv_lig, inv_col))
+    print(f"lig {inv_lig} col {inv_col}")
     # assert(lig == pytest.approx(inv_lig,abs=1e-2))
     # assert(col == pytest.approx(inv_col,abs=1e-2))
     # assert(valid == 1)
@@ -478,7 +478,7 @@ def test_colocalization(col, row, alt):
 
     data_folder = test_path()
     id_scene = "P1BP--2018122638935449CP"
-    file_dimap = os.path.join(data_folder, "rpc/PHRDIMAP_{}.XML".format(id_scene))
+    file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
     fctrat = RPC.from_dimap_v1(file_dimap)
 
     row_coloc, col_coloc, _ = coloc_rpc(fctrat, fctrat, row, col, alt)

@@ -119,7 +119,7 @@ class DTMImage(Image):
             else:
                 self.datum = datum
 
-        self.stats = dict()
+        self.stats = {}
         if read_data:
             if self.mask is not None:
                 valid_data = self.data[self.mask[:, :] == 255]
@@ -172,7 +172,7 @@ def list_dtm_tiles(directory):
     :return list of files
     :rtype list
     """
-    dtm_tiles = list()
+    dtm_tiles = []
     for file_path in os.listdir(directory):
         complete_file_path = os.path.join(directory, file_path)
         if rasterio_can_open(complete_file_path):
@@ -190,6 +190,6 @@ def gather_dtm_tiles(directory, vrt):
     """
     dtm_tiles = list_dtm_tiles(directory)
     if len(dtm_tiles) == 0:
-        raise Exception("{} doesn't contain any dtm files".format(directory))
+        raise Exception(f"{directory} doesn't contain any dtm files")
     command = " ".join(["gdalbuildvrt ", vrt, " ".join(dtm_tiles)])
     os.system(command)

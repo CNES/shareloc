@@ -91,7 +91,7 @@ def identify_euclidium_rpc(eucl_file):
     :rtype Boolean
     """
     try:
-        with open(eucl_file) as euclidium_file:
+        with open(eucl_file, encoding="utf-8") as euclidium_file:
             content = euclidium_file.readlines()
         is_eucl = True
         for line in content:
@@ -112,14 +112,13 @@ def identify_ossim_kwl(ossim_kwl_file):
     :rtype str
     """
     try:
-        with open(ossim_kwl_file) as ossim_file:
+        with open(ossim_kwl_file, encoding="utf-8") as ossim_file:
             content = ossim_file.readlines()
-
-        geom_dict = dict()
+        geom_dict = {}
         for line in content:
             (key, val) = line.split(": ")
             geom_dict[key] = val.rstrip()
-        if "type" in geom_dict.keys():
+        if "type" in geom_dict:
             if geom_dict["type"].strip().startswith("ossim"):
                 return geom_dict["type"].strip()
         return None
@@ -153,8 +152,8 @@ def read_eucl_file(eucl_file):
     :return parsed file
     :rtype dict
     """
-    parsed_file = dict()
-    with open(eucl_file, "r") as fid:
+    parsed_file = {}
+    with open(eucl_file, "r", encoding="utf-8") as fid:
         txt = fid.readlines()
 
     for line in txt:
@@ -180,7 +179,7 @@ def read_eucl_file(eucl_file):
     coeff_py_str = txt[ind_debut_pyout + 1 : ind_debut_pyout + 21]
     coeff_qy_str = txt[ind_debut_qyout + 1 : ind_debut_qyout + 21]
 
-    poly_coeffs = dict()
+    poly_coeffs = {}
     if parsed_file["type_fic"] == "I":
         poly_coeffs["num_col"] = [float(coeff.split()[1]) for coeff in coeff_px_str]
         poly_coeffs["den_col"] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
@@ -194,7 +193,7 @@ def read_eucl_file(eucl_file):
 
     parsed_file["poly_coeffs"] = poly_coeffs
     # list [offset , scale]
-    normalisation_coeff = dict()
+    normalisation_coeff = {}
     for line in txt:
         if line.startswith(">>\tXIN_OFFSET"):
             lsplit = line.split()
@@ -406,7 +405,7 @@ class RPC:
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
 
-        rpc_params = dict()
+        rpc_params = {}
         if not basename(dimap_filepath).upper().endswith("XML"):
             raise ValueError("dimap must ends with .xml")
 
@@ -418,36 +417,36 @@ class RPC:
         global_rfm = xmldoc.getElementsByTagName("Global_RFM")[0]
         direct_coeffs = global_rfm.getElementsByTagName("Direct_Model")[0]
         rpc_params["num_x"] = [
-            float(direct_coeffs.getElementsByTagName("SAMP_NUM_COEFF_{}".format(index))[0].firstChild.data)
+            float(direct_coeffs.getElementsByTagName(f"SAMP_NUM_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
         rpc_params["den_x"] = [
-            float(direct_coeffs.getElementsByTagName("SAMP_DEN_COEFF_{}".format(index))[0].firstChild.data)
+            float(direct_coeffs.getElementsByTagName(f"SAMP_DEN_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
         rpc_params["num_y"] = [
-            float(direct_coeffs.getElementsByTagName("LINE_NUM_COEFF_{}".format(index))[0].firstChild.data)
+            float(direct_coeffs.getElementsByTagName(f"LINE_NUM_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
         rpc_params["den_y"] = [
-            float(direct_coeffs.getElementsByTagName("LINE_DEN_COEFF_{}".format(index))[0].firstChild.data)
+            float(direct_coeffs.getElementsByTagName(f"LINE_DEN_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
         inverse_coeffs = global_rfm.getElementsByTagName("Inverse_Model")[0]
         rpc_params["num_col"] = [
-            float(inverse_coeffs.getElementsByTagName("SAMP_NUM_COEFF_{}".format(index))[0].firstChild.data)
+            float(inverse_coeffs.getElementsByTagName(f"SAMP_NUM_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
         rpc_params["den_col"] = [
-            float(inverse_coeffs.getElementsByTagName("SAMP_DEN_COEFF_{}".format(index))[0].firstChild.data)
+            float(inverse_coeffs.getElementsByTagName(f"SAMP_DEN_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
         rpc_params["num_row"] = [
-            float(inverse_coeffs.getElementsByTagName("LINE_NUM_COEFF_{}".format(index))[0].firstChild.data)
+            float(inverse_coeffs.getElementsByTagName(f"LINE_NUM_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
         rpc_params["den_row"] = [
-            float(inverse_coeffs.getElementsByTagName("LINE_DEN_COEFF_{}".format(index))[0].firstChild.data)
+            float(inverse_coeffs.getElementsByTagName(f"LINE_DEN_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
         normalisation_coeffs = global_rfm.getElementsByTagName("RFM_Validity")[0]
@@ -479,7 +478,6 @@ class RPC:
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-        rpc_params = dict()
 
         if not basename(dimap_filepath).upper().endswith("XML"):
             raise ValueError("dimap must ends with .xml")
@@ -488,7 +486,7 @@ class RPC:
 
         mtd = xmldoc.getElementsByTagName("Metadata_Identification")
         version = mtd[0].getElementsByTagName("METADATA_PROFILE")[0].attributes.items()[0][1]
-        rpc_params["driver_type"] = "dimap_v" + version
+        rpc_params = {"driver_type": "dimap_v" + version}
 
         global_rfm = xmldoc.getElementsByTagName("Global_RFM")
         rfm_validity = xmldoc.getElementsByTagName("RFM_Validity")
@@ -549,26 +547,27 @@ class RPC:
         if not rpc_dict:
             logging.error("%s does not contains RPCs ", image_filename)
             raise ValueError
-        rpc_params = dict()
-        rpc_params["den_row"] = parse_coeff_line(rpc_dict["LINE_DEN_COEFF"])
-        rpc_params["num_row"] = parse_coeff_line(rpc_dict["LINE_NUM_COEFF"])
-        rpc_params["num_col"] = parse_coeff_line(rpc_dict["SAMP_NUM_COEFF"])
-        rpc_params["den_col"] = parse_coeff_line(rpc_dict["SAMP_DEN_COEFF"])
-        rpc_params["offset_col"] = float(rpc_dict["SAMP_OFF"])
-        rpc_params["scale_col"] = float(rpc_dict["SAMP_SCALE"])
-        rpc_params["offset_row"] = float(rpc_dict["LINE_OFF"])
-        rpc_params["scale_row"] = float(rpc_dict["LINE_SCALE"])
-        rpc_params["offset_alt"] = float(rpc_dict["HEIGHT_OFF"])
-        rpc_params["scale_alt"] = float(rpc_dict["HEIGHT_SCALE"])
-        rpc_params["offset_x"] = float(rpc_dict["LONG_OFF"])
-        rpc_params["scale_x"] = float(rpc_dict["LONG_SCALE"])
-        rpc_params["offset_y"] = float(rpc_dict["LAT_OFF"])
-        rpc_params["scale_y"] = float(rpc_dict["LAT_SCALE"])
+        rpc_params = {
+            "den_row": parse_coeff_line(rpc_dict["LINE_DEN_COEFF"]),
+            "num_row": parse_coeff_line(rpc_dict["LINE_NUM_COEFF"]),
+            "num_col": parse_coeff_line(rpc_dict["SAMP_NUM_COEFF"]),
+            "den_col": parse_coeff_line(rpc_dict["SAMP_DEN_COEFF"]),
+            "offset_col": float(rpc_dict["SAMP_OFF"]),
+            "scale_col": float(rpc_dict["SAMP_SCALE"]),
+            "offset_row": float(rpc_dict["LINE_OFF"]),
+            "scale_row": float(rpc_dict["LINE_SCALE"]),
+            "offset_alt": float(rpc_dict["HEIGHT_OFF"]),
+            "scale_alt": float(rpc_dict["HEIGHT_SCALE"]),
+            "offset_x": float(rpc_dict["LONG_OFF"]),
+            "scale_x": float(rpc_dict["LONG_SCALE"]),
+            "offset_y": float(rpc_dict["LAT_OFF"]),
+            "scale_y": float(rpc_dict["LAT_SCALE"]),
+            "num_x": None,
+            "den_x": None,
+            "num_y": None,
+            "den_y": None,
+        }
         # inverse coeff are not defined
-        rpc_params["num_x"] = None
-        rpc_params["den_x"] = None
-        rpc_params["num_y"] = None
-        rpc_params["den_y"] = None
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
             rpc_params["offset_col"] += 0.5
@@ -583,13 +582,13 @@ class RPC:
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-        rpc_params = dict()
+        rpc_params = {}
         # OSSIM keyword list
         rpc_params["driver_type"] = "ossim_kwl"
-        with open(ossim_kwl_filename) as ossim_file:
+        with open(ossim_kwl_filename, "r", encoding="utf-8") as ossim_file:
             content = ossim_file.readlines()
 
-        geom_dict = dict()
+        geom_dict = {}
         for line in content:
             (key, val) = line.split(": ")
             geom_dict[key] = val.rstrip()
@@ -601,16 +600,16 @@ class RPC:
         for index in range(0, 20):
             axis = "line"
             num_den = "den"
-            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            key = f"{axis}_{num_den}_coeff_{index:02d}"
             rpc_params["den_row"][index] = float(geom_dict[key])
             num_den = "num"
-            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            key = f"{axis}_{num_den}_coeff_{index:02d}"
             rpc_params["num_row"][index] = float(geom_dict[key])
             axis = "samp"
-            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            key = f"{axis}_{num_den}_coeff_{index:02d}"
             rpc_params["num_col"][index] = float(geom_dict[key])
             num_den = "den"
-            key = "{0}_{1}_coeff_{2:02d}".format(axis, num_den, index)
+            key = f"{axis}_{num_den}_coeff_{index:02d}"
             rpc_params["den_col"][index] = float(geom_dict[key])
         rpc_params["offset_col"] = float(geom_dict["samp_off"])
         rpc_params["scale_col"] = float(geom_dict["samp_scale"])
@@ -646,7 +645,7 @@ class RPC:
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-        rpc_params = dict()
+        rpc_params = {}
         rpc_params["driver_type"] = "euclidium"
 
         # lecture fichier euclidium

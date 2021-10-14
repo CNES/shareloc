@@ -51,7 +51,7 @@ def test_rectification_grid_interpolation_one_point(row, col):
     Test interpolation on rectification grid
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "grid_{}.tif".format(id_scene_right))
+    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", f"grid_{id_scene_right}.tif")
     rectif_grid = RectificationGrid(grid_filename)
     # value at position [15,15]
     value_row = np.sum(rectif_grid.row_positions[0, 0:2]) / 2.0
@@ -67,7 +67,7 @@ def test_rectification_grid_interpolation():
     Test interpolation on rectification grid
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "grid_{}.tif".format(id_scene_right))
+    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", f"grid_{id_scene_right}.tif")
 
     rectif_grid = RectificationGrid(grid_filename)
     # value at position [15,15]

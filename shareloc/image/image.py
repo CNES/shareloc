@@ -32,7 +32,7 @@ from affine import Affine
 
 # pylint: disable=too-many-instance-attributes
 class Image:
-    """ class Image to handle image data """
+    """class Image to handle image data"""
 
     def __init__(self, image_path, read_data=False, roi=None, roi_is_in_physical_space=False):
         """

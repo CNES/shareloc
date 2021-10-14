@@ -25,7 +25,6 @@ Test module for triangulation class shareloc/triangulation/triangulation.py
 
 
 import os
-import time
 import pytest
 import numpy as np
 from utils import test_path
@@ -53,7 +52,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     dtmbsq = DTM(fic)
 
     # chargement des grilles
-    gld = os.path.join(data_folder, "grilles_gld_xH/{}_H1.hd".format(id_scene))
+    gld = os.path.join(data_folder, f"grilles_gld_xH/{id_scene}_H1.hd")
     gri = Grid(gld)
 
     return dtmbsq, gri
@@ -151,10 +150,11 @@ def test_epi_triangulation_sift_rpc():
 
     data_folder = test_path()
     id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
-    file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
+    file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
-    file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
+    file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
+    print(file_geom)
     geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
 
     grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "left_epipolar_grid.tif")
@@ -243,10 +243,10 @@ def test_epi_triangulation_disp_rpc():
     """
     data_folder = test_path()
     id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
-    file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
+    file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
-    file_geom = os.path.join(data_folder, "rpc/{}.geom".format(id_scene))
+    file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
 
     # grid_left_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids",
@@ -260,12 +260,9 @@ def test_epi_triangulation_disp_rpc():
     disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "disparity-crop.nc")
     disp = xr.load_dataset(disp_filename)
 
-    start = time.time()
     point_ecef, point_wgs84, residuals = epipolar_triangulation(
         disp, None, "disp", geom_model_left, geom_model_right, grid_left_filename, grid_right_filename, residues=True
     )
-    end = time.time()
-    print("elapsed time {}".format(end - start))
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
     out_disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "out_disparity_triangulation_rpc.nc")
@@ -350,12 +347,9 @@ def test_epi_triangulation_disp_grid():
     disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "disparity-crop.nc")
     disp = xr.load_dataset(disp_filename)
 
-    start = time.time()
     point_ecef, point_wgs84, residuals = epipolar_triangulation(
         disp, None, "disp", gri_left, gri_right, grid_left_filename, grid_right_filename, residues=True
     )
-    end = time.time()
-    print("elapsed time {}".format(end - start))
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
     out_disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "out_disparity_triangulation.nc")
@@ -393,12 +387,9 @@ def test_epi_triangulation_disp_grid_masked():
     disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "disparity-crop.nc")
     disp = xr.load_dataset(disp_filename)
     mask_array = disp.msk.values
-    start = time.time()
     point_ecef, __, __ = epipolar_triangulation(
         disp, mask_array, "disp", gri_left, gri_right, grid_left_filename, grid_right_filename, residues=True
     )
-    end = time.time()
-    print("elapsed time {}".format(end - start))
     # pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     # disp = xr.merge((disp, pc_dataset))
     # out_disp_filename = os.path.join(os.environ["TESTPATH"], "triangulation", "out_disparity_triangulation_masked.nc")

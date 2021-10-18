@@ -24,18 +24,19 @@
 Image class to handle Image data.
 """
 
+import os
 import logging
 import numpy as np
 from affine import Affine
 from rasterio.fill import fillnodata
-from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid
+from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid, rasterio_can_open
 from shareloc.image.image import Image
 from shareloc.euclidium_utils import identify_gdlib_code
 
 
 # pylint: disable=too-many-instance-attributes
 class DTMImage(Image):
-    """ class DTM  Image to handle DTM image data """
+    """class DTM  Image to handle DTM image data"""
 
     def __init__(
         self,
@@ -45,6 +46,7 @@ class DTMImage(Image):
         roi=None,
         roi_is_in_physical_space=False,
         fill_nodata="rio_fillnodata",
+        fill_value=None,
     ):
         """
         constructor
@@ -60,8 +62,11 @@ class DTMImage(Image):
         :type roi  : list
         :param roi_is_in_physical_space  : roi value in physical space
         :type roi_is_in_physical_space  : bool
-        :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
+        :param fill_nodata  fill_nodata strategy in None/'constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/
         :type fill_nodata  : str
+        :param fill_value  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
+        if None 'min' is used
+        :type fill_value  : float
         """
         if image_path.split(".")[-1] == "c1":
             logging.debug("bsq babel image")
@@ -114,7 +119,7 @@ class DTMImage(Image):
             else:
                 self.datum = datum
 
-        self.stats = dict()
+        self.stats = {}
         if read_data:
             if self.mask is not None:
                 valid_data = self.data[self.mask[:, :] == 255]
@@ -125,29 +130,66 @@ class DTMImage(Image):
             self.stats["mean"] = valid_data.mean()
             self.stats["median"] = np.median(valid_data)
         if fill_nodata is not None:
-            self.fill_nodata(strategy=fill_nodata)
+            self.fill_nodata(strategy=fill_nodata, fill_value=fill_value)
 
-    def fill_nodata(self, strategy="rio_fillnodata", max_search_distance=100.0, smoothing_iterations=0):
+    def fill_nodata(self, strategy="rio_fillnodata", max_search_distance=100.0, smoothing_iterations=0, fill_value=0.0):
         """
         fill nodata in DTM image
 
-        :param strategy: fill strategy (mean,rio_fillnodata)
+        :param strategy: fill strategy ('constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/)
         :type strategy: str
         :param max_search_distance: fill max_search_distance
         :type max_search_distance: float
         :param smoothing_iterations: smoothing_iterations
         :type smoothing_iterations: int
-
+        :param fill_value  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
+        if None 'min' is used
+        :type fill_value  : float
         """
         if self.mask is not None:
-            if strategy == "mean":
-                self.data[self.mask[:, :] == 0] = self.stats["mean"]
+            if strategy in self.stats:
+                self.data[self.mask[:, :] == 0] = self.stats[strategy]
             elif strategy == "rio_fillnodata":
                 self.data = fillnodata(self.data, self.mask[:, :], max_search_distance, smoothing_iterations)
-                print(np.sum(self.data[self.mask[:, :] == 0] == self.nodata))
                 if np.sum(self.data[self.mask[:, :] == 0] == self.nodata) != 0:
-                    logging.warning("not all nodata have been filled")
+                    if fill_value is None:
+                        fill_value = self.stats["min"]
+                    logging.warning("not all nodata have been filled, fill with %d", fill_value)
+                    self.data[self.data[:, :] == self.nodata] = fill_value
+            elif strategy == "constant":
+                self.data[self.mask[:, :] == 0] = fill_value
             else:
                 logging.warning("fill nodata strategy not available")
         else:
             logging.debug("no nodata mask has been defined")
+
+
+def list_dtm_tiles(directory):
+    """
+    list dtm tiles
+    :param directory: dtm dir
+    :type directory: str
+    :return list of files
+    :rtype list
+    """
+    dtm_tiles = []
+    for file_path in os.listdir(directory):
+        complete_file_path = os.path.join(directory, file_path)
+        if rasterio_can_open(complete_file_path):
+            dtm_tiles.append(complete_file_path)
+    return dtm_tiles
+
+
+def gather_dtm_tiles(directory, vrt):
+    """
+    gather dtm tiles into vrt file
+    :param directory: dtm dir
+    :type directory: str
+    :param vrt: vrt output
+    :type vrt: str
+    """
+    dtm_tiles = list_dtm_tiles(directory)
+    if len(dtm_tiles) == 0:
+        raise Exception(f"{directory} doesn't contain any dtm files")
+    command = " ".join(["gdalbuildvrt ", vrt, " ".join(dtm_tiles)])
+    os.system(command)

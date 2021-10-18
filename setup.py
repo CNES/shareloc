@@ -1,51 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-# Install CARS, whether via
-#      ``python setup.py install``
-#    or
-#      ``pip install shareloc``
+# Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
+#
+# This file is part of Shareloc
+# (see https://github.com/CNES/shareloc).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
-This module contains the required libraries and softwares allowing to execute the software,
-and setup elements to configure and identify the software.
-"""
-
-from codecs import open as copen
-from setuptools import setup, find_packages
-
-# Meta-data.
-NAME = "shareloc"
-DESCRIPTION = "ShareLoc API."
-URL = "https://gitlab.cnes.fr/OutilsCommuns/shareloc"
-AUTHOR = "CNES"
-REQUIRES_PYTHON = ">=3.6.0"
-VERSION = "0.1.0"
-EMAIL = "TBD"
-LICENSE = "TBD"
-REQUIREMENTS = ["numpy", "gdal", "rasterio", "xarray", "netCDF4", "numba"]
-REQUIREMENTS_EXTRA = {"dev": ["pytest", "pylint", "pre-commit", "black"]}
-DESCRIPTION = """
-ShareLoc API
+Shareloc Setup.py kept for compatibility and setuptools_scm configuration.
+Main part is in setup.cfg file.
 """
 
+from setuptools import setup
 
-def readme():
-    with copen("readme.md", "r", "utf-8") as fstream:
-        return fstream.read()
-
-
-# Setup
-setup(
-    name=NAME,
-    version=VERSION,
-    description=DESCRIPTION,
-    url=URL,
-    author=AUTHOR,
-    author_email=EMAIL,
-    license=LICENSE,
-    long_description=DESCRIPTION,
-    install_requires=REQUIREMENTS,
-    python_requires=REQUIRES_PYTHON,
-    extras_require=REQUIREMENTS_EXTRA,
-    packages=find_packages(),
-)
+# Main setup with setup.cfg file.
+setup(use_scm_version=True)

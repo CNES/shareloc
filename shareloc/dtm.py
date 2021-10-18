@@ -38,7 +38,15 @@ class DTM:
 
     # gitlab issue #56
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, dtm_filename, geoid_filename=None, roi=None, roi_is_in_physical_space=True, fill_nodata=None):
+    def __init__(
+        self,
+        dtm_filename,
+        geoid_filename=None,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    ):
         """
         Constructor
         :param dtm_filename: dtm filename
@@ -50,8 +58,11 @@ class DTM:
         :type roi  : list
         :param roi_is_in_physical_space  : roi value in physical space
         :type roi_is_in_physical_space  : bool
-        :param fill_nodata  fill_nodata strategy in None/'mean'/'rio_fillnodata'/
-        :type fill_nodata : str
+        :param fill_nodata  fill_nodata strategy in None/'constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/
+        :type fill_nodata  : str
+        :param fill_value  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
+        if None 'min' is used
+        :type fill_value  : float
         """
         self.dtm_file = dtm_filename
         self.alt_data = None
@@ -61,8 +72,6 @@ class DTM:
         self.origin_y = None
         self.pixel_size_x = None
         self.pixel_size_y = None
-        self.column_nb = None
-        self.row_nb = None
         self.plane_coef_a = None
         self.plane_coef_b = None
         self.plane_coef_c = None
@@ -82,6 +91,7 @@ class DTM:
             roi_is_in_physical_space=roi_is_in_physical_space,
             datum=datum,
             fill_nodata=fill_nodata,
+            fill_value=fill_value,
         )
         self.epsg = self.dtm_image.epsg
         self.alt_data = self.dtm_image.data[:, :].astype("float64")
@@ -94,7 +104,7 @@ class DTM:
                 lat, lon = self.dtm_image.transform_index_to_physical_point(self.grid_row, self.grid_col)
                 positions = np.vstack([lon.flatten(), lat.flatten()]).transpose()
                 if self.epsg != 4326:
-                    positions = coordinates_conversion(positions, self.epsg, 4326)[:, 0:2]
+                    positions = coordinates_conversion(positions, self.epsg, 4326)
                 geoid_height = interpolate_geoid_height(geoid_filename, positions)
                 self.alt_data += geoid_height.reshape(lon.shape)
             else:
@@ -177,6 +187,27 @@ class DTM:
         vect_ter = vect_dtm.copy()
         (vect_ter[1], vect_ter[0]) = self.dtm_image.transform_index_to_physical_point(vect_dtm[0], vect_dtm[1])
         return vect_ter
+
+    def get_alt_offset(self, epsg):
+        """
+        returns min/amx altitude offset between dtm coordinates system and another one
+        :param epsg: epsg code to compare with
+        :type epsg: int
+        :return min/max altimetric difference between epsg in parameter minus dtm alti expressed in dtm epsg
+        :rtype list of float (1x2)
+        """
+        if epsg != self.epsg:
+            alti_moy = (self.alt_min + self.alt_max) / 2.0
+            corners = np.zeros([4, 2])
+            corners[:, 0] = [0.0, 0.0, self.dtm_image.nb_rows, self.dtm_image.nb_rows]
+            corners[:, 1] = [0.0, self.dtm_image.nb_columns, self.dtm_image.nb_columns, 0.0]
+            corners -= 0.5  # index to corner
+            ground_corners = np.zeros([3, 4])
+            ground_corners[2, :] = alti_moy
+            ground_corners[1::-1, :] = self.dtm_image.transform_index_to_physical_point(corners[:, 0], corners[:, 1])
+            converted_corners = coordinates_conversion(ground_corners.transpose(), self.epsg, epsg)
+            return [np.min(converted_corners[:, 2]) - alti_moy, np.max(converted_corners[:, 2]) - alti_moy]
+        return [0.0, 0.0]
 
     def interpolate(self, pos_row, pos_col):
         """

@@ -38,10 +38,10 @@ from shareloc.rectification.rectification import (
     moving_to_next_line,
     prepare_rectification,
     compute_stereorectification_epipolar_grids,
+    get_epipolar_extent,
     # write_epipolar_grid,
 )
 from shareloc.image.image import Image
-from shareloc.localization import Localization
 
 
 @pytest.mark.parametrize("row,col", [(15, 0)])
@@ -51,7 +51,7 @@ def test_rectification_grid_interpolation_one_point(row, col):
     Test interpolation on rectification grid
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "grid_{}.tif".format(id_scene_right))
+    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", f"grid_{id_scene_right}.tif")
     rectif_grid = RectificationGrid(grid_filename)
     # value at position [15,15]
     value_row = np.sum(rectif_grid.row_positions[0, 0:2]) / 2.0
@@ -67,7 +67,7 @@ def test_rectification_grid_interpolation():
     Test interpolation on rectification grid
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", "grid_{}.tif".format(id_scene_right))
+    grid_filename = os.path.join(os.environ["TESTPATH"], "rectification_grids", f"grid_{id_scene_right}.tif")
 
     rectif_grid = RectificationGrid(grid_filename)
     # value at position [15,15]
@@ -115,9 +115,10 @@ def test_prepare_rectification():
     epi_step = 30
     elevation_offset = 50
     default_elev = 0.0
-    __, grid_size, rectified_image_size, left_epi_origin = prepare_rectification(
+    __, grid_size, rectified_image_size, left_epi_origin, __ = prepare_rectification(
         left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
     )
+
     # check size of the epipolar grids
     assert grid_size[0] == 22
     assert grid_size[1] == 22
@@ -247,12 +248,10 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid_roi():
         os.path.join(os.environ["TESTPATH"], "rectification", "right_image.geom"), topleftconvention=True
     )
 
-    loc_left = Localization(geom_model_left, image=left_im)
-
     dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
-    print(loc_left.extent())
-    dtm_ventoux = DTM(dtm_file, geoid_file, roi=loc_left.extent(margin=0.005))
+    extent = get_epipolar_extent(left_im, geom_model_left, geom_model_right, margin=0.0016667)
+    dtm_ventoux = DTM(dtm_file, geoid_file, roi=extent)
 
     epi_step = 30
     elevation_offset = 50

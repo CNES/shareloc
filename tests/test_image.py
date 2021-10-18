@@ -24,11 +24,12 @@ Test module for image class shareloc/image/image.py
 """
 
 import os
+import tempfile
 import pytest
 import numpy as np
 from utils import test_path
 from shareloc.image.image import Image
-from shareloc.image.dtm_image import DTMImage
+from shareloc.image.dtm_image import DTMImage, list_dtm_tiles, gather_dtm_tiles
 
 
 @pytest.mark.parametrize(
@@ -130,3 +131,35 @@ def test_dtm_fillnodata():
     assert my_image_rio_fillnodata.data[nodata_index[0], nodata_index[1]] == 783
     my_image_mean = DTMImage(dtm_file, read_data=True, fill_nodata="mean")
     assert my_image_mean.data[nodata_index[0], nodata_index[1]] == 872
+    my_image_min = DTMImage(dtm_file, read_data=True, fill_nodata="min")
+    assert my_image_min.data[nodata_index[0], nodata_index[1]] == 32
+    my_image_max = DTMImage(dtm_file, read_data=True, fill_nodata="max")
+    assert my_image_max.data[nodata_index[0], nodata_index[1]] == 2757
+    my_image_median = DTMImage(dtm_file, read_data=True, fill_nodata="median")
+    assert my_image_median.data[nodata_index[0], nodata_index[1]] == 840
+    my_image_constant = DTMImage(dtm_file, read_data=True, fill_nodata="constant", fill_value=100.0)
+    assert my_image_constant.data[nodata_index[0], nodata_index[1]] == 100.0
+
+    dtm_file_srtm_hole = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "N44E005_big_hole.tif")
+    my_image_fill_hole = DTMImage(dtm_file_srtm_hole, read_data=True, fill_nodata="rio_fillnodata")
+    assert my_image_fill_hole.data[403, 1119] == 32
+
+
+def test_dtm_list_files():
+    """
+    Test dtm listfiles
+    """
+    files = list_dtm_tiles("/datalake/static_aux/MNT/SRTM_90m/")
+    assert len(files) == 872
+
+
+def test_dtm_vrt():
+    """
+    Test create dtm vrt
+    """
+    with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+        vrt = os.path.join(directory, "dsm.vrt")
+        gather_dtm_tiles("/datalake/static_aux/MNT/SRTM_90m/", vrt)
+        dtm = Image(vrt)
+        assert dtm.origin_row == 60
+        assert dtm.origin_col == -180

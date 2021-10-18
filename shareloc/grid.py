@@ -90,8 +90,8 @@ class Grid:
             nom_hd = self.filename[:-4] + "1.hd"
             dico_hd = read_bsq_hd(nom_hd, dico_a_lire)
 
-            for var in dico_hd:
-                setattr(self, var, dico_hd[var])
+            for var, values in dico_hd.items():
+                setattr(self, var, values)
             # """renvoie une structure 3D [i_alt][l,c]"""
             gld_lon = np.zeros((self.nbalt, self.nbrow, self.nbcol))
             gld_lat = np.zeros((self.nbalt, self.nbrow, self.nbcol))

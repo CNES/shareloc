@@ -25,7 +25,7 @@ This module contains the input/output for shareloc
 import logging
 import os.path as op
 import numpy as np
-
+import rasterio as rio
 
 # ------------------------------------------------------------------------------
 def read_hdbabel_header(bsq_filename):
@@ -44,7 +44,7 @@ def read_hdbabel_header(bsq_filename):
     if not op.exists(babelheader):
         logging.error("missing hd_babel header")
     else:
-        with open(babelheader, "r") as fstream:
+        with open(babelheader, "r", encoding="utf-8") as fstream:
             txt_header = fstream.readlines()
         for row_header in txt_header:
             if row_header.startswith(">>"):
@@ -91,7 +91,7 @@ def read_bsq_hd(fic_hd, tag):
     :rtype dict
     """
     dico_out = {}
-    with open(op.join(fic_hd), "r") as fstream:
+    with open(op.join(fic_hd), "r", encoding="utf-8") as fstream:
         txt_header = fstream.readlines()
     header = {}
 
@@ -103,3 +103,17 @@ def read_bsq_hd(fic_hd, tag):
         dico_out[var] = form(header[nom])
 
     return dico_out
+
+
+def rasterio_can_open(raster_file: str) -> bool:
+    """
+    Test if a file can be open by rasterio
+
+    :param raster_file: File to test
+    :returns: True if rasterio can open file and False otherwise
+    """
+    try:
+        rio.open(raster_file)
+        return True
+    except Exception:
+        return False

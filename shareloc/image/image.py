@@ -159,11 +159,8 @@ class Image:
         :rtype: Tuple(georeference row float or 1D np.array, georeference col float or 1D np.array)
         """
 
-        # trans with convention : | pixel size col, row rotation, origin col, col rotation, pixel size row, origin row |
         trans = self.transform
-        col_geo = trans[2] + (col + 0.5) * trans[0] + (row + 0.5) * trans[1]
-        row_geo = trans[5] + (col + 0.5) * trans[3] + (row + 0.5) * trans[4]
-
+        col_geo, row_geo = trans * (col + 0.5, row + 0.5)
         return row_geo, col_geo
 
     def transform_physical_point_to_index(self, row_geo, col_geo):
@@ -177,6 +174,6 @@ class Image:
         :return: index coordinates (row, col)
         :rtype: Tuple(row float or 1D np.array, col float or 1D np.array)
         """
-        row = (row_geo - self.origin_row) / self.pixel_size_row - 0.5
-        col = (col_geo - self.origin_col) / self.pixel_size_col - 0.5
-        return row, col
+        trans_inv = ~self.transform
+        col, row = trans_inv * (col_geo, row_geo)
+        return row - 0.5, col - 0.5

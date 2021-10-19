@@ -19,13 +19,9 @@ ifndef VENV
 	VENV = "venv"
 endif
 
-# Check OTB and GDAL
-CHECK_OTB = $(shell command -v otbcli_ReadImageInfo 2> /dev/null)
-GDAL_VERSION = $(shell gdal-config --version)
 
 # CHECK if dependencies are installed.
 CHECK_NUMPY = $(shell ${VENV}/bin/python -m pip list|grep numpy)
-CHECK_RASTERIO = $(shell ${VENV}/bin/python -m pip list|grep rasterio)
 
 # SHARELOC variables
 CHECK_SHARELOC = $(shell ${VENV}/bin/python -m pip list|grep shareloc)
@@ -38,22 +34,15 @@ SHARELOCPATH ="$(shell cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P )"
 
 help: ## this help
 	@echo "      SHARELOC MAKE HELP  LOGLEVEL=${LOGLEVEL}"
-	@echo "  Dependencies: Install OTB before !\n"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-check: ## check if cmake, OTB, VLFEAT, GDAL is installed
-	@[ "${CHECK_OTB}" ] || ( echo ">> OTB not found"; exit 1 )
-	@[ "${OTB_APPLICATION_PATH}" ] || ( echo ">> OTB_APPLICATION_PATH is not set"; exit 1 )
-	@[ "${GDAL_VERSION}" ] || ( echo ">> GDAL_VERSION is not set"; exit 1 )
-
-venv: check ## create virtualenv in "venv" dir if not exists
+venv: ## create virtualenv in "venv" dir if not exists
 	@test -d ${VENV} || virtualenv -p `which python3` ${VENV}
 	@${VENV}/bin/python -m pip install --upgrade pip setuptools # no check to upgrade each time
 	@touch ${VENV}/bin/activate
 
 install-deps: venv
 	@[ "${CHECK_NUMPY}" ] || ${VENV}/bin/python -m pip install --upgrade cython numpy
-	@[ "${CHECK_RASTERIO}" ] || ${VENV}/bin/python -m pip install --no-binary rasterio rasterio
 
 install: install-deps ## install shareloc in dev mode
 	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[dev]

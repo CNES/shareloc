@@ -25,9 +25,9 @@ then
   printf 'ERROR: virtual environment has not been created yet\n' >&2
 
 else
-  # Load OTB for gdal and python3
+  # python3
   # TODO: move to hpc HAL specific doc or script.
-  ml otb/7.0-python3.7.2
+  ml python/3.7.2
 
   # Set TESTPATH for tests
   # TODO: remove with tests evolution to set TESTPATH internally

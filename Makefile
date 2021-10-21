@@ -20,9 +20,6 @@ ifndef VENV
 endif
 
 
-# CHECK if dependencies are installed.
-CHECK_NUMPY = $(shell ${VENV}/bin/python -m pip list|grep numpy)
-
 # SHARELOC variables
 CHECK_SHARELOC = $(shell ${VENV}/bin/python -m pip list|grep shareloc)
 SHARELOC_VERSION = $(shell python3 setup.py --version)
@@ -30,7 +27,7 @@ SHARELOC_VERSION = $(shell python3 setup.py --version)
 SHARELOCPATH ="$(shell cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P )"
 
 # MAKE TARGETS DEFINITION
-.PHONY: help check venv install-deps install test test-ci lint format notebook clean
+.PHONY: help check venv install test test-ci lint format notebook clean
 
 help: ## this help
 	@echo "      SHARELOC MAKE HELP  LOGLEVEL=${LOGLEVEL}"
@@ -41,10 +38,7 @@ venv: ## create virtualenv in "venv" dir if not exists
 	@${VENV}/bin/python -m pip install --upgrade pip setuptools # no check to upgrade each time
 	@touch ${VENV}/bin/activate
 
-install-deps: venv
-	@[ "${CHECK_NUMPY}" ] || ${VENV}/bin/python -m pip install --upgrade cython numpy
-
-install: install-deps ## install shareloc in dev mode
+install: venv ## install shareloc in dev mode
 	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[dev]
 	@test -f .git/hooks/pre-commit || echo "  Install pre-commit hook"
 	@test -f .git/hooks/pre-commit || ${VENV}/bin/pre-commit install -t pre-commit

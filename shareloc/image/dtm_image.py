@@ -24,12 +24,11 @@
 Image class to handle Image data.
 """
 
-import os
 import logging
 import numpy as np
 from affine import Affine
 from rasterio.fill import fillnodata
-from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid, rasterio_can_open
+from shareloc.image.readwrite import read_hdbabel_header, read_bsq_grid
 from shareloc.image.image import Image
 from shareloc.euclidium_utils import identify_gdlib_code
 
@@ -162,34 +161,3 @@ class DTMImage(Image):
                 logging.warning("fill nodata strategy not available")
         else:
             logging.debug("no nodata mask has been defined")
-
-
-def list_dtm_tiles(directory):
-    """
-    list dtm tiles
-    :param directory: dtm dir
-    :type directory: str
-    :return list of files
-    :rtype list
-    """
-    dtm_tiles = []
-    for file_path in os.listdir(directory):
-        complete_file_path = os.path.join(directory, file_path)
-        if rasterio_can_open(complete_file_path):
-            dtm_tiles.append(complete_file_path)
-    return dtm_tiles
-
-
-def gather_dtm_tiles(directory, vrt):
-    """
-    gather dtm tiles into vrt file
-    :param directory: dtm dir
-    :type directory: str
-    :param vrt: vrt output
-    :type vrt: str
-    """
-    dtm_tiles = list_dtm_tiles(directory)
-    if len(dtm_tiles) == 0:
-        raise Exception(f"{directory} doesn't contain any dtm files")
-    command = " ".join(["gdalbuildvrt ", vrt, " ".join(dtm_tiles)])
-    os.system(command)

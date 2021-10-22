@@ -22,7 +22,7 @@ export VENV_NAME="venv"
 
 # Load OTB for gdal and python3
 # TODO: move to hpc HAL specific doc or script.
-ml otb/7.0-python3.7.2
+ml python/3.7.2
 
 echo "INFO: clean previous installation..."
 make clean

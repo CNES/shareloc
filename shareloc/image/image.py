@@ -53,16 +53,22 @@ class Image:
 
             # Rasterio dataset
             self.dataset = rasterio.open(image_path)
+
+            # Geo-transform of type Affine with convention :
+            # | pixel size col,   row rotation, origin col |
+            # | col rotation  , pixel size row, origin row |
+            self.transform = self.dataset.transform
+
             roi_window = None
             if roi is not None:
                 if roi_is_in_physical_space:
-                    transform = self.dataset.transform
-                    self.origin_row = transform[5]
-                    self.origin_col = transform[2]
-                    row_off = (roi[0] - transform[5]) / transform[4]
-                    col_off = (roi[1] - transform[2]) / transform[0]
-                    row_max = (roi[2] - transform[5]) / transform[4]
-                    col_max = (roi[3] - transform[2]) / transform[0]
+                    row_off, col_off = self.transform_physical_point_to_index(roi[0], roi[1])
+                    row_max, col_max = self.transform_physical_point_to_index(roi[2], roi[3])
+                    # index is relative to pixel center, here the roi is defined with corners
+                    row_off += 0.5
+                    col_off += 0.5
+                    row_max += 0.5
+                    col_max += 0.5
                     # in case of negative pixel size y
                     if row_off > row_max:
                         row_max, row_off = row_off, row_max
@@ -81,11 +87,6 @@ class Image:
                 self.nb_rows = height
                 self.nb_columns = width
             else:
-                # Geo-transform of type Affine with convention :
-                # | pixel size col,   row rotation, origin col |
-                # | col rotation  , pixel size row, origin row |
-                self.transform = self.dataset.transform
-
                 # Image size
                 self.nb_rows = self.dataset.height
                 self.nb_columns = self.dataset.width

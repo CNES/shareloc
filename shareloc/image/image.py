@@ -100,6 +100,10 @@ class Image:
             self.pixel_size_row = self.transform[4]
             self.pixel_size_col = self.transform[0]
 
+            # row/col rotation
+            self.pixel_rotation_row = self.transform[3]
+            self.pixel_rotation_col = self.transform[1]
+
             if self.dataset.crs is not None:
                 self.epsg = self.dataset.crs.to_epsg()
             else:

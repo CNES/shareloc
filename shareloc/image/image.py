@@ -157,9 +157,9 @@ class Image:
         Transform index to physical point
 
         :param row: row index
-        :type row: int or 1D numpy array
+        :type row: float or 1D np.array
         :param col: col index
-        :type col: int or 1D numpy array
+        :type col: float or 1D np.array
         :return: Georeferenced coordinates (row, col)
         :rtype: Tuple(georeference row float or 1D np.array, georeference col float or 1D np.array)
         """
@@ -173,9 +173,9 @@ class Image:
         Transform physical point to index
 
         :param row_geo: physical point row
-        :type row_geo: int or 1D numpy array
+        :type row_geo: float or 1D np.array
         :param col_geo: physical point col
-        :type col_geo: int or 1D numpy array
+        :type col_geo: float or 1D np.array
         :return: index coordinates (row, col)
         :rtype: Tuple(row float or 1D np.array, col float or 1D np.array)
         """

@@ -24,12 +24,11 @@ Test module for image class shareloc/image/image.py
 """
 
 import os
-import tempfile
 import pytest
 import numpy as np
 from utils import test_path
 from shareloc.image.image import Image
-from shareloc.image.dtm_image import DTMImage, list_dtm_tiles, gather_dtm_tiles
+from shareloc.image.dtm_image import DTMImage
 
 # pylint: disable=too-many-arguments
 @pytest.mark.parametrize(
@@ -175,23 +174,3 @@ def test_dtm_fillnodata():
     dtm_file_srtm_hole = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "N44E005_big_hole.tif")
     my_image_fill_hole = DTMImage(dtm_file_srtm_hole, read_data=True, fill_nodata="rio_fillnodata")
     assert my_image_fill_hole.data[403, 1119] == 32
-
-
-def test_dtm_list_files():
-    """
-    Test dtm listfiles
-    """
-    files = list_dtm_tiles("/datalake/static_aux/MNT/SRTM_90m/")
-    assert len(files) == 872
-
-
-def test_dtm_vrt():
-    """
-    Test create dtm vrt
-    """
-    with tempfile.TemporaryDirectory(dir="/tmp") as directory:
-        vrt = os.path.join(directory, "dsm.vrt")
-        gather_dtm_tiles("/datalake/static_aux/MNT/SRTM_90m/", vrt)
-        dtm = Image(vrt)
-        assert dtm.origin_row == 60
-        assert dtm.origin_col == -180

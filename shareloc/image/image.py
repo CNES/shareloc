@@ -53,16 +53,22 @@ class Image:
 
             # Rasterio dataset
             self.dataset = rasterio.open(image_path)
+
+            # Geo-transform of type Affine with convention :
+            # | pixel size col,   row rotation, origin col |
+            # | col rotation  , pixel size row, origin row |
+            self.transform = self.dataset.transform
+
             roi_window = None
             if roi is not None:
                 if roi_is_in_physical_space:
-                    transform = self.dataset.transform
-                    self.origin_row = transform[5]
-                    self.origin_col = transform[2]
-                    row_off = (roi[0] - transform[5]) / transform[4]
-                    col_off = (roi[1] - transform[2]) / transform[0]
-                    row_max = (roi[2] - transform[5]) / transform[4]
-                    col_max = (roi[3] - transform[2]) / transform[0]
+                    row_off, col_off = self.transform_physical_point_to_index(roi[0], roi[1])
+                    row_max, col_max = self.transform_physical_point_to_index(roi[2], roi[3])
+                    # index is relative to pixel center, here the roi is defined with corners
+                    row_off += 0.5
+                    col_off += 0.5
+                    row_max += 0.5
+                    col_max += 0.5
                     # in case of negative pixel size y
                     if row_off > row_max:
                         row_max, row_off = row_off, row_max
@@ -81,11 +87,6 @@ class Image:
                 self.nb_rows = height
                 self.nb_columns = width
             else:
-                # Geo-transform of type Affine with convention :
-                # | pixel size col,   row rotation, origin col |
-                # | col rotation  , pixel size row, origin row |
-                self.transform = self.dataset.transform
-
                 # Image size
                 self.nb_rows = self.dataset.height
                 self.nb_columns = self.dataset.width
@@ -98,6 +99,10 @@ class Image:
             # Pixel size
             self.pixel_size_row = self.transform[4]
             self.pixel_size_col = self.transform[0]
+
+            # row/col rotation
+            self.pixel_rotation_row = self.transform[3]
+            self.pixel_rotation_col = self.transform[1]
 
             if self.dataset.crs is not None:
                 self.epsg = self.dataset.crs.to_epsg()
@@ -152,18 +157,15 @@ class Image:
         Transform index to physical point
 
         :param row: row index
-        :type row: int or 1D numpy array
+        :type row: float or 1D np.array
         :param col: col index
-        :type col: int or 1D numpy array
+        :type col: float or 1D np.array
         :return: Georeferenced coordinates (row, col)
         :rtype: Tuple(georeference row float or 1D np.array, georeference col float or 1D np.array)
         """
 
-        # trans with convention : | pixel size col, row rotation, origin col, col rotation, pixel size row, origin row |
         trans = self.transform
-        col_geo = trans[2] + (col + 0.5) * trans[0] + (row + 0.5) * trans[1]
-        row_geo = trans[5] + (col + 0.5) * trans[3] + (row + 0.5) * trans[4]
-
+        col_geo, row_geo = trans * (col + 0.5, row + 0.5)
         return row_geo, col_geo
 
     def transform_physical_point_to_index(self, row_geo, col_geo):
@@ -171,12 +173,12 @@ class Image:
         Transform physical point to index
 
         :param row_geo: physical point row
-        :type row_geo: int or 1D numpy array
+        :type row_geo: float or 1D np.array
         :param col_geo: physical point col
-        :type col_geo: int or 1D numpy array
+        :type col_geo: float or 1D np.array
         :return: index coordinates (row, col)
         :rtype: Tuple(row float or 1D np.array, col float or 1D np.array)
         """
-        row = (row_geo - self.origin_row) / self.pixel_size_row - 0.5
-        col = (col_geo - self.origin_col) / self.pixel_size_col - 0.5
-        return row, col
+        trans_inv = ~self.transform
+        col, row = trans_inv * (col_geo, row_geo)
+        return row - 0.5, col - 0.5

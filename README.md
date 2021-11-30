@@ -24,13 +24,13 @@
 ## Overview
 
 Shareloc is an open source satellite geolocation library. 
-It performs image (row, col) to geographic (lat, lon, h) or projected (x, y, h) mapping using RPC model or direct location grids, and reverse (gounrd to sensor mapping). 
-This mapping is done at constant elevation (ellipsoïdal Earth model) or byline of sight (LOS) instersection with DEM. 
-These functionnalities are a key component when projecting an image on ground.
+It performs image coordinates (row, col) to geographic (lat, lon, h) or projected (x, y, h)  coordinates  direct mapping using RPC model or direct location grids, and reverse one (ground to sensor mapping). 
+This mapping is done at constant elevation (ellipsoidal Earth model) or by line of sight (LOS) intersection with DEM. 
+These functionalities are key components when projecting an image on ground.
 
 ## Why Shareloc
 
-Shareloc development has been motivated by the need of a full python component for CNES studies, and the need of an underlying geomrical component for <a href="https://github.com/CNES/cars">CARS</a>    
+Shareloc development has been motivated by the need of a full python component for CNES studies, and the need of an underlying geoetrical component for <a href="https://github.com/CNES/cars">CARS</a>.   
 
 
 ## Quick start

@@ -54,7 +54,7 @@ source venv/bin/activate # to go in installed dev environment
 
 Dependencies : **git**, **make**
 
-### example
+### Example
 
 Shareloc is designed as an API. Please refer the [notebook directory](notebooks) for examples. 
 

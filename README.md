@@ -25,14 +25,18 @@
 
 Shareloc is an open source satellite geolocation library. 
 
-It performs image coordinates projections between sensor and ground and vice versa.
+It performs image coordinates projections between sensor and ground and vice versa. 
+Shareloc handles RPC models and direct location grids.
 
 TODO add illustration
 
- * Projections can be direct (sensor to ground) or inverse (ground to sensor) 
- * Ground coordinates can be either geographic [latitude, longitude, height] or cartographic [x,y,height], depending on the chosen coordinate system (EPSG code)
- * Constant elevation (ellipsoidal earth model) or line of sight (LOS) intersection with DEM (w.r.t ellispoid or geoid) are handled.  
- * RPC models and direct location grids geometric models are handled.
+Shareloc Main functions : 
+
+ * Direct/inverse localization at constant elevation (ellipsoidal earth model). Ground coordinates can be either geographic [latitude, longitude, height] or cartographic [x,y,height], depending on the chosen coordinate system (EPSG code) 
+ * Direct localization on 2.5D DEM (w.r.t ellipsoid or geoid) 
+ * Line of sight triangulation
+ * Rectification grid creation
+ * Rectification grid interpolation
 
 ## Why Shareloc
 
@@ -57,15 +61,6 @@ Dependencies : **git**, **make**
 ### Example
 
 Shareloc is designed as a library. Please refer the [notebook directory](notebooks) for examples. 
-
-
-## Main Functions
-
-* Direct/inverse localization on ellipsoid
-* Direct localisation on 2.5D DEM
-* Line of sight triangulation
-* Rectification grid creation
-* Rectification grid interpolation
 
 ## Documentation
 

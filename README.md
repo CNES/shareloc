@@ -36,7 +36,7 @@ TODO add illustration
 
 ## Why Shareloc
 
-Shareloc development has been motivated by the need of a full python component for CNES studies, and the need of an underlying geoetrical component for <a href="https://github.com/CNES/cars">CARS</a>.   
+Shareloc development has been motivated by the need of a full python component for CNES studies, and the need of an underlying geometrical component for <a href="https://github.com/CNES/cars">CARS</a>.   
 
 
 ## Quick start

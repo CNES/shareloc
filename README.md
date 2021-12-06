@@ -24,6 +24,7 @@
 ## Overview
 
 Shareloc is an open source satellite geolocation library. 
+
 It performs image coordinates (row, col) to geographic (lat, lon, h) or projected (x, y, h)  coordinates  direct mapping using RPC model or direct location grids, and reverse one (ground to sensor mapping). 
 This mapping is done at constant elevation (ellipsoidal Earth model) or by line of sight (LOS) intersection with DEM. 
 These functionalities are key components when projecting an image on ground.

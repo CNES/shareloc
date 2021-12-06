@@ -56,12 +56,12 @@ Dependencies : **git**, **make**
 
 ### Example
 
-Shareloc is designed as an API. Please refer the [notebook directory](notebooks) for examples. 
+Shareloc is designed as a library. Please refer the [notebook directory](notebooks) for examples. 
 
 
 ## Main Functions
 
-* Direct/inverse localisation on ellipsoid
+* Direct/inverse localization on ellipsoid
 * Direct localisation on 2.5D DEM
 * Line of sight triangulation
 * Rectification grid creation
@@ -69,7 +69,7 @@ Shareloc is designed as an API. Please refer the [notebook directory](notebooks)
 
 ## Documentation
 
-See [Shareloc generation README](docs/README.md) to rebuild documentation.
+Go to [SHareloc Main Documentation](https://shareloc.readthedocs.io/?badge=latest)  
 
 ## Contribution
 

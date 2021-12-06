@@ -45,7 +45,7 @@ Shareloc development has been motivated by the need of a full python component f
 
 ## Quick start
 
-### installation
+### Installation
 
 Shareloc can be installed in a  [virtualenv](https://docs.python.org/3/library/venv) using the following commands:
 

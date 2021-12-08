@@ -28,7 +28,10 @@ Shareloc is an open source remote sensing geolocation library.
 It performs image coordinates projections between sensor and ground and vice versa. 
 Shareloc handles RPC models and direct location grids.
 
-TODO add illustration
+
+Direct localization at constant elevation |  Direct localization on DEM 
+:-------------------------:|:-------------------------:
+<img src="docs/source/images/shareloc_loc_ellipsoid.png" alt="drawing" width="400"/> |  <img src="ddocs/source/images/shareloc_loc_ellipsoid.png" alt="drawing" width="400"/>
 
 Shareloc main functions : 
 

@@ -31,7 +31,7 @@ Shareloc handles RPC models and direct location grids.
 
 Direct localization at constant elevation |  Direct localization on DEM 
 :-------------------------:|:-------------------------:
-<img src="docs/source/images/shareloc_loc_ellipsoid.png" alt="drawing" width="400"/> |  <img src="docs/source/images/shareloc_loc_dem.png" alt="drawing" width="400"/>
+<img src="docs/source/images/shareloc_loc_ellipsoid.png" alt="drawing" width="300"/> |  <img src="docs/source/images/shareloc_loc_dem.png" alt="drawing" width="300"/>
 
 Shareloc main functions : 
 

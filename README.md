@@ -4,7 +4,7 @@
 <div align="center">
   <a href="https://github.com/CNES/shareloc"><img src="docs/source/images/shareloc_picto.svg" alt="Shareloc" title="Shareloc"  width="20%"></a>
 
-<h4>ShareLoc a full python simple satellite geometric library</h4>
+<h4>ShareLoc, a simple remote sensing geometric library</h4>
 
 [![Python](https://img.shields.io/badge/python-v3.6+-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
@@ -23,20 +23,20 @@
 
 ## Overview
 
-Shareloc is an open source satellite geolocation library. 
+Shareloc is an open source remote sensing geolocation library. 
 
 It performs image coordinates projections between sensor and ground and vice versa. 
 Shareloc handles RPC models and direct location grids.
 
 TODO add illustration
 
-Shareloc Main functions : 
+Shareloc main functions : 
 
- * Direct/inverse localization at constant elevation (ellipsoidal earth model). Ground coordinates can be either geographic [latitude, longitude, height] or cartographic [x,y,height], depending on the chosen coordinate system (EPSG code) 
- * Direct localization on 2.5D DEM (w.r.t ellipsoid or geoid) 
- * Line of sight triangulation
- * Rectification grid creation
- * Rectification grid interpolation
+ * Direct/inverse localization at constant elevation (ellipsoidal earth model).
+ * Direct localization on 2.5D DEM (w.r.t ellipsoid or geoid).
+ * Line of sight triangulation.
+ * Rectification grid creation.
+ * Rectification grid interpolation.
 
 ## Why Shareloc
 
@@ -64,7 +64,7 @@ Shareloc is designed as a library. Please refer the [notebook directory](noteboo
 
 ## Documentation
 
-Go to [SHareloc Main Documentation](https://shareloc.readthedocs.io/?badge=latest)  
+Go to [Shareloc Main Documentation](https://shareloc.readthedocs.io/?badge=latest)  
 
 ## Contribution
 

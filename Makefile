@@ -45,6 +45,16 @@ install: venv ## install shareloc in dev mode
 	@echo "Shareloc ${SHARELOC_VERSION} installed in dev mode in virtualenv ${VENV}"
 	@echo "Shareloc venv usage : source ${VENV}/bin/activate; python3 -c 'import shareloc'"
 
+install-doc: install  ## install shareloc with Sphinx documentation dependencies
+	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[doc]
+	@echo "Shareloc ${SHARELOC_VERSION} in virtualenv ${ENV} installed with Sphinx docs dependencies"
+
+doc: install-doc ## build sphinx documentation
+	@${VENV}/bin/sphinx-build -M clean docs/source/ docs/build
+	@${VENV}/bin/sphinx-apidoc -o docs/source/apidoc/ shareloc
+	@${VENV}/bin/sphinx-build -M html docs/source/ docs/build
+
+
 test: install ## run all tests + coverage html
 	@TESTPATH="${SHARELOCPATH}/valid" ${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --cov-config=.coveragerc --cov-report html --cov
 

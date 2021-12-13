@@ -39,11 +39,6 @@ Go to `docs` directory from Shareloc source root directory.
 cd docs
 ```
 
-First generate Autodoc generation in docs directory:
-````
-sphinx-apidoc -o source/apidoc/ ../shareloc
-````
-
 For HTML documentation generation:
 ```
 make html

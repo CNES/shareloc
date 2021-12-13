@@ -51,7 +51,7 @@ install-doc: install  ## install shareloc with Sphinx documentation dependencies
 
 doc: install-doc ## build sphinx documentation
 	@${VENV}/bin/sphinx-build -M clean docs/source/ docs/build
-	@${VENV}/bin/sphinx-apidoc -o docs/source/apidoc/ shareloc
+	# @${VENV}/bin/sphinx-apidoc -o docs/source/apidoc/ shareloc
 	@${VENV}/bin/sphinx-build -M html docs/source/ docs/build
 
 

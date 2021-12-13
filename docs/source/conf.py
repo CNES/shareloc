@@ -140,10 +140,10 @@ man_pages = [(master_doc, "sharelocdocs", "Shareloc Documentation", [author], 1)
 texinfo_documents = [
     (
         master_doc,
-        "CARSDoc",
-        "CARS Documentation",
+        "SharelocDoc",
+        "Shareloc Documentation",
         author,
-        "CARSDoc",
+        "SharelocDoc",
         "One line description of project.",
         "Miscellaneous",
     ),

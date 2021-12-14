@@ -26,28 +26,23 @@ localisations function from mutji h direct grids.
 
 import logging
 import numpy as np
-from pyhdf.SD import SD, SDC
-from shareloc.image.readwrite import read_bsq_hd, read_hdf_hd
+from shareloc.image.image import Image
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
-from shareloc.euclidium_utils import identify_gdlib_code
 from shareloc.proj_utils import coordinates_conversion
 
 
+# gitlab issue #58
+# pylint: disable=too-many-instance-attributes
 class Grid:
     """multi H direct localization grid handling class"""
 
-    # gitlab issue #58
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, grid_filename, grid_format="bsq"):
+    def __init__(self, grid_filename):
         """
         Constructor
-        :param grid_filename: grid filename (XXX_HX.hd(f))
+        :param grid_filename: grid filename (Geotiff)
         :type grid_filename: string
-        :param grid_format: grid format (default 'bsq' EUCLIDIUM, 'hdf' Libgeo is also handled)
-        :type grid_format: string
         """
         self.filename = grid_filename
-        self.format = grid_format
         self.row0 = None
         self.col0 = None
         self.nbrow = None
@@ -63,7 +58,10 @@ class Grid:
         self.rowmax = None
         self.colmax = None
         self.load()
-        self.epsg, self.datum = identify_gdlib_code(self.repter)
+        # self.datum = "ellipsoid"
+        # print(self.alts_down)
+        # print(self.gld_lon[:,0:2,0:2])
+        # print(self.gld_lat[:,0:2,0:2])
         self.type = "multi H grid"
 
     def load(self):
@@ -75,94 +73,41 @@ class Grid:
         bsq and hdf grids are stored by increasing altitude H0 ... Hx
         internal structure is decreasing one
         """
-        if self.format == "bsq":
-            dico_a_lire = {
-                "nbrow": ("LINES", int),
-                "nbcol": ("COLUMNS", int),
-                "bpp": ("BITS PER PIXEL", int),
-                "nbalt": ("NB ALT", int),
-                "stepcol": ("PAS COL", float),
-                "steprow": ("PAS LIG", float),
-                "col0": ("COL0", float),
-                "row0": ("LIG0", float),
-                "repter": ("REFERENTIEL TERRESTRE", str),
-            }
 
-            nom_hd = self.filename[:-4] + "1.hd"
-            dico_hd = read_bsq_hd(nom_hd, dico_a_lire)
+        grid_image = Image(self.filename, read_data=True)
+        metadata = grid_image.dataset.tags()
+        self.nbalt = int(grid_image.dataset.count / 2)
+        self.nbrow = grid_image.nb_rows
+        self.nbcol = grid_image.nb_columns
+        indexes = self.parse_metadata_alti(metadata)
+        lon_indexes = indexes * 2
+        self.gld_lon = grid_image.data[lon_indexes, :, :]
+        self.gld_lat = grid_image.data[lon_indexes + 1, :, :]
+        self.stepcol = grid_image.pixel_size_col
+        self.steprow = grid_image.pixel_size_row
+        self.col0 = grid_image.origin_col + self.stepcol / 2.0
+        self.row0 = grid_image.origin_row + self.steprow / 2.0
+        self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
+        self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
+        for key in metadata.keys():
+            if key.endswith("REF"):
+                self.repter = metadata[key]
+                self.epsg = int(metadata[key].split(":")[1])
 
-            for var, values in dico_hd.items():
-                setattr(self, var, values)
-            # """renvoie une structure 3D [i_alt][l,c]"""
-            gld_lon = np.zeros((self.nbalt, self.nbrow, self.nbcol))
-            gld_lat = np.zeros((self.nbalt, self.nbrow, self.nbcol))
-
-            codage = float
-
-            for alt_layer in range(self.nbalt):
-                inverse_index = self.nbalt - alt_layer
-                nom_gri_lon = self.filename[:-4] + str(inverse_index) + ".c1"
-                nom_gri_lat = self.filename[:-4] + str(inverse_index) + ".c2"
-                nom_hd = self.filename[:-4] + str(inverse_index) + ".hd"
-
-                gld_lon[alt_layer, :, :] = np.fromfile(nom_gri_lon, dtype=codage).reshape((self.nbrow, self.nbcol))
-                gld_lat[alt_layer, :, :] = np.fromfile(nom_gri_lat, dtype=codage).reshape((self.nbrow, self.nbcol))
-
-                dico_hd = read_bsq_hd(nom_hd, {"index": ("ALT INDEX", int), "alt": ("ALTITUDE", float)})
-                self.index_alt[dico_hd["index"]] = dico_hd["alt"]
-
-            self.gld_lon = gld_lon
-            self.gld_lat = gld_lat
-            self.alts_down = [self.index_alt[_] for _ in range(int(self.nbalt - 1), -1, -1)]
-            self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
-            self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
-
-        elif self.format == "hdf":
-            dico_a_lire = {
-                "nbrow": ("LINES", int),
-                "nbcol": ("COLUMNS", int),
-                "bpp": ("BITS PER PIXEL", int),
-                "nbalt": ("NB ALT", int),
-                "stepcol": ("PAS COL", float),
-                "steprow": ("PAS LIG", float),
-                "col0": ("Y0", float),
-                "row0": ("X0", float),
-                "repter": ("REFERENTIEL TERRESTRE", str),
-                "convention": ("CONVENTION", str),
-            }
-
-            nom_hd = self.filename[:-5] + "1.hdf"
-            dico_hd = read_hdf_hd(nom_hd, dico_a_lire)
-
-            for var in dico_hd:
-                setattr(self, var, dico_hd[var])
-            # """renvoie une structure 3D [i_alt][l,c]"""
-            gld_lon = np.zeros((self.nbalt, self.nbrow, self.nbcol))
-            gld_lat = np.zeros((self.nbalt, self.nbrow, self.nbcol))
-
-            for alt_layer in range(self.nbalt):
-                inverse_index = self.nbalt - alt_layer
-                hdf = SD(self.filename[:-5] + str(inverse_index) + ".hdf", SDC.READ)
-                gri_lon_obj = hdf.select("c1")
-                gri_lat_obj = hdf.select("c2")
-
-                gld_lon[alt_layer, :, :] = gri_lon_obj.get().reshape((self.nbrow, self.nbcol))
-                gld_lat[alt_layer, :, :] = gri_lat_obj.get().reshape((self.nbrow, self.nbcol))
-
-                dico_hd = read_hdf_hd(
-                    self.filename[:-5] + str(inverse_index) + ".hdf",
-                    {"index": ("ALT INDEX", int), "alt": ("ALTITUDE", float)},
-                )
-                self.index_alt[dico_hd["index"]] = dico_hd["alt"]
-
-            self.gld_lon = gld_lon
-            self.gld_lat = gld_lat
-            self.alts_down = [self.index_alt[_] for _ in range(int(self.nbalt - 1), -1, -1)]
-            self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
-            self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
-
-        else:
-            logging.error("dtm format is not handled")
+    def parse_metadata_alti(self, metadata):
+        """
+        parse metadata to sort altitude in decreasing order
+        :param metadata :  Geotiff metadata
+        :type metadata : dict
+        """
+        alt_array = np.zeros([self.nbalt])
+        for key in metadata.keys():
+            if "ALTITUDE" in key:
+                band_index = int(int(key.split("B")[1]) / 2)
+                alt_array[band_index] = float(metadata[key])
+        indexes = np.argsort(alt_array)[::-1]
+        self.alts_down = alt_array[indexes]
+        return indexes
 
     def get_alt_min_max(self):
         """

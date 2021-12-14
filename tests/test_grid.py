@@ -26,27 +26,18 @@ Module to test functions that use direct grid
 import os
 import pytest
 import numpy as np
-from utils import test_path
 
 from shareloc.grid import Grid
 
 
 @pytest.mark.unit_tests
-def test_grid_eucl_vs_libgeorpc_drivers():
+def test_grid_geotiff():
     """
     test grid readers
     """
-    id_scene = "P1AP--2013072139303958CP"
-    data_folder = test_path(alti="ellipsoide", id_scene=id_scene)
-    gld = os.path.join(data_folder, "{}_H1.hd".format(id_scene))
-    gri = Grid(gld)
-    print(gri.nbrow)
-    print(gri.nbcol)
-    res_eucl = gri.direct_loc_h(100.0, 200.0, 100.0)
-
-    data_folder_libgeo = os.path.join(os.environ["TESTPATH"], "ellipsoide", "{}_Libgeo".format(id_scene))
-    gld_libgeo = os.path.join(data_folder_libgeo, "{}_H1.hdf".format(id_scene))
-    print(gld_libgeo)
-    gri_libgeo = Grid(gld_libgeo, grid_format="hdf")
-    res_libgeo = gri_libgeo.direct_loc_h(100.0, 200.0, 100.0)
-    np.testing.assert_allclose(res_eucl, res_libgeo, rtol=0, atol=1e-9)
+    gld_geotiff = os.path.join(os.environ["TESTPATH"], "ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
+    gri_geotiff = Grid(gld_geotiff)
+    res_geotiff = gri_geotiff.direct_loc_h(0.5, 0.5, 1000.0)
+    np.testing.assert_allclose(res_geotiff, [2.183908972985368, 48.94317692547565, 1000.0], rtol=0, atol=1e-9)
+    res_geotiff = gri_geotiff.direct_loc_h(50, 100, 200.0)
+    np.testing.assert_allclose(res_geotiff, [2.1828713504608683, 48.942429997483146, 200.0], rtol=0, atol=1e-9)

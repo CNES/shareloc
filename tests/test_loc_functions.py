@@ -122,7 +122,7 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     lonlatalt = loc.direct(row, col, h)
 
     assert gri.epsg == 4269
-    assert gri.datum == "geoid"
+    # assert gri.datum == "geoid"
     assert valid_lon == pytest.approx(lonlatalt[0], abs=1e-12)
     assert valid_lat == pytest.approx(lonlatalt[1], abs=1e-12)
     assert valid_alt == pytest.approx(lonlatalt[2], abs=1e-8)
@@ -209,7 +209,6 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     id_scene = "P1BP--2018122638935449CP"
     ___, gri = prepare_loc("ellipsoide", id_scene)
     assert gri.epsg == 4269
-    assert gri.datum == "ellipsoid"
     loc_grid = Localization(gri)
     # init des predicteurs
     lonlatalt = loc_grid.direct(row, col, h)

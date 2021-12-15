@@ -58,10 +58,6 @@ class Grid:
         self.rowmax = None
         self.colmax = None
         self.load()
-        # self.datum = "ellipsoid"
-        # print(self.alts_down)
-        # print(self.gld_lon[:,0:2,0:2])
-        # print(self.gld_lat[:,0:2,0:2])
         self.type = "multi H grid"
 
     def load(self):

@@ -34,7 +34,7 @@ from shareloc.proj_utils import coordinates_conversion
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
 class Grid:
-    """multi H direct localization grid handling class"""
+    """multi H direct localization grid handling class. please refers documentation regarding grid format"""
 
     def __init__(self, grid_filename):
         """
@@ -71,6 +71,10 @@ class Grid:
         """
 
         grid_image = Image(self.filename, read_data=True)
+        if grid_image.dataset.driver != "GTiff":
+            raise Exception(
+                "Only Geotiff grids are accepted. Please refers the documentation for grid supported format."
+            )
         metadata = grid_image.dataset.tags()
         self.nbalt = int(grid_image.dataset.count / 2)
         self.nbrow = grid_image.nb_rows

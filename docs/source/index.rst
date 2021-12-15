@@ -27,3 +27,8 @@ ShareLoc, is an open source remote sensing geolocation library.
    :maxdepth: 2
 
    getting_started
+   install
+   user_manual
+   examples
+   glossary
+

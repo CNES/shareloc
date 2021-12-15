@@ -134,8 +134,6 @@ class Grid:
         """
         if fill_nan:
             logging.debug("fill nan %s", fill_nan)
-        # faire une controle sur row / col !!!!
-        # 0.5 < row < rowmax
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
         alt_down = self.alts_down[grid_index_down]
         alt_up = self.alts_down[grid_index_up]

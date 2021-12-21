@@ -6,14 +6,14 @@
 :Version: |version|
 
 ShareLoc, a simple remote sensing geometric library
-============================================
+===================================================
 
 ShareLoc, is an open source remote sensing geolocation library.
 
 .. |img1| image:: images/shareloc_loc_ellipsoid.png
-   :width: 100%
+   :width: 65%
 .. |img2| image:: images/shareloc_loc_dem.png
-   :width: 80%
+   :width: 100%
 
 +-------------------------------------------+----------------------------+
 | Direct localization at constant elevation | Direct localization on DEM |
@@ -30,5 +30,6 @@ ShareLoc, is an open source remote sensing geolocation library.
    install
    user_manual
    examples
+   developer
    glossary
 

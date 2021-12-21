@@ -35,7 +35,7 @@ Quick install
 
 Advanced Install
 ================
-The following steps are defined in `Makefile`_  ``install`` command.
+The following steps are defined in `Makefile`  ``install`` command.
 
 Virtualenv
 ----------

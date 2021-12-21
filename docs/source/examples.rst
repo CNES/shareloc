@@ -1,17 +1,18 @@
-.. _user_manual:
+.. _examples:
 
-===========
-User Manual
-===========
+========
+Examples
+========
 
-.. image:: diagrams/cars_inputs_outputs.svg
-   :target: _images/cars_inputs_outputs.svg
+Direct/Inverse Localisation
+===========================
+
+Rectification grid computation
+==============================
+
+Triangulation
+=============
+
 
 .. toctree::
 
-    user_manual_main_cli
-    user_manual_input_data
-    user_manual_prepare_cli
-    user_manual_compute_cli
-    user_manual_output_data
-    user_manual_advanced_configuration

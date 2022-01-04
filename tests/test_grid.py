@@ -35,8 +35,8 @@ def test_grid_geotiff():
     """
     test grid readers
     """
-    gld_geotiff = os.path.join(os.environ["TESTPATH"], "ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
-    gri_geotiff = Grid(gld_geotiff)
+    geotiff_grid_path = os.path.join(os.environ["TESTPATH"], "ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
+    gri_geotiff = Grid(geotiff_grid_path)
     res_geotiff = gri_geotiff.direct_loc_h(0.5, 0.5, 1000.0)
     np.testing.assert_allclose(res_geotiff, [2.183908972985368, 48.94317692547565, 1000.0], rtol=0, atol=1e-9)
     res_geotiff = gri_geotiff.direct_loc_h(50, 100, 200.0)

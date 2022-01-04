@@ -122,7 +122,6 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     lonlatalt = loc.direct(row, col, h)
 
     assert gri.epsg == 4269
-    # assert gri.datum == "geoid"
     assert valid_lon == pytest.approx(lonlatalt[0], abs=1e-12)
     assert valid_lat == pytest.approx(lonlatalt[1], abs=1e-12)
     assert valid_alt == pytest.approx(lonlatalt[2], abs=1e-8)

@@ -31,7 +31,6 @@ from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 from shareloc.proj_utils import coordinates_conversion
 
 
-# gitlab issue #58
 # pylint: disable=too-many-instance-attributes
 class Grid:
     """multi H direct localization grid handling class. please refers documentation regarding grid format"""

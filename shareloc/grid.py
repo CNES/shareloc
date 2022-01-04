@@ -34,7 +34,40 @@ from shareloc.proj_utils import coordinates_conversion
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
 class Grid:
-    """multi H direct localization grid handling class. please refers documentation regarding grid format"""
+    """multi H direct localization grid handling class. please refers documentation regarding grid format
+    :param filename: grid path
+    :type filename: str
+    :param row0: grid first pixel center along Y axis (row).
+    :type row0: float
+    :param col0: grid first pixel center along X axis (column).
+    :type col0: float
+    :param nbrow: grid size in row
+    :type nbrow: int
+    :param nbcol: grid size in col
+    :type nbcol: int
+    :param steprow: grid step in row
+    :type steprow: float
+    :param stepcol: grid step in col
+    :type stepcol: float
+    :param rowmax: last row in grid
+    :type rowmax: float
+    :param colmax: last col in grid
+    :type colmax: float
+    :param repter: ground coordinate system
+    :type repter: str
+    :param epsg: epsg code corresponding to shareloc.grid.Grid.repter
+    :type epsg: int
+    :param nbalt: number of altitude layers
+    :type nbalt: int
+    :param lon_data: longitude array
+    :type lon_data: np.ndarray of size (nbalt,nbrow,nbcol) size
+    :param lat_data: latitude array
+    :type lat_data: np.ndarray of size (nbalt,nbrow,nbcol) size
+    :param alts_down: altitudes in decreasing order
+    :type alts_down: list
+    :param type: geometric model type
+    :type tpye: str
+    """
 
     def __init__(self, grid_filename):
         """
@@ -43,20 +76,20 @@ class Grid:
         :type grid_filename: string
         """
         self.filename = grid_filename
-        self.row0 = None  #: grid first pixel center along Y axis (row).
-        self.col0 = None  #: grid first pixel center along X axis (column).
+        self.row0 = None
+        self.col0 = None
         self.nbrow = None
         self.nbcol = None
         self.steprow = None
         self.stepcol = None
         self.repter = None
         self.nbalt = None
-        self.index_alt = {}
-        self.gld_lon = None  #: longitude array
-        self.gld_lat = None  #: latitude array
-        self.alts_down = []
+        self.lon_data = None  #: longitude array
+        self.lat_data = None  #: latitude array
+        self.alts_down = None
         self.rowmax = None
         self.colmax = None
+        self.epsg = 0
         self.load()
         self.type = "multi H grid"
 
@@ -64,8 +97,8 @@ class Grid:
         """
         header and grid loading function
         2 data cubes are defined :
-        - gld_lon : [alt,row,col]
-        - gld_lat : [alt,row,col]
+        - lon_data : [alt,row,col]
+        - lat_data : [alt,row,col]
         Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
         internal structure is decreasing one
         """
@@ -81,8 +114,8 @@ class Grid:
         self.nbcol = grid_image.nb_columns
         indexes = self.parse_metadata_alti(metadata)
         lon_indexes = indexes * 2
-        self.gld_lon = grid_image.data[lon_indexes, :, :]
-        self.gld_lat = grid_image.data[lon_indexes + 1, :, :]
+        self.lon_data = grid_image.data[lon_indexes, :, :]
+        self.lat_data = grid_image.data[lon_indexes + 1, :, :]
         self.stepcol = grid_image.pixel_size_col
         self.steprow = grid_image.pixel_size_row
         self.col0 = grid_image.origin_col + self.stepcol / 2.0
@@ -139,8 +172,8 @@ class Grid:
         alt_up = self.alts_down[grid_index_up]
         alti_coef = (alt - alt_down) / (alt_up - alt_down)
         mats = [
-            self.gld_lon[grid_index_up : grid_index_down + 1, :, :],
-            self.gld_lat[grid_index_up : grid_index_down + 1, :, :],
+            self.lon_data[grid_index_up : grid_index_down + 1, :, :],
+            self.lat_data[grid_index_up : grid_index_down + 1, :, :],
         ]
 
         if not isinstance(col, (list, np.ndarray)):
@@ -234,7 +267,7 @@ class Grid:
         """
         pos_row = (row - self.row0) / self.steprow
         pos_col = (col - self.col0) / self.stepcol
-        mats = [self.gld_lon, self.gld_lat]
+        mats = [self.lon_data, self.lat_data]
         res = interpol_bilin(mats, self.nbrow, self.nbcol, pos_row, pos_col)
         return res
 
@@ -256,8 +289,8 @@ class Grid:
         else:
             list_alts = np.linspace(self.alts_down[0], self.alts_down[-1], nbalt)
 
-        gld_lon = np.zeros((nbalt, nbrow, nbcol))
-        gld_lat = np.zeros((nbalt, nbrow, nbcol))
+        lon_data = np.zeros((nbalt, nbrow, nbcol))
+        lat_data = np.zeros((nbalt, nbrow, nbcol))
         # """genere un cube de visee interpole de nrow/ncol visee"""
         # row_max = self.row0 + self.steprow * (self.nbrow-1)
         # col_max = self.col0 + self.stepcol * (self.nbcol-1)
@@ -268,9 +301,9 @@ class Grid:
         for index, alt in enumerate(list_alts):
 
             res = self.direct_loc_grid_h(self.row0, self.col0, steprow, stepcol, nbrow, nbcol, alt)
-            gld_lon[index] = res[0]
-            gld_lat[index] = res[1]
-        return gld_lon, gld_lat
+            lon_data[index] = res[0]
+            lat_data[index] = res[1]
+        return lon_data, lat_data
 
     def direct_loc_grid_dtm(self, row0, col0, steprow, stepcol, nbrow, nbcol, dtm):
         """
@@ -358,8 +391,8 @@ class Grid:
         alt_up = self.alts_down[grid_index_up]
         alti_coef = (alt - alt_down) / (alt_up - alt_down)
         mats = [
-            self.gld_lon[grid_index_up : grid_index_down + 1, :, :],
-            self.gld_lat[grid_index_up : grid_index_down + 1, :, :],
+            self.lon_data[grid_index_up : grid_index_down + 1, :, :],
+            self.lat_data[grid_index_up : grid_index_down + 1, :, :],
         ]
         position = np.zeros(3)
         position[2] = alt
@@ -546,21 +579,21 @@ class Grid:
         index_col = int(np.floor(pos_col))
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
 
-        lon_h00 = self.gld_lon[grid_index_up, index_row, index_col]
-        lon_h01 = self.gld_lon[grid_index_up, index_row, index_col + 1]
-        lon_h10 = self.gld_lon[grid_index_up, index_row + 1, index_col]
+        lon_h00 = self.lon_data[grid_index_up, index_row, index_col]
+        lon_h01 = self.lon_data[grid_index_up, index_row, index_col + 1]
+        lon_h10 = self.lon_data[grid_index_up, index_row + 1, index_col]
 
-        lon_b00 = self.gld_lon[grid_index_down, index_row, index_col]
-        lon_b01 = self.gld_lon[grid_index_down, index_row, index_col + 1]
-        lon_b10 = self.gld_lon[grid_index_down, index_row + 1, index_col]
+        lon_b00 = self.lon_data[grid_index_down, index_row, index_col]
+        lon_b01 = self.lon_data[grid_index_down, index_row, index_col + 1]
+        lon_b10 = self.lon_data[grid_index_down, index_row + 1, index_col]
 
-        lat_h00 = self.gld_lat[grid_index_up, index_row, index_col]
-        lat_h01 = self.gld_lat[grid_index_up, index_row, index_col + 1]
-        lat_h10 = self.gld_lat[grid_index_up, index_row + 1, index_col]
+        lat_h00 = self.lat_data[grid_index_up, index_row, index_col]
+        lat_h01 = self.lat_data[grid_index_up, index_row, index_col + 1]
+        lat_h10 = self.lat_data[grid_index_up, index_row + 1, index_col]
 
-        lat_b00 = self.gld_lat[grid_index_down, index_row, index_col]
-        lat_b01 = self.gld_lat[grid_index_down, index_row, index_col + 1]
-        lat_b10 = self.gld_lat[grid_index_down, index_row + 1, index_col]
+        lat_b00 = self.lat_data[grid_index_down, index_row, index_col]
+        lat_b01 = self.lat_data[grid_index_down, index_row, index_col + 1]
+        lat_b10 = self.lat_data[grid_index_down, index_row + 1, index_col]
 
         dlon_ch = np.deg2rad(lon_h01 - lon_h00) / self.stepcol
         dlon_cb = np.deg2rad(lon_b01 - lon_b00) / self.stepcol

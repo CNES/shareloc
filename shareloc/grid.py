@@ -21,7 +21,7 @@
 
 
 """
-localisations function from mutji h direct grids.
+localisation functions from multi h direct grids.
 """
 
 import logging
@@ -43,8 +43,8 @@ class Grid:
         :type grid_filename: string
         """
         self.filename = grid_filename
-        self.row0 = None
-        self.col0 = None
+        self.row0 = None  #: grid first pixel center along Y axis (row).
+        self.col0 = None  #: grid first pixel center along X axis (column).
         self.nbrow = None
         self.nbcol = None
         self.steprow = None
@@ -52,8 +52,8 @@ class Grid:
         self.repter = None
         self.nbalt = None
         self.index_alt = {}
-        self.gld_lon = None
-        self.gld_lat = None
+        self.gld_lon = None  #: longitude array
+        self.gld_lat = None  #: latitude array
         self.alts_down = []
         self.rowmax = None
         self.colmax = None
@@ -66,7 +66,7 @@ class Grid:
         2 data cubes are defined :
         - gld_lon : [alt,row,col]
         - gld_lat : [alt,row,col]
-        bsq and hdf grids are stored by increasing altitude H0 ... Hx
+        Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
         internal structure is decreasing one
         """
 

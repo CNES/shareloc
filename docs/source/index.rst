@@ -21,6 +21,9 @@ ShareLoc, is an open source remote sensing geolocation library.
 | |img1|                                    | |img2|                     |
 +-------------------------------------------+----------------------------+
 
+
+Shareloc rely on analytics or sampled geometric models (see :ref:`user_manual_geometric_models`) to perform geolocation functions listed here :ref:`user_manual_functions`
+
 **Contact:** cars AT cnes.fr
 
 .. toctree::

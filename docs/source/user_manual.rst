@@ -7,4 +7,5 @@ User Manual
 .. toctree::
    :maxdepth: 2
 
-   userguide/geometric_models.rst
+   user_manual_geometric_models
+   user_manual_functions

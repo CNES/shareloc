@@ -27,6 +27,10 @@ To update, follow `glossary sphinx documentation`_ in RST source documentation.
       `Image rectification`_ is a transformation process used to project images onto a common image plane.
       In CARS, the epipipolar geometry rectification is used.
 
+    RPC
+      `Rational polynomial coefficient`_ is analytics compact representation of ground to image mapping.
+
+
     ROI
       `Region of Interest`_ means a subpart of the `DSM` raster in CARS.
       It can be defined by a file or a bounding box.
@@ -36,5 +40,5 @@ To update, follow `glossary sphinx documentation`_ in RST source documentation.
 .. _`epipolar geometry`: https://en.wikipedia.org/wiki/Epipolar_geometry
 .. _`Image rectification`: https://en.wikipedia.org/wiki/Image_rectification
 .. _`Region of Interest`: https://en.wikipedia.org/wiki/Region_of_interest
-
+.. _`Rational polynomial coefficient`: https://en.wikipedia.org/wiki/Rational_polynomial_coefficient
 .. _`glossary sphinx documentation`: https://sublime-and-sphinx-guide.readthedocs.io/en/latest/glossary.html

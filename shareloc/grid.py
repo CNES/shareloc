@@ -95,12 +95,12 @@ class Grid:
 
     def load(self):
         """
-        header and grid loading function
+        Load grid and fill Class attributes
+        The grid is read as an shareloc.image.image.Image and class attributes are filled.
+        Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
         2 data cubes are defined :
         - lon_data : [alt,row,col]
         - lat_data : [alt,row,col]
-        Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
-        internal structure is decreasing one
         """
 
         grid_image = Image(self.filename, read_data=True)

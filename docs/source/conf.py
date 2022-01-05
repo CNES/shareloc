@@ -50,7 +50,7 @@ master_doc = "index"
 extensions = [
     "sphinx.ext.ifconfig",  # add if config possibility in rst files
     "sphinx.ext.intersphinx",  # other projects automatic links to doc
-    "sphinx.ext.mathjax",  # Add rst math capabilities with :math:
+    "sphinx.ext.imgmath",
     "sphinx.ext.autodoc",  # apidoc automatic generation
     "sphinx.ext.viewcode",  # viewcode in automatic apidoc
 ]

@@ -9,3 +9,4 @@ User Manual
 
    user_manual_geometric_models
    user_manual_functions
+   user_manual_elevation_handling

@@ -25,11 +25,8 @@ Cartesian (4978)
 triangulation in sensor geometry
 
 according to the formula:
-.. math::
 
-    x =
-    \\left(\\sum_i I-\\hat v_i \\hat v_i^\\top\\right)^{-1} \\left(\\sum_i (I-\\hat v_i \\hat v_i^\\top) s_i\\right)
-
+:math:`x= \left(\sum_i I-\hat v_i \hat v_i^\top\right)^{-1} \left(\sum_i (I-\hat v_i \hat v_i^\top) s_i\right)`
 
 
 Rectification

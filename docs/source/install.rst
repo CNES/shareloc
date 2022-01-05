@@ -69,4 +69,4 @@ Here are the correspondent commands to install these prior dependencies:
 Environment variables
 ---------------------
 
-TEST_PATH
+TEST_PATH must be set at shareloc root dir (TEST_PATH is going to be suppressed)

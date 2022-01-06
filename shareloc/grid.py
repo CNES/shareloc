@@ -21,32 +21,61 @@
 
 
 """
-localisations function from mutji h direct grids.
+localisation functions from multi h direct grids.
 """
 
 import logging
 import numpy as np
-from shareloc.image.readwrite import read_bsq_hd
+from shareloc.image.image import Image
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
-from shareloc.euclidium_utils import identify_gdlib_code
 from shareloc.proj_utils import coordinates_conversion
 
 
+# gitlab issue #58
+# pylint: disable=too-many-instance-attributes
 class Grid:
-    """multi H direct localization grid handling class"""
+    """multi H direct localization grid handling class. please refers documentation regarding grid format
+    :param filename: grid path
+    :type filename: str
+    :param row0: grid first pixel center along Y axis (row).
+    :type row0: float
+    :param col0: grid first pixel center along X axis (column).
+    :type col0: float
+    :param nbrow: grid size in row
+    :type nbrow: int
+    :param nbcol: grid size in col
+    :type nbcol: int
+    :param steprow: grid step in row
+    :type steprow: float
+    :param stepcol: grid step in col
+    :type stepcol: float
+    :param rowmax: last row in grid
+    :type rowmax: float
+    :param colmax: last col in grid
+    :type colmax: float
+    :param repter: ground coordinate system
+    :type repter: str
+    :param epsg: epsg code corresponding to shareloc.grid.Grid.repter
+    :type epsg: int
+    :param nbalt: number of altitude layers
+    :type nbalt: int
+    :param lon_data: longitude array
+    :type lon_data: np.ndarray of size (nbalt,nbrow,nbcol) size
+    :param lat_data: latitude array
+    :type lat_data: np.ndarray of size (nbalt,nbrow,nbcol) size
+    :param alts_down: altitudes in decreasing order
+    :type alts_down: list
+    :param type: geometric model type
+    :type tpye: str
+    """
 
-    # gitlab issue #58
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self, grid_filename, grid_format="bsq"):
+    def __init__(self, grid_filename):
         """
         Constructor
-        :param grid_filename: grid filename
+        :param grid_filename: grid filename (Geotiff)
         :type grid_filename: string
-        :param grid_format: grid format (by default bsq)
-        :type grid_format: string
         """
         self.filename = grid_filename
-        self.format = grid_format
         self.row0 = None
         self.col0 = None
         self.nbrow = None
@@ -55,68 +84,63 @@ class Grid:
         self.stepcol = None
         self.repter = None
         self.nbalt = None
-        self.index_alt = {}
-        self.gld_lon = None
-        self.gld_lat = None
-        self.alts_down = []
+        self.lon_data = None  #: longitude array
+        self.lat_data = None  #: latitude array
+        self.alts_down = None
         self.rowmax = None
         self.colmax = None
+        self.epsg = 0
         self.load()
-        self.epsg, self.datum = identify_gdlib_code(self.repter)
         self.type = "multi H grid"
 
     def load(self):
         """
-        header and grid loading function
+        Load grid and fill Class attributes
+        The grid is read as an shareloc.image.image.Image and class attributes are filled.
+        Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
         2 data cubes are defined :
-        - gld_lon : [alt,row,col]
-        - gld_lat : [alt,row,col]
-        bsq grids are stored by increasing altitude H0 ... Hx
-        internal structure is decreasing one
+        - lon_data : [alt,row,col]
+        - lat_data : [alt,row,col]
         """
-        if self.format == "bsq":
-            dico_a_lire = {
-                "nbrow": ("LINES", int),
-                "nbcol": ("COLUMNS", int),
-                "bpp": ("BITS PER PIXEL", int),
-                "nbalt": ("NB ALT", int),
-                "stepcol": ("PAS COL", float),
-                "steprow": ("PAS LIG", float),
-                "col0": ("COL0", float),
-                "row0": ("LIG0", float),
-                "repter": ("REFERENTIEL TERRESTRE", str),
-            }
 
-            nom_hd = self.filename[:-4] + "1.hd"
-            dico_hd = read_bsq_hd(nom_hd, dico_a_lire)
+        grid_image = Image(self.filename, read_data=True)
+        if grid_image.dataset.driver != "GTiff":
+            raise Exception(
+                "Only Geotiff grids are accepted. Please refers the documentation for grid supported format."
+            )
+        metadata = grid_image.dataset.tags()
+        self.nbalt = int(grid_image.dataset.count / 2)
+        self.nbrow = grid_image.nb_rows
+        self.nbcol = grid_image.nb_columns
+        indexes = self.parse_metadata_alti(metadata)
+        lon_indexes = indexes * 2
+        self.lon_data = grid_image.data[lon_indexes, :, :]
+        self.lat_data = grid_image.data[lon_indexes + 1, :, :]
+        self.stepcol = grid_image.pixel_size_col
+        self.steprow = grid_image.pixel_size_row
+        self.col0 = grid_image.origin_col + self.stepcol / 2.0
+        self.row0 = grid_image.origin_row + self.steprow / 2.0
+        self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
+        self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
+        for key in metadata.keys():
+            if key.endswith("REF"):
+                self.repter = metadata[key]
+                self.epsg = int(metadata[key].split(":")[1])
 
-            for var, values in dico_hd.items():
-                setattr(self, var, values)
-            # """renvoie une structure 3D [i_alt][l,c]"""
-            gld_lon = np.zeros((self.nbalt, self.nbrow, self.nbcol))
-            gld_lat = np.zeros((self.nbalt, self.nbrow, self.nbcol))
-
-            codage = float
-
-            for alt_layer in range(self.nbalt):
-                inverse_index = self.nbalt - alt_layer
-                nom_gri_lon = self.filename[:-4] + str(inverse_index) + ".c1"
-                nom_gri_lat = self.filename[:-4] + str(inverse_index) + ".c2"
-                nom_hd = self.filename[:-4] + str(inverse_index) + ".hd"
-
-                gld_lon[alt_layer, :, :] = np.fromfile(nom_gri_lon, dtype=codage).reshape((self.nbrow, self.nbcol))
-                gld_lat[alt_layer, :, :] = np.fromfile(nom_gri_lat, dtype=codage).reshape((self.nbrow, self.nbcol))
-
-                dico_hd = read_bsq_hd(nom_hd, {"index": ("ALT INDEX", int), "alt": ("ALTITUDE", float)})
-                self.index_alt[dico_hd["index"]] = dico_hd["alt"]
-
-            self.gld_lon = gld_lon
-            self.gld_lat = gld_lat
-            self.alts_down = [self.index_alt[_] for _ in range(int(self.nbalt - 1), -1, -1)]
-            self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
-            self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
-        else:
-            logging.error("dtm format is not handled")
+    def parse_metadata_alti(self, metadata):
+        """
+        parse metadata to sort altitude in decreasing order
+        :param metadata :  Geotiff metadata
+        :type metadata : dict
+        """
+        alt_array = np.zeros([self.nbalt])
+        for key in metadata.keys():
+            if "ALTITUDE" in key:
+                band_index = int(int(key.split("B")[1]) / 2)
+                alt_array[band_index] = float(metadata[key])
+        indexes = np.argsort(alt_array)[::-1]
+        self.alts_down = alt_array[indexes]
+        return indexes
 
     def get_alt_min_max(self):
         """
@@ -143,15 +167,13 @@ class Grid:
         """
         if fill_nan:
             logging.debug("fill nan %s", fill_nan)
-        # faire une controle sur row / col !!!!
-        # 0.5 < row < rowmax
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
         alt_down = self.alts_down[grid_index_down]
         alt_up = self.alts_down[grid_index_up]
         alti_coef = (alt - alt_down) / (alt_up - alt_down)
         mats = [
-            self.gld_lon[grid_index_up : grid_index_down + 1, :, :],
-            self.gld_lat[grid_index_up : grid_index_down + 1, :, :],
+            self.lon_data[grid_index_up : grid_index_down + 1, :, :],
+            self.lat_data[grid_index_up : grid_index_down + 1, :, :],
         ]
 
         if not isinstance(col, (list, np.ndarray)):
@@ -245,7 +267,7 @@ class Grid:
         """
         pos_row = (row - self.row0) / self.steprow
         pos_col = (col - self.col0) / self.stepcol
-        mats = [self.gld_lon, self.gld_lat]
+        mats = [self.lon_data, self.lat_data]
         res = interpol_bilin(mats, self.nbrow, self.nbcol, pos_row, pos_col)
         return res
 
@@ -267,8 +289,8 @@ class Grid:
         else:
             list_alts = np.linspace(self.alts_down[0], self.alts_down[-1], nbalt)
 
-        gld_lon = np.zeros((nbalt, nbrow, nbcol))
-        gld_lat = np.zeros((nbalt, nbrow, nbcol))
+        lon_data = np.zeros((nbalt, nbrow, nbcol))
+        lat_data = np.zeros((nbalt, nbrow, nbcol))
         # """genere un cube de visee interpole de nrow/ncol visee"""
         # row_max = self.row0 + self.steprow * (self.nbrow-1)
         # col_max = self.col0 + self.stepcol * (self.nbcol-1)
@@ -279,9 +301,9 @@ class Grid:
         for index, alt in enumerate(list_alts):
 
             res = self.direct_loc_grid_h(self.row0, self.col0, steprow, stepcol, nbrow, nbcol, alt)
-            gld_lon[index] = res[0]
-            gld_lat[index] = res[1]
-        return gld_lon, gld_lat
+            lon_data[index] = res[0]
+            lat_data[index] = res[1]
+        return lon_data, lat_data
 
     def direct_loc_grid_dtm(self, row0, col0, steprow, stepcol, nbrow, nbcol, dtm):
         """
@@ -369,8 +391,8 @@ class Grid:
         alt_up = self.alts_down[grid_index_up]
         alti_coef = (alt - alt_down) / (alt_up - alt_down)
         mats = [
-            self.gld_lon[grid_index_up : grid_index_down + 1, :, :],
-            self.gld_lat[grid_index_up : grid_index_down + 1, :, :],
+            self.lon_data[grid_index_up : grid_index_down + 1, :, :],
+            self.lat_data[grid_index_up : grid_index_down + 1, :, :],
         ]
         position = np.zeros(3)
         position[2] = alt
@@ -557,21 +579,21 @@ class Grid:
         index_col = int(np.floor(pos_col))
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
 
-        lon_h00 = self.gld_lon[grid_index_up, index_row, index_col]
-        lon_h01 = self.gld_lon[grid_index_up, index_row, index_col + 1]
-        lon_h10 = self.gld_lon[grid_index_up, index_row + 1, index_col]
+        lon_h00 = self.lon_data[grid_index_up, index_row, index_col]
+        lon_h01 = self.lon_data[grid_index_up, index_row, index_col + 1]
+        lon_h10 = self.lon_data[grid_index_up, index_row + 1, index_col]
 
-        lon_b00 = self.gld_lon[grid_index_down, index_row, index_col]
-        lon_b01 = self.gld_lon[grid_index_down, index_row, index_col + 1]
-        lon_b10 = self.gld_lon[grid_index_down, index_row + 1, index_col]
+        lon_b00 = self.lon_data[grid_index_down, index_row, index_col]
+        lon_b01 = self.lon_data[grid_index_down, index_row, index_col + 1]
+        lon_b10 = self.lon_data[grid_index_down, index_row + 1, index_col]
 
-        lat_h00 = self.gld_lat[grid_index_up, index_row, index_col]
-        lat_h01 = self.gld_lat[grid_index_up, index_row, index_col + 1]
-        lat_h10 = self.gld_lat[grid_index_up, index_row + 1, index_col]
+        lat_h00 = self.lat_data[grid_index_up, index_row, index_col]
+        lat_h01 = self.lat_data[grid_index_up, index_row, index_col + 1]
+        lat_h10 = self.lat_data[grid_index_up, index_row + 1, index_col]
 
-        lat_b00 = self.gld_lat[grid_index_down, index_row, index_col]
-        lat_b01 = self.gld_lat[grid_index_down, index_row, index_col + 1]
-        lat_b10 = self.gld_lat[grid_index_down, index_row + 1, index_col]
+        lat_b00 = self.lat_data[grid_index_down, index_row, index_col]
+        lat_b01 = self.lat_data[grid_index_down, index_row, index_col + 1]
+        lat_b10 = self.lat_data[grid_index_down, index_row + 1, index_col]
 
         dlon_ch = np.deg2rad(lon_h01 - lon_h00) / self.stepcol
         dlon_cb = np.deg2rad(lon_b01 - lon_b00) / self.stepcol

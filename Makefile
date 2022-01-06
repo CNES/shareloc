@@ -34,7 +34,7 @@ help: ## this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 venv: ## create virtualenv in "venv" dir if not exists
-	@test -d ${VENV} || virtualenv -p `which python3` ${VENV}
+	@test -d ${VENV} || python3 -m venv ${VENV}
 	@${VENV}/bin/python -m pip install --upgrade pip setuptools # no check to upgrade each time
 	@touch ${VENV}/bin/activate
 

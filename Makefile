@@ -35,7 +35,7 @@ help: ## this help
 
 venv: ## create virtualenv in "venv" dir if not exists
 	@test -d ${VENV} || python3 -m venv ${VENV}
-	@${VENV}/bin/python -m pip install --upgrade pip setuptools # no check to upgrade each time
+	@${VENV}/bin/pip install --upgrade pip setuptools # no check to upgrade each time
 	@touch ${VENV}/bin/activate
 
 install: venv ## install shareloc in dev mode

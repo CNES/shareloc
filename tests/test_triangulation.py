@@ -52,7 +52,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     dtmbsq = DTM(fic)
 
     # chargement des grilles
-    gld = os.path.join(data_folder, f"grilles_gld_xH/{id_scene}_H1.hd")
+    gld = os.path.join(data_folder, f"grilles_gld_xH/{id_scene}.tif")
     gri = Grid(gld)
 
     return dtmbsq, gri

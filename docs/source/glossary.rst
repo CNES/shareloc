@@ -12,6 +12,10 @@ To update, follow `glossary sphinx documentation`_ in RST source documentation.
     CARS
       means CNES Algorithms to Reconstruct Surface (ou Chaîne Automatique de Restitution Stéréoscopique en français)
 
+    CRS
+      `Coordinate Reference System`_ characterize location on earth.
+
+
     DEM
       `Digital Elevation Model`_. Usually means all elevation models in raster: DSM, DTM,...
 
@@ -19,9 +23,8 @@ To update, follow `glossary sphinx documentation`_ in RST source documentation.
       Digital Surface Model. Represents the earth's surface and includes all objects on it.
       CARS generates DSMs. See `Digital Elevation Model`_
 
-    DTM
-      Digital Terrain Model. Represents bare ground surface without any objects like plants and buildings
-      You need another tool to generate DTM from CARS DSM. See `Digital Elevation Model`_
+    LOS
+      Line of Sight is the viewing ray at a given position of the sensor.
 
     rectification
       `Image rectification`_ is a transformation process used to project images onto a common image plane.
@@ -30,10 +33,9 @@ To update, follow `glossary sphinx documentation`_ in RST source documentation.
     RPC
       `Rational polynomial coefficient`_ is analytics compact representation of ground to image mapping.
 
-
     ROI
-      `Region of Interest`_ means a subpart of the `DSM` raster in CARS.
-      It can be defined by a file or a bounding box.
+      `Region of Interest`_ means a subpart of the data.
+      It can be defined by it's extent.
 
 .. _`Digital Elevation Model`: https://en.wikipedia.org/wiki/Digital_elevation_model
 .. _`Digital Surface Model`: https://en.wikipedia.org/wiki/Digital_elevation_model
@@ -42,3 +44,4 @@ To update, follow `glossary sphinx documentation`_ in RST source documentation.
 .. _`Region of Interest`: https://en.wikipedia.org/wiki/Region_of_interest
 .. _`Rational polynomial coefficient`: https://en.wikipedia.org/wiki/Rational_polynomial_coefficient
 .. _`glossary sphinx documentation`: https://sublime-and-sphinx-guide.readthedocs.io/en/latest/glossary.html
+.. _`Coordinate Reference System` : https://en.wikipedia.org/wiki/Spatial_Reference_system

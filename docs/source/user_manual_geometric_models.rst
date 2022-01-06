@@ -5,27 +5,7 @@
 Geometric models
 ================
 
-Shareloc handles two type of geometric models, RPC and Direct location grids. An upper layer class ``Localization`` can be used to handle both of them.
-
-.. code-block:: console
-
-    class Localization:
-    """base class for localization function.
-    Underlying model can be both multi layer localization grids or RPCs models
-    """
-
-    def __init__(self, model, elevation=None, image=None, epsg=None):
-        """
-        constructor
-        :param model : geometric model
-        :type model  : shareloc.grid or  shareloc.rpc
-        :param elevation  : dtm or default elevation over ellipsoid if None elevation is set to 0
-        :type elevation  : shareloc.dtm or float or np.ndarray
-        :param image  : image class to handle geotransform
-        :type image  : shareloc.image.image.Image
-        :param epsg  : coordinate system of world points, if None model coordiante system will be used
-        :type epsg  : int
-        """
+Shareloc handles two type of geometric models, RPC and Direct location grids.
 
 RPC
 ===
@@ -60,9 +40,8 @@ The following parameter has to be set :
 Direct location grids
 =====================
 
-Direct location grid is a sampled geometric models, which contains direct location at each grid cell for H0 .. Hn altitude layers.
+Direct location grid is a sampled geometric models, which contains direct location at each grid cell for H0 to Hn altitude layers.
 It can be viewed at 3D grid (row,col,h) as illustrated below :
-
 
 .. figure:: images/direct_loc_multi_h.png
     :align: center
@@ -71,24 +50,21 @@ It can be viewed at 3D grid (row,col,h) as illustrated below :
 
     direct location grid
 
+Shareloc grid format specifications
+-----------------------------------
 
-Shareloc grid format
---------------------
-
-Shareloc grid must be a geotiff images
-
-Geotiff
-
-metadata
-
-GDAL infos
+Shareloc grid must be a geotiff image, which contains 2 bands per altitude layer. One corresponding to x or longitude coordinates, the other corresponding to y, latitude coordinates
 
 following metadata are needed
 
 *  ALTITUDE_BX=Y : one per band X with altitude value Y
 *  REF=EPSG:XXXX : coordinate reference system of ground coordinates
 
-below an example of 9x5 grid composed of 3 altitude layers (-30m,485m,1000m)
+below an example of 9x5 grid composed of 3 altitude layers (-30m,485m,1000m). Each cell contains direct location at altitude layer of image position calculated from it's geotransform.
+
+In the example below ``my_multi_h_grid`` is a 9x5x6 grid. ``my_multi_h_grid`` contains at index :math:`(row, col)` direct location
+of :math:`((row + 0.5) * steprow + row0,  (col + 0.5) * stepcol + col0))`, for example with `(band, row, col)` convention
+:math:`my\_multi\_h\_grid[0:1,1,2] = direct\_loc(row = 1250,col = 625,h = -30)`
 
 .. code-block:: console
 
@@ -140,7 +116,7 @@ The following parameter has to be set :
     gri_geotiff = Grid(geotiff_grid_path)
 
 References
-==========
+__________
 
 .. _`RPC in Geotiff`: http://geotiff.maptools.org/rpc_prop.html
 .. _`STDI-0002 2.1 (16Nov2000) specification document`: http://geotiff.maptools.org/STDI-0002_v2.1.pdf

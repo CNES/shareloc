@@ -25,6 +25,12 @@ DEM must respects some constraints to be understandable by Shareloc :
  * monolitic data : tiled DEM has to be mosaicked, using ``gdalbuildvrt`` command for example.
  * georeferenced : DEM must contains geotransform and :term:`CRS`.
 
+add ref to SRTM
+
+:term:`DEM` can be used for Localization on DEM function and Rectification using `shareloc.dtm.DTM` class.
+
+Since Shareloc works w.r.t elllipsoid by default, geoid height has to be removed from :term:`DEM` if w.r.t geoid.
+Shareloc provides egm96_15 in its data `https://gitlab.cnes.fr/cars/shareloc/-/blob/master/valid/dtm/geoid/egm96_15.gtx`
 
 .. code-block:: bash
 
@@ -40,6 +46,7 @@ DEM must respects some constraints to be understandable by Shareloc :
             fill_value=0.0,
         ):
 
+For example, the `SRTM <https://www2.jpl.nasa.gov/srtm/>`_ data corresponding to the zone to process can be used through the `otbcli_DownloadSRTMTiles <https://www.orfeo-toolbox.org/CookBook/Applications/app_DownloadSRTMTiles.html>`_ OTB command.
 
 
 

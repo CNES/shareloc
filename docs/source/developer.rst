@@ -35,7 +35,7 @@ Here are some rules to apply when developing a new functionality:
 * **Use type hints**: Use the type hints provided by the `typing` python module.
 * **Use doctype**: Follow sphinx default doctype for automatic API
 * **Quality code**: Correct project quality code errors with pre-commit automatic workflow (see below)
-* **Factorization**: Factorize the code as much as possible. The command line tools shall only include the main workflow and rely on the cars python modules.
+* **Factorization**: Factorize the code as much as possible. The command line tools shall only include the main workflow and rely on the shareloc python modules.
 * **Be careful with user interface upgrade:** If major modifications of the user interface or of the tool's behaviour are done, update the user documentation (and the notebooks if necessary).
 * **Logging and no print**: The usage of the `print()` function is forbidden: use the `logging` python standard module instead.
 * **Limit classes**: If possible, limit the use of classes as much as possible and opt for a functional approach. The classes are reserved for data modelling if it is impossible to do so using `xarray` and for the good level of modularity.
@@ -53,7 +53,7 @@ Here is the way to install it manually:
 
   $ pre-commit install
 
-This installs the pre-commit hook in `.git/hooks/pre-commit`  from `.pre-commit-config.yaml <https://raw.githubusercontent.com/CNES/cars/master/.pre-commit-config.yaml>`_ file configuration.
+This installs the pre-commit hook in `.git/hooks/pre-commit`  from `.pre-commit-config.yaml <https://raw.githubusercontent.com/CNES/shareloc/master/.pre-commit-config.yaml>`_ file configuration.
 
 It is possible to test pre-commit before commiting:
 
@@ -68,7 +68,7 @@ Code quality
 =============
 Shareloc uses `Black`_,  and `Pylint`_ quality code checking.
 
-Use the following command in CARS `virtualenv`_ to check the code with these tools:
+Use the following command in shareloc `virtualenv`_ to check the code with these tools:
 
 .. code-block:: console
 
@@ -95,13 +95,13 @@ If necessary, Black doesn’t reformat blocks that start with "# fmt: off" and e
     $ cd SHARELOC_HOME
     $ black --check shareloc tests  # Check code with black with no modifications
     $ black --diff shareloc tests   # Show black diff modifications
-    $ black cars tests          # Apply modifications
+    $ black shareloc tests          # Apply modifications
 
 Pylint
 ------
 `Pylint`_ is a global linting tool which helps to have many information on source code.
 
-CARS ``pylint`` configuration is done in dedicated `.pylintrc <http://https://raw.githubusercontent.com/CNES/cars/master/.pylintrc>`_ file.
+shareloc ``pylint`` configuration is done in dedicated `.pylintrc <http://https://raw.githubusercontent.com/CNES/shareloc/master/.pylintrc>`_ file.
 
 `Pylint`_ messages can be avoided (in particular cases !) adding "# pylint: disable=error-message-name" in the file or line.
 Look at examples in source code.
@@ -149,14 +149,14 @@ It is possible to obtain the code coverage level of the tests by installing the 
 .. code-block:: console
 
     $ cd shareloc/
-    $ python -m pytest --cov=cars
+    $ python -m pytest --cov=shareloc
 
 It is also possible to execute only a specific part of the test, either by indicating the test file to run:
 
 .. code-block:: console
 
     $ cd shareloc/
-    $ python -m pytest tests/test_tiling.py
+    $ python -m pytest tests/test_triangulation.py
 
 Or by using the ``-k`` option which will execute the tests which names contain the option's value:
 

@@ -5,6 +5,8 @@
 Functions
 =========
 
+Shareloc has tree main functions detailed below. See :ref:`examples` section for more information.
+
 Localization
 ============
 
@@ -47,9 +49,9 @@ It is possible to use geometric model directly using ``shareloc.grid.Grid`` and 
 Direct Localization
 -------------------
 
-Direct localization returns ground coordinates  :math:`(\lambda,\phi,h) for image position (row, column) :math:`(\lambda,\phi) = direct_localization(row,column)`.
+Direct localization returns ground coordinates  :math:`(\lambda,\phi,h)` for image position (row, column) :math:`(\lambda,\phi) = direct\_localization(row,column)`.
 
-:math:`h` can be explicitly set as input (in case of constant altitude over ellipsoid) : :math:`(\lambda,\phi,h) = direct_localization(row,column,h)`, or found via the underlying :term:`DEM` : :math:`(\lambda,\phi) = direct_localization(row,column)`
+:math:`h` can be explicitly set as input (in case of constant altitude over ellipsoid) : :math:`(\lambda,\phi,h) = direct\_localization(row,column,h)`, or found via the underlying :term:`DEM` : :math:`(\lambda,\phi) = direct\_localization(row,column)`
 
 :math:`(\lambda,\phi)` can be geographic (lat,lon) or cartographic depending on the chosen :term:`CRS`
 
@@ -174,9 +176,18 @@ where :math:`v_i` is the orientation of the :term:`LOS` i and :math:`s_i` the ha
         :rtype (numpy.array,numpy,array,numpy.array)
         """
 
+References :
+------------
 
-Rectification
-=============
+- Delvit J.M. et al. **The geometric supersite of Salon de Provence**, ISPRS Congress Paris, 2006. (`http://isprs.free.fr/documents/Papers/T11-50.pdf <http://isprs.free.fr/documents/Papers/T11-50.pdf>`_)
+
+
+Rectification Grid Computation
+==============================
+
+:term:`rectification` or stereo-rectification refers to the image transformation in epipolar geometry. A rectification grid is a displacement grid used to resample sensor gemetry to epipolar one.
+Shareloc rectification grids respects OTB convention for displacement grids. To generate the images in epipolar geometry from the grids computed by shareloc and the original images, one can refer to the Orfeo Toolbox documentation `here <https://www.orfeo-toolbox.org/CookBook/recipes/stereo.html#resample-images-in-epipolar-geometry>`_ .
+Algorithm details can be found in reference below.
 
 
 .. code-block:: bash
@@ -213,5 +224,4 @@ Rectification
 
 References :
 ------------
-
-- Delvit J.M. et al. **The geometric supersite of Salon de Provence**, ISPRS Congress Paris, 2006. (`http://isprs.free.fr/documents/Papers/T11-50.pdf <http://isprs.free.fr/documents/Papers/T11-50.pdf>`_)
+- Youssefi D., Michel, J., Sarrazin, E., Buffe, F., Cournet, M., Delvit, J.,  L'Helguen, C., Melet, O., Emilien, A., Bosman, J., 2020. **CARS: A photogrammetry pipeline using dask graphs to construct a global 3d model**. IGARSS - IEEE International Geoscience and Remote Sensing Symposium.(`https://ieeexplore.ieee.org/document/9324020 <https://ieeexplore.ieee.org/document/9324020>`_)

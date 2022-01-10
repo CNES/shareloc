@@ -1,9 +1,12 @@
 .. _user_manual_conventions:
 
+===========
+Conventions
+===========
 
 This sections details Shareloc convention for images and geometric models.
 
-================
+
 Pixel convention
 ================
 
@@ -14,7 +17,7 @@ Geometric model convention for coordinates is, by default, [0.5,0.5] at the cent
     :alt: convention pixel
     :width: 60%
 
-    convention pixel
+    pixel convention
 
 When dealing with ``shareloc.rpc.rpc.RPC`` it is possible to fix the center at [0,0] by setting the ``topleftconvention`` option to ``False``.
 
@@ -23,8 +26,6 @@ When dealing with ``shareloc.rpc.rpc.RPC`` it is possible to fix the center at [
     @classmethod
     def from_any(cls, primary_file, secondary_file=None, topleftconvention=True):
 
-
-================
 Image convention
 ================
 
@@ -33,9 +34,9 @@ The transformation between index and physical point use the geotransform of the 
 
 ``shareloc.image.image.Image`` class manage the conversion between index and physical point.
 
-It allow to manage easily images :term:`ROI` without any processing on geomtric model. See `CARS Faq <https://cars.readthedocs.io/en/latest/faq.html#faq>` or `GDAL translate command <https://gdal.org/programs/gdal_translate.html>` to create image extract.
+It allow to manage easily images :term:`ROI` without any processing on geometric model. See `CARS Faq <https://cars.readthedocs.io/en/latest/faq.html#faq>`_ or `GDAL translate command <https://gdal.org/programs/gdal_translate.html>`_ to create image extract.
 
-see `image example <https://github.com/CNES/shareloc/tests/test_image.py>`
+See `image example in test directory <https://github.com/CNES/shareloc/tests/test_image.py>`_
 
 
 

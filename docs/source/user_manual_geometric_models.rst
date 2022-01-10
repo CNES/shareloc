@@ -10,9 +10,10 @@ Shareloc handles two type of geometric models, RPC and Direct location grids.
 RPC
 ===
 
-:term:`RPC` is an analytics function for ground (lon,lat,h) to image (r,c) mapping, it can be summarized as :math:`(r,c) = (f(P,L,H),g(P,L,H))`, where :math:`f()`, :math:`g()` are rational polynomial function, and (P,L,H) normalized ground positions.
-The rational function polynomial equation numerators and denominators each are 20-term cubic polynomial functions, which respects RPC00B convention.
-Further details are given in `RPC in Geotiff`_ and `STDI-0002 2.1 (16Nov2000) specification document`_
+:term:`RPC` is an analytic function for ground (lon,lat,h) to image (r,c) mapping, it can be summarized as :math:`(r,c) = (f(P,L,H),g(P,L,H))`, where :math:`f()`, :math:`g()` are rational polynomial function, and (P,L,H) normalized ground positions.
+The rational function polynomial equation numerators and denominators each are 20-term cubic polynomial functions, which respects RPC00B convention. This relationship between ground and image is called inverse RPC coefficients.
+Only inverse coefficients are compulsory, if direct ones are not available then direct localization is computed by iterating on inverse one. Direct mapping, if available  can be summarized as :math:`(lon,lat) = (h(R,C,H),i(R,C,H))`, where :math:`h()`, :math:`i()` are rational polynomial function, and (R,C,H) normalized image coordinates (R,C) and normalized altitude H.
+Further details are given in `RPC in Geotiff`_, `STDI-0002 2.1 (16Nov2000) specification document`_ and `Pléiades user guide Appendix C.3`_.
 
 Supported RPC format
 --------------------
@@ -40,7 +41,7 @@ The following parameter has to be set :
 Direct location grids
 =====================
 
-Direct location grid is a sampled geometric models, which contains direct location at each grid cell for H0 to Hn altitude layers.
+Direct location grid is a sampled geometric model, which contains direct location at each grid cell for H0 to Hn altitude layers.
 It can be viewed at 3D grid (row,col,h) as illustrated below :
 
 .. figure:: images/direct_loc_multi_h.png
@@ -120,3 +121,4 @@ __________
 
 .. _`RPC in Geotiff`: http://geotiff.maptools.org/rpc_prop.html
 .. _`STDI-0002 2.1 (16Nov2000) specification document`: http://geotiff.maptools.org/STDI-0002_v2.1.pdf
+.. _`Pléiades user guide Appendix C.3`: https://content.satimagingcorp.com/media/pdf/User_Guide_Pleiades.pdf`

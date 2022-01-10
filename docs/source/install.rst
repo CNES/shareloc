@@ -13,7 +13,7 @@ Shareloc depends on few python packages
 Quick install
 =============
 
-* Clone Shareloc Source code (choose version)
+* Clone Shareloc Source code
 
 .. code-block:: console
 

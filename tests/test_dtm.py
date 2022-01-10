@@ -27,7 +27,7 @@ Test module for localisation class shareloc/localisation.py
 import os
 import pytest
 import numpy as np
-from utils import test_path
+from utils import test_path, TEST_DIR
 
 from shareloc.dtm import DTM
 
@@ -65,8 +65,8 @@ def test_interp_dtm_geoid(index_lon, index_lat, valid_alt):
     """
     Test interp function
     """
-    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
-    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_file = os.path.join(TEST_DIR, "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(TEST_DIR, "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file)
     coords = [index_lon, index_lat]
     index = dtm_ventoux.ter_to_index(coords)
@@ -79,13 +79,13 @@ def test_dtm_alt_min_max():
     """
     Test dtm alt min/max
     """
-    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
-    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_file = os.path.join(TEST_DIR, "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(TEST_DIR, "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file, roi=[256, 256, 512, 512], roi_is_in_physical_space=False)
     alt_min = dtm_ventoux.alt_min_cell
     alt_max = dtm_ventoux.alt_max_cell
-    alt_valid_min = os.path.join(os.environ["TESTPATH"], "srtm_ventoux_alt_min.npy")
-    alt_valid_max = os.path.join(os.environ["TESTPATH"], "srtm_ventoux_alt_max.npy")
+    alt_valid_min = os.path.join(TEST_DIR, "srtm_ventoux_alt_min.npy")
+    alt_valid_max = os.path.join(TEST_DIR, "srtm_ventoux_alt_max.npy")
     alt_min_vt = np.load(alt_valid_min)
     alt_max_vt = np.load(alt_valid_max)
     np.testing.assert_array_equal(alt_min, alt_min_vt)

@@ -27,6 +27,7 @@ import os
 import pytest
 import numpy as np
 
+from utils import TEST_DIR
 from shareloc.grid import Grid
 
 
@@ -35,7 +36,7 @@ def test_grid_geotiff():
     """
     test grid readers
     """
-    geotiff_grid_path = os.path.join(os.environ["TESTPATH"], "ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
+    geotiff_grid_path = os.path.join(TEST_DIR, "ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
     gri_geotiff = Grid(geotiff_grid_path)
     res_geotiff = gri_geotiff.direct_loc_h(0.5, 0.5, 1000.0)
     np.testing.assert_allclose(res_geotiff, [2.183908972985368, 48.94317692547565, 1000.0], rtol=0, atol=1e-9)

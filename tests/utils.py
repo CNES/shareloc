@@ -23,8 +23,9 @@
 module for test utilities
 """
 
-
 import os
+
+TEST_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "valid")
 
 
 def test_path(alti="", id_scene=""):
@@ -34,6 +35,6 @@ def test_path(alti="", id_scene=""):
     :rtype: str
     """
 
-    data_folder = os.path.join(os.environ["TESTPATH"], alti, id_scene)
+    data_folder = os.path.join(TEST_DIR, alti, id_scene)
 
     return data_folder

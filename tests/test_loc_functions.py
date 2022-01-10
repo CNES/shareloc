@@ -27,7 +27,7 @@ Test module for localisation class shareloc/localisation.py
 import os
 import pytest
 import numpy as np
-from utils import test_path
+from utils import test_path, TEST_DIR
 
 from shareloc.grid import Grid, coloc
 from shareloc.dtm import DTM
@@ -143,9 +143,9 @@ def test_extent():
     """
     Test  extent
     """
-    data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    data_left = os.path.join(TEST_DIR, "rectification", "left_image")
     geom_model = RPC.from_any(data_left + ".geom", topleftconvention=True)
-    image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
+    image_filename = os.path.join(TEST_DIR, "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
     image = Image(image_filename)
     loc_rpc_image = Localization(geom_model, elevation=None, image=image)
     np.testing.assert_allclose(loc_rpc_image.extent(), [44.20518231, 5.19307549, 44.20739814, 5.19629785], atol=1e-8)
@@ -161,13 +161,13 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     """
     Test direct localization using image geotransform
     """
-    data = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    data = os.path.join(TEST_DIR, "rectification", "left_image")
     geom_model_left = RPC.from_any(data + ".geom", topleftconvention=True)
-    image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image.tif")
+    image_filename = os.path.join(TEST_DIR, "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
 
-    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
-    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_file = os.path.join(TEST_DIR, "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(TEST_DIR, "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file)
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
@@ -184,13 +184,13 @@ def test_sensor_loc_dir_dtm_geoid_utm(col, row, valid_coord):
     """
     Test direct localization using image geotransform
     """
-    data = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    data = os.path.join(TEST_DIR, "rectification", "left_image")
     geom_model_left = RPC.from_any(data + ".geom", topleftconvention=True)
-    image_filename = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image.tif")
+    image_filename = os.path.join(TEST_DIR, "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
 
-    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_resampled_UTM31", "N44E005_UTM.tif")
-    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_file = os.path.join(TEST_DIR, "dtm", "srtm_ventoux", "srtm90_resampled_UTM31", "N44E005_UTM.tif")
+    geoid_file = os.path.join(TEST_DIR, "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file)
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left, epsg=4326)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
@@ -491,14 +491,14 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     """
     Test direct localization using image geotransform
     """
-    data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    data_left = os.path.join(TEST_DIR, "rectification", "left_image")
     geom_model_left = RPC.from_any(data_left + ".geom", topleftconvention=True)
-    image_filename_left = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
+    image_filename_left = os.path.join(TEST_DIR, "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
     image_left = Image(image_filename_left)
 
-    data_right = os.path.join(os.environ["TESTPATH"], "rectification", "right_image")
+    data_right = os.path.join(TEST_DIR, "rectification", "right_image")
     geom_model_right = RPC.from_any(data_right + ".geom", topleftconvention=True)
-    image_filename_right = os.path.join(os.environ["TESTPATH"], "image/phr_ventoux/", "right_image_pixsize_0_5.tif")
+    image_filename_right = os.path.join(TEST_DIR, "image/phr_ventoux/", "right_image_pixsize_0_5.tif")
     image_right = Image(image_filename_right)
 
     row_coloc, col_coloc, _ = coloc_rpc(
@@ -526,7 +526,7 @@ def test_sensor_loc_utm(col, row):
     """
     Test direct localization using image geotransform
     """
-    data_left = os.path.join(os.environ["TESTPATH"], "rectification", "left_image")
+    data_left = os.path.join(TEST_DIR, "rectification", "left_image")
     geom_model = RPC.from_any(data_left + ".geom", topleftconvention=True)
     epsg = 32631
     loc_wgs = Localization(geom_model)
@@ -548,14 +548,12 @@ def test_sensor_loc_dir_dtm_multi_points():
     Test direct localization on DTM
     """
 
-    left_im = Image(os.path.join(os.environ["TESTPATH"], "rectification", "left_image.tif"))
+    left_im = Image(os.path.join(TEST_DIR, "rectification", "left_image.tif"))
 
-    geom_model = RPC.from_any(
-        os.path.join(os.environ["TESTPATH"], "rectification", "left_image.geom"), topleftconvention=True
-    )
+    geom_model = RPC.from_any(os.path.join(TEST_DIR, "rectification", "left_image.geom"), topleftconvention=True)
 
-    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
-    geoid_file = os.path.join(os.environ["TESTPATH"], "dtm", "geoid", "egm96_15.gtx")
+    dtm_file = os.path.join(TEST_DIR, "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(TEST_DIR, "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file)
 
     loc = Localization(geom_model, image=left_im, elevation=dtm_ventoux)

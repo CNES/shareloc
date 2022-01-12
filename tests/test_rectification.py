@@ -29,7 +29,7 @@ import pytest
 import numpy as np
 import rasterio
 
-from utils import TEST_DIR
+from helpers import data_path
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC
 from shareloc.rectification.rectification_grid import RectificationGrid
@@ -52,7 +52,7 @@ def test_rectification_grid_interpolation_one_point(row, col):
     Test interpolation on rectification grid
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    grid_filename = os.path.join(TEST_DIR, "rectification_grids", f"grid_{id_scene_right}.tif")
+    grid_filename = os.path.join(data_path(), "rectification_grids", f"grid_{id_scene_right}.tif")
     rectif_grid = RectificationGrid(grid_filename)
     # value at position [15,15]
     value_row = np.sum(rectif_grid.row_positions[0, 0:2]) / 2.0
@@ -68,7 +68,7 @@ def test_rectification_grid_interpolation():
     Test interpolation on rectification grid
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    grid_filename = os.path.join(TEST_DIR, "rectification_grids", f"grid_{id_scene_right}.tif")
+    grid_filename = os.path.join(data_path(), "rectification_grids", f"grid_{id_scene_right}.tif")
 
     rectif_grid = RectificationGrid(grid_filename)
     # value at position [15,15]
@@ -88,7 +88,7 @@ def test_rectification_grid_extrapolation():
     """
     Test interpolation on rectification grid
     """
-    grid_filename = os.path.join(TEST_DIR, "rectification_grids", "left_epipolar_grid_ventoux.tif")
+    grid_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid_ventoux.tif")
     rectif_grid = RectificationGrid(grid_filename)
 
     sensor_positions = np.zeros((2, 2))
@@ -104,10 +104,14 @@ def test_prepare_rectification():
     """
     Test prepare rectification : check grids size, epipolar image size, and left epipolar starting point
     """
-    left_im = Image(os.path.join(TEST_DIR, "rectification", "left_image.tif"))
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
-    geom_model_left = RPC.from_any(os.path.join(TEST_DIR, "rectification", "left_image.geom"), topleftconvention=True)
-    geom_model_right = RPC.from_any(os.path.join(TEST_DIR, "rectification", "right_image.geom"), topleftconvention=True)
+    geom_model_left = RPC.from_any(
+        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
+    )
 
     epi_step = 30
     elevation_offset = 50
@@ -140,11 +144,15 @@ def test_compute_stereorectification_epipolar_grids():
     """
     Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
     """
-    left_im = Image(os.path.join(TEST_DIR, "rectification", "left_image.tif"))
-    right_im = Image(os.path.join(TEST_DIR, "rectification", "right_image.tif"))
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+    right_im = Image(os.path.join(data_path(), "rectification", "right_image.tif"))
 
-    geom_model_left = RPC.from_any(os.path.join(TEST_DIR, "rectification", "left_image.geom"), topleftconvention=True)
-    geom_model_right = RPC.from_any(os.path.join(TEST_DIR, "rectification", "right_image.geom"), topleftconvention=True)
+    geom_model_left = RPC.from_any(
+        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
+    )
 
     epi_step = 30
     elevation_offset = 50
@@ -153,11 +161,11 @@ def test_compute_stereorectification_epipolar_grids():
         left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
-    gt_left_grid = rasterio.open(os.path.join(TEST_DIR, "rectification", "gt_left_grid.tif")).read()
-    gt_right_grid = rasterio.open(os.path.join(TEST_DIR, "rectification", "gt_right_grid.tif")).read()
+    gt_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid.tif")).read()
+    gt_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid.tif")).read()
 
-    # write_epipolar_grid(left_grid, os.path.join(TEST_DIR,'grid_left_elev_0.tif'))
-    # write_epipolar_grid(right_grid, os.path.join(TEST_DIR,'grid_right_elev_0.tif'))
+    # write_epipolar_grid(left_grid, os.path.join(data_path(),'grid_left_elev_0.tif'))
+    # write_epipolar_grid(right_grid, os.path.join(data_path(),'grid_right_elev_0.tif'))
 
     # Check epipolar grids
     # OTB convention is [col, row], shareloc convention is [row, col]
@@ -182,14 +190,18 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid():
     """
     Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
     """
-    left_im = Image(os.path.join(TEST_DIR, "rectification", "left_image.tif"))
-    right_im = Image(os.path.join(TEST_DIR, "rectification", "right_image.tif"))
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+    right_im = Image(os.path.join(data_path(), "rectification", "right_image.tif"))
 
-    geom_model_left = RPC.from_any(os.path.join(TEST_DIR, "rectification", "left_image.geom"), topleftconvention=True)
-    geom_model_right = RPC.from_any(os.path.join(TEST_DIR, "rectification", "right_image.geom"), topleftconvention=True)
+    geom_model_left = RPC.from_any(
+        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
+    )
 
-    dtm_file = os.path.join(TEST_DIR, "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
-    geoid_file = os.path.join(TEST_DIR, "dtm", "geoid", "egm96_15.gtx")
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
     dtm_ventoux = DTM(dtm_file, geoid_file)
 
     epi_step = 30
@@ -198,11 +210,11 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid():
         left_im, geom_model_left, right_im, geom_model_right, dtm_ventoux, epi_step, elevation_offset
     )
 
-    gt_left_grid = rasterio.open(os.path.join(TEST_DIR, "rectification", "gt_left_grid_dtm.tif")).read()
-    gt_right_grid = rasterio.open(os.path.join(TEST_DIR, "rectification", "gt_right_grid_dtm.tif")).read()
+    gt_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_dtm.tif")).read()
+    gt_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_dtm.tif")).read()
 
-    # write_epipolar_grid(left_grid, os.path.join(TEST_DIR,'grid_left_dtm.tif'))
-    # write_epipolar_grid(right_grid, os.path.join(TEST_DIR,'grid_right_dtm.tif'))
+    # write_epipolar_grid(left_grid, os.path.join(data_path(),'grid_left_dtm.tif'))
+    # write_epipolar_grid(right_grid, os.path.join(data_path(),'grid_right_dtm.tif'))
 
     # Check epipolar grids
     # OTB convention is [col, row], shareloc convention is [row, col]
@@ -227,14 +239,18 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid_roi():
     """
     Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
     """
-    left_im = Image(os.path.join(TEST_DIR, "rectification", "left_image.tif"))
-    right_im = Image(os.path.join(TEST_DIR, "rectification", "right_image.tif"))
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+    right_im = Image(os.path.join(data_path(), "rectification", "right_image.tif"))
 
-    geom_model_left = RPC.from_any(os.path.join(TEST_DIR, "rectification", "left_image.geom"), topleftconvention=True)
-    geom_model_right = RPC.from_any(os.path.join(TEST_DIR, "rectification", "right_image.geom"), topleftconvention=True)
+    geom_model_left = RPC.from_any(
+        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
+    )
 
-    dtm_file = os.path.join(TEST_DIR, "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
-    geoid_file = os.path.join(TEST_DIR, "dtm", "geoid", "egm96_15.gtx")
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
     extent = get_epipolar_extent(left_im, geom_model_left, geom_model_right, margin=0.0016667)
     dtm_ventoux = DTM(dtm_file, geoid_file, roi=extent)
 
@@ -244,11 +260,11 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid_roi():
         left_im, geom_model_left, right_im, geom_model_right, dtm_ventoux, epi_step, elevation_offset
     )
 
-    gt_left_grid = rasterio.open(os.path.join(TEST_DIR, "rectification", "gt_left_grid_dtm.tif")).read()
-    gt_right_grid = rasterio.open(os.path.join(TEST_DIR, "rectification", "gt_right_grid_dtm.tif")).read()
+    gt_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_dtm.tif")).read()
+    gt_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_dtm.tif")).read()
 
-    # write_epipolar_grid(left_grid, os.path.join(TEST_DIR,'grid_left_dtm_roi.tif'))
-    # write_epipolar_grid(right_grid, os.path.join(TEST_DIR,'grid_right_dtm_roi.tif'))
+    # write_epipolar_grid(left_grid, os.path.join(data_path(),'grid_left_dtm_roi.tif'))
+    # write_epipolar_grid(right_grid, os.path.join(data_path(),'grid_right_dtm_roi.tif'))
 
     # Check epipolar grids
     # OTB convention is [col, row], shareloc convention is [row, col]
@@ -273,11 +289,15 @@ def test_compute_stereorectification_epipolar_grids_alti():
     """
     Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
     """
-    left_im = Image(os.path.join(TEST_DIR, "rectification", "left_image.tif"))
-    right_im = Image(os.path.join(TEST_DIR, "rectification", "right_image.tif"))
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+    right_im = Image(os.path.join(data_path(), "rectification", "right_image.tif"))
 
-    geom_model_left = RPC.from_any(os.path.join(TEST_DIR, "rectification", "left_image.geom"), topleftconvention=True)
-    geom_model_right = RPC.from_any(os.path.join(TEST_DIR, "rectification", "right_image.geom"), topleftconvention=True)
+    geom_model_left = RPC.from_any(
+        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
+    )
 
     epi_step = 30
     elevation_offset = 50
@@ -286,8 +306,8 @@ def test_compute_stereorectification_epipolar_grids_alti():
         left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
-    gt_left_grid = rasterio.open(os.path.join(TEST_DIR, "rectification", "gt_left_grid_100.tif")).read()
-    gt_right_grid = rasterio.open(os.path.join(TEST_DIR, "rectification", "gt_right_grid_100.tif")).read()
+    gt_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_100.tif")).read()
+    gt_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_100.tif")).read()
 
     # Check epipolar grids
     # OTB convention is [col, row], shareloc convention is [row, col]
@@ -312,8 +332,12 @@ def test_rectification_moving_along_line():
     """
     Test moving along line in epipolar geometry
     """
-    geom_model_left = RPC.from_any(os.path.join(TEST_DIR, "rectification", "left_image.geom"), topleftconvention=True)
-    geom_model_right = RPC.from_any(os.path.join(TEST_DIR, "rectification", "right_image.geom"), topleftconvention=True)
+    geom_model_left = RPC.from_any(
+        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
+    )
 
     current_left_coords = np.array([[5000.5, 5000.5, 0.0]], dtype=np.float64)
     mean_spacing = 1
@@ -337,8 +361,12 @@ def test_rectification_moving_to_next_line():
     """
     Test moving to next line in epipolar geometry
     """
-    geom_model_left = RPC.from_any(os.path.join(TEST_DIR, "rectification", "left_image.geom"), topleftconvention=True)
-    geom_model_right = RPC.from_any(os.path.join(TEST_DIR, "rectification", "right_image.geom"), topleftconvention=True)
+    geom_model_left = RPC.from_any(
+        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
+    )
 
     current_left_coords = np.array([5000.5, 5000.5, 0.0], dtype=np.float64)
     mean_spacing = 1

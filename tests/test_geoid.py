@@ -27,7 +27,7 @@ Test module for geoid function class shareloc/localisation.py
 import os
 import pytest
 import numpy as np
-from utils import TEST_DIR
+from helpers import data_path
 
 from shareloc.geoid import interpolate_geoid_height
 
@@ -46,7 +46,7 @@ def test_geoid_height(lon, lat, valid_alt):
     """
     Test interpolate geoid height
     """
-    geoid_file = os.path.join(TEST_DIR, "dtm/geoid/egm96_15.gtx")
+    geoid_file = os.path.join(data_path(), "dtm/geoid/egm96_15.gtx")
     positions = np.asarray([lon, lat])[np.newaxis, :]
     geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
     assert geoid_height == pytest.approx(valid_alt, abs=1e-6)

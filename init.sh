@@ -29,12 +29,6 @@ else
   # TODO: move to hpc HAL specific doc or script.
   ml python/3.7.2
 
-  # Set TESTPATH for tests
-  # TODO: remove with tests evolution to set TESTPATH internally
-  export SHARELOCPATH="$( cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P )"
-  export TESTPATH=$SHARELOCPATH/valid
-  echo "TESTPATH: $TESTPATH"
-
   # Activate virtualenv
   source ./${VENV_NAME}/bin/activate
 fi

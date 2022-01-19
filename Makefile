@@ -19,12 +19,9 @@ ifndef VENV
 	VENV = "venv"
 endif
 
-
 # SHARELOC variables
 CHECK_SHARELOC = $(shell ${VENV}/bin/python -m pip list|grep shareloc)
 SHARELOC_VERSION = $(shell python3 setup.py --version)
-# Path for tests : TODO remove with path put internally in tests/
-SHARELOCPATH ="$(shell cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P )"
 
 # MAKE TARGETS DEFINITION
 .PHONY: help check venv install test test-ci lint format notebook clean
@@ -56,10 +53,10 @@ doc: install-doc ## build sphinx documentation
 
 
 test: install ## run all tests + coverage html
-	@TESTPATH="${SHARELOCPATH}/valid" ${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --cov-config=.coveragerc --cov-report html --cov
+	@${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --cov-config=.coveragerc --cov-report html --cov
 
 test-ci: install ## run all + coverage for ci to sonarqube
-	@TESTPATH="${SHARELOCPATH}/valid" ${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --junitxml=pytest-report.xml --cov-config=.coveragerc --cov-report xml --cov
+	@${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --junitxml=pytest-report.xml --cov-config=.coveragerc --cov-report xml --cov
 
 lint: install ## run lint tools (depends install)
 	@echo "Linting isort check"

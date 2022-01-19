@@ -25,7 +25,7 @@ Module to test functions that use rpc
 
 import os
 import pytest
-from utils import test_path
+from helpers import data_path
 import numpy as np
 
 from shareloc.dtm import DTM
@@ -36,7 +36,7 @@ def test_rpc_drivers():
     """
     test rpc driver identification
     """
-    data_folder = test_path()
+    data_folder = data_path()
 
     file_direct_euclide = os.path.join(data_folder, "rpc/rpc_dir.euc")
     file_inverse_euclide = os.path.join(data_folder, "rpc/rpc_inv.euc")
@@ -69,7 +69,7 @@ def test_identify_ossim_kwl():
     """
     test ossim file identification
     """
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     ossim_model = identify_ossim_kwl(file_geom)
@@ -80,7 +80,7 @@ def test_identify_euclidium_rpc():
     """
     test euclidium file identification
     """
-    data_folder = test_path()
+    data_folder = data_path()
     file_direct_euclide = os.path.join(data_folder, "rpc/rpc_dir.euc")
     file_inverse_euclide = os.path.join(data_folder, "rpc/rpc_inv.euc")
 
@@ -99,7 +99,7 @@ def test_identify_dimap():
     """
     test dimap file identification
     """
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
     dimap_version = identify_dimap(file_dimap)
@@ -131,7 +131,7 @@ def test_rpc_ossim_kwl(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test inverse localization from ossim file
     """
-    data_folder = test_path()
+    data_folder = data_path()
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     fctrat_geom = RPC.from_any(file_geom, topleftconvention=True)
 
@@ -181,7 +181,7 @@ def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test inverse localization from any file
     """
-    data_folder = test_path()
+    data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
@@ -199,7 +199,7 @@ def test_rpc_euclidium_direct_iterative(id_scene, lon, lat, alt):
     """
     test the sequence of a inverse localization followed by a direct localization using euclidium file
     """
-    data_folder = test_path()
+    data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
@@ -225,7 +225,7 @@ def test_rpc_euclidium_direct(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test direct and inverse localization using fake rpc file
     """
-    data_folder = test_path()
+    data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
@@ -247,7 +247,7 @@ def test_rpc_from_geotiff_without_rpc(prod, can_read):
     """
     test file without rpc
     """
-    data_folder = test_path()
+    data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", prod)
     try:
         RPC.from_geotiff(rpc_file, topleftconvention=True)
@@ -264,7 +264,7 @@ def test_rpc_dimap_v2(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test inverse localization using ossim and dimap files
     """
-    data_folder = test_path()
+    data_folder = data_path()
     file_dimap = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
     fctrat_dimap = RPC.from_dimap(file_dimap, topleftconvention=True)
 
@@ -284,7 +284,7 @@ def test_rpc_phrdimap(col, row, alt):
     """
     test the sequence of a inverse localization followed by a direct localization using dimap file
     """
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
@@ -302,7 +302,7 @@ def test_rpc_direct_inverse_iterative_vs_direct(col, row, alt):
     """
     compare direct localization and iterative direct localization
     """
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
@@ -321,7 +321,7 @@ def test_rpc_direct_inverse_iterative_vs_direct_multiple_points():
     """
     compare direct localization and iterative direct localization with multiple points
     """
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
@@ -347,7 +347,7 @@ def test_rpc_direct_iterative_nan():
     """
     test iterative direct localization with nan
     """
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
@@ -366,7 +366,7 @@ def test_rpc_direct_iterative_all_nan():
     test iterative direct localization with all nan
     """
     # comparasion between tabs en tab containing Nan cf. issue #46
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
@@ -392,7 +392,7 @@ def test_rpc_direct_inverse_iterative(col, row, alt):
     """
     test the sequence of a direct localization followed by a inverse localization
     """
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
@@ -415,11 +415,11 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
     """
     vect_index = [index_x, index_y]
 
-    data_folder = test_path()
+    data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
 
-    data_folder_mnt = test_path("ellipsoide", "P1BP--2017092838284574CP")
+    data_folder_mnt = data_path("ellipsoide", "P1BP--2017092838284574CP")
 
     # chargement du mnt
     fic = os.path.join(data_folder_mnt, "MNT_extrait/mnt_extrait.c1")
@@ -442,7 +442,7 @@ def test_rpc_los_extrapolation(id_scene, row, col):
     """
     test los extrapolation
     """
-    data_folder = test_path()
+    data_folder = data_path()
     file_dimap = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
     fctrat = RPC.from_dimap(file_dimap, topleftconvention=True)
     los_edges = fctrat.los_extrema(row, col)
@@ -458,7 +458,7 @@ def test_rpc_minmax():
     """
     test get min and max altitude
     """
-    data_folder = test_path()
+    data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     fichier_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
     fctrat = RPC.from_any(fichier_dimap)

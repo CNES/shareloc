@@ -23,17 +23,19 @@
 module for test utilities
 """
 
-
 import os
 
 
-def test_path(alti="", id_scene=""):
+def data_path(alti="", scene_id=""):
     """
-    return the data folder
+    return the data path, when used without any argument data_path() returns data directory
+    :param alti: first sub dir corresponding to datum ("ellipsoide" or "geoid")
+    :type alti: str
+    :param scene_id: second sub dir corresponding to the scene id
+    :type scene_id: str
     :return: data path.
     :rtype: str
     """
-
-    data_folder = os.path.join(os.environ["TESTPATH"], alti, id_scene)
-
-    return data_folder
+    data_root_folder = os.path.join(os.path.dirname(__file__), "data")
+    sub_folder = os.path.join(alti, scene_id)
+    return os.path.join(data_root_folder, sub_folder)

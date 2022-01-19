@@ -26,7 +26,7 @@ Test module for image class shareloc/image/image.py
 import os
 import pytest
 import numpy as np
-from utils import test_path
+from helpers import data_path
 from shareloc.image.image import Image
 from shareloc.image.dtm_image import DTMImage
 
@@ -47,7 +47,7 @@ def test_image_metadata(
     """
     Test image class
     """
-    data_folder = test_path()
+    data_folder = data_path()
     image_filename = os.path.join(data_folder, "image/phr_ventoux/", image_name)
 
     my_image = Image(image_filename)
@@ -85,7 +85,7 @@ def test_image_metadata_roi(
     Test image class with roi
     """
 
-    data_folder = test_path()
+    data_folder = data_path()
     image_filename = os.path.join(data_folder, "image/phr_ventoux/", image_name)
 
     # roi in index
@@ -130,7 +130,7 @@ def test_bsqimage_metadata(row, col, origin_row, origin_col, pixel_size_row, pix
     """
     Test  dtmimage class
     """
-    data_folder = test_path("ellipsoide", "P1BP--2017092838319324CP")
+    data_folder = data_path("ellipsoide", "P1BP--2017092838319324CP")
     # chargement du mnt
     image_filename = os.path.join(data_folder, "MNT_extrait/mnt_extrait.c1")
 
@@ -154,7 +154,7 @@ def test_dtm_fillnodata():
     """
     Test dtm image fillnodata
     """
-    dtm_file = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     my_image_with_nodata = DTMImage(dtm_file, read_data=True, fill_nodata=None)
     nodata_index = np.argwhere(my_image_with_nodata.mask == 0)[0]
     assert my_image_with_nodata.data[nodata_index[0], nodata_index[1]] == -32768
@@ -171,6 +171,6 @@ def test_dtm_fillnodata():
     my_image_constant = DTMImage(dtm_file, read_data=True, fill_nodata="constant", fill_value=100.0)
     assert my_image_constant.data[nodata_index[0], nodata_index[1]] == 100.0
 
-    dtm_file_srtm_hole = os.path.join(os.environ["TESTPATH"], "dtm", "srtm_ventoux", "N44E005_big_hole.tif")
+    dtm_file_srtm_hole = os.path.join(data_path(), "dtm", "srtm_ventoux", "N44E005_big_hole.tif")
     my_image_fill_hole = DTMImage(dtm_file_srtm_hole, read_data=True, fill_nodata="rio_fillnodata")
     assert my_image_fill_hole.data[403, 1119] == 32

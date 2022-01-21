@@ -86,8 +86,8 @@ def test_localize_direct_grid():
     col = 0
 
     # first instanciate the Grid geometric model
-    data = os.path.join(data_path(), "rpc/phr_ventoux/", "left_image.geom")
-    geom_model_1 = RPC.from_any(data)
+    # data = os.path.join(data_path(), "rpc/phr_ventoux/", "left_image.geom")
+    # geom_model_1 = RPC.from_any(data)
     data = os.path.join(data_path(), "grid/phr_ventoux/", "left_image_grid.tif")
     geom_model = Grid(data)
     # then read the Image to retrieve its geotransform
@@ -97,7 +97,7 @@ def test_localize_direct_grid():
     # read the SRTM tile and Geoid
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTM(dtm_file, geoid_file, fill_nodata="min")
 
     # Localization class is then used using WGS84 output
     loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
@@ -105,10 +105,10 @@ def test_localize_direct_grid():
     # use direct localisation of the first image pixel
     lonlatalt = loc.direct(row, col, using_geotransform=True)
     print(lonlatalt)
-    print(geom_model_1.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2]))
-    assert lonlatalt[0][0] == pytest.approx(5.193406151946084, abs=1e-8)
-    assert lonlatalt[0][1] == pytest.approx(44.20805807814395, abs=1e-8)
-    assert lonlatalt[0][2] == pytest.approx(503.51202179, abs=1e-4)
+    # print(geom_model_1.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2]))
+    assert lonlatalt[0] == pytest.approx(5.193406151946084, abs=1e-8)
+    assert lonlatalt[1] == pytest.approx(44.20805807814395, abs=1e-8)
+    assert lonlatalt[2] == pytest.approx(503.51202179, abs=1e-4)
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):

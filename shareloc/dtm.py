@@ -482,7 +482,7 @@ class DTM:
         point_b_dtm = self.ter_to_index(point_b)
         point_r = np.zeros(3)
         (npl, _) = los.shape
-        alti = range(npl, -1, -1)
+        alti = np.arange(npl, -1.0, -1.0)
         p_1 = point_b_dtm.copy()  # [p_1[0],p_1[1],p_1[2]]
 
         h_intersect_p1 = h_intersect
@@ -590,7 +590,7 @@ class DTM:
                     # a1 = a_2;
                     # p_1 devient p_2
                     p_1 = p_2.copy()
-                    h_intersect_p1 = h_intersect_p2.copy()
+                    h_intersect_p1 = h_intersect_p2
 
                     # 4.2 - D?termination d'un nouveau point bas
                     #      - Test d'orientation de la vis?e

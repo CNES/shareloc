@@ -106,9 +106,9 @@ def test_localize_direct_grid():
     lonlatalt = loc.direct(row, col, using_geotransform=True)
     print(lonlatalt)
     # print(geom_model_1.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2]))
-    assert lonlatalt[0] == pytest.approx(5.193406151946084, abs=1e-8)
-    assert lonlatalt[1] == pytest.approx(44.20805807814395, abs=1e-8)
-    assert lonlatalt[2] == pytest.approx(503.51202179, abs=1e-4)
+    assert lonlatalt[0] == pytest.approx(5.193406151946084, abs=1e-7)
+    assert lonlatalt[1] == pytest.approx(44.20805807814395, abs=1e-7)
+    assert lonlatalt[2] == pytest.approx(503.51202179, abs=1e-3)
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):

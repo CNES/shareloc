@@ -29,7 +29,7 @@ from helpers import data_path
 import numpy as np
 
 from shareloc.dtm import DTM
-from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl, identify_euclidium_rpc
+from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl
 
 
 def test_rpc_drivers():
@@ -37,11 +37,6 @@ def test_rpc_drivers():
     test rpc driver identification
     """
     data_folder = data_path()
-
-    file_direct_euclide = os.path.join(data_folder, "rpc/rpc_dir.euc")
-    file_inverse_euclide = os.path.join(data_folder, "rpc/rpc_inv.euc")
-
-    fctrat_eucl = RPC.from_any(file_inverse_euclide, file_direct_euclide)
 
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
@@ -58,7 +53,7 @@ def test_rpc_drivers():
 
     fake_rpc = os.path.join(data_folder, "rpc/fake_rpc.txt")
     fctrat_fake = RPC.from_any(fake_rpc, topleftconvention=True)
-    assert fctrat_eucl.driver_type == "euclidium"
+
     assert fctrat_dimap.driver_type == "dimap_v1.4"
     assert fctrat_geom.driver_type == "ossim_kwl"
     assert fctrat_dimap_v2.driver_type == "dimap_v2.15"
@@ -74,25 +69,6 @@ def test_identify_ossim_kwl():
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     ossim_model = identify_ossim_kwl(file_geom)
     assert ossim_model == "ossimPleiadesModel"
-
-
-def test_identify_euclidium_rpc():
-    """
-    test euclidium file identification
-    """
-    data_folder = data_path()
-    file_direct_euclide = os.path.join(data_folder, "rpc/rpc_dir.euc")
-    file_inverse_euclide = os.path.join(data_folder, "rpc/rpc_inv.euc")
-
-    is_eucl_inverse = identify_euclidium_rpc(file_inverse_euclide)
-    is_eucl_direct = identify_euclidium_rpc(file_direct_euclide)
-
-    id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
-    file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    is_eucl_bad = identify_euclidium_rpc(file_geom)
-    assert is_eucl_inverse
-    assert is_eucl_direct
-    assert not is_eucl_bad
 
 
 def test_identify_dimap():
@@ -144,14 +120,6 @@ def test_rpc_ossim_kwl(id_scene, lon, lat, alt, row_vt, col_vt):
     "id_scene,lon,lat,alt, col_vt,row_vt",
     [
         (
-            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt",
-            7.048662660737769592,
-            43.72774839443545858,
-            0.0,
-            100.5,
-            200.5,
-        ),
-        (
             "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.geom",
             7.048662660737769592,
             43.72774839443545858,
@@ -193,9 +161,9 @@ def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
 
 @pytest.mark.parametrize(
     "id_scene,lon,lat,alt",
-    [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt", 7.048662660737769592, 43.72774839443545858, 0.0)],
+    [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif", 7.048662660737769592, 43.72774839443545858, 0.0)],
 )
-def test_rpc_euclidium_direct_iterative(id_scene, lon, lat, alt):
+def test_rpc_direct_iterative(id_scene, lon, lat, alt):
     """
     test the sequence of a inverse localization followed by a direct localization using euclidium file
     """
@@ -203,37 +171,9 @@ def test_rpc_euclidium_direct_iterative(id_scene, lon, lat, alt):
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
-    (lon2, lat2, __) = fctrat.direct_loc_h(row, col, alt)
+    (lon2, lat2, __) = fctrat.direct_loc_inverse_iterative(row, col, alt)
     assert lon == pytest.approx(lon2, abs=1e-2)
     assert lat == pytest.approx(lat2, abs=1e-2)
-
-
-@pytest.mark.parametrize(
-    "id_scene,lon,lat,alt, col_vt,row_vt",
-    [
-        (
-            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_dir.txt",
-            7.048662660737769592,
-            43.72774839443545858,
-            0.0,
-            100.0,
-            200.0,
-        )
-    ],
-)
-def test_rpc_euclidium_direct(id_scene, lon, lat, alt, row_vt, col_vt):
-    """
-    test direct and inverse localization using fake rpc file
-    """
-    data_folder = data_path()
-    rpc_file = os.path.join(data_folder, "rpc", id_scene)
-    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
-    (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
-    assert row is None
-    assert col is None
-    (lon2, lat2, __) = fctrat.direct_loc_inverse_iterative(row_vt, col_vt, alt)
-    assert lat2 is None
-    assert lon2 is None
 
 
 @pytest.mark.parametrize(
@@ -406,7 +346,7 @@ def test_rpc_direct_inverse_iterative(col, row, alt):
 
 
 @pytest.mark.parametrize(
-    "id_scene, index_x,index_y", [("PHR1B_P_201709281038393_SEN_PRG_FC_178609-001_inv.txt", 10.5, 20.5)]
+    "id_scene, index_x,index_y", [("RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML", 10.5, 20.5)]
 )
 @pytest.mark.unit_tests
 def test_rpc_direct_dtm(id_scene, index_x, index_y):

@@ -69,27 +69,6 @@ def identify_dimap(xml_file):
         return version
 
 
-def identify_euclidium_rpc(eucl_file):
-    """
-    parse file to identify if it is an euclidium model (starts with '>>')
-    :param eucl_file : euclidium rpc file
-    :type eucl_file : str
-    :return  True if euclidium rpc has been identified, False otherwise
-    :rtype Boolean
-    """
-    try:
-        with open(eucl_file, encoding="utf-8") as euclidium_file:
-            content = euclidium_file.readlines()
-        is_eucl = True
-        for line in content:
-            if not line.startswith(">>") and line != "\n":
-                is_eucl = False
-    except Exception:
-        return False
-    else:
-        return is_eucl
-
-
 def identify_ossim_kwl(ossim_kwl_file):
     """
     parse geom file to identify if it is an ossim model
@@ -513,12 +492,10 @@ class RPC:
         return cls(rpc_params)
 
     @classmethod
-    def from_any(cls, primary_file, secondary_file=None, topleftconvention=True):
-        """load from any RPC (auto indetify driver)
-        :param primary_file  : rpc filename (dimap, ossim kwl, euclidium coefficients, geotiff)
+    def from_any(cls, primary_file, topleftconvention=True):
+        """load from any RPC (auto identify driver)
+        :param primary_file  : rpc filename (dimap, ossim kwl, geotiff)
         :type primary_file  : str
-        :param secondary_file  : secondary file (euclidium coefficients)
-        :type secondary_file  : str
         :param topleftconvention  : [0,0] position
         :type topleftconvention  : boolean
         If False : [0,0] is at the center of the Top Left pixel
@@ -537,11 +514,6 @@ class RPC:
         geotiff_rpc_dict = identify_geotiff_rpc(primary_file)
         if geotiff_rpc_dict is not None:
             return cls.from_geotiff(primary_file, topleftconvention)
-        is_eucl_rpc = identify_euclidium_rpc(primary_file)
-        if secondary_file is not None:
-            is_eucl_rpc = is_eucl_rpc and identify_euclidium_rpc(secondary_file)
-        if is_eucl_rpc:
-            return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
         ValueError("can not read rpc file")
         return None
 

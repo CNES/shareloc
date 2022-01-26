@@ -20,7 +20,7 @@
 #
 """
 This module contains the RPC class corresponding to the RPC models.
-RPC models covered are : DIMAP V1, DIMAP V2, Euclidium, ossim (geom file), geotiff.
+RPC models covered are : DIMAP V1, DIMAP V2, ossim (geom file), geotiff.
 """
 
 from xml.dom import minidom

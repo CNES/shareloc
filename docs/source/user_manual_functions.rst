@@ -1,11 +1,16 @@
 .. _user_manual_functions:
 
+=====================
+Geolocation Functions
+=====================
 
-=========
-Functions
-=========
+Shareloc has several main functions: 
 
-Shareloc has tree main functions detailed below. See :ref:`examples` section for more information.
+- :ref:`Localization`
+- :ref:`Triangulation`
+- :ref:`Rectification Grid Computation`
+
+Examples can be found in `tests directory <https://github.com/CNES/shareloc/tests/>`_ in source code.
 
 Localization
 ============
@@ -42,8 +47,6 @@ It is possible to use geometric model directly using ``shareloc.grid.Grid`` and 
         :param epsg  : coordinate system of world points, if None model coordinate system will be used
         :type epsg  : int
         """
-
-
 
 
 Direct Localization

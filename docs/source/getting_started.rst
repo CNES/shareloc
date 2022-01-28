@@ -3,28 +3,26 @@
 Getting started
 ===============
 
-Overview
-########
+This section gives a quick easy start on shareloc. 
 
-Shareloc rely on analytics or sampled geometric models, more generally on non physical modelling. :ref:`user_manual_geometric_models` section details supported models.
+Please read :ref:`user_manual` for more details, especially :ref:`user_manual_functions`.
+
+Quick Start
+===========
+
+* Install Shareloc (section :ref:`install` for more details)
+
+.. code-block:: console
+
+    $ python -m venv venv
+    $ source venv/bin/activate
+    $ pip install shareloc 
 
 
-Shareloc main functions are listed below :
+* Test shareloc quick example for direct localization 
 
- * Direct/inverse localization at constant elevation (ellipsoidal earth model).
- * Direct localization on 2.5D DEM (w.r.t ellipsoid or geoid).
- * Line of sight triangulation.
- * Rectification grid creation.
- * Rectification grid interpolation.
+.. code-block:: console
 
-:ref:`user_manual_functions` section gives more details about these functions.
+    $ TODO : quick example 
 
-Install
-#######
-
-:ref:`install` Shareloc on your system
-
-Examples
-########
-
-see :ref:`examples` section.
+see :ref:`user_manual_functions` section for more examples.

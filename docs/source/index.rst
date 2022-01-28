@@ -5,10 +5,10 @@
 
 :Version: |version|
 
-ShareLoc, a simple remote sensing geometric library
+Shareloc, a simple remote sensing geometric library
 ===================================================
 
-ShareLoc, is an open source remote sensing geolocation library.
+**Shareloc** is an open source remote sensing geolocation library.
 
 .. |img1| image:: images/shareloc_loc_ellipsoid.png
    :width: 65%
@@ -21,8 +21,22 @@ ShareLoc, is an open source remote sensing geolocation library.
 | |img1|                                    | |img2|                     |
 +-------------------------------------------+----------------------------+
 
+Shareloc performs :ref:`user_manual_functions` between sensor and ground and vice versa: 
 
-Shareloc rely on analytics or sampled geometric models (see :ref:`user_manual_geometric_models`) to perform geolocation functions listed here :ref:`user_manual_functions`
+- Direct/inverse localization at constant elevation (ellipsoidal earth model).
+- Direct localization on 2.5D DEM (w.r.t ellipsoid or geoid).
+- Line of sight triangulation.
+- Rectification grid creation.
+- Rectification grid interpolation.
+
+Shareloc handles RPC and direct location grids :ref:`user_manual_geometric_models`.
+
+Why Shareloc ?
+--------------
+
+Shareloc development has been motivated by the need of a full python component for CNES studies and the need of an underlying geometrical component for CARS. 
+
+Be aware that the project is new and is evolving to maturity with your help. 
 
 **Contact:** cars AT cnes.fr
 
@@ -32,7 +46,6 @@ Shareloc rely on analytics or sampled geometric models (see :ref:`user_manual_ge
    getting_started
    install
    user_manual
-   examples
    developer
    glossary
 

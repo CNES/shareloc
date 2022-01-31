@@ -12,7 +12,7 @@ Read also `Shareloc Contribution guide`_ with `LICENCE <https://raw.githubuserco
 
 Developer Install
 =================
-:ref:`Install` procedure is followed.
+:ref:`Install` from source procedure is followed.
 
 The detailed development install method is described in the `Makefile`
 

@@ -10,20 +10,21 @@ Shareloc has several main functions:
 - :ref:`Triangulation`
 - :ref:`Rectification Grid Computation`
 
-Examples can be found in `tests directory <https://github.com/CNES/shareloc/tests/>`_ in source code.
+Examples can be found in `tests directory <https://github.com/CNES/shareloc/tests/>`_ of Shareloc source code.
 
 Localization
 ============
 
-Localization means mapping between image coordinates and ground ones using geometric model. Localization functions can be called via ``shareloc.localization.Localization`` class,
-or directly using geometric models. It can be schematised as the intersection of a :term:`LOS` and the terrain.
+Localization means mapping between image coordinates and ground ones using geometric model.
 
-Following information are needed for localization functions :
+Localization functions can be called via its class or directly using geometric models. It can be simplified as the intersection of a :term:`LOS` and the terrain.
 
- * a geometric model
- * elevation information, see : :ref:`user_manual_elevation_handling`
- * image information in order to use geotransform, see : :ref:`user_manual_conventions`
- * epsg code to specify ground coordinate system
+Following information are needed for localization functions:
+
+ * **a geometric model**
+ * **elevation information**, details in :ref:`user_manual_elevation_handling` section.
+ * **image information** in order to use geotransform, details in :ref:`user_manual_conventions` section.
+ * :term:`EPSG` **code** to specify ground coordinate system
 
 ``shareloc.localization.Localization`` class collect these data to set up the localization functions.
 It is possible to use geometric model directly using ``shareloc.grid.Grid`` and ``shareloc.rpc.rpc.RPC`` for advanced used.
@@ -130,10 +131,9 @@ colocalization returns image positions (row2,col2) in image 2 from (row1,col1) p
 Triangulation
 =============
 
-
 Triangulation gives 3D intersections between :term:`LOS` coming from 2 geometric models.
 
-Triangulation is calculated according to the formula:
+Triangulation is calculated according to the following formula:
 
 :math:`x= \left(\sum_i I-\hat v_i \hat v_i^\top\right)^{-1} \left(\sum_i (I-\hat v_i \hat v_i^\top) s_i\right)`
 
@@ -188,10 +188,13 @@ References :
 Rectification Grid Computation
 ==============================
 
-:term:`rectification` or stereo-rectification refers to the image transformation in epipolar geometry. A rectification grid is a displacement grid used to resample sensor gemetry to epipolar one.
-Shareloc rectification grids respects OTB convention for displacement grids. To generate the images in epipolar geometry from the grids computed by shareloc and the original images, one can refer to the Orfeo Toolbox documentation `here <https://www.orfeo-toolbox.org/CookBook/recipes/stereo.html#resample-images-in-epipolar-geometry>`_ .
-Algorithm details can be found in reference below.
+:term:`Rectification` or stereo-rectification refers to the image transformation in epipolar geometry.
 
+A rectification grid is a displacement grid used to resample sensor gemetry to epipolar one.
+Shareloc rectification grids respects OTB convention for displacement grids. 
+
+To generate the images in epipolar geometry from the grids computed by shareloc and the original images, one can refer to the Orfeo Toolbox documentation `here <https://www.orfeo-toolbox.org/CookBook/recipes/stereo.html#resample-images-in-epipolar-geometry>`_ .
+Algorithm details can be found in reference below.
 
 .. code-block:: bash
 

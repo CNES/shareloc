@@ -18,19 +18,20 @@ It can be summarized as:
 
 where:
 
-- :math:`f()`, :math:`g()` are rational polynomial function
+- :math:`f()`, :math:`g()` are Rational Polynomial Function
 - and :math:`(P,L,H)` normalized ground positions.
 
 The Rational Function Polynomial equation numerators and denominators are 20-term cubic polynomial functions, which respects RPC00B convention.
 This relationship between ground and image is called inverse RPC coefficients.
-Only inverse coefficients are compulsory, if direct ones are not available then direct localization is computed by iterating on inverse one. 
+Only inverse coefficients are compulsory, if direct ones are not available then direct localization is computed by iterating on inverse one
+ 
 Direct mapping, if available  can be summarized as: 
 
 :math:`(lon,lat) = (h(R,C,H),i(R,C,H))`
 
 where:
 
-- :math:`h()`, :math:`i()` are rational polynomial function
+- :math:`h()`, :math:`i()` are Rational Polynomial Function
 - and :math:`(R,C,H)` normalized image coordinates (R,C) and normalized altitude H.
 
 Further details are given in `RPC in Geotiff`_, `STDI-0002 2.1 (16Nov2000) specification document`_ and `Pléiades user guide Appendix C.3`_.

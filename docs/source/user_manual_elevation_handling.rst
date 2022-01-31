@@ -28,7 +28,8 @@ DEM must respects some constraints to be understandable by Shareloc :
 :term:`DEM` can be used for Localization on DEM function and Rectification using `shareloc.dtm.DTM` class.
 
 Since Shareloc works w.r.t elllipsoid by default, geoid height has to be removed from :term:`DEM` if w.r.t geoid.
-Shareloc provides egm96_15 in its  `data <https://gitlab.cnes.fr/cars/shareloc/-/blob/master/valid/dtm/geoid/egm96_15.gtx>`
+
+Shareloc provides egm96_15 in its  `data <https://raw.githubusercontent.com/CNES/shareloc/tests/data/dtm/geoid/egm96_15.gtx>`_
 
 .. code-block:: bash
 

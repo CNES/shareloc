@@ -11,6 +11,7 @@ To update, follow `glossary sphinx documentation`_ in RST source documentation.
 .. glossary::
     CARS
       means CNES Algorithms to Reconstruct Surface (ou Chaîne Automatique de Restitution Stéréoscopique en français)
+      See `CARS Documentation`_
 
     CRS
       `Coordinate Reference System`_ characterize location on earth.
@@ -44,4 +45,5 @@ To update, follow `glossary sphinx documentation`_ in RST source documentation.
 .. _`Region of Interest`: https://en.wikipedia.org/wiki/Region_of_interest
 .. _`Rational polynomial coefficient`: https://en.wikipedia.org/wiki/Rational_polynomial_coefficient
 .. _`glossary sphinx documentation`: https://sublime-and-sphinx-guide.readthedocs.io/en/latest/glossary.html
-.. _`Coordinate Reference System` : https://en.wikipedia.org/wiki/Spatial_Reference_system
+.. _`Coordinate Reference System`: https://en.wikipedia.org/wiki/Spatial_Reference_system
+.. _`CARS Documentation`: https://cars.readthedocs.io/

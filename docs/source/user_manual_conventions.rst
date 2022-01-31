@@ -4,7 +4,7 @@
 Conventions
 ===========
 
-This sections details Shareloc convention for images and geometric models.
+This sections details Shareloc conventions for images and geometric models.
 
 
 Pixel convention
@@ -19,7 +19,7 @@ Geometric model convention for coordinates is, by default, [0.5,0.5] at the cent
 
     pixel convention
 
-When dealing with ``shareloc.rpc.rpc.RPC`` it is possible to fix the center at [0,0] by setting the ``topleftconvention`` option to ``False``.
+When dealing with shareloc RPC (``shareloc.rpc.rpc.RPC``), the center at [0,0] can be changed by setting the ``topleftconvention`` option to ``False``.
 
 .. code-block:: bash
 
@@ -29,15 +29,15 @@ When dealing with ``shareloc.rpc.rpc.RPC`` it is possible to fix the center at [
 Image convention
 ================
 
-When dealing with image we use ``index`` to refer the position in the 2D array and ``Physical point`` the position of the pixel.
-The transformation between index and physical point use the geotransform of the image. `OTB Software guide chapter 5.1`_ gives complete descriptions of these concepts.
+In Shareloc image convention, ``index`` refers to the position in the 2D array and ``Physical point`` the position of the pixel.
 
-``shareloc.image.image.Image`` class manage the conversion between index and physical point.
+The transformation between ``index`` and ``Physical point`` use the geotransform of the image. `OTB Software guide chapter 5.1`_ gives complete descriptions of these concepts.
 
-It allow to manage easily images :term:`ROI` without any processing on geometric model. See `CARS Faq <https://cars.readthedocs.io/en/latest/faq.html#faq>`_ or `GDAL translate command <https://gdal.org/programs/gdal_translate.html>`_ to create image extract.
+Shareloc Image class (``shareloc.image.image.Image``) manages the conversion between index and physical point.
 
-See `image example in test directory <https://github.com/CNES/shareloc/tests/test_image.py>`_
+:term:`ROI` can be easily managed without any processing on geometric model. See `CARS Faq <https://cars.readthedocs.io/en/latest/faq.html#faq>`_ or `GDAL translate command <https://gdal.org/programs/gdal_translate.html>`_ to create image extraction.
+
+See `image example in test directory <https://github.com/CNES/shareloc/tests/test_image.py>`_ for more details.
 
 
-
-.. _`OTB Software guide chapter 5.1` : https://www.orfeo-toolbox.org/packages/archives/Doc/SoftwareGuide-6.6.0.pdf
+.. _`OTB Software guide chapter 5.1`: https://www.orfeo-toolbox.org/packages/archives/Doc/SoftwareGuide-6.6.0.pdf

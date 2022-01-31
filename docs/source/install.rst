@@ -21,8 +21,8 @@ Quick install
 
     $ pip install shareloc
 
-Advanced install from source
-============================
+Install from source
+===================
 
 * Clone Shareloc source code
 

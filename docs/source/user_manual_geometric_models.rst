@@ -5,43 +5,60 @@
 Geometric models
 ================
 
-Shareloc handles two type of geometric models, RPC and Direct location grids.
+Shareloc handles two type of geometric models: :ref:`RPC` and :ref:`Direct location grids`.
 
 RPC
 ===
 
-:term:`RPC` is an analytic function for ground (lon,lat,h) to image (r,c) mapping, it can be summarized as :math:`(r,c) = (f(P,L,H),g(P,L,H))`, where :math:`f()`, :math:`g()` are rational polynomial function, and (P,L,H) normalized ground positions.
-The rational function polynomial equation numerators and denominators each are 20-term cubic polynomial functions, which respects RPC00B convention. This relationship between ground and image is called inverse RPC coefficients.
-Only inverse coefficients are compulsory, if direct ones are not available then direct localization is computed by iterating on inverse one. Direct mapping, if available  can be summarized as :math:`(lon,lat) = (h(R,C,H),i(R,C,H))`, where :math:`h()`, :math:`i()` are rational polynomial function, and (R,C,H) normalized image coordinates (R,C) and normalized altitude H.
+:term:`RPC` is an analytic function for ground (lon,lat,h) to image (r,c) mapping.
+
+It can be summarized as:
+
+:math:`(r,c) = (f(P,L,H),g(P,L,H))`
+
+where:
+
+- :math:`f()`, :math:`g()` are rational polynomial function
+- and :math:`(P,L,H)` normalized ground positions.
+
+The Rational Function Polynomial equation numerators and denominators are 20-term cubic polynomial functions, which respects RPC00B convention.
+This relationship between ground and image is called inverse RPC coefficients.
+Only inverse coefficients are compulsory, if direct ones are not available then direct localization is computed by iterating on inverse one. 
+Direct mapping, if available  can be summarized as: 
+
+:math:`(lon,lat) = (h(R,C,H),i(R,C,H))`
+
+where:
+
+- :math:`h()`, :math:`i()` are rational polynomial function
+- and :math:`(R,C,H)` normalized image coordinates (R,C) and normalized altitude H.
+
 Further details are given in `RPC in Geotiff`_, `STDI-0002 2.1 (16Nov2000) specification document`_ and `Pléiades user guide Appendix C.3`_.
 
-Supported RPC format
---------------------
+Supported RPC formats
+---------------------
 
 * DIMAP format (V1/V2)
 * OSSIM keywordlist
 * Geotiff RPC
 
-Example
--------
+RPC class API Example
+----------------------
 
-The following parameter has to be set :
-    * ``shareloc_home`` : Path to the Shareloc folder.
+.. code-block:: console
 
-.. code-block:: bash
-
-    import os
-    from shareloc.rpc.rpc import RPC
-
-    data_folder = os.path.join(shareloc_home,'valid')
-    file_dimap = os.path.join(data_folder, f"rpc/RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML")
-    fctrat_dimap = RPC.from_any(file_dimap)
+    $ wget https://raw.githubusercontent.com/CNES/shareloc/tests/data/rpc/RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML
+    $ python3
+    >>> from shareloc.rpc.rpc import RPC
+    >>> file_dimap = "RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML")
+    >>> rpc_dimap = RPC.from_any(file_dimap)
 
 
 Direct location grids
 =====================
 
 Direct location grid is a sampled geometric model, which contains direct location at each grid cell for H0 to Hn altitude layers.
+
 It can be viewed at 3D grid (row,col,h) as illustrated below :
 
 .. figure:: images/direct_loc_multi_h.png
@@ -54,17 +71,23 @@ It can be viewed at 3D grid (row,col,h) as illustrated below :
 Shareloc grid format specifications
 -----------------------------------
 
-Shareloc grid must be a geotiff image, which contains 2 bands per altitude layer. One corresponding to x or longitude coordinates, the other corresponding to y, latitude coordinates
+Shareloc grid must be a geotiff image, which contains 2 bands per altitude layer. One corresponding to x or longitude coordinates, the other corresponding to y or latitude coordinates.
 
-following metadata are needed
+Following metadata are needed:
 
 *  ALTITUDE_BX=Y : one per band X with altitude value Y
 *  REF=EPSG:XXXX : coordinate reference system of ground coordinates
 
-below an example of 9x5 grid composed of 3 altitude layers (-30m,485m,1000m). Each cell contains direct location at altitude layer of image position calculated from it's geotransform.
+Shareloc grid format example
+----------------------------
 
-In the example below ``my_multi_h_grid`` is a 9x5x6 grid. ``my_multi_h_grid`` contains at index :math:`(row, col)` direct location
-of :math:`((row + 0.5) * steprow + row0,  (col + 0.5) * stepcol + col0))`, for example with `(band, row, col)` convention
+
+The example is composed of 9x5 grid composed of 3 altitude layers (-30m,485m,1000m). Each cell contains direct location at altitude layer of image position calculated from its geotransform.
+
+In the example below:
+
+- ``my_multi_h_grid`` is a 9x5x6 grid.
+- ``my_multi_h_grid`` contains at index :math:`(row, col)` direct location of :math:`((row + 0.5) * steprow + row0,  (col + 0.5) * stepcol + col0))`, for example with `(band, row, col)` convention
 :math:`my\_multi\_h\_grid[0:1,1,2] = direct\_loc(row = 1250,col = 625,h = -30)`
 
 .. code-block:: console
@@ -102,22 +125,23 @@ of :math:`((row + 0.5) * steprow + row0,  (col + 0.5) * stepcol + col0))`, for e
     Band 5 Block=9x5 Type=Float64, ColorInterp=Undefined
     Band 6 Block=9x5 Type=Float64, ColorInterp=Undefined
 
-Example
--------
+Grid API Example
+----------------
 
-The following parameter has to be set :
-    * ``shareloc_home`` : Path to the Shareloc folder.
-
-.. code-block:: bash
-
-    import os
-    from shareloc.grid import Grid
-    data_folder = os.path.join(shareloc_home,'valid')
-    eotiff_grid_path = os.path.join(data_folder, "ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
-    gri_geotiff = Grid(geotiff_grid_path)
+.. code-block:: console
+    
+    $ wget https://raw.githubusercontent.com/CNES/shareloc/tests/data/ellipsoide/loc_direct_grid_PHR_2013072139303958CP.tif
+    $ python3
+    >>> from shareloc.grid import Grid
+    >>> geotiff_grid_path = "loc_direct_grid_PHR_2013072139303958CP.tif"
+    >>> geotiff_grid = Grid(geotiff_grid_path)
 
 References
 __________
+
+- `RPC in Geotiff`_
+- `STDI-0002 2.1 (16Nov2000) specification document`_
+- `Pléiades user guide Appendix C.3`_
 
 .. _`RPC in Geotiff`: http://geotiff.maptools.org/rpc_prop.html
 .. _`STDI-0002 2.1 (16Nov2000) specification document`: http://geotiff.maptools.org/STDI-0002_v2.1.pdf

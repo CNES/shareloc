@@ -1,5 +1,6 @@
 .. _getting_started:
 
+===============
 Getting started
 ===============
 
@@ -19,10 +20,27 @@ Quick Start
     $ pip install shareloc 
 
 
-* Test shareloc quick example for direct localization 
+* Quick example for direct localization at constant elevation on a grid
+
+1. Get Grid TIF file from shareloc tests
 
 .. code-block:: console
+    
+    $ wget https://raw.githubusercontent.com/CNES/shareloc/tests/data/geoide/P1BP--2017030824934340CP/grilles_gld_xH/P1BP--2017030824934340CP.tif    
 
-    $ TODO : quick example 
+2. Use shareloc API for direct localization 
+      
+.. code-block:: console    
+
+    $ python3
+    >>> from shareloc.grid import Grid
+    >>> from shareloc.localization import Localization
+    >>> grid_geom_file = "P1BP--2017030824934340CP.tif"
+    >>> grid = Grid(grid_geom_file)
+    >>> loc = Localization(grid)
+    >>> loc.direct(50.5, 100.5, 100.0)
+    array([ 57.21682531,  21.9593944 , 100.        ])
+    
+    # --> Result in latitude, longitude, altitude.
 
 see :ref:`user_manual_functions` section for more examples.

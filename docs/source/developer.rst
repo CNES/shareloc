@@ -14,7 +14,7 @@ Developer Install
 =================
 :ref:`Install` procedure is followed.
 
-The detailed development install method is described in `Makefile`
+The detailed development install method is described in the `Makefile`
 
 Particularly, it uses the following pip editable install:
 

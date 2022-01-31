@@ -38,6 +38,79 @@ from shareloc.image.image import Image
 from shareloc.proj_utils import coordinates_conversion
 
 
+@pytest.mark.unit_tests
+def test_localize_direct_rpc():
+    """
+    Test direct localization using image indexing and RPC model
+    """
+
+    # we wants to localize the first pixel center of phr_ventoux left image
+    row = 0
+    col = 0
+
+    # first instanciate the RPC geometric model
+    # data = os.path.join(data_path(), "rpc/phr_ventoux/", "left_image.geom")
+    # geom_model = RPC.from_any(data)
+    data = os.path.join(data_path(), "rpc/phr_ventoux/", "RPC_PHR1B_P_201308051042194_SEN_690908101-001.XML")
+    geom_model = RPC.from_any(data)
+    # then read the Image to retrieve its geotransform
+    image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
+    image_left = Image(image_filename)
+
+    # read the SRTM tile and Geoid
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
+    dtm_ventoux = DTM(dtm_file, geoid_file)
+
+    # Localization class is then used using WGS84 output
+    loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
+
+    # use direct localisation of the first image pixel
+    lonlatalt = loc.direct(row, col, using_geotransform=True)
+    # [5.19340615  44.20805808 503.51202179]
+    # print(lonlatalt)
+    # print(geom_model_1.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2]))
+    assert lonlatalt[0][0] == pytest.approx(5.193406151946084, abs=1e-8)
+    assert lonlatalt[0][1] == pytest.approx(44.20805807814395, abs=1e-8)
+    assert lonlatalt[0][2] == pytest.approx(503.51202179, abs=1e-4)
+
+
+@pytest.mark.unit_tests
+def test_localize_direct_grid():
+    """
+    Test direct localization using image indexing and grid model
+    """
+
+    # we wants to localize the first pixel center of phr_ventoux left image
+    row = 0
+    col = 0
+
+    # first instanciate the Grid geometric model
+    # data = os.path.join(data_path(), "rpc/phr_ventoux/", "left_image.geom")
+    # geom_model_1 = RPC.from_any(data)
+    data = os.path.join(data_path(), "grid/phr_ventoux/", "left_image_grid.tif")
+    geom_model = Grid(data)
+    # then read the Image to retrieve its geotransform
+    image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
+    image_left = Image(image_filename)
+
+    # read the SRTM tile and Geoid
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
+    dtm_ventoux = DTM(dtm_file, geoid_file, fill_nodata="min")
+
+    # Localization class is then used using WGS84 output
+    loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
+
+    # use direct localisation of the first image pixel
+    lonlatalt = loc.direct(row, col, using_geotransform=True)
+    print(lonlatalt)
+    # print(geom_model_1.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2]))
+    assert lonlatalt[0] == pytest.approx(5.193406151946084, abs=1e-7)
+    assert lonlatalt[1] == pytest.approx(44.20805807814395, abs=1e-7)
+    assert lonlatalt[2] == pytest.approx(503.51202179, abs=1e-3)
+
+
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     """
     Read multiH grid

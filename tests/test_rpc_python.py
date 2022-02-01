@@ -165,7 +165,7 @@ def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
 )
 def test_rpc_direct_iterative(id_scene, lon, lat, alt):
     """
-    test the sequence of a inverse localization followed by a direct localization using euclidium file
+    test the sequence of a inverse localization followed by a direct localization using Geotif driver
     """
     data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)

@@ -42,7 +42,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     """
     Read multiH grid
     :param alti: alti validation dir
-    :param id_scene: scene euclidium ID
+    :param id_scene: scene ID
     :return: multi H grid
     :rtype: str
     """
@@ -153,8 +153,6 @@ def test_extent():
     np.testing.assert_allclose(loc_rpc.extent(), [44.041678, 5.155808, 44.229592, 5.412923], atol=1e-8)
 
 
-# LOC 3D EUCLIDIUM 5.17387725120693 44.2257086206228 365.643429880962
-# 5.17388499778903 44.2257233720898 376.864272617735
 @pytest.mark.parametrize("col,row,valid_coord", [(1999.5, 999.5, (5.17388499778903, 44.2257233720898, 376.86))])
 @pytest.mark.unit_tests
 def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
@@ -176,8 +174,6 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     assert valid_coord[2] == pytest.approx(lonlatalt[0, 2], abs=15.0)
 
 
-# LOC 3D EUCLIDIUM 5.17387725120693 44.2257086206228 365.643429880962
-# 5.17388499778903 44.2257233720898 376.864272617735
 @pytest.mark.parametrize("col,row,valid_coord", [(1999.5, 999.5, (5.17388499778903, 44.2257233720898, 376.86))])
 @pytest.mark.unit_tests
 def test_sensor_loc_dir_dtm_geoid_utm(col, row, valid_coord):

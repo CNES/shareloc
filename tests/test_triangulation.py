@@ -41,7 +41,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     Read multiH grid
 
     :param alti: alti validation dir
-    :param id_scene: scene euclidium ID
+    :param id_scene: scene ID
     :return: multi H grid
     :rtype: str
     """

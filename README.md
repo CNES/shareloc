@@ -1,10 +1,9 @@
 
-
  
 <div align="center">
   <a href="https://github.com/CNES/shareloc"><img src="docs/source/images/shareloc_picto.svg" alt="Shareloc" title="Shareloc"  width="20%"></a>
 
-<h4>ShareLoc, a simple remote sensing geometric library</h4>
+<h4>Shareloc, a simple remote sensing geometric library</h4>
 
 [![Python](https://img.shields.io/badge/python-v3.6+-blue.svg)](https://www.python.org/downloads/release/python-360/)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
@@ -46,17 +45,25 @@ Shareloc main functions :
 
 ## Why Shareloc
 
-Shareloc development has been motivated by the need of a full python component for CNES studies, and the need of an underlying geometrical component for <a href="https://github.com/CNES/cars">CARS</a>.   
+Shareloc development has been motivated by the need of a full python component for CNES studies and the need of an underlying geometrical component for <a href="https://github.com/CNES/cars">CARS</a>.   
 
 
 ## Quick start
 
 ### Installation
 
-Shareloc can be installed in a  [virtualenv](https://docs.python.org/3/library/venv) using the following commands:
+Shareloc can be installed in a [virtualenv](https://docs.python.org/3/library/venv) from Pypi repository: 
 
 ```
-git clone https://gitlab.cnes.fr/cars/shareloc.git
+python -m venv venv
+source venv
+pip install shareloc
+```
+
+For developers, Shareloc can be installed from source in a [virtualenv](https://docs.python.org/3/library/venv) using the following commands:
+
+```
+git clone https://github.com/CNES/shareloc
 cd shareloc
 make install
 source venv/bin/activate # to go in installed dev environment

@@ -20,7 +20,7 @@
 #
 """
 This module contains the RPC class corresponding to the RPC models.
-RPC models covered are : DIMAP V1, DIMAP V2, Euclidium, ossim (geom file), geotiff.
+RPC models covered are : DIMAP V1, DIMAP V2, ossim (geom file), geotiff.
 """
 
 from xml.dom import minidom
@@ -29,23 +29,10 @@ import logging
 import rasterio as rio
 import numpy as np
 from numba import njit, prange, config
-from shareloc.euclidium_utils import identify_gdlib_code
 from shareloc.proj_utils import coordinates_conversion
 
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
-
-# pylint: disable=too-many-lines
-def renvoie_linesep(txt_liste_lines):
-    """
-    Renvoie le separateur de ligne d'un texte sous forme de liste de lignes
-    Obtenu par readlines
-    """
-    if txt_liste_lines[0].endswith("\r\n"):
-        line_sep = "\r\n"
-    elif txt_liste_lines[0].endswith("\n"):
-        line_sep = "\n"
-    return line_sep
 
 
 def parse_coeff_line(coeff_str):
@@ -80,27 +67,6 @@ def identify_dimap(xml_file):
         return None
     else:
         return version
-
-
-def identify_euclidium_rpc(eucl_file):
-    """
-    parse file to identify if it is an euclidium model (starts with '>>')
-    :param eucl_file : euclidium rpc file
-    :type eucl_file : str
-    :return  True if euclidium rpc has been identified, False otherwise
-    :rtype Boolean
-    """
-    try:
-        with open(eucl_file, encoding="utf-8") as euclidium_file:
-            content = euclidium_file.readlines()
-        is_eucl = True
-        for line in content:
-            if not line.startswith(">>") and line != "\n":
-                is_eucl = False
-    except Exception:
-        return False
-    else:
-        return is_eucl
 
 
 def identify_ossim_kwl(ossim_kwl_file):
@@ -140,113 +106,6 @@ def identify_geotiff_rpc(image_filename):
         return rpc_dict
     except Exception:
         return None
-
-
-# gitlab issue #59
-# pylint: disable=too-many-branches
-def read_eucl_file(eucl_file):
-    """
-    read euclidium file and parse it
-    :param eucl_file : euclidium file
-    :type eucl_file : str
-    :return parsed file
-    :rtype dict
-    """
-    parsed_file = {}
-    with open(eucl_file, "r", encoding="utf-8") as fid:
-        txt = fid.readlines()
-
-    for line in txt:
-        if line.startswith(">>\tREP_TERRAIN"):
-            epsg, datum = identify_gdlib_code(line.split()[-1])
-            parsed_file["epsg"] = epsg
-            parsed_file["datum"] = datum
-        if line.startswith(">>\tTYPE_OBJET"):
-            if line.split()[-1].endswith("Inverse"):
-                parsed_file["type_fic"] = "I"
-            if line.split()[-1].endswith("Directe"):
-                parsed_file["type_fic"] = "D"
-
-    lsep = renvoie_linesep(txt)
-
-    ind_debut_pxout = txt.index(">>\tCOEFF POLYNOME PXOUT" + lsep)
-    ind_debut_qxout = txt.index(">>\tCOEFF POLYNOME QXOUT" + lsep)
-    ind_debut_pyout = txt.index(">>\tCOEFF POLYNOME PYOUT" + lsep)
-    ind_debut_qyout = txt.index(">>\tCOEFF POLYNOME QYOUT" + lsep)
-
-    coeff_px_str = txt[ind_debut_pxout + 1 : ind_debut_pxout + 21]
-    coeff_qx_str = txt[ind_debut_qxout + 1 : ind_debut_qxout + 21]
-    coeff_py_str = txt[ind_debut_pyout + 1 : ind_debut_pyout + 21]
-    coeff_qy_str = txt[ind_debut_qyout + 1 : ind_debut_qyout + 21]
-
-    poly_coeffs = {}
-    if parsed_file["type_fic"] == "I":
-        poly_coeffs["num_col"] = [float(coeff.split()[1]) for coeff in coeff_px_str]
-        poly_coeffs["den_col"] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
-        poly_coeffs["num_row"] = [float(coeff.split()[1]) for coeff in coeff_py_str]
-        poly_coeffs["den_row"] = [float(coeff.split()[1]) for coeff in coeff_qy_str]
-    else:
-        poly_coeffs["num_x"] = [float(coeff.split()[1]) for coeff in coeff_px_str]
-        poly_coeffs["den_x"] = [float(coeff.split()[1]) for coeff in coeff_qx_str]
-        poly_coeffs["num_y"] = [float(coeff.split()[1]) for coeff in coeff_py_str]
-        poly_coeffs["den_y"] = [float(coeff.split()[1]) for coeff in coeff_qy_str]
-
-    parsed_file["poly_coeffs"] = poly_coeffs
-    # list [offset , scale]
-    normalisation_coeff = {}
-    for line in txt:
-        if line.startswith(">>\tXIN_OFFSET"):
-            lsplit = line.split()
-            if parsed_file["type_fic"] == "I":
-                param = "x"
-            else:
-                param = "col"
-            normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
-        if line.startswith(">>\tYIN_OFFSET"):
-            if parsed_file["type_fic"] == "I":
-                param = "y"
-            else:
-                param = "row"
-            lsplit = line.split()
-            normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
-        if line.startswith(">>\tZIN_OFFSET"):
-            lsplit = line.split()
-            normalisation_coeff["alt"] = [float(lsplit[4]), float(lsplit[5])]
-        if line.startswith(">>\tXOUT_OFFSET"):
-            lsplit = line.split()
-            if parsed_file["type_fic"] == "D":
-                param = "x"
-            else:
-                param = "col"
-            normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
-        if line.startswith(">>\tYOUT_OFFSET"):
-            lsplit = line.split()
-            if parsed_file["type_fic"] == "D":
-                param = "y"
-            else:
-                param = "row"
-            normalisation_coeff[param] = [float(lsplit[4]), float(lsplit[5])]
-    parsed_file["normalisation_coeffs"] = normalisation_coeff
-    return parsed_file
-
-
-def check_coeff_consistency(dict1, dict2):
-    """
-    print an error message inf normalisations coeff are not consistent
-    :param dict1 : normalisation coeffs 1
-    :type dict1 : dict
-    :param dict2 : normalisation coeffs 2
-    :type dict2 : dict
-
-    """
-    for key, value in dict1.items():
-        if dict2[key] != value:
-            logging.warning(
-                "normalisation coeffs are different between" " direct en inverse one : %s : %f %f",
-                key,
-                value,
-                dict2[key],
-            )
 
 
 class RPC:
@@ -633,69 +492,10 @@ class RPC:
         return cls(rpc_params)
 
     @classmethod
-    def from_euclidium(cls, primary_euclidium_coeff, secondary_euclidium_coeff=None, topleftconvention=True):
-        """load from euclidium
-        :param topleftconvention  : [0,0] position
-        :type topleftconvention  : boolean
-        :param primary_euclidium_coeff  : primary euclidium coefficients file (can be either direct or inverse)
-        :type primary_euclidium_coeff  : str
-        :param secondary_euclidium_coeff  : optional secondary euclidium coeff coefficients file
-            (can be either direct or inverse)
-        :type secondary_euclidium_coeff  : str
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
-        """
-        rpc_params = {}
-        rpc_params["driver_type"] = "euclidium"
-
-        # lecture fichier euclidium
-        primary_coeffs = read_eucl_file(primary_euclidium_coeff)
-        rpc_params["epsg"] = primary_coeffs["epsg"]
-        rpc_params["datum"] = primary_coeffs["datum"]
-        # info log
-        logging.debug("primary euclidium file is of %s type", primary_coeffs["type_fic"])
-
-        rpc_params["num_x"] = None
-        rpc_params["den_x"] = None
-        rpc_params["num_y"] = None
-        rpc_params["den_y"] = None
-        rpc_params["num_col"] = None
-        rpc_params["den_col"] = None
-        rpc_params["num_row"] = None
-        rpc_params["den_row"] = None
-
-        for key, value in primary_coeffs["poly_coeffs"].items():
-            rpc_params[key] = value
-
-        rpc_params["normalisation_coeffs"] = primary_coeffs["normalisation_coeffs"]
-        for key, value in primary_coeffs["normalisation_coeffs"].items():
-            rpc_params["offset_" + key] = value[0]
-            rpc_params["scale_" + key] = value[1]
-
-        if secondary_euclidium_coeff is not None:
-            secondary_coeffs = read_eucl_file(secondary_euclidium_coeff)
-            logging.debug("secondary euclidium file is of %s type", secondary_coeffs["type_fic"])
-            check_coeff_consistency(primary_coeffs["normalisation_coeffs"], secondary_coeffs["normalisation_coeffs"])
-
-            for key, value in secondary_coeffs["poly_coeffs"].items():
-                rpc_params[key] = value
-
-        rpc_params["offset_col"] -= 0.5
-        rpc_params["offset_row"] -= 0.5
-        # If top left convention, 0.5 pixel shift added on col/row offsets
-        if topleftconvention:
-            rpc_params["offset_col"] += 0.5
-            rpc_params["offset_row"] += 0.5
-
-        return cls(rpc_params)
-
-    @classmethod
-    def from_any(cls, primary_file, secondary_file=None, topleftconvention=True):
-        """load from any RPC (auto indetify driver)
-        :param primary_file  : rpc filename (dimap, ossim kwl, euclidium coefficients, geotiff)
+    def from_any(cls, primary_file, topleftconvention=True):
+        """load from any RPC (auto identify driver)
+        :param primary_file  : rpc filename (dimap, ossim kwl, geotiff)
         :type primary_file  : str
-        :param secondary_file  : secondary file (euclidium coefficients)
-        :type secondary_file  : str
         :param topleftconvention  : [0,0] position
         :type topleftconvention  : boolean
         If False : [0,0] is at the center of the Top Left pixel
@@ -714,11 +514,6 @@ class RPC:
         geotiff_rpc_dict = identify_geotiff_rpc(primary_file)
         if geotiff_rpc_dict is not None:
             return cls.from_geotiff(primary_file, topleftconvention)
-        is_eucl_rpc = identify_euclidium_rpc(primary_file)
-        if secondary_file is not None:
-            is_eucl_rpc = is_eucl_rpc and identify_euclidium_rpc(secondary_file)
-        if is_eucl_rpc:
-            return cls.from_euclidium(primary_file, secondary_file, topleftconvention)
         ValueError("can not read rpc file")
         return None
 

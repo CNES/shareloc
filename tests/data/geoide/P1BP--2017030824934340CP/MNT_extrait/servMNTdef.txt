@@ -1,6 +1,0 @@
->>	TYPE	MNTRAW
->>	IDENTIFIANT	mnt_extrait
->>	ALTITUDES MIN MAX	3	238
->>	Nombre mailles/360 degres	43200
->>	Fichier Donnees	./essao/OUT/MNT_extrait/mnt_extrait
->>	Pas latitude	0.00833333333333

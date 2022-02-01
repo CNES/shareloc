@@ -46,8 +46,8 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     :rtype: str
     """
     data_folder = data_path(alti, id_scene)
-    # chargement des grilles
-    gld = os.path.join(data_folder, f"grilles_gld_xH/{id_scene}.tif")
+    # load grid
+    gld = os.path.join(data_folder, f"GRID_{id_scene}.tif")
     gri = Grid(gld)
 
     return gri

@@ -116,17 +116,20 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     Read multiH grid
     :param alti: alti validation dir
     :param id_scene: scene ID
-    :return: multi H grid
-    :rtype: str
+    :return: (mnt, grid)
+    :rtype: list(shareloc.dtm.DTM, shareloc.grid.Grid)
     """
     data_folder = data_path(alti, id_scene)
-    # chargement du mnt
-    fic = os.path.join(data_folder, "MNT_extrait/mnt_extrait.c1")
-    dtmbsq = DTM(fic)
-    # chargement des grilles
-    gld = os.path.join(data_folder, f"grilles_gld_xH/{id_scene}.tif")
+
+    mnt_name = f"MNT_{id_scene}.tif"
+    grid_name = f"GRID_{id_scene}.tif"
+    fic = os.path.join(data_folder, mnt_name)
+    # load mnt
+    dtm = DTM(fic)
+    # load grid model
+    gld = os.path.join(data_folder, grid_name)
     gri = Grid(gld)
-    return dtmbsq, gri
+    return dtm, gri
 
 
 @pytest.mark.parametrize("idxcol,idxrow", [(20, 10)])

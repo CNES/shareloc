@@ -6,8 +6,6 @@ Glossary
 
 Shareloc common words and shortened terms are detailed here.
 
-To update, follow `glossary sphinx documentation`_ in RST source documentation.
-
 .. glossary::
     CARS
       means CNES Algorithms to Reconstruct Surface (ou Chaîne Automatique de Restitution Stéréoscopique en français)

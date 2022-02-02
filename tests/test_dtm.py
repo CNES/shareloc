@@ -39,22 +39,21 @@ def test_interp_dtm(index_col, index_row, valid_alt):
     Test interp function
     """
     data_folder = data_path("geoide", "P1BP--2017030824934340CP")
-    # chargement du mnt
-    fic = os.path.join(data_folder, "MNT_extrait/mnt_extrait.c1")
-    dtmbsq = DTM(fic)
+    # load MNT
+    fic = os.path.join(data_folder, "MNT_P1BP--2017030824934340CP.tif")
+    dtm = DTM(fic)
     vect_index = [index_row, index_col]
-    coords = dtmbsq.index_to_ter(vect_index)
+    coords = dtm.index_to_ter(vect_index)
     lon_ref = 57.2083333333
     lat_ref = 22.2166666667
     pas_lon = 0.00833333333333
     pas_lat = -0.00833333333333
-    assert dtmbsq.dtm_image.datum == "geoid"
     assert coords[0] == pytest.approx(lon_ref + index_col * pas_lon, 1e-12)
     assert coords[1] == pytest.approx(lat_ref + index_row * pas_lat, 1e-12)
-    index = dtmbsq.ter_to_index(coords)
+    index = dtm.ter_to_index(coords)
     assert index[1] == pytest.approx(index_col, 1e-12)
     assert index[0] == pytest.approx(index_row, 1e-12)
-    alti = dtmbsq.interpolate(index_row, index_col)
+    alti = dtm.interpolate(index_row, index_col)
     assert alti == valid_alt
 
 

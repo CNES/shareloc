@@ -358,17 +358,16 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
     data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
     fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+    id_scene = "P1BP--2017092838284574CP"
+    data_folder_mnt = data_path("ellipsoide", id_scene)
 
-    data_folder_mnt = data_path("ellipsoide", "P1BP--2017092838284574CP")
-
-    # chargement du mnt
-    fic = os.path.join(data_folder_mnt, "MNT_extrait/mnt_extrait.c1")
-    dtmbsq = DTM(fic)
-    [lon, lat] = dtmbsq.index_to_ter(vect_index)
-    alt = dtmbsq.interpolate(index_x, index_y)
+    fic = os.path.join(data_folder_mnt, f"MNT_{id_scene}.tif")
+    dtm = DTM(fic)
+    [lon, lat] = dtm.index_to_ter(vect_index)
+    alt = dtm.interpolate(index_x, index_y)
 
     row, col, alt = fctrat.inverse_loc(lon, lat, alt)
-    lonlath = fctrat.direct_loc_dtm(row[0], col[0], dtmbsq)
+    lonlath = fctrat.direct_loc_dtm(row[0], col[0], dtm)
     assert lon == pytest.approx(lonlath[0][0], abs=1e-7)
     assert lat == pytest.approx(lonlath[0][1], abs=1e-7)
     assert alt == pytest.approx(lonlath[0][2], abs=1e-4)

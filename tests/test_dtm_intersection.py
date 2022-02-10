@@ -25,15 +25,36 @@ Test module for localisation class shareloc/dtm.py
 # Standard imports
 import os
 
-# Third party imports
-import pytest
 import numpy as np
 
+# Third party imports
+import pytest
+
 # Shareloc imports
-from shareloc.geofunctions.dtm_intersection import DTMIntersection
+from shareloc.geofunctions.dtm_intersection import DTMIntersection, interpolate_geoid_height
 
 # Shareloc test imports
 from .helpers import data_path
+
+
+@pytest.mark.parametrize(
+    "lon,lat, valid_alt",
+    [
+        (0.0, 0.0, 17.16157913),
+        (10.125, 0.0, 8.72032166),
+        (5.19368066, 44.20749145, 50.8618354),
+        (5.17381589, 44.22559175, 50.87610),
+    ],
+)
+@pytest.mark.unit_tests
+def test_geoid_height(lon, lat, valid_alt):
+    """
+    Test interpolate geoid height
+    """
+    geoid_file = os.path.join(data_path(), "dtm/geoid/egm96_15.gtx")
+    positions = np.asarray([lon, lat])[np.newaxis, :]
+    geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
+    assert geoid_height == pytest.approx(valid_alt, abs=1e-6)
 
 
 @pytest.mark.parametrize("index_col,index_row, valid_alt", [(10.0, 20.0, 196.0), (20.5, 25.5, 189.5)])

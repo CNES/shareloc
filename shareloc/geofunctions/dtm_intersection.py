@@ -27,12 +27,46 @@ import logging
 
 # Third party imports
 import numpy as np
+from scipy import interpolate
 
 # Shareloc imports
 from shareloc.dtm_image import DTMImage
-from shareloc.geoid import interpolate_geoid_height
+from shareloc.image import Image
 from shareloc.math_utils import interpol_bilin
 from shareloc.proj_utils import coordinates_conversion
+
+
+def interpolate_geoid_height(geoid_filename, positions, interpolation_method="linear"):
+    """
+    terrain to index conversion
+    retrieve geoid height above ellispoid
+
+    :param geoid_filename: geoid_filename
+    :type geoid_filename: str
+    :param positions: geodetic coordinates
+    :type positions: 2D numpy array : (number of points, [long coord, lat coord])
+    :parama interpolation_method default is 'linear' (interpn interpolation method)
+    :type str
+    :return geoid height
+    :rtype 1 numpy array (nuber of points)
+    """
+
+    geoid_image = Image(geoid_filename, read_data=True)
+
+    # Prepare grid for interpolation
+    row_indexes = np.arange(0, geoid_image.nb_rows, 1)
+    col_indexes = np.arange(0, geoid_image.nb_columns, 1)
+    points = (row_indexes, col_indexes)
+
+    # add modulo lon/lat
+    min_lon = geoid_image.origin_col
+    max_lon = min_lon + geoid_image.nb_columns * geoid_image.pixel_size_col
+    positions[:, 0] += (positions[:, 0] + min_lon < 0) * 360.0
+    positions[:, 0] -= (positions[:, 0] - max_lon > 0) * 360.0
+    if np.any(np.abs(positions[:, 1]) > 90.0):
+        raise RuntimeError("Geoid can" "t handle latitudes greater than 90 deg.")
+    indexes_geoid = geoid_image.transform_physical_point_to_index(positions[:, 1], positions[:, 0])
+    return interpolate.interpn(points, geoid_image.data[:, :], indexes_geoid, method=interpolation_method)
 
 
 class DTMIntersection:

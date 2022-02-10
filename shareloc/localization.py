@@ -42,7 +42,7 @@ class Localization:
         :param elevation  : dtm or default elevation over ellipsoid if None elevation is set to 0
         :type elevation  : shareloc.dtm or float or np.ndarray
         :param image  : image class to handle geotransform
-        :type image  : shareloc.image.image.Image
+        :type image  : shareloc.image.Image
         :param epsg  : coordinate system of world points, if None model coordiante system will be used
         :type epsg  : int
         """
@@ -165,9 +165,9 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
     :param elevation: elevation
     :type elevation: shareloc.dtm or float or 1D numpy array
     :param image1  : image class to handle geotransform
-    :type image1  : shareloc.image.image.Image
+    :type image1  : shareloc.image.Image
     :param image2  : image class to handle geotransform
-    :type image2  : shareloc.image.image.Image
+    :type image2  : shareloc.image.Image
     :param using_geotransform: using_geotransform
     :type using_geotransform : boolean
     :return: Corresponding sensor position [row, col, True] in the geometric model 2

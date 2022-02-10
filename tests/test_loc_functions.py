@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,24 +18,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 Test module for localisation class shareloc/localisation.py
 """
 
-
+# Standard imports
 import os
-import pytest
-import numpy as np
-from helpers import data_path
 
+# Third party imports
+import numpy as np
+import pytest
+
+# Shareloc imports
 from shareloc.grid import Grid, coloc
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC
 from shareloc.localization import Localization
 from shareloc.localization import coloc as coloc_rpc
-from shareloc.image.image import Image
+from shareloc.image import Image
 from shareloc.proj_utils import coordinates_conversion
+
+# Shareloc test imports
+from .helpers import data_path
 
 
 @pytest.mark.unit_tests

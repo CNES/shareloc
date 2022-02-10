@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,18 +18,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 Test module for geoid function class shareloc/localisation.py
 """
 
-
+# Standard imports
 import os
+
+# Third party imports
 import pytest
 import numpy as np
-from helpers import data_path
 
+# Shareloc imports
 from shareloc.geoid import interpolate_geoid_height
+
+# Shareloc test imports
+from .helpers import data_path
 
 
 @pytest.mark.parametrize(

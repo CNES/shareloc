@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -22,14 +22,19 @@
 Module to test functions that use rpc
 """
 
-
+# Standard imports
 import os
-import pytest
-from helpers import data_path
-import numpy as np
 
+# Third party imports
+import numpy as np
+import pytest
+
+# Shareloc imports
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl
+
+# Shareloc test imports
+from .helpers import data_path
 
 
 def test_rpc_drivers():

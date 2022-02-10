@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -22,12 +22,15 @@
 Module to test functions that use direct grid
 """
 
-
+# Third party imports
 import pytest
 import numpy as np
 
-from helpers import data_path
+# Shareloc imports
 from shareloc.grid import Grid
+
+# Shareloc test imports
+from .helpers import data_path
 
 
 @pytest.mark.unit_tests

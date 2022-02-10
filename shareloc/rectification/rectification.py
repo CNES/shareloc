@@ -28,7 +28,7 @@ import numpy as np
 import rasterio
 
 from shareloc.localization import Localization, coloc
-from shareloc.image.image import Image
+from shareloc.image import Image
 
 
 def write_epipolar_grid(grid, filename, xy_convention=True):

@@ -33,7 +33,7 @@ In Shareloc image convention, ``index`` refers to the position in the 2D array a
 
 The transformation between ``index`` and ``Physical point`` use the geotransform of the image. `OTB Software guide chapter 5.1`_ gives complete descriptions of these concepts.
 
-Shareloc Image class (``shareloc.image.image.Image``) manages the conversion between index and physical point.
+Shareloc Image class (``shareloc.image.Image``) manages the conversion between index and physical point.
 
 :term:`ROI` can be easily managed without any processing on geometric model. See `CARS Faq <https://cars.readthedocs.io/en/latest/faq.html#faq>`_ or `GDAL translate command <https://gdal.org/programs/gdal_translate.html>`_ to create image extraction.
 

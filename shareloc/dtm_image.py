@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -19,19 +18,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
-Image class to handle Image data.
+Image DTM Image to handle DTM image data.
+Inherits from Image Class with DTM particularities.
 """
 
+# Standard imports
 import logging
+
+# Third party imports
 import numpy as np
 from rasterio.fill import fillnodata
-from shareloc.image.image import Image
 
-# pylint: disable=too-many-instance-attributes
+# Shareloc imports
+from shareloc.image import Image
+
+
 class DTMImage(Image):
-    """class DTM  Image to handle DTM image data"""
+    """
+    class DTM  Image to handle DTM image data
+    Inherits from Image Class with DTM particularities
+    """
 
     def __init__(
         self,

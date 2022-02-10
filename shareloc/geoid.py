@@ -25,7 +25,7 @@ This module contains the Geoid class to retrieve geoid height above ellispoid.
 
 import numpy as np
 from scipy import interpolate
-from shareloc.image.image import Image
+from shareloc.image import Image
 
 
 def interpolate_geoid_height(geoid_filename, positions, interpolation_method="linear"):

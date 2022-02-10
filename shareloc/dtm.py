@@ -25,7 +25,7 @@ This module contains the DTM class to handle dtm intersection.
 
 import logging
 import numpy as np
-from shareloc.image.dtm_image import DTMImage
+from shareloc.dtm_image import DTMImage
 from shareloc.math_utils import interpol_bilin
 from shareloc.geoid import interpolate_geoid_height
 from shareloc.proj_utils import coordinates_conversion

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,18 +18,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
-Test module for localisation class shareloc/localisation.py
+Test module for localisation class shareloc/dtm.py
 """
 
-
+# Standard imports
 import os
+
+# Third party imports
 import pytest
 import numpy as np
-from helpers import data_path
 
+# Shareloc imports
 from shareloc.dtm import DTM
+
+# Shareloc test imports
+from .helpers import data_path
 
 
 @pytest.mark.parametrize("index_col,index_row, valid_alt", [(10.0, 20.0, 196.0), (20.5, 25.5, 189.5)])

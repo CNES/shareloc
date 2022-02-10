@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,22 +18,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 Test module for triangulation class shareloc/triangulation/triangulation.py
 """
 
-
+# Standard imports
 import os
+
+# Third party imports
 import pytest
 import numpy as np
-from helpers import data_path
 import xarray as xr
 
+# Shareloc imports
 from shareloc.grid import Grid
 from shareloc.triangulation.triangulation import distance_point_los, sensor_triangulation
 from shareloc.triangulation.triangulation import epipolar_triangulation
 from shareloc.rpc.rpc import RPC
+
+# Shareloc test imports
+from .helpers import data_path
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):

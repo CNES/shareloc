@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,17 +18,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
-Test module for image class shareloc/image/image.py
+Test module for image class shareloc/image.py
 """
-
+# Standard imports
 import os
+
+# Third party imports
 import pytest
-import numpy as np
-from helpers import data_path
-from shareloc.image.image import Image
-from shareloc.image.dtm_image import DTMImage
+
+# Shareloc imports
+from shareloc.image import Image
+
+# Shareloc test imports
+from .helpers import data_path
+
 
 # pylint: disable=too-many-arguments
 @pytest.mark.parametrize(
@@ -109,7 +113,7 @@ def test_image_metadata_roi(
     assert row == row_index + start_row
     assert col == col_index + start_col
 
-    ## roi in physical space
+    # roi in physical space
     start_phys_row = origin_row + start_row * pixel_size_row + start_col * pixel_rotation_row
     start_phys_col = origin_col + start_col * pixel_size_col + start_row * pixel_rotation_col
     end_phys_row = origin_row + end_row * pixel_size_row + end_col * pixel_rotation_row
@@ -119,29 +123,3 @@ def test_image_metadata_roi(
     [phys_row, phys_col] = my_image_roi_phys.transform_index_to_physical_point(row - start_row, col - start_col)
     assert phys_row == phy_valid_row
     assert phys_col == phy_valid_col
-
-
-def test_dtm_fillnodata():
-    """
-    Test dtm image fillnodata
-    """
-    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
-    my_image_with_nodata = DTMImage(dtm_file, read_data=True, fill_nodata=None)
-    nodata_index = np.argwhere(my_image_with_nodata.mask == 0)[0]
-    assert my_image_with_nodata.data[nodata_index[0], nodata_index[1]] == -32768
-    my_image_rio_fillnodata = DTMImage(dtm_file, read_data=True, fill_nodata="rio_fillnodata")
-    assert my_image_rio_fillnodata.data[nodata_index[0], nodata_index[1]] == 783
-    my_image_mean = DTMImage(dtm_file, read_data=True, fill_nodata="mean")
-    assert my_image_mean.data[nodata_index[0], nodata_index[1]] == 872
-    my_image_min = DTMImage(dtm_file, read_data=True, fill_nodata="min")
-    assert my_image_min.data[nodata_index[0], nodata_index[1]] == 32
-    my_image_max = DTMImage(dtm_file, read_data=True, fill_nodata="max")
-    assert my_image_max.data[nodata_index[0], nodata_index[1]] == 2757
-    my_image_median = DTMImage(dtm_file, read_data=True, fill_nodata="median")
-    assert my_image_median.data[nodata_index[0], nodata_index[1]] == 840
-    my_image_constant = DTMImage(dtm_file, read_data=True, fill_nodata="constant", fill_value=100.0)
-    assert my_image_constant.data[nodata_index[0], nodata_index[1]] == 100.0
-
-    dtm_file_srtm_hole = os.path.join(data_path(), "dtm", "srtm_ventoux", "N44E005_big_hole.tif")
-    my_image_fill_hole = DTMImage(dtm_file_srtm_hole, read_data=True, fill_nodata="rio_fillnodata")
-    assert my_image_fill_hole.data[403, 1119] == 32

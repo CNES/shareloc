@@ -26,7 +26,7 @@ localisation functions from multi h direct grids.
 
 import logging
 import numpy as np
-from shareloc.image.image import Image
+from shareloc.image import Image
 from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
 from shareloc.proj_utils import coordinates_conversion
 
@@ -96,7 +96,7 @@ class Grid:
     def load(self):
         """
         Load grid and fill Class attributes
-        The grid is read as an shareloc.image.image.Image and class attributes are filled.
+        The grid is read as an shareloc.image.Image and class attributes are filled.
         Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
         2 data cubes are defined :
         - lon_data : [alt,row,col]
@@ -533,7 +533,7 @@ class Grid:
             extrapol = True
 
         # application polynome
-        vect_sol = np.array([1, lon_n, lat_n, lon_n ** 2, lat_n ** 2, lon_n * lat_n])
+        vect_sol = np.array([1, lon_n, lat_n, lon_n**2, lat_n**2, lon_n * lat_n])
         col_min = ((self.pred_col_min * vect_sol).sum() * self.pred_ofset_scale_col[1]) + self.pred_ofset_scale_col[0]
         row_min = ((self.pred_row_min * vect_sol).sum() * self.pred_ofset_scale_row[1]) + self.pred_ofset_scale_row[0]
         col_max = ((self.pred_col_max * vect_sol).sum() * self.pred_ofset_scale_col[1]) + self.pred_ofset_scale_col[0]
@@ -645,7 +645,7 @@ class Grid:
         deg2mrad = np.deg2rad(1.0) * 1e6
         iteration = 0
         coslon = np.cos(np.deg2rad(lat))
-        rtx = 1e-12 * 6378000 ** 2
+        rtx = 1e-12 * 6378000**2
         (row_i, col_i, extrapol) = self.inverse_loc_predictor(lon, lat, alt)
         erreur_m2 = 10.0
         point_valide = 0
@@ -656,7 +656,7 @@ class Grid:
                 position = self.direct_loc_h(row_i, col_i, alt)
                 dlon_microrad = (position[0] - lon) * deg2mrad
                 dlat_microrad = (position[1] - lat) * deg2mrad
-                erreur_m2 = rtx * (dlat_microrad ** 2 + (dlon_microrad * coslon) ** 2)
+                erreur_m2 = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
                 dsol = np.array([dlon_microrad, dlat_microrad])
                 mat_dp = self.inverse_partial_derivative(row_i, col_i, alt)
                 dimg = mat_dp @ dsol

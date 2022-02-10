@@ -260,8 +260,6 @@ def test_epi_triangulation_disp_rpc():
     )
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
-    out_disp_filename = os.path.join(data_path(), "triangulation", "out_disparity_triangulation_rpc.nc")
-    disp.to_netcdf(out_disp_filename)
 
     # open cloud
     cloud_filename = os.path.join(data_path(), "triangulation", "cloud_ECEF.nc")
@@ -347,8 +345,6 @@ def test_epi_triangulation_disp_grid():
     )
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
-    out_disp_filename = os.path.join(data_path(), "triangulation", "out_disparity_triangulation.nc")
-    disp.to_netcdf(out_disp_filename)
 
     # open cloud
     cloud_filename = os.path.join(data_path(), "triangulation", "cloud_ECEF.nc")
@@ -387,6 +383,4 @@ def test_epi_triangulation_disp_grid_masked():
     )
     # pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     # disp = xr.merge((disp, pc_dataset))
-    # out_disp_filename = os.path.join(data_path(), "triangulation", "out_disparity_triangulation_masked.nc")
-    # disp.to_netcdf(out_disp_filename)
     assert np.array_equal(point_ecef[0, :], [0, 0, 0])

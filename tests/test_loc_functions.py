@@ -31,7 +31,7 @@ import pytest
 
 # Shareloc imports
 from shareloc.grid import Grid, coloc
-from shareloc.dtm import DTM
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.rpc.rpc import RPC
 from shareloc.geofunctions.localization import Localization
 from shareloc.geofunctions.localization import coloc as coloc_rpc
@@ -64,7 +64,7 @@ def test_localize_direct_rpc():
     # read the SRTM tile and Geoid
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
 
     # Localization class is then used using WGS84 output
     loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
@@ -101,7 +101,7 @@ def test_localize_direct_grid():
     # read the SRTM tile and Geoid
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file, fill_nodata="min")
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file, fill_nodata="min")
 
     # Localization class is then used using WGS84 output
     loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
@@ -121,7 +121,8 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     :param alti: alti validation dir
     :param id_scene: scene ID
     :return: (mnt, grid)
-    :rtype: list(shareloc.dtm.DTM, shareloc.grid.Grid)
+    :rtype: list(shareloc.geofunctions.dtmIntersection.DTMIntersection,
+            shareloc.grid.Grid)
     """
     data_folder = data_path(alti, id_scene)
 
@@ -129,7 +130,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     grid_name = f"GRID_{id_scene}.tif"
     fic = os.path.join(data_folder, mnt_name)
     # load mnt
-    dtm = DTM(fic)
+    dtm = DTMIntersection(fic)
     # load grid model
     gld = os.path.join(data_folder, grid_name)
     gri = Grid(gld)
@@ -246,7 +247,7 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
     assert valid_coord[0] == pytest.approx(lonlatalt[0, 0], abs=3.0 * 1e-5)
@@ -267,7 +268,7 @@ def test_sensor_loc_dir_dtm_geoid_utm(col, row, valid_coord):
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_resampled_UTM31", "N44E005_UTM.tif")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left, epsg=4326)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
     assert valid_coord[0] == pytest.approx(lonlatalt[0, 0], abs=3.0 * 1e-5)
@@ -308,7 +309,7 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
 @pytest.mark.unit_tests
 def test_sensor_loc_dir_dtm(index_x, index_y):
     """
-    Test direct localization on DTM
+    Test direct localization on DTMIntersection
     """
     dtmbsq, gri = prepare_loc()
     loc = Localization(gri, elevation=dtmbsq)
@@ -621,7 +622,7 @@ def test_sensor_loc_utm(col, row):
 @pytest.mark.unit_tests
 def test_sensor_loc_dir_dtm_multi_points():
     """
-    Test direct localization on DTM
+    Test direct localization on DTMIntersection
     """
 
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
@@ -630,7 +631,7 @@ def test_sensor_loc_dir_dtm_multi_points():
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
 
     loc = Localization(geom_model, image=left_im, elevation=dtm_ventoux)
 

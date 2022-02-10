@@ -31,7 +31,7 @@ import numpy as np
 import rasterio
 
 # Shareloc imports
-from shareloc.dtm import DTM
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.rpc.rpc import RPC
 from shareloc.geofunctions.rectification_grid import RectificationGrid
 from shareloc.geofunctions.rectification import (
@@ -206,7 +206,7 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid():
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
 
     epi_step = 30
     elevation_offset = 50
@@ -256,7 +256,7 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid_roi():
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
     extent = get_epipolar_extent(left_im, geom_model_left, geom_model_right, margin=0.0016667)
-    dtm_ventoux = DTM(dtm_file, geoid_file, roi=extent)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file, roi=extent)
 
     epi_step = 30
     elevation_offset = 50

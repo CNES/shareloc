@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,21 +18,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
-This module contains the DTM class to handle dtm intersection.
+This module contains the DTMIntersection class to handle DTM intersection.
 """
 
+# Standard imports
 import logging
+
+# Third party imports
 import numpy as np
+
+# Shareloc imports
 from shareloc.dtm_image import DTMImage
-from shareloc.math_utils import interpol_bilin
 from shareloc.geoid import interpolate_geoid_height
+from shareloc.math_utils import interpol_bilin
 from shareloc.proj_utils import coordinates_conversion
 
 
-class DTM:
-    """DTM class dedicated
+class DTMIntersection:
+    """
+    DTMIntersection class dedicated to earth elevation handling with a DTM
+
     we work in cell convention [0,0] is the first cell center (not [0.5,0.5])
     """
 

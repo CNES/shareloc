@@ -30,7 +30,7 @@ import numpy as np
 import pytest
 
 # Shareloc imports
-from shareloc.dtm import DTM
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl
 
 # Shareloc test imports
@@ -356,7 +356,7 @@ def test_rpc_direct_inverse_iterative(col, row, alt):
 @pytest.mark.unit_tests
 def test_rpc_direct_dtm(id_scene, index_x, index_y):
     """
-    Test direct localization on DTM
+    Test direct localization on DTMIntersection
     """
     vect_index = [index_x, index_y]
 
@@ -367,7 +367,7 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
     data_folder_mnt = data_path("ellipsoide", id_scene)
 
     fic = os.path.join(data_folder_mnt, f"MNT_{id_scene}.tif")
-    dtm = DTM(fic)
+    dtm = DTMIntersection(fic)
     [lon, lat] = dtm.index_to_ter(vect_index)
     alt = dtm.interpolate(index_x, index_y)
 

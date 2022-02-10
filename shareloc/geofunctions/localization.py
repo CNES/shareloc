@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -23,9 +23,14 @@
 Localization class for localization functions.
 """
 
+# Standard imports
 import logging
 import numbers
+
+# Third party imports
 import numpy as np
+
+# Shareloc imports
 from shareloc.proj_utils import coordinates_conversion
 
 

@@ -34,7 +34,7 @@ Quick Start
 
     $ python3
     >>> from shareloc.grid import Grid
-    >>> from shareloc.localization import Localization
+    >>> from shareloc.geofunctions.localization import Localization
     >>> grid_geom_file = "P1BP--2017030824934340CP.tif"
     >>> grid = Grid(grid_geom_file)
     >>> loc = Localization(grid)

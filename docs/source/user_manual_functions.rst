@@ -26,7 +26,7 @@ Following information are needed for localization functions:
  * **image information** in order to use geotransform, details in :ref:`user_manual_conventions` section.
  * :term:`EPSG` **code** to specify ground coordinate system
 
-``shareloc.localization.Localization`` class collect these data to set up the localization functions.
+``shareloc.geofunctions.localization.Localization`` class collect these data to set up the localization functions.
 It is possible to use geometric model directly using ``shareloc.grid.Grid`` and ``shareloc.rpc.rpc.RPC`` for advanced used.
 
 .. code-block:: console

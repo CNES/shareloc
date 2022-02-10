@@ -33,8 +33,8 @@ import pytest
 from shareloc.grid import Grid, coloc
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC
-from shareloc.localization import Localization
-from shareloc.localization import coloc as coloc_rpc
+from shareloc.geofunctions.localization import Localization
+from shareloc.geofunctions.localization import coloc as coloc_rpc
 from shareloc.image import Image
 from shareloc.proj_utils import coordinates_conversion
 

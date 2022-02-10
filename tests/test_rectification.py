@@ -33,8 +33,8 @@ import rasterio
 # Shareloc imports
 from shareloc.dtm import DTM
 from shareloc.rpc.rpc import RPC
-from shareloc.rectification.rectification_grid import RectificationGrid
-from shareloc.rectification.rectification import (
+from shareloc.geofunctions.rectification_grid import RectificationGrid
+from shareloc.geofunctions.rectification import (
     compute_epipolar_angle,
     moving_along_lines,
     moving_to_next_line,

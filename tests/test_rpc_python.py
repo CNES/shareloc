@@ -31,7 +31,7 @@ import pytest
 
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
-from shareloc.rpc.rpc import RPC, identify_dimap, identify_ossim_kwl
+from shareloc.geomodels.rpc import RPC, identify_dimap, identify_ossim_kwl
 
 # Shareloc test imports
 from .helpers import data_path

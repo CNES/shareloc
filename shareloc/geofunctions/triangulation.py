@@ -27,7 +27,7 @@ import numpy as np
 
 # Shareloc imports
 from shareloc.geofunctions.rectification_grid import RectificationGrid
-from shareloc.los import LOS
+from shareloc.geomodels.los import LOS
 from shareloc.proj_utils import coordinates_conversion
 
 

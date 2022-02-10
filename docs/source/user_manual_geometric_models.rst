@@ -50,7 +50,7 @@ RPC class API Example
 
     $ wget https://raw.githubusercontent.com/CNES/shareloc/tests/data/rpc/RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML
     $ python3
-    >>> from shareloc.rpc.rpc import RPC
+    >>> from shareloc.geomodels.rpc import RPC
     >>> file_dimap = "RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML")
     >>> rpc_dimap = RPC.from_any(file_dimap)
 
@@ -133,7 +133,7 @@ Grid API Example
     
     $ wget https://raw.githubusercontent.com/CNES/shareloc/tests/data/ellipsoide/loc_direct_grid_PHR_2013072139303958CP.tif
     $ python3
-    >>> from shareloc.grid import Grid
+    >>> from shareloc.geomodels.grid import Grid
     >>> geotiff_grid_path = "loc_direct_grid_PHR_2013072139303958CP.tif"
     >>> geotiff_grid = Grid(geotiff_grid_path)
 

@@ -27,7 +27,7 @@ import pytest
 import numpy as np
 
 # Shareloc imports
-from shareloc.grid import Grid
+from shareloc.geomodels.grid import Grid
 
 # Shareloc test imports
 from .helpers import data_path

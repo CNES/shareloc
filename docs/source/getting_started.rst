@@ -33,7 +33,7 @@ Quick Start
 .. code-block:: console    
 
     $ python3
-    >>> from shareloc.grid import Grid
+    >>> from shareloc.geomodels.grid import Grid
     >>> from shareloc.geofunctions.localization import Localization
     >>> grid_geom_file = "P1BP--2017030824934340CP.tif"
     >>> grid = Grid(grid_geom_file)

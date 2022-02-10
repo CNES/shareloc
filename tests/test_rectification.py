@@ -32,7 +32,7 @@ import rasterio
 
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
-from shareloc.rpc.rpc import RPC
+from shareloc.geomodels.rpc import RPC
 from shareloc.geofunctions.rectification_grid import RectificationGrid
 from shareloc.geofunctions.rectification import (
     compute_epipolar_angle,

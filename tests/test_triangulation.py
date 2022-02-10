@@ -31,10 +31,10 @@ import numpy as np
 import xarray as xr
 
 # Shareloc imports
-from shareloc.grid import Grid
+from shareloc.geomodels.grid import Grid
 from shareloc.geofunctions.triangulation import distance_point_los, sensor_triangulation
 from shareloc.geofunctions.triangulation import epipolar_triangulation
-from shareloc.rpc.rpc import RPC
+from shareloc.geomodels.rpc import RPC
 
 # Shareloc test imports
 from .helpers import data_path

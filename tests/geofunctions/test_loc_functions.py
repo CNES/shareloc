@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 """
-Test module for localisation class shareloc/localisation.py
+Test module for localisation class shareloc/geofunctions/localisation.py
 """
 
 # Standard imports
@@ -39,7 +39,7 @@ from shareloc.image import Image
 from shareloc.proj_utils import coordinates_conversion
 
 # Shareloc test imports
-from .helpers import data_path
+from ..helpers import data_path
 
 
 @pytest.mark.unit_tests

@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 """
-Test module for localisation class shareloc/dtm.py
+Test module for localisation class shareloc/geofunctions/dtm_intersection.py
 """
 
 # Standard imports
@@ -34,7 +34,7 @@ import pytest
 from shareloc.geofunctions.dtm_intersection import DTMIntersection, interpolate_geoid_height
 
 # Shareloc test imports
-from .helpers import data_path
+from ..helpers import data_path
 
 
 @pytest.mark.parametrize(

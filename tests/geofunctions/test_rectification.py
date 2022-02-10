@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 """
-Test module for rectification grid interpolation class shareloc/rectification/rectification_grid.py
+Test module for rectification grid interpolation class shareloc/geofunctions/rectification*.py
 """
 # Standard imports
 import os
@@ -46,7 +46,7 @@ from shareloc.geofunctions.rectification import (
 from shareloc.image import Image
 
 # Shareloc test imports
-from .helpers import data_path
+from ..helpers import data_path
 
 
 @pytest.mark.parametrize("row,col", [(15, 0)])

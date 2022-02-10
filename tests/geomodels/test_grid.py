@@ -30,7 +30,7 @@ import numpy as np
 from shareloc.geomodels.grid import Grid
 
 # Shareloc test imports
-from .helpers import data_path
+from ..helpers import data_path
 
 
 @pytest.mark.unit_tests

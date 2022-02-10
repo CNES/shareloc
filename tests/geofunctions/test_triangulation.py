@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 """
-Test module for triangulation class shareloc/triangulation/triangulation.py
+Test module for triangulation class shareloc/geofunctions/triangulation.py
 """
 
 # Standard imports
@@ -37,7 +37,7 @@ from shareloc.geofunctions.triangulation import epipolar_triangulation
 from shareloc.geomodels.rpc import RPC
 
 # Shareloc test imports
-from .helpers import data_path
+from ..helpers import data_path
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):

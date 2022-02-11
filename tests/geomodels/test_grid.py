@@ -23,8 +23,8 @@ Module to test functions that use direct grid
 """
 
 # Third party imports
-import pytest
 import numpy as np
+import pytest
 
 # Shareloc imports
 from shareloc.geomodels.grid import Grid

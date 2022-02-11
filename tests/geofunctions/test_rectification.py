@@ -21,28 +21,28 @@
 """
 Test module for rectification grid interpolation class shareloc/geofunctions/rectification*.py
 """
+
 # Standard imports
-import os
 import math
+import os
 
 # Third party imports
-import pytest
 import numpy as np
+import pytest
 import rasterio
 
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
-from shareloc.geomodels.rpc import RPC
-from shareloc.geofunctions.rectification_grid import RectificationGrid
-from shareloc.geofunctions.rectification import (
+from shareloc.geofunctions.rectification import (  # write_epipolar_grid,
     compute_epipolar_angle,
+    compute_stereorectification_epipolar_grids,
+    get_epipolar_extent,
     moving_along_lines,
     moving_to_next_line,
     prepare_rectification,
-    compute_stereorectification_epipolar_grids,
-    get_epipolar_extent,
-    # write_epipolar_grid,
 )
+from shareloc.geofunctions.rectification_grid import RectificationGrid
+from shareloc.geomodels.rpc import RPC
 from shareloc.image import Image
 
 # Shareloc test imports

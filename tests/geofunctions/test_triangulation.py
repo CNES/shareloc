@@ -26,14 +26,13 @@ Test module for triangulation class shareloc/geofunctions/triangulation.py
 import os
 
 # Third party imports
-import pytest
 import numpy as np
+import pytest
 import xarray as xr
 
 # Shareloc imports
+from shareloc.geofunctions.triangulation import distance_point_los, epipolar_triangulation, sensor_triangulation
 from shareloc.geomodels.grid import Grid
-from shareloc.geofunctions.triangulation import distance_point_los, sensor_triangulation
-from shareloc.geofunctions.triangulation import epipolar_triangulation
 from shareloc.geomodels.rpc import RPC
 
 # Shareloc test imports

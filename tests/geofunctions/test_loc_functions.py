@@ -29,12 +29,13 @@ import os
 import numpy as np
 import pytest
 
-# Shareloc imports
-from shareloc.geomodels.grid import Grid, coloc
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
-from shareloc.geomodels.rpc import RPC
 from shareloc.geofunctions.localization import Localization
 from shareloc.geofunctions.localization import coloc as coloc_rpc
+
+# Shareloc imports
+from shareloc.geomodels.grid import Grid, coloc
+from shareloc.geomodels.rpc import RPC
 from shareloc.image import Image
 from shareloc.proj_utils import coordinates_conversion
 

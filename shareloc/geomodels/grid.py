@@ -21,6 +21,7 @@
 """
 localisation functions from multi h direct grids.
 """
+# pylint: disable=no-member
 
 # Standard imports
 import logging
@@ -169,6 +170,7 @@ class Grid:
         :rtype numpy.ndarray
         """
         if fill_nan:
+            # pylint: disable=logging-too-many-args
             logging.debug("fill nan %s", fill_nan)
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
         alt_down = self.alts_down[grid_index_down]
@@ -499,14 +501,16 @@ class Grid:
         coef_col_max = t_aa_max_inv @ mat_a_max.T @ b_col
         coef_row_max = t_aa_max_inv @ mat_a_max.T @ b_row
 
-        setattr(self, "pred_col_min", coef_col_min.flatten())
-        setattr(self, "pred_row_min", coef_row_min.flatten())
-        setattr(self, "pred_col_max", coef_col_max.flatten())
-        setattr(self, "pred_row_max", coef_row_max.flatten())
-        setattr(self, "pred_ofset_scale_lon", [lon_ofset, lon_scale])
-        setattr(self, "pred_ofset_scale_lat", [lat_ofset, lat_scale])
-        setattr(self, "pred_ofset_scale_row", [row_ofset, row_scale])
-        setattr(self, "pred_ofset_scale_col", [col_ofset, col_scale])
+        # TODO: refactor to have only class parameters in __init__
+        # seems not clear to understand with inverse_loc_predictor function ...
+        setattr(self, "pred_col_min", coef_col_min.flatten())  # noqa: 502
+        setattr(self, "pred_row_min", coef_row_min.flatten())  # noqa: 502
+        setattr(self, "pred_col_max", coef_col_max.flatten())  # noqa: 502
+        setattr(self, "pred_row_max", coef_row_max.flatten())  # noqa: 502
+        setattr(self, "pred_ofset_scale_lon", [lon_ofset, lon_scale])  # noqa: 502
+        setattr(self, "pred_ofset_scale_lat", [lat_ofset, lat_scale])  # noqa: 502
+        setattr(self, "pred_ofset_scale_row", [row_ofset, row_scale])  # noqa: 502
+        setattr(self, "pred_ofset_scale_col", [col_ofset, col_scale])  # noqa: 502
 
     def inverse_loc_predictor(self, lon, lat, alt=0.0):
         """
@@ -529,9 +533,11 @@ class Grid:
         lon_n = (lon - self.pred_ofset_scale_lon[0]) / self.pred_ofset_scale_lon[1]
         lat_n = (lat - self.pred_ofset_scale_lat[0]) / self.pred_ofset_scale_lat[1]
         if abs(lon_n) > (1 + seuil_extrapol / 100.0):
+            # pylint: disable=logging-too-many-args
             logging.warning("Attention, en extrapolation de %1.8f en longitude:", lon_n)
             extrapol = True
         if abs(lat_n) > (1 + seuil_extrapol / 100.0):
+            # pylint: disable=logging-too-many-args
             logging.warning("Attention, en extrapolation de %1.8f en latitude:", lat_n)
             extrapol = True
 

@@ -22,6 +22,7 @@
 This module contains the RPC class corresponding to the RPC models.
 RPC models covered are : DIMAP V1, DIMAP V2, ossim (geom file), geotiff.
 """
+# pylint: disable=no-member
 
 # Standard imports
 import logging
@@ -68,7 +69,7 @@ def identify_dimap(xml_file):
         else:
             version_tag = "METADATA_FORMAT"
         version = mtd[0].getElementsByTagName(version_tag)[0].attributes.items()[0][1]
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         return None
     else:
         return version
@@ -93,7 +94,7 @@ def identify_ossim_kwl(ossim_kwl_file):
             if geom_dict["type"].strip().startswith("ossim"):
                 return geom_dict["type"].strip()
         return None
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         return None
 
 
@@ -109,7 +110,7 @@ def identify_geotiff_rpc(image_filename):
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns="RPC")
         return rpc_dict
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         return None
 
 
@@ -255,8 +256,9 @@ class RPC:
             if float(dimap_version) >= 2.0:
                 return cls.from_dimap_v2(dimap_filepath, topleftconvention)
         else:
-            ValueError("can''t read dimap file")
-            return None
+            raise ValueError("can''t read dimap file")
+
+        return None
 
     @classmethod
     def from_dimap_v2(cls, dimap_filepath, topleftconvention=True):
@@ -409,6 +411,7 @@ class RPC:
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns="RPC")
         if not rpc_dict:
+            # pylint: disable=logging-too-many-args
             logging.error("%s does not contains RPCs ", image_filename)
             raise ValueError
         rpc_params = {

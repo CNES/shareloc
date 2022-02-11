@@ -21,6 +21,7 @@
 """
 This module contains the rectification_grids class to handle CARS rectification grids.
 """
+# pylint: disable=no-member
 
 # Third party imports
 import numpy as np

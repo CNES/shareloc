@@ -22,6 +22,7 @@
 Image class to handle Image data.
 Shareloc Reference raster image input based on rasterio.
 """
+# pylint: disable=no-member
 
 # Standard imports
 import logging
@@ -82,6 +83,7 @@ class Image:
                     col_off = np.floor(col_off)
                     width = int(np.ceil(col_max - col_off))
                     height = int(np.ceil(row_max - row_off))
+                    # pylint: disable=logging-too-many-args
                     logging.info("roi in image , offset : %s %s size %s %s", col_off, row_off, width, height)
                 else:
                     row_off = roi[0]
@@ -124,6 +126,7 @@ class Image:
                 self.data = np.squeeze(self.dataset.read(window=roi_window))
                 if self.nodata is not None:
                     self.mask = np.squeeze(self.dataset.read_masks(window=roi_window))
+                    # pylint: disable=logging-too-many-args
                     logging.info("image contains %d nodata values ", np.sum(self.mask == 0))
 
     def set_metadata(self, nb_row, nb_col, nb_band, transform, datatype=np.float32):

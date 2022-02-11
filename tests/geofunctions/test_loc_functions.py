@@ -21,6 +21,8 @@
 """
 Test module for localisation class shareloc/geofunctions/localisation.py
 """
+# TODO: refactor to disable no-member in Grid class
+# pylint: disable=no-member
 
 # Standard imports
 import os

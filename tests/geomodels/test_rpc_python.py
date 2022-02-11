@@ -21,6 +21,9 @@
 """
 Module to test functions that use rpc
 """
+# TODO: refactor to disable no-member in RPC class
+# pylint: disable=no-member
+
 
 # Standard imports
 import os

@@ -112,6 +112,7 @@ class DTMImage(Image):
                 if np.sum(self.data[self.mask[:, :] == 0] == self.nodata) != 0:
                     if fill_value is None:
                         fill_value = self.stats["min"]
+                    # pylint: disable=logging-too-many-args
                     logging.warning("not all nodata have been filled, fill with %d", fill_value)
                     self.data[self.data[:, :] == self.nodata] = fill_value
             elif strategy == "constant":

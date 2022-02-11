@@ -326,7 +326,7 @@ class DTMIntersection:
 
     # gitlab issue #56
     # pylint: disable=too-many-branches
-    def intersect_dtm_cube(self, los):
+    def intersect_dtm_cube(self, los):  # noqa: C901
         """
         DTM cube intersection
         :param los :  line of sight
@@ -506,7 +506,7 @@ class DTMIntersection:
     # pylint: disable=too-many-function-args
     # pylint: disable=too-many-nested-blocks
     # pylint: disable=too-many-statements
-    def intersection(self, los, point_b, h_intersect):
+    def intersection(self, los, point_b, h_intersect):  # noqa: C901
         """
         DTM intersection
         :param los :  line of sight

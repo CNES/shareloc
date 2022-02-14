@@ -19,7 +19,7 @@ Geometric model convention for coordinates is, by default, [0.5,0.5] at the cent
 
     pixel convention
 
-When dealing with shareloc RPC (``shareloc.rpc.rpc.RPC``), the center at [0,0] can be changed by setting the ``topleftconvention`` option to ``False``.
+When dealing with shareloc RPC (``shareloc.geomodels.rpc.RPC``), the center at [0,0] can be changed by setting the ``topleftconvention`` option to ``False``.
 
 .. code-block:: bash
 

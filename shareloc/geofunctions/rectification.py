@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -23,12 +22,16 @@
 This module contains functions to generate stereo-rectification epipolar grids
 """
 
+# Standard imports
 import math
+
+# Third party imports
 import numpy as np
 import rasterio
 
-from shareloc.localization import Localization, coloc
-from shareloc.image.image import Image
+# Shareloc imports
+from shareloc.geofunctions.localization import Localization, coloc
+from shareloc.image import Image
 
 
 def write_epipolar_grid(grid, filename, xy_convention=True):
@@ -145,7 +148,7 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, e
     return np.squeeze(epi_line_start), np.squeeze(epi_line_end)
 
 
-## pylint: disable=too-many-locals
+# pylint: disable=too-many-locals
 def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset):
     """
     Determine size and spacing of the epipolar grids.
@@ -392,8 +395,8 @@ def moving_along_lines(
 
 
 # disable for api symmetry between left and right data
-## pylint: disable=unused-argument
-## pylint: disable=too-many-locals
+# pylint: disable=unused-argument
+# pylint: disable=too-many-locals
 def compute_stereorectification_epipolar_grids(
     left_im, geom_model_left, right_im, geom_model_right, elevation=0.0, epi_step=1, elevation_offset=50.0
 ):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,18 +18,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
-Test module for localisation class shareloc/localisation.py
+Test module for localisation class shareloc/geofunctions/dtm_intersection.py
 """
 
-
+# Standard imports
 import os
-import pytest
-import numpy as np
-from helpers import data_path
 
-from shareloc.dtm import DTM
+import numpy as np
+
+# Third party imports
+import pytest
+
+# Shareloc imports
+from shareloc.geofunctions.dtm_intersection import DTMIntersection, interpolate_geoid_height
+
+# Shareloc test imports
+from ..helpers import data_path
+
+
+@pytest.mark.parametrize(
+    "lon,lat, valid_alt",
+    [
+        (0.0, 0.0, 17.16157913),
+        (10.125, 0.0, 8.72032166),
+        (5.19368066, 44.20749145, 50.8618354),
+        (5.17381589, 44.22559175, 50.87610),
+    ],
+)
+@pytest.mark.unit_tests
+def test_geoid_height(lon, lat, valid_alt):
+    """
+    Test interpolate geoid height
+    """
+    geoid_file = os.path.join(data_path(), "dtm/geoid/egm96_15.gtx")
+    positions = np.asarray([lon, lat])[np.newaxis, :]
+    geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
+    assert geoid_height == pytest.approx(valid_alt, abs=1e-6)
 
 
 @pytest.mark.parametrize("index_col,index_row, valid_alt", [(10.0, 20.0, 196.0), (20.5, 25.5, 189.5)])
@@ -41,7 +66,7 @@ def test_interp_dtm(index_col, index_row, valid_alt):
     data_folder = data_path("geoide", "P1BP--2017030824934340CP")
     # load MNT
     fic = os.path.join(data_folder, "MNT_P1BP--2017030824934340CP.tif")
-    dtm = DTM(fic)
+    dtm = DTMIntersection(fic)
     vect_index = [index_row, index_col]
     coords = dtm.index_to_ter(vect_index)
     lon_ref = 57.2083333333
@@ -66,7 +91,7 @@ def test_interp_dtm_geoid(index_lon, index_lat, valid_alt):
     """
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
     coords = [index_lon, index_lat]
     index = dtm_ventoux.ter_to_index(coords)
     alti = dtm_ventoux.interpolate(index[0], index[1])
@@ -80,7 +105,7 @@ def test_dtm_alt_min_max():
     """
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file, roi=[256, 256, 512, 512], roi_is_in_physical_space=False)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file, roi=[256, 256, 512, 512], roi_is_in_physical_space=False)
     alt_min = dtm_ventoux.alt_min_cell
     alt_max = dtm_ventoux.alt_max_cell
     alt_valid_min = os.path.join(data_path(), "srtm_ventoux_alt_min.npy")

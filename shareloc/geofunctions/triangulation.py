@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,16 +18,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 This module contains triangulation methods.
 """
 
-
+# Third party imports
 import numpy as np
-from shareloc.rectification.rectification_grid import RectificationGrid
+
+# Shareloc imports
+from shareloc.geofunctions.rectification_grid import RectificationGrid
+from shareloc.geomodels.los import LOS
 from shareloc.proj_utils import coordinates_conversion
-from shareloc.los import LOS
 
 
 def sensor_triangulation(

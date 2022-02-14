@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,31 +18,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
-Test module for rectification grid interpolation class shareloc/rectification/rectification_grid.py
+Test module for rectification grid interpolation class shareloc/geofunctions/rectification*.py
 """
 
-import os
+# Standard imports
 import math
-import pytest
+import os
+
+# Third party imports
 import numpy as np
+import pytest
 import rasterio
 
-from helpers import data_path
-from shareloc.dtm import DTM
-from shareloc.rpc.rpc import RPC
-from shareloc.rectification.rectification_grid import RectificationGrid
-from shareloc.rectification.rectification import (
+# Shareloc imports
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
+from shareloc.geofunctions.rectification import (  # write_epipolar_grid,
     compute_epipolar_angle,
+    compute_stereorectification_epipolar_grids,
+    get_epipolar_extent,
     moving_along_lines,
     moving_to_next_line,
     prepare_rectification,
-    compute_stereorectification_epipolar_grids,
-    get_epipolar_extent,
-    # write_epipolar_grid,
 )
-from shareloc.image.image import Image
+from shareloc.geofunctions.rectification_grid import RectificationGrid
+from shareloc.geomodels.rpc import RPC
+from shareloc.image import Image
+
+# Shareloc test imports
+from ..helpers import data_path
 
 
 @pytest.mark.parametrize("row,col", [(15, 0)])
@@ -202,7 +206,7 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid():
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTM(dtm_file, geoid_file)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
 
     epi_step = 30
     elevation_offset = 50
@@ -252,7 +256,7 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid_roi():
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
     extent = get_epipolar_extent(left_im, geom_model_left, geom_model_right, margin=0.0016667)
-    dtm_ventoux = DTM(dtm_file, geoid_file, roi=extent)
+    dtm_ventoux = DTMIntersection(dtm_file, geoid_file, roi=extent)
 
     epi_step = 30
     elevation_offset = 50

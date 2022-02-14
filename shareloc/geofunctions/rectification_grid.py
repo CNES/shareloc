@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,13 +18,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 This module contains the rectification_grids class to handle CARS rectification grids.
 """
+# pylint: disable=no-member
 
-import rasterio as rio
+# Third party imports
 import numpy as np
+import rasterio as rio
 from scipy import interpolate
 
 

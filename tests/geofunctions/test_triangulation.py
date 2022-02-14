@@ -22,6 +22,8 @@
 Test module for triangulation class shareloc/geofunctions/triangulation.py
 """
 
+import logging
+
 # Standard imports
 import os
 
@@ -39,6 +41,37 @@ from shareloc.geomodels.rpc import RPC
 from ..helpers import data_path
 
 
+@pytest.mark.parametrize("col,row,h", [(1000.5, 1500.5, 10.0)])
+@pytest.mark.unit_tests
+def test_sensor_triangulation(row, col, h):
+    """
+    Test sensor triangulation
+    """
+
+    # first read the left and right geometric models (here Grids)
+    id_scene_right = "P1BP--2017092838319324CP"
+    gri_right = prepare_loc("ellipsoide", id_scene_right)
+    id_scene_left = "P1BP--2017092838284574CP"
+    gri_left = prepare_loc("ellipsoide", id_scene_left)
+
+    # create fake matches by colocalization
+    gri_right.estimate_inverse_loc_predictor()
+    lonlatalt = gri_left.direct_loc_h(row, col, h)
+    inv_row, inv_col, __ = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    matches = np.zeros([1, 4])
+    matches[0, :] = [col, row, inv_col, inv_row]
+
+    # compute triangulation
+    point_ecef, point_wgs84, distance = sensor_triangulation(matches, gri_left, gri_right, residues=True)
+
+    logging.info(point_ecef)
+
+    assert lonlatalt[0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)
+    assert lonlatalt[1] == pytest.approx(point_wgs84[0, 1], abs=1e-8)
+    assert lonlatalt[2] == pytest.approx(point_wgs84[0, 2], abs=8e-3)
+    assert distance == pytest.approx(0.0, abs=1e-3)
+
+
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     """
     Read multiH grid
@@ -54,34 +87,6 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     gri = Grid(gld)
 
     return gri
-
-
-@pytest.mark.parametrize("col,row,h", [(1000.5, 1500.5, 10.0)])
-@pytest.mark.unit_tests
-def test_sensor_triangulation(row, col, h):
-    """
-    Test sensor triangulation
-    """
-    id_scene_right = "P1BP--2017092838319324CP"
-    gri_right = prepare_loc("ellipsoide", id_scene_right)
-    id_scene_left = "P1BP--2017092838284574CP"
-    gri_left = prepare_loc("ellipsoide", id_scene_left)
-    # init des predicteurs
-    gri_right.estimate_inverse_loc_predictor()
-    lonlatalt = gri_left.direct_loc_h(row, col, h)
-
-    inv_row, inv_col, __ = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
-
-    matches = np.zeros([1, 4])
-    matches[0, :] = [col, row, inv_col, inv_row]
-    # matches[1,:] = [lig + 10, col + 5, inv_lig + 12, inv_col + 7]
-
-    __, point_wgs84, distance = sensor_triangulation(matches, gri_left, gri_right, residues=True)
-
-    assert lonlatalt[0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)
-    assert lonlatalt[1] == pytest.approx(point_wgs84[0, 1], abs=1e-8)
-    assert lonlatalt[2] == pytest.approx(point_wgs84[0, 2], abs=8e-3)
-    assert distance == pytest.approx(0.0, abs=1e-3)
 
 
 @pytest.mark.unit_tests

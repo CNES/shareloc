@@ -25,7 +25,7 @@ DEM must respects some constraints to be understandable by Shareloc :
  * monolitic data : tiled DEM has to be mosaicked, using ``gdalbuildvrt`` command for example.
  * georeferenced : DEM must contains geotransform and :term:`CRS`.
 
-:term:`DEM` can be used for Localization on DEM function and Rectification using `shareloc.dtm.DTM` class.
+:term:`DEM` can be used for Localization on DEM function and Rectification using `shareloc.geofunctions.DTMIntersection` class.
 
 Since Shareloc works w.r.t elllipsoid by default, geoid height has to be removed from :term:`DEM` if w.r.t geoid.
 
@@ -46,3 +46,9 @@ Shareloc provides egm96_15 in its  `data <https://raw.githubusercontent.com/CNES
         ):
 
 For example, the `SRTM <https://www2.jpl.nasa.gov/srtm/>`_ data corresponding to the zone to process can be used through the `otbcli_DownloadSRTMTiles <https://www.orfeo-toolbox.org/CookBook/Applications/app_DownloadSRTMTiles.html>`_ OTB command.
+
+Limitations
+-----------
+
+ * nodata are not (yet) handled in `shareloc.geofunctions.DTMIntersection` code. Thus a filling strategy should be set when using nodata DTM. This can be done by setting `fill_nodata` arg in `shareloc.geofunctions.DTMIntersection`. Filling strategy examples can be found in test `test_dtm_image`
+

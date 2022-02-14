@@ -61,9 +61,10 @@ def test_sensor_triangulation(row, col, h):
     matches = np.zeros([1, 4])
     matches[0, :] = [col, row, inv_col, inv_row]
 
-    # compute triangulation
+    # compute triangulation with residues,
     point_ecef, point_wgs84, distance = sensor_triangulation(matches, gri_left, gri_right, residues=True)
 
+    logging.info("cartesian coordinates :")
     logging.info(point_ecef)
 
     assert lonlatalt[0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)

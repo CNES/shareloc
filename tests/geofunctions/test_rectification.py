@@ -79,20 +79,21 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid():
         left_im, geom_model_left, right_im, geom_model_right, dtm_ventoux, epi_step, elevation_offset
     )
 
-    # evaluate the results
-    gt_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_dtm.tif")).read()
-    gt_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_dtm.tif")).read()
+    # evaluate the results by comparison with OTB
+    reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_dtm.tif")).read()
+    reference_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_dtm.tif")).read()
 
+    # baseline update if necessary
     # write_epipolar_grid(left_grid, os.path.join(data_path(),'grid_left_dtm.tif'))
     # write_epipolar_grid(right_grid, os.path.join(data_path(),'grid_right_dtm.tif'))
 
     # Check epipolar grids
     # OTB convention is [col, row], shareloc convention is [row, col]
-    assert gt_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
-    assert gt_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
+    assert reference_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
+    assert reference_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
 
-    assert gt_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
-    assert gt_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
+    assert reference_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
+    assert reference_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
 
     # Check size of rectified images
     assert img_size_row == 612
@@ -100,8 +101,8 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid():
 
     # Check mean_baseline_ratio
     # ground truth mean baseline ratio from OTB
-    gt_mean_br = 0.7039416432
-    assert mean_br == pytest.approx(gt_mean_br, abs=1e-5)
+    reference_mean_br = 0.7039416432
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-5)
 
 
 @pytest.mark.parametrize("row,col", [(15, 0)])
@@ -220,28 +221,30 @@ def test_compute_stereorectification_epipolar_grids():
         left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
-    gt_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid.tif")).read()
-    gt_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid.tif")).read()
+    # OTB reference
+    reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid.tif")).read()
+    reference_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid.tif")).read()
 
+    # update baseline
     # write_epipolar_grid(left_grid, os.path.join(data_path(),'grid_left_elev_0.tif'))
     # write_epipolar_grid(right_grid, os.path.join(data_path(),'grid_right_elev_0.tif'))
 
     # Check epipolar grids
     # OTB convention is [col, row], shareloc convention is [row, col]
-    assert gt_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
-    assert gt_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
+    assert reference_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
+    assert reference_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
 
-    assert gt_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
-    assert gt_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
+    assert reference_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
+    assert reference_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
 
-    #  Check size of rectified images
+    # Check size of rectified images
     assert img_size_row == 612
     assert img_size_col == 612
 
-    #  Check mean_baseline_ratio
+    # Check mean_baseline_ratio
     # ground truth mean baseline ratio from OTB
-    gt_mean_br = 0.704004705
-    assert mean_br == pytest.approx(gt_mean_br, abs=1e-5)
+    referecne_mean_br = 0.704004705
+    assert mean_br == pytest.approx(referecne_mean_br, abs=1e-5)
 
 
 @pytest.mark.unit_tests
@@ -270,28 +273,29 @@ def test_compute_stereorectification_epipolar_grids_dtm_geoid_roi():
         left_im, geom_model_left, right_im, geom_model_right, dtm_ventoux, epi_step, elevation_offset
     )
 
-    gt_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_dtm.tif")).read()
-    gt_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_dtm.tif")).read()
+    reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_dtm.tif")).read()
+    reference_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_dtm.tif")).read()
 
+    # update baseline
     # write_epipolar_grid(left_grid, os.path.join(data_path(),'grid_left_dtm_roi.tif'))
     # write_epipolar_grid(right_grid, os.path.join(data_path(),'grid_right_dtm_roi.tif'))
 
     # Check epipolar grids
     # OTB convention is [col, row], shareloc convention is [row, col]
 
-    assert gt_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
-    assert gt_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
-    assert gt_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
-    assert gt_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
+    assert reference_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
+    assert reference_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
+    assert reference_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
+    assert reference_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
 
-    #  Check size of rectified images
+    # Check size of rectified images
     assert img_size_row == 612
     assert img_size_col == 612
 
-    #  Check mean_baseline_ratio
+    # Check mean_baseline_ratio
     # ground truth mean baseline ratio from OTB
-    gt_mean_br = 0.7039416432
-    assert mean_br == pytest.approx(gt_mean_br, abs=1e-5)
+    reference_mean_br = 0.7039416432
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-5)
 
 
 @pytest.mark.unit_tests
@@ -316,25 +320,25 @@ def test_compute_stereorectification_epipolar_grids_alti():
         left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
-    gt_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_100.tif")).read()
-    gt_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_100.tif")).read()
+    reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid_100.tif")).read()
+    reference_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid_100.tif")).read()
 
     # Check epipolar grids
     # OTB convention is [col, row], shareloc convention is [row, col]
-    assert gt_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
-    assert gt_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
+    assert reference_left_grid[1] == pytest.approx(left_grid.data[0, :, :], abs=1e-2)
+    assert reference_left_grid[0] == pytest.approx(left_grid.data[1, :, :], abs=1e-2)
 
-    assert gt_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
-    assert gt_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
+    assert reference_right_grid[1] == pytest.approx(right_grid.data[0, :, :], abs=1e-2)
+    assert reference_right_grid[0] == pytest.approx(right_grid.data[1, :, :], abs=1e-2)
 
-    #  Check size of rectified images
+    # Check size of rectified images
     assert img_size_row == 612
     assert img_size_col == 612
 
-    #  Check mean_baseline_ratio
+    # Check mean_baseline_ratio
     # ground truth mean baseline ratio from OTB
-    gt_mean_br = 0.7039927244
-    assert mean_br == pytest.approx(gt_mean_br, abs=1e-5)
+    reference_mean_br = 0.7039927244
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-5)
 
 
 @pytest.mark.unit_tests
@@ -357,13 +361,13 @@ def test_rectification_moving_along_line():
     # ground truth next pixel
     # col pixel size of the image
     col_pixel_size = 1.0
-    gt_next_cords = np.array([[5000.5, 5000.5 + col_pixel_size, 0.0]], dtype=np.float64)
+    reference_next_cords = np.array([[5000.5, 5000.5 + col_pixel_size, 0.0]], dtype=np.float64)
 
     next_cords, _ = moving_along_lines(
         geom_model_left, geom_model_right, current_left_coords, mean_spacing, default_elev, epi_step, alphas
     )
 
-    np.testing.assert_array_equal(gt_next_cords, next_cords)
+    np.testing.assert_array_equal(reference_next_cords, next_cords)
 
 
 @pytest.mark.unit_tests
@@ -386,13 +390,13 @@ def test_rectification_moving_to_next_line():
     # ground truth next pixel
     # row pixel size of the image
     row_pixel_size = 1.0
-    gt_next_cords = np.array([5000.5 + row_pixel_size, 5000.5, 0.0], dtype=np.float64)
+    reference_next_cords = np.array([5000.5 + row_pixel_size, 5000.5, 0.0], dtype=np.float64)
 
     next_cords, _ = moving_to_next_line(
         geom_model_left, geom_model_right, current_left_coords, mean_spacing, default_elev, epi_step, alphas
     )
 
-    np.testing.assert_array_equal(gt_next_cords, next_cords)
+    np.testing.assert_array_equal(reference_next_cords, next_cords)
 
 
 @pytest.mark.unit_tests
@@ -404,17 +408,17 @@ def test_epipolar_angle():
     start_line_1 = np.array([1, 0, 0])
     end_line_1 = np.array([2, 0, 0])
 
-    gt_alpha_1 = math.pi / 2.0
+    reference_alpha_1 = math.pi / 2.0
     alpha = compute_epipolar_angle(end_line_1, start_line_1)
-    assert alpha == gt_alpha_1
+    assert alpha == reference_alpha_1
 
     # Second case : same column, negative direction [row, col, alt]
     start_line_2 = np.array([2, 0, 0])
     end_line_2 = np.array([1, 0, 0])
 
-    gt_alpha_2 = -(math.pi / 2.0)
+    reference_alpha_2 = -(math.pi / 2.0)
     alpha = compute_epipolar_angle(end_line_2, start_line_2)
-    assert alpha == gt_alpha_2
+    assert alpha == reference_alpha_2
 
     # Third case : different column, positive direction [row, col, alt]
     start_line_3 = np.array([2, 0, 0])
@@ -422,23 +426,23 @@ def test_epipolar_angle():
 
     slope = (1 - 2) / (1 - 0)
 
-    gt_alpha_3 = np.arctan(slope)
+    reference_alpha_3 = np.arctan(slope)
     alpha = compute_epipolar_angle(end_line_3, start_line_3)
-    assert alpha == gt_alpha_3
+    assert alpha == reference_alpha_3
 
     # Fourth case : different column, negative direction [row, col, alt]
     start_line_4 = np.array([2, 1, 0])
     end_line_4 = np.array([1, 0, 0])
 
     slope = (1 - 2) / (0 - 1)
-    gt_alpha_4 = math.pi + np.arctan(slope)
+    reference_alpha_4 = math.pi + np.arctan(slope)
     alpha = compute_epipolar_angle(end_line_4, start_line_4)
-    assert alpha == gt_alpha_4
+    assert alpha == reference_alpha_4
 
     # With multiple point
     start_lines = np.stack((start_line_1, start_line_2, start_line_3, start_line_4))
     end_lines = np.stack((end_line_1, end_line_2, end_line_3, end_line_4))
-    gt_alphas = np.stack((gt_alpha_1, gt_alpha_2, gt_alpha_3, gt_alpha_4))
+    reference_alphas = np.stack((reference_alpha_1, reference_alpha_2, reference_alpha_3, reference_alpha_4))
 
     alphas = compute_epipolar_angle(end_lines, start_lines)
-    np.testing.assert_array_equal(alphas, gt_alphas)
+    np.testing.assert_array_equal(alphas, reference_alphas)

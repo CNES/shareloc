@@ -50,21 +50,21 @@ def test_sensor_triangulation(row, col, h):
 
     # First read the left and right geometric models (here Grids)
     id_scene_right = "P1BP--2017092838319324CP"
-    gri_right = prepare_loc("ellipsoide", id_scene_right)
+    grid_right = prepare_loc("ellipsoide", id_scene_right)
     id_scene_left = "P1BP--2017092838284574CP"
-    gri_left = prepare_loc("ellipsoide", id_scene_left)
+    grid_left = prepare_loc("ellipsoide", id_scene_left)
 
     # We need matches between left and right image. In real case use correlator or SIFT points.
     # In this test example we create a match by colocalization of one point.
-    gri_right.estimate_inverse_loc_predictor()
-    lonlatalt = gri_left.direct_loc_h(row, col, h)
-    inv_row, inv_col, __ = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    grid_right.estimate_inverse_loc_predictor()
+    lonlatalt = grid_left.direct_loc_h(row, col, h)
+    inv_row, inv_col, __ = grid_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
     # matches are defined as Nx4 array, here N=1
     matches = np.zeros([1, 4])
     matches[0, :] = [col, row, inv_col, inv_row]
 
     # compute triangulation with residues (see sensor_triangulation docstring for further details),
-    point_ecef, point_wgs84, distance = sensor_triangulation(matches, gri_left, gri_right, residues=True)
+    point_ecef, point_wgs84, distance = sensor_triangulation(matches, grid_left, grid_right, residues=True)
 
     logging.info("cartesian coordinates :")
     logging.info(point_ecef)
@@ -132,9 +132,9 @@ def test_epi_triangulation_sift():
     Test epipolar triangulation
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    gri_right = prepare_loc("ellipsoide", id_scene_right)
+    grid_right = prepare_loc("ellipsoide", id_scene_right)
     id_scene_left = "P1BP--2017092838284574CP"
-    gri_left = prepare_loc("ellipsoide", id_scene_left)
+    grid_left = prepare_loc("ellipsoide", id_scene_left)
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
@@ -143,7 +143,7 @@ def test_epi_triangulation_sift():
     matches = np.load(matches_filename)
 
     point_ecef, __, __ = epipolar_triangulation(
-        matches, None, "sift", gri_left, gri_right, grid_left_filename, grid_right_filename
+        matches, None, "sift", grid_left, grid_right, grid_left_filename, grid_right_filename
     )
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     assert valid == pytest.approx(point_ecef[0, :], abs=0.5)
@@ -161,7 +161,6 @@ def test_epi_triangulation_sift_rpc():
     geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    print(file_geom)
     geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")

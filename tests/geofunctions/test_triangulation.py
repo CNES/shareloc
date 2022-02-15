@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -18,22 +18,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
-Test module for triangulation class shareloc/triangulation/triangulation.py
+Test module for triangulation class shareloc/geofunctions/triangulation.py
 """
 
-
+# Standard imports
 import os
-import pytest
+
+# Third party imports
 import numpy as np
-from helpers import data_path
+import pytest
 import xarray as xr
 
-from shareloc.grid import Grid
-from shareloc.triangulation.triangulation import distance_point_los, sensor_triangulation
-from shareloc.triangulation.triangulation import epipolar_triangulation
-from shareloc.rpc.rpc import RPC
+# Shareloc imports
+from shareloc.geofunctions.triangulation import distance_point_los, epipolar_triangulation, sensor_triangulation
+from shareloc.geomodels.grid import Grid
+from shareloc.geomodels.rpc import RPC
+
+# Shareloc test imports
+from ..helpers import data_path
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
@@ -260,8 +263,6 @@ def test_epi_triangulation_disp_rpc():
     )
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
-    out_disp_filename = os.path.join(data_path(), "triangulation", "out_disparity_triangulation_rpc.nc")
-    disp.to_netcdf(out_disp_filename)
 
     # open cloud
     cloud_filename = os.path.join(data_path(), "triangulation", "cloud_ECEF.nc")
@@ -347,8 +348,6 @@ def test_epi_triangulation_disp_grid():
     )
     pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     disp = xr.merge((disp, pc_dataset))
-    out_disp_filename = os.path.join(data_path(), "triangulation", "out_disparity_triangulation.nc")
-    disp.to_netcdf(out_disp_filename)
 
     # open cloud
     cloud_filename = os.path.join(data_path(), "triangulation", "cloud_ECEF.nc")
@@ -387,6 +386,4 @@ def test_epi_triangulation_disp_grid_masked():
     )
     # pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
     # disp = xr.merge((disp, pc_dataset))
-    # out_disp_filename = os.path.join(data_path(), "triangulation", "out_disparity_triangulation_masked.nc")
-    # disp.to_netcdf(out_disp_filename)
     assert np.array_equal(point_ecef[0, :], [0, 0, 0])

@@ -79,10 +79,24 @@ notebook: install ## Install Jupyter notebook kernel with venv and shareloc inst
 	@echo "jupyter notebook"
 
 clean: ## clean: remove all generated files: venv, cache, ...
-	@rm -rf ${VENV}
-	@rm -rf dist
+	@find . -type f -name '*.pyc' -delete
+	@find . -type d -name '__pycache__' | xargs rm -rf
+	@rm -rf .eggs/
 	@rm -rf shareloc.egg-info
-	@find . -type d -name __pycache__ -exec rm -r {} \+
-	@rm -rf .eggs
+	@rm -rf dist/
+	@rm -rf build/
+	@rm -rf ${VENV}
+	@rm -rf .tox/
+	@rm -rf .pytest_cache/
+	@rm -f pytest-report.xml
 	@rm -f .coverage
 	@rm -rf .coverage.*
+	@rm -f coverage.xml
+	@rm -rf htmlcov/
+	@rm -f pylint-report.txt
+	@rm -f pylint-report.xml
+	@rm -f debug.log
+	@rm -rf docs/build/
+	@rm -rf tmp.*
+	@rm -rf tmp/
+	@rm -rf .ipynb_checkpoints/

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -19,19 +18,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
-Image class to handle Image data.
+Image DTM Image to handle DTM image data.
+Inherits from Image Class with DTM particularities.
 """
 
+# Standard imports
 import logging
+
+# Third party imports
 import numpy as np
 from rasterio.fill import fillnodata
-from shareloc.image.image import Image
 
-# pylint: disable=too-many-instance-attributes
+# Shareloc imports
+from shareloc.image import Image
+
+
 class DTMImage(Image):
-    """class DTM  Image to handle DTM image data"""
+    """
+    class DTM  Image to handle DTM image data
+    Inherits from Image Class with DTM particularities
+    """
 
     def __init__(
         self,
@@ -105,6 +112,7 @@ class DTMImage(Image):
                 if np.sum(self.data[self.mask[:, :] == 0] == self.nodata) != 0:
                     if fill_value is None:
                         fill_value = self.stats["min"]
+                    # pylint: disable=logging-too-many-args
                     logging.warning("not all nodata have been filled, fill with %d", fill_value)
                     self.data[self.data[:, :] == self.nodata] = fill_value
             elif strategy == "constant":

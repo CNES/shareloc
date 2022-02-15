@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding: utf8
 #
 # Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
@@ -18,7 +19,7 @@
 # limitations under the License.
 #
 """
-Test module for proj utils  function  shareloc/proj_utils.py
+Module to test functions that use direct grid
 """
 
 # Third party imports
@@ -26,20 +27,20 @@ import numpy as np
 import pytest
 
 # Shareloc imports
-from shareloc.proj_utils import coordinates_conversion
+from shareloc.geomodels.grid import Grid
+
+# Shareloc test imports
+from ..helpers import data_path
 
 
 @pytest.mark.unit_tests
-def test_coordinates_conversion():
+def test_grid_geotiff():
     """
-    Test coordinates conversion
+    test grid readers
     """
-    in_crs = 4326
-    out_crs = 4978
-
-    point_wgs84 = np.asarray([[7.05396752, 43.73000865, 4900.0], [7.05860411, 43.72347311, -30.0]])
-    point_ecef = coordinates_conversion(point_wgs84, in_crs, out_crs)
-    coords_vt_ecef = np.asarray(
-        [[4584837.334948, 567331.361674, 4389850.562378], [4581754.08394, 567326.291517, 4385917.904472]]
-    )
-    np.testing.assert_allclose(point_ecef, coords_vt_ecef, atol=1e-5, rtol=0)
+    geotiff_grid_path = data_path("ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
+    gri_geotiff = Grid(geotiff_grid_path)
+    res_geotiff = gri_geotiff.direct_loc_h(0.5, 0.5, 1000.0)
+    np.testing.assert_allclose(res_geotiff, [2.183908972985368, 48.94317692547565, 1000.0], rtol=0, atol=1e-9)
+    res_geotiff = gri_geotiff.direct_loc_h(50, 100, 200.0)
+    np.testing.assert_allclose(res_geotiff, [2.1828713504608683, 48.942429997483146, 200.0], rtol=0, atol=1e-9)

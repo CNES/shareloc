@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -22,13 +22,19 @@
 This module contains the RPC class corresponding to the RPC models.
 RPC models covered are : DIMAP V1, DIMAP V2, ossim (geom file), geotiff.
 """
+# pylint: disable=no-member
 
-from xml.dom import minidom
-from os.path import basename
+# Standard imports
 import logging
-import rasterio as rio
+from os.path import basename
+from xml.dom import minidom
+
+# Third party imports
 import numpy as np
-from numba import njit, prange, config
+import rasterio as rio
+from numba import config, njit, prange
+
+# Shareloc imports
 from shareloc.proj_utils import coordinates_conversion
 
 # Set numba type of threading layer before parallel target compilation
@@ -63,7 +69,7 @@ def identify_dimap(xml_file):
         else:
             version_tag = "METADATA_FORMAT"
         version = mtd[0].getElementsByTagName(version_tag)[0].attributes.items()[0][1]
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         return None
     else:
         return version
@@ -88,7 +94,7 @@ def identify_ossim_kwl(ossim_kwl_file):
             if geom_dict["type"].strip().startswith("ossim"):
                 return geom_dict["type"].strip()
         return None
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         return None
 
 
@@ -104,7 +110,7 @@ def identify_geotiff_rpc(image_filename):
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns="RPC")
         return rpc_dict
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         return None
 
 
@@ -250,8 +256,9 @@ class RPC:
             if float(dimap_version) >= 2.0:
                 return cls.from_dimap_v2(dimap_filepath, topleftconvention)
         else:
-            ValueError("can''t read dimap file")
-            return None
+            raise ValueError("can''t read dimap file")
+
+        return None
 
     @classmethod
     def from_dimap_v2(cls, dimap_filepath, topleftconvention=True):
@@ -404,6 +411,7 @@ class RPC:
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns="RPC")
         if not rpc_dict:
+            # pylint: disable=logging-too-many-args
             logging.error("%s does not contains RPCs ", image_filename)
             raise ValueError
         rpc_params = {
@@ -947,19 +955,19 @@ def polynomial_equation(xnorm, ynorm, znorm, coeff):
         + coeff[4] * xnorm * ynorm
         + coeff[5] * xnorm * znorm
         + coeff[6] * ynorm * znorm
-        + coeff[7] * xnorm ** 2
-        + coeff[8] * ynorm ** 2
-        + coeff[9] * znorm ** 2
+        + coeff[7] * xnorm**2
+        + coeff[8] * ynorm**2
+        + coeff[9] * znorm**2
         + coeff[10] * xnorm * ynorm * znorm
-        + coeff[11] * xnorm ** 3
-        + coeff[12] * xnorm * ynorm ** 2
-        + coeff[13] * xnorm * znorm ** 2
-        + coeff[14] * xnorm ** 2 * ynorm
-        + coeff[15] * ynorm ** 3
-        + coeff[16] * ynorm * znorm ** 2
-        + coeff[17] * xnorm ** 2 * znorm
-        + coeff[18] * ynorm ** 2 * znorm
-        + coeff[19] * znorm ** 3
+        + coeff[11] * xnorm**3
+        + coeff[12] * xnorm * ynorm**2
+        + coeff[13] * xnorm * znorm**2
+        + coeff[14] * xnorm**2 * ynorm
+        + coeff[15] * ynorm**3
+        + coeff[16] * ynorm * znorm**2
+        + coeff[17] * xnorm**2 * znorm
+        + coeff[18] * ynorm**2 * znorm
+        + coeff[19] * znorm**3
     )
 
     return rational
@@ -1054,9 +1062,9 @@ def derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, coeff):
         + 2 * coeff[8] * lat_norm
         + coeff[10] * lon_norm * alt_norm
         + 2 * coeff[12] * lon_norm * lat_norm
-        + coeff[14] * lon_norm ** 2
-        + 3 * coeff[15] * lat_norm ** 2
-        + coeff[16] * alt_norm ** 2
+        + coeff[14] * lon_norm**2
+        + 3 * coeff[15] * lat_norm**2
+        + coeff[16] * alt_norm**2
         + 2 * coeff[18] * lat_norm * alt_norm
     )
 
@@ -1085,9 +1093,9 @@ def derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, coeff):
         + coeff[5] * alt_norm
         + 2 * coeff[7] * lon_norm
         + coeff[10] * lat_norm * alt_norm
-        + 3 * coeff[11] * lon_norm ** 2
-        + coeff[12] * lat_norm ** 2
-        + coeff[13] * alt_norm ** 2
+        + 3 * coeff[11] * lon_norm**2
+        + coeff[12] * lat_norm**2
+        + coeff[13] * alt_norm**2
         + 2 * coeff[14] * lat_norm * lon_norm
         + 2 * coeff[17] * lon_norm * alt_norm
     )
@@ -1156,9 +1164,9 @@ def calcule_derivees_inv_numba(
         num_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], num_lin)
         den_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], den_lin)
 
-        dcol_dlon[i] = scale_col / scale_lon * (num_dcol_dlon * den_dcol - den_dcol_dlon * num_dcol) / den_dcol ** 2
-        dcol_dlat[i] = scale_col / scale_lat * (num_dcol_dlat * den_dcol - den_dcol_dlat * num_dcol) / den_dcol ** 2
-        drow_dlon[i] = scale_lin / scale_lon * (num_drow_dlon * den_drow - den_drow_dlon * num_drow) / den_drow ** 2
-        drow_dlat[i] = scale_lin / scale_lat * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / den_drow ** 2
+        dcol_dlon[i] = scale_col / scale_lon * (num_dcol_dlon * den_dcol - den_dcol_dlon * num_dcol) / den_dcol**2
+        dcol_dlat[i] = scale_col / scale_lat * (num_dcol_dlat * den_dcol - den_dcol_dlat * num_dcol) / den_dcol**2
+        drow_dlon[i] = scale_lin / scale_lon * (num_drow_dlon * den_drow - den_drow_dlon * num_drow) / den_drow**2
+        drow_dlat[i] = scale_lin / scale_lat * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / den_drow**2
 
     return dcol_dlon, dcol_dlat, drow_dlon, drow_dlat

@@ -26,7 +26,7 @@ Following information are needed for localization functions:
  * **image information** in order to use geotransform, details in :ref:`user_manual_conventions` section.
  * :term:`EPSG` **code** to specify ground coordinate system
 
-``shareloc.localization.Localization`` class collect these data to set up the localization functions.
+``shareloc.geofunctions.localization.Localization`` class collect these data to set up the localization functions.
 It is possible to use geometric model directly using ``shareloc.grid.Grid`` and ``shareloc.rpc.rpc.RPC`` for advanced used.
 
 .. code-block:: console
@@ -44,7 +44,7 @@ It is possible to use geometric model directly using ``shareloc.grid.Grid`` and 
         :param elevation  : dtm or default elevation over ellipsoid if None elevation is set to 0
         :type elevation  : shareloc.dtm or float or np.ndarray
         :param image  : image class to handle geotransform
-        :type image  : shareloc.image.image.Image
+        :type image  : shareloc.image.Image
         :param epsg  : coordinate system of world points, if None model coordinate system will be used
         :type epsg  : int
         """
@@ -118,9 +118,9 @@ colocalization returns image positions (row2,col2) in image 2 from (row1,col1) p
         :param elevation: elevation
         :type elevation: shareloc.dtm or float or 1D numpy array
         :param image1  : image class to handle geotransform
-        :type image1  : shareloc.image.image.Image
+        :type image1  : shareloc.image.Image
         :param image2  : image class to handle geotransform
-        :type image2  : shareloc.image.image.Image
+        :type image2  : shareloc.image.Image
         :param using_geotransform: using_geotransform
         :type using_geotransform : boolean
         :return: Corresponding sensor position [row, col, True] in the geometric model 2

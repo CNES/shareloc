@@ -1,8 +1,7 @@
 #!/usr/bin/env python
-
 # coding: utf8
 #
-# Copyright (c) 2020 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -19,24 +18,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """
 Image class to handle Image data.
+Shareloc Reference raster image input based on rasterio.
 """
+# pylint: disable=no-member
 
+# Standard imports
 import logging
-import rasterio
+
+# Third party imports
 import numpy as np
+import rasterio
 from affine import Affine
 
 
 # pylint: disable=too-many-instance-attributes
 class Image:
-    """class Image to handle image data"""
+    """
+    class Image to handle image data
+    Shareloc reference for raster image input based on rasterio.
+    """
 
     def __init__(self, image_path, read_data=False, roi=None, roi_is_in_physical_space=False):
         """
         constructor
+
         :param image_path : image path
         :type image_path  : string or None
         :param read_data  : read image data
@@ -76,6 +83,7 @@ class Image:
                     col_off = np.floor(col_off)
                     width = int(np.ceil(col_max - col_off))
                     height = int(np.ceil(row_max - row_off))
+                    # pylint: disable=logging-too-many-args
                     logging.info("roi in image , offset : %s %s size %s %s", col_off, row_off, width, height)
                 else:
                     row_off = roi[0]
@@ -118,6 +126,7 @@ class Image:
                 self.data = np.squeeze(self.dataset.read(window=roi_window))
                 if self.nodata is not None:
                     self.mask = np.squeeze(self.dataset.read_masks(window=roi_window))
+                    # pylint: disable=logging-too-many-args
                     logging.info("image contains %d nodata values ", np.sum(self.mask == 0))
 
     def set_metadata(self, nb_row, nb_col, nb_band, transform, datatype=np.float32):

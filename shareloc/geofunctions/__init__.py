@@ -19,24 +19,5 @@
 # limitations under the License.
 #
 """
-Helpers shared testing generic module:
-contains global shared generic functions for tests/*.py
+Shareloc geofunctions module
 """
-
-# Standard imports
-import os
-
-
-def data_path(alti="", scene_id=""):
-    """
-    return the data path, when used without any argument data_path() returns data directory
-    :param alti: first sub dir corresponding to datum ("ellipsoide" or "geoid")
-    :type alti: str
-    :param scene_id: second sub dir corresponding to the scene id
-    :type scene_id: str
-    :return: data path.
-    :rtype: str
-    """
-    data_root_folder = os.path.join(os.path.dirname(__file__), "data")
-    sub_folder = os.path.join(alti, scene_id)
-    return os.path.join(data_root_folder, sub_folder)

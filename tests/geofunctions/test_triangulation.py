@@ -48,20 +48,22 @@ def test_sensor_triangulation(row, col, h):
     Test sensor triangulation
     """
 
-    # first read the left and right geometric models (here Grids)
+    # First read the left and right geometric models (here Grids)
     id_scene_right = "P1BP--2017092838319324CP"
     gri_right = prepare_loc("ellipsoide", id_scene_right)
     id_scene_left = "P1BP--2017092838284574CP"
     gri_left = prepare_loc("ellipsoide", id_scene_left)
 
-    # create fake matches by colocalization
+    # We need matches between left and right image. In real case use correlator or SIFT points.
+    # In this test example we create a match by colocalization of one point.
     gri_right.estimate_inverse_loc_predictor()
     lonlatalt = gri_left.direct_loc_h(row, col, h)
     inv_row, inv_col, __ = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    # matches are defined as Nx4 array, here N=1
     matches = np.zeros([1, 4])
     matches[0, :] = [col, row, inv_col, inv_row]
 
-    # compute triangulation with residues,
+    # compute triangulation with residues (see sensor_triangulation docstring for further details),
     point_ecef, point_wgs84, distance = sensor_triangulation(matches, gri_left, gri_right, residues=True)
 
     logging.info("cartesian coordinates :")
@@ -70,6 +72,7 @@ def test_sensor_triangulation(row, col, h):
     assert lonlatalt[0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)
     assert lonlatalt[1] == pytest.approx(point_wgs84[0, 1], abs=1e-8)
     assert lonlatalt[2] == pytest.approx(point_wgs84[0, 2], abs=8e-3)
+    # residues is approx 0.0 meter here since los intersection is ensured by colocalization
     assert distance == pytest.approx(0.0, abs=1e-3)
 
 

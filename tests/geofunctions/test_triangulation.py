@@ -22,6 +22,8 @@
 Test module for triangulation class shareloc/geofunctions/triangulation.py
 """
 
+import logging
+
 # Standard imports
 import os
 
@@ -39,6 +41,41 @@ from shareloc.geomodels.rpc import RPC
 from ..helpers import data_path
 
 
+@pytest.mark.parametrize("col,row,h", [(1000.5, 1500.5, 10.0)])
+@pytest.mark.unit_tests
+def test_sensor_triangulation(row, col, h):
+    """
+    Test sensor triangulation
+    """
+
+    # First read the left and right geometric models (here Grids)
+    id_scene_right = "P1BP--2017092838319324CP"
+    grid_right = prepare_loc("ellipsoide", id_scene_right)
+    id_scene_left = "P1BP--2017092838284574CP"
+    grid_left = prepare_loc("ellipsoide", id_scene_left)
+
+    # We need matches between left and right image. In real case use correlator or SIFT points.
+    # In this test example we create a match by colocalization of one point.
+    grid_right.estimate_inverse_loc_predictor()
+    lonlatalt = grid_left.direct_loc_h(row, col, h)
+    inv_row, inv_col, __ = grid_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    # matches are defined as Nx4 array, here N=1
+    matches = np.zeros([1, 4])
+    matches[0, :] = [col, row, inv_col, inv_row]
+
+    # compute triangulation with residues (see sensor_triangulation docstring for further details),
+    point_ecef, point_wgs84, distance = sensor_triangulation(matches, grid_left, grid_right, residues=True)
+
+    logging.info("cartesian coordinates :")
+    logging.info(point_ecef)
+
+    assert lonlatalt[0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)
+    assert lonlatalt[1] == pytest.approx(point_wgs84[0, 1], abs=1e-8)
+    assert lonlatalt[2] == pytest.approx(point_wgs84[0, 2], abs=8e-3)
+    # residues is approx 0.0 meter here since los intersection is ensured by colocalization
+    assert distance == pytest.approx(0.0, abs=1e-3)
+
+
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     """
     Read multiH grid
@@ -54,34 +91,6 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     gri = Grid(gld)
 
     return gri
-
-
-@pytest.mark.parametrize("col,row,h", [(1000.5, 1500.5, 10.0)])
-@pytest.mark.unit_tests
-def test_sensor_triangulation(row, col, h):
-    """
-    Test sensor triangulation
-    """
-    id_scene_right = "P1BP--2017092838319324CP"
-    gri_right = prepare_loc("ellipsoide", id_scene_right)
-    id_scene_left = "P1BP--2017092838284574CP"
-    gri_left = prepare_loc("ellipsoide", id_scene_left)
-    # init des predicteurs
-    gri_right.estimate_inverse_loc_predictor()
-    lonlatalt = gri_left.direct_loc_h(row, col, h)
-
-    inv_row, inv_col, __ = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
-
-    matches = np.zeros([1, 4])
-    matches[0, :] = [col, row, inv_col, inv_row]
-    # matches[1,:] = [lig + 10, col + 5, inv_lig + 12, inv_col + 7]
-
-    __, point_wgs84, distance = sensor_triangulation(matches, gri_left, gri_right, residues=True)
-
-    assert lonlatalt[0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)
-    assert lonlatalt[1] == pytest.approx(point_wgs84[0, 1], abs=1e-8)
-    assert lonlatalt[2] == pytest.approx(point_wgs84[0, 2], abs=8e-3)
-    assert distance == pytest.approx(0.0, abs=1e-3)
 
 
 @pytest.mark.unit_tests
@@ -123,9 +132,9 @@ def test_epi_triangulation_sift():
     Test epipolar triangulation
     """
     id_scene_right = "P1BP--2017092838319324CP"
-    gri_right = prepare_loc("ellipsoide", id_scene_right)
+    grid_right = prepare_loc("ellipsoide", id_scene_right)
     id_scene_left = "P1BP--2017092838284574CP"
-    gri_left = prepare_loc("ellipsoide", id_scene_left)
+    grid_left = prepare_loc("ellipsoide", id_scene_left)
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
@@ -134,7 +143,7 @@ def test_epi_triangulation_sift():
     matches = np.load(matches_filename)
 
     point_ecef, __, __ = epipolar_triangulation(
-        matches, None, "sift", gri_left, gri_right, grid_left_filename, grid_right_filename
+        matches, None, "sift", grid_left, grid_right, grid_left_filename, grid_right_filename
     )
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     assert valid == pytest.approx(point_ecef[0, :], abs=0.5)
@@ -152,7 +161,6 @@ def test_epi_triangulation_sift_rpc():
     geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    print(file_geom)
     geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")

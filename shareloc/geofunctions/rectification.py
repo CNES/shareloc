@@ -118,7 +118,7 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, e
     :type elevation: shareloc.dtm or float
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: int
-    :return: Coordinates of the beginning and the ending of local epipolar line in the left image
+
     :rtype: Tuple(1D np.array [row, col, altitude], 1D numpy array [row, col, altitude])
             or Tuple(2D np.array (nb points, [row, col, altitude]), 2D np.array (nb points, [row, col, altitude]))
     """

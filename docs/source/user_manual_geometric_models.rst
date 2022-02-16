@@ -88,8 +88,7 @@ The example is composed of 9x5 grid composed of 3 altitude layers (-30m,485m,100
 In the example below:
 
 - ``my_multi_h_grid`` is a 9x5x6 grid.
-- ``my_multi_h_grid`` contains at index :math:`(row, col)` direct location of :math:`((row + 0.5) * steprow + row0,  (col + 0.5) * stepcol + col0))`, for example with `(band, row, col)` convention
-:math:`my\_multi\_h\_grid[0:1,1,2] = direct\_loc(row = 1250,col = 625,h = -30)`
+- ``my_multi_h_grid`` contains at index :math:`(row, col)` direct location of :math:`((row + 0.5) * steprow + row0,  (col + 0.5) * stepcol + col0))`, for example with `(band, row, col)` convention :math:`my\_multi\_h\_grid[0:1,1,2] = direct\_loc(row = 1250,col = 625,h = -30)`
 
 .. code-block:: console
 

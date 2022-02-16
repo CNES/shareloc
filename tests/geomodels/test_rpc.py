@@ -60,12 +60,14 @@ def test_rpc_drivers():
     fctrat_dimap_v2 = RPC.from_any(file_dimap, topleftconvention=True)
 
     fake_rpc = os.path.join(data_folder, "rpc/fake_rpc.txt")
-    fctrat_fake = RPC.from_any(fake_rpc, topleftconvention=True)
-
     assert fctrat_dimap.driver_type == "dimap_v1.4"
     assert fctrat_geom.driver_type == "ossim_kwl"
     assert fctrat_dimap_v2.driver_type == "dimap_v2.15"
-    assert fctrat_fake is None
+    try:
+        RPC.from_any(fake_rpc, topleftconvention=True)
+        raise AssertionError()
+    except ValueError:
+        assert True
 
 
 def test_identify_ossim_kwl():

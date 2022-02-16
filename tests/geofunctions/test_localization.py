@@ -110,6 +110,7 @@ def test_localize_direct_grid():
     loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
 
     # use direct localisation of the first image pixel
+    # TODO: refacto interfaces to avoid np.squeeze
     lonlatalt = np.squeeze(loc.direct(row, col, using_geotransform=True))
 
     assert lonlatalt[0] == pytest.approx(5.193406151946084, abs=1e-7)
@@ -155,6 +156,7 @@ def test_gld_dtm(idxrow, idxcol, row0, col0, steprow, stepcol, nbrow, nbcol):
     row = row0 + steprow * idxrow
     col = col0 + stepcol * idxcol
 
+    # TODO: refacto interfaces to avoid np.squeeze
     valid_lonlatalt = np.squeeze(gri.direct_loc_dtm(row, col, dtmbsq))
     assert lonlatalt == pytest.approx(valid_lonlatalt, abs=1e-12)
 
@@ -321,6 +323,7 @@ def test_sensor_loc_dir_dtm(index_x, index_y):
     alt = dtmbsq.interpolate(index_x, index_y)
 
     row, col, alt = loc.inverse(lon, lat, alt)
+    # TODO: refacto interfaces to avoid np.squeeze
     lonlath = np.squeeze(loc.direct(row, col))
     assert lon == pytest.approx(lonlath[0], abs=1e-8)
     assert lat == pytest.approx(lonlath[1], abs=1e-8)

@@ -169,6 +169,8 @@ class Grid:
         :return ground position (lon,lat,h)
         :rtype numpy.ndarray
         """
+        # Test for rectification to work with ndarray in input
+        # TODO: clean interfaces to remove this part
         if isinstance(alt, (list, np.ndarray)):
             logging.debug("grid doesn't handle alt as array, first value is used")
             alt = alt[0]
@@ -184,6 +186,8 @@ class Grid:
             self.lat_data[grid_index_up : grid_index_down + 1, :, :],
         ]
 
+        # Test added for rectification to work
+        # TODO: refactoring to remove this part.
         if not isinstance(col, (list, np.ndarray)):
             col = np.array([col])
             row = np.array([row])
@@ -225,6 +229,10 @@ class Grid:
     def direct_loc_dtm(self, row, col, dtm):
         """
         direct localization on dtm
+
+        TODO: explain algorithm
+        TODO: optimize code (for loop, ...)
+
         :param row :  line sensor position
         :type row : float
         :param col :  column sensor position
@@ -250,6 +258,7 @@ class Grid:
             else:
                 logging.warning("los doesn't instersect DTM cube")
                 points_dtm[point_index, :] = np.full(3, fill_value=np.nan)
+            # Kept for information but done in Localization class
             # if self.epsg != dtm.epsg:
             #    point_dtm = coordinates_conversion(point_dtm, dtm.epsg, self.epsg)
         return points_dtm
@@ -655,6 +664,10 @@ class Grid:
         * calculate geographic error dlon,dlat
         * calculate senor correction dlon,dlat -> dcol,drow
         * apply direct localization  -> lon_i,lat_i
+
+        TODO: explain algo
+        TODO: optimization (for loop,...)
+
         :param lon : longitude
         :type lon: float
         :param lat : latitude
@@ -667,6 +680,8 @@ class Grid:
         :rtype tuple (float,float,float)
         """
 
+        # Test added for rectification to work
+        # TODO: refactoring with interfaces clean
         if not isinstance(lon, (list, np.ndarray)):
             lon = np.array([lon])
             lat = np.array([lat])
@@ -737,6 +752,7 @@ def coloc(multi_h_grid_src, multi_h_grid_dst, dtm, origin, step, size):
         row = l0_src + steprow_src * index_row
         for index_col in range(nbcol_src):
             col = c0_src + stepcol_src * index_col
+            # TODO: refacto interfaces to avoid np.squeeze if not necessary
             (lon, lat, alt) = np.squeeze(multi_h_grid_src.direct_loc_dtm(row, col, dtm))
             pos_dst = multi_h_grid_dst.inverse_loc(lon, lat, alt)
             gricoloc[:, index_row, index_col] = pos_dst

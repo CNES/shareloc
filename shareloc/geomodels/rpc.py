@@ -522,8 +522,7 @@ class RPC:
         geotiff_rpc_dict = identify_geotiff_rpc(primary_file)
         if geotiff_rpc_dict is not None:
             return cls.from_geotiff(primary_file, topleftconvention)
-        ValueError("can not read rpc file")
-        return None
+        raise ValueError("can not read rpc file")
 
     def calcule_derivees_inv(self, lon, lat, alt):
         """calcul analytiques des derivees partielles de la loc inverse

@@ -169,7 +169,7 @@ class Grid:
         :return ground position (lon,lat,h)
         :rtype numpy.ndarray
         """
-        # Test for rectification to work with ndarray in input
+        # Vectorization doesn't handle yet altitude as np.ndarray (3D interpolation work).
         # TODO: clean interfaces to remove this part
         if isinstance(alt, (list, np.ndarray)):
             logging.debug("grid doesn't handle alt as array, first value is used")
@@ -186,7 +186,7 @@ class Grid:
             self.lat_data[grid_index_up : grid_index_down + 1, :, :],
         ]
 
-        # Test added for rectification to work
+        # float are converted to np.ndarray for vectorization
         # TODO: refactoring to remove this part.
         if not isinstance(col, (list, np.ndarray)):
             col = np.array([col])
@@ -239,7 +239,7 @@ class Grid:
         :type col : float
         :param dtm : dtm model
         :type dtm  : shareloc.dtm
-        :return ground position (lon,lat,h)
+        :return ground position (lon,lat,h) in dtm coordinates system.
         :rtype numpy.array
         """
         if not isinstance(row, (list, np.ndarray)):
@@ -258,9 +258,6 @@ class Grid:
             else:
                 logging.warning("los doesn't instersect DTM cube")
                 points_dtm[point_index, :] = np.full(3, fill_value=np.nan)
-            # Kept for information but done in Localization class
-            # if self.epsg != dtm.epsg:
-            #    point_dtm = coordinates_conversion(point_dtm, dtm.epsg, self.epsg)
         return points_dtm
 
     def los_extrema(self, row, col, alt_min, alt_max):

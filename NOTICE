@@ -1,0 +1,58 @@
+Shareloc Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+
+This software is distributed under the Apache Software License (ASL) v2.0, see
+LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
+
+Shareloc depends on or includes source code from the following third-party
+software:
+
+NumPy: The fundamental package for scientific computing with Python.
+Copyright (c) 2005-2022, NumPy Developers.
+Website: https://numpy.org/
+License: BSD 3 Clause.
+
+Numba: NumPy aware dynamic Python compiler using LLVM
+Copyright (c) 2022, Anaconda, Inc.
+Website: https://numba.pydata.org/
+License: BSD 2 Clause.
+
+SciPy: open-source software for mathematics, science, and engineering.
+Copyright (c) 2001, 2002 Enthought, Inc. All rights reserved.
+Copyright (c) 2003-2022 SciPy Developers. All rights reserved.
+Website: https://www.scipy.org/scipylib/
+License: BSD 3 Clause.
+
+Xarray: N-D labeled arrays and datasets in Python
+Copyright 2014-2022, xarray Developers
+Website: http://xarray.pydata.org
+License: Apache v2.0.
+
+Rasterio: access to geospatial raster data
+Copyright (c) 2016, MapBox All rights reserved.
+Website: https://github.com/mapbox/rasterio
+License: BSD 3 Clause.
+
+netCDF4: Python/numpy interface to the netCDF C library.
+Copyright (c) 2008 Jeffrey Whitaker
+Website: https://github.com/Unidata/netcdf4-python
+Licence: MIT.
+
+Python: programming language that lets you work quickly and integrate systems more effectively.
+Copyright (c) 2001-2022 Python Software Foundation. All Rights reserved.
+Website: http://python.org/
+License: Python Software License.
+
+Setuptools: build system
+Copyright (C) 2016 Jason R Coombs <jaraco@jaraco.com>
+Website: https://setuptools.readthedocs.io/
+License: MIT.
+
+Pytest: Testing module for Python codes
+Copyright Holger Krekel and others, 2004-2022.
+Website: https://github.com/pytest-dev/pytest
+License: MIT.
+
+Sphinx-doc: Tool to create documentation for Python projects
+Copyright (c) 2007-2022 by the Sphinx team
+Website: https://www.sphinx-doc.org/
+License: BSD 2 Clause.

@@ -20,7 +20,7 @@ A new section Unreleased is opened then for next dev phase.
 ### Added
 - Shareloc library first release
 - geometric functions: localization, rectification, triangulation, earth elevation management
-- geometric models: RPC and grids
+- geometric models: RPC and multi altitudes layers location grids
 - Simple install with pip, clean dependencies (rasterio mainly) and Makefile for developper
 - Documentation basics (README) and sphinx documentation to readthedocs
 - Detailed pytest tests (tests directory)

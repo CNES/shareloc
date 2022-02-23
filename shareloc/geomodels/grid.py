@@ -167,8 +167,13 @@ class Grid:
             otherwise
         :type fill_nan : boolean
         :return ground position (lon,lat,h)
-        :rtype numpy.ndarray
+        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
+        # Vectorization doesn't handle yet altitude as np.ndarray (3D interpolation work).
+        # TODO: clean interfaces to remove this part
+        if isinstance(alt, (list, np.ndarray)):
+            logging.debug("grid doesn't handle alt as array, first value is used")
+            alt = alt[0]
         if fill_nan:
             # pylint: disable=logging-too-many-args
             logging.debug("fill nan %s", fill_nan)
@@ -181,6 +186,8 @@ class Grid:
             self.lat_data[grid_index_up : grid_index_down + 1, :, :],
         ]
 
+        # float are converted to np.ndarray for vectorization
+        # TODO: refactoring to remove this part.
         if not isinstance(col, (list, np.ndarray)):
             col = np.array([col])
             row = np.array([row])
@@ -195,7 +202,7 @@ class Grid:
         position[:, 0] = alti_coef * vlon[0, :] + (1 - alti_coef) * vlon[1, :]
         position[:, 1] = alti_coef * vlat[0, :] + (1 - alti_coef) * vlat[1, :]
 
-        return np.squeeze(position)
+        return position
 
     def compute_los(self, row, col, epsg):
         """
@@ -222,24 +229,36 @@ class Grid:
     def direct_loc_dtm(self, row, col, dtm):
         """
         direct localization on dtm
+
+        TODO: explain algorithm
+        TODO: optimize code (for loop, ...)
+
         :param row :  line sensor position
         :type row : float
         :param col :  column sensor position
         :type col : float
         :param dtm : dtm model
         :type dtm  : shareloc.dtm
-        :return ground position (lon,lat,h)
-        :rtype numpy.array
+        :return ground position (lon,lat,h) in dtm coordinates system.
+        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
-        los = self.compute_los(row, col, dtm.epsg)
-        (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
-        if position_cube is not None:
-            (__, __, point_dtm) = dtm.intersection(los, position_cube, alti)
-        else:
-            point_dtm = np.full(3, fill_value=np.nan)
-        # if self.epsg != dtm.epsg:
-        #    point_dtm = coordinates_conversion(point_dtm, dtm.epsg, self.epsg)
-        return point_dtm
+        if not isinstance(row, (list, np.ndarray)):
+            row = np.array([row])
+            col = np.array([col])
+
+        points_nb = len(row)
+        points_dtm = np.zeros((points_nb, 3))
+        for point_index in np.arange(points_nb):
+            row_i = row[point_index]
+            col_i = col[point_index]
+            los = self.compute_los(row_i, col_i, dtm.epsg)
+            (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
+            if position_cube is not None:
+                (__, __, points_dtm[point_index, :]) = dtm.intersection(los, position_cube, alti)
+            else:
+                logging.warning("los doesn't instersect DTM cube")
+                points_dtm[point_index, :] = np.full(3, fill_value=np.nan)
+        return points_dtm
 
     def los_extrema(self, row, col, alt_min, alt_max):
         """
@@ -390,6 +409,9 @@ class Grid:
         :return direct localization grid
         :rtype numpy.array
         """
+        if isinstance(alt, (list, np.ndarray)):
+            logging.warning("grid doesn't handle alt as array, first value is used")
+            alt = alt[0]
         gldalt = np.zeros((3, nbrow, nbcol))
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
         alt_down = self.alts_down[grid_index_down]
@@ -639,6 +661,10 @@ class Grid:
         * calculate geographic error dlon,dlat
         * calculate senor correction dlon,dlat -> dcol,drow
         * apply direct localization  -> lon_i,lat_i
+
+        TODO: explain algo
+        TODO: optimization (for loop,...)
+
         :param lon : longitude
         :type lon: float
         :param lat : latitude
@@ -651,31 +677,51 @@ class Grid:
         :rtype tuple (float,float,float)
         """
 
-        deg2mrad = np.deg2rad(1.0) * 1e6
-        iteration = 0
-        coslon = np.cos(np.deg2rad(lat))
-        rtx = 1e-12 * 6378000**2
-        (row_i, col_i, extrapol) = self.inverse_loc_predictor(lon, lat, alt)
-        erreur_m2 = 10.0
-        point_valide = 0
-        if not extrapol:
-            # Processus iteratif
-            # while erreur > seuil:1mm
-            while (erreur_m2 > 1e-6) and (iteration < nb_iterations):
-                position = self.direct_loc_h(row_i, col_i, alt)
-                dlon_microrad = (position[0] - lon) * deg2mrad
-                dlat_microrad = (position[1] - lat) * deg2mrad
-                erreur_m2 = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
-                dsol = np.array([dlon_microrad, dlat_microrad])
-                mat_dp = self.inverse_partial_derivative(row_i, col_i, alt)
-                dimg = mat_dp @ dsol
-                col_i += -dimg[0]
-                row_i += -dimg[1]
-                iteration += 1
-                point_valide = 1
-        if point_valide == 0:
-            (row_i, col_i) = (None, None)
-        return row_i, col_i, alt
+        # Test added for rectification to work
+        # TODO: refactoring with interfaces clean
+        if not isinstance(lon, (list, np.ndarray)):
+            lon = np.array([lon])
+            lat = np.array([lat])
+        if not isinstance(alt, (list, np.ndarray)):
+            alt = np.array([alt])
+
+        if alt.shape[0] != lon.shape[0]:
+            alt = np.full(lon.shape[0], fill_value=alt[0])
+
+        points_nb = len(lon)
+        row = np.zeros((points_nb))
+        col = np.zeros((points_nb))
+        for point_index in np.arange(points_nb):
+            lon_i = lon[point_index]
+            lat_i = lat[point_index]
+            alt_i = alt[point_index]
+            deg2mrad = np.deg2rad(1.0) * 1e6
+            iteration = 0
+            coslon = np.cos(np.deg2rad(lat_i))
+            rtx = 1e-12 * 6378000**2
+            (row_i, col_i, extrapol) = self.inverse_loc_predictor(lon_i, lat_i, alt_i)
+            erreur_m2 = 10.0
+            point_valide = 0
+            if not extrapol:
+                # Processus iteratif
+                # while erreur > seuil:1mm
+                while (erreur_m2 > 1e-6) and (iteration < nb_iterations):
+                    position = self.direct_loc_h(row_i, col_i, alt_i)
+                    dlon_microrad = (position[0][0] - lon_i) * deg2mrad
+                    dlat_microrad = (position[0][1] - lat_i) * deg2mrad
+                    erreur_m2 = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
+                    dsol = np.array([dlon_microrad, dlat_microrad])
+                    mat_dp = self.inverse_partial_derivative(row_i, col_i, alt_i)
+                    dimg = mat_dp @ dsol
+                    col_i += -dimg[0]
+                    row_i += -dimg[1]
+                    iteration += 1
+                    point_valide = 1
+            if point_valide == 0:
+                (row_i, col_i) = (None, None)
+            row[point_index] = row_i
+            col[point_index] = col_i
+        return row, col, alt
 
 
 def coloc(multi_h_grid_src, multi_h_grid_dst, dtm, origin, step, size):
@@ -703,7 +749,8 @@ def coloc(multi_h_grid_src, multi_h_grid_dst, dtm, origin, step, size):
         row = l0_src + steprow_src * index_row
         for index_col in range(nbcol_src):
             col = c0_src + stepcol_src * index_col
-            (lon, lat, alt) = multi_h_grid_src.direct_loc_dtm(row, col, dtm)
+            # TODO: refacto interfaces to avoid np.squeeze if not necessary
+            (lon, lat, alt) = np.squeeze(multi_h_grid_src.direct_loc_dtm(row, col, dtm))
             pos_dst = multi_h_grid_dst.inverse_loc(lon, lat, alt)
             gricoloc[:, index_row, index_col] = pos_dst
     return gricoloc

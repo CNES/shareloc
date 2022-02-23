@@ -66,14 +66,15 @@ class Localization:
         """
         direct localization
         :param row :  sensor row
-        :type row : float
+        :type row : float or 1D np.ndarray
         :param col : sensor col
-        :type col : float
+        :type col : float or 1D np.ndarray
         :param h: altitude, if none DTM is used
-        :type h : float
+        :type h : float or 1D np.ndarray
         :param using_geotransform: using_geotransform
         :type using_geotransform : boolean
-        :return coordinates : [lon,lat,h] (3D np.array)
+        :return coordinates : [lon,lat,h] (2D np.array)
+        :rtype np.ndarray of 2D dimension
         """
         if using_geotransform and self.image is not None:
             row, col = self.image.transform_index_to_physical_point(row, col)
@@ -126,8 +127,8 @@ class Localization:
         :param h : altitude
         :param using_geotransform: using_geotransform
         :type using_geotransform : boolean
-        :return coordinates : [row,col,h] (2D np.array)
-        :rtype numpy.array
+        :return coordinates : [row,col,h] (1D np.ndarray)
+        :rtype Tuple(1D np.ndarray row position, 1D np.ndarray col position, 1D np.ndarray alt)
         """
 
         if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
@@ -176,7 +177,7 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
     :param using_geotransform: using_geotransform
     :type using_geotransform : boolean
     :return: Corresponding sensor position [row, col, True] in the geometric model 2
-    :rtype : Tuple(1D np.array row position, 1D np.array col position, 1D np.array True)
+    :rtype : Tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
     """
     geometric_model1 = Localization(model1, elevation, image=image1)
     geometric_model2 = Localization(model2, elevation, image=image2)
@@ -186,9 +187,6 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
         col = np.array([col])
 
     ground_coord = geometric_model1.direct(row, col, using_geotransform=using_geotransform)
-
-    if len(ground_coord.shape) == 1:
-        ground_coord = np.expand_dims(ground_coord, 0)
 
     # Estimate sensor position (row, col, altitude) using inverse localization with model2
     sensor_coord = np.zeros((row.shape[0], 3), dtype=np.float64)

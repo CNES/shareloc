@@ -522,8 +522,7 @@ class RPC:
         geotiff_rpc_dict = identify_geotiff_rpc(primary_file)
         if geotiff_rpc_dict is not None:
             return cls.from_geotiff(primary_file, topleftconvention)
-        ValueError("can not read rpc file")
-        return None
+        raise ValueError("can not read rpc file")
 
     def calcule_derivees_inv(self, lon, lat, alt):
         """calcul analytiques des derivees partielles de la loc inverse
@@ -568,7 +567,7 @@ class RPC:
             otherwise
         :type fill_nan : boolean
         :return ground position (lon,lat,h)
-        :rtype numpy.ndarray
+        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
         if not isinstance(col, (list, np.ndarray)):
             col = np.array([col])
@@ -620,7 +619,7 @@ class RPC:
                 row, col, alt, 10, fill_nan
             )
         points[:, 2] = alt
-        return np.squeeze(points)
+        return points
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
         """calcule une grille de loc directe a partir des RPC directs
@@ -661,7 +660,7 @@ class RPC:
         :param dtm : dtm model
         :type dtm  : shareloc.dtm
         :return ground position (lon,lat,h) in dtm coordinates system
-        :rtype numpy.array
+        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
         if isinstance(col, (list, np.ndarray)):
             points_nb = len(col)

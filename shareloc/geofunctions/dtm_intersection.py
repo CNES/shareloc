@@ -577,7 +577,7 @@ class DTMIntersection:
                     p_1[1] = row_0
                     p_1[2] = alti_1
                     b_trouve = True
-                    self.index_to_ter(p_1, point_r)
+                    point_r = self.index_to_ter(p_1)
                     return True, b_trouve, point_r
                 # Positionnement sur le sommet suivant
                 i_0 += 1

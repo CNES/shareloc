@@ -700,7 +700,7 @@ class RPC:
         :param alt: altitude
         :type alt : float
         :return: sensor position (row, col, alt)
-        :rtype numpy.ndarray
+        :rtype tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
         if self.inverse_coefficient:
             if not isinstance(lon, (list, np.ndarray)):

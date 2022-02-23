@@ -674,7 +674,7 @@ class Grid:
         :param nb_iterations : max number of iterations (15 by default)
         :type nb_iterations : int
         :return sensor position (row,col,alt)
-        :rtype tuple (float,float,float)
+        :rtype tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
 
         # Test added for rectification to work

@@ -58,7 +58,7 @@ def test_sensor_triangulation(row, col, h):
     # In this test example we create a match by colocalization of one point.
     grid_right.estimate_inverse_loc_predictor()
     lonlatalt = grid_left.direct_loc_h(row, col, h)
-    inv_row, inv_col, __ = grid_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    inv_row, inv_col, __ = grid_right.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
     # matches are defined as Nx4 array, here N=1
     matches = np.zeros([1, 4])
     matches[0, :] = [col, row, inv_col, inv_row]
@@ -69,9 +69,9 @@ def test_sensor_triangulation(row, col, h):
     logging.info("cartesian coordinates :")
     logging.info(point_ecef)
 
-    assert lonlatalt[0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)
-    assert lonlatalt[1] == pytest.approx(point_wgs84[0, 1], abs=1e-8)
-    assert lonlatalt[2] == pytest.approx(point_wgs84[0, 2], abs=8e-3)
+    assert lonlatalt[0][0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)
+    assert lonlatalt[0][1] == pytest.approx(point_wgs84[0, 1], abs=1e-8)
+    assert lonlatalt[0][2] == pytest.approx(point_wgs84[0, 2], abs=8e-3)
     # residues is approx 0.0 meter here since los intersection is ensured by colocalization
     assert distance == pytest.approx(0.0, abs=1e-3)
 

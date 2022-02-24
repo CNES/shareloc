@@ -167,7 +167,7 @@ class Grid:
             otherwise
         :type fill_nan : boolean
         :return ground position (lon,lat,h)
-        :rtype numpy.ndarray
+        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
         # Vectorization doesn't handle yet altitude as np.ndarray (3D interpolation work).
         # TODO: clean interfaces to remove this part
@@ -202,7 +202,7 @@ class Grid:
         position[:, 0] = alti_coef * vlon[0, :] + (1 - alti_coef) * vlon[1, :]
         position[:, 1] = alti_coef * vlat[0, :] + (1 - alti_coef) * vlat[1, :]
 
-        return np.squeeze(position)
+        return position
 
     def compute_los(self, row, col, epsg):
         """
@@ -240,7 +240,7 @@ class Grid:
         :param dtm : dtm model
         :type dtm  : shareloc.dtm
         :return ground position (lon,lat,h) in dtm coordinates system.
-        :rtype numpy.array
+        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
         if not isinstance(row, (list, np.ndarray)):
             row = np.array([row])
@@ -674,7 +674,7 @@ class Grid:
         :param nb_iterations : max number of iterations (15 by default)
         :type nb_iterations : int
         :return sensor position (row,col,alt)
-        :rtype tuple (float,float,float)
+        :rtype tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
 
         # Test added for rectification to work
@@ -707,8 +707,8 @@ class Grid:
                 # while erreur > seuil:1mm
                 while (erreur_m2 > 1e-6) and (iteration < nb_iterations):
                     position = self.direct_loc_h(row_i, col_i, alt_i)
-                    dlon_microrad = (position[0] - lon_i) * deg2mrad
-                    dlat_microrad = (position[1] - lat_i) * deg2mrad
+                    dlon_microrad = (position[0][0] - lon_i) * deg2mrad
+                    dlat_microrad = (position[0][1] - lat_i) * deg2mrad
                     erreur_m2 = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
                     dsol = np.array([dlon_microrad, dlat_microrad])
                     mat_dp = self.inverse_partial_derivative(row_i, col_i, alt_i)

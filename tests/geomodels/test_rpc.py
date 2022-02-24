@@ -243,9 +243,9 @@ def test_rpc_phrdimap(col, row, alt):
 
     fctrat = RPC.from_dimap(file_dimap)
 
-    (lon, lat, alt) = fctrat.direct_loc_h(row, col, alt)
+    (lonlatalt) = fctrat.direct_loc_h(row, col, alt)
 
-    (row_ar, col_ar, __) = fctrat.inverse_loc(lon, lat, alt)
+    (row_ar, col_ar, __) = fctrat.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
     assert col_ar == pytest.approx(col, abs=2e-2)
     assert row_ar == pytest.approx(row, abs=2e-2)
 
@@ -262,12 +262,12 @@ def test_rpc_direct_inverse_iterative_vs_direct(col, row, alt):
     fctrat = RPC.from_dimap_v1(file_dimap)
 
     # (col,lig,alt)=(100,1000,400)
-    (x_direct, y_direct, __) = fctrat.direct_loc_h(row, col, alt)
+    lonlatalt = fctrat.direct_loc_h(row, col, alt)
     (x_inv, y_inv, __) = fctrat.direct_loc_inverse_iterative(row, col, alt)
     # print("comparaison loc directe RPC / loc inverse RPC iterative""")
     # """Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
-    assert x_direct == pytest.approx(x_inv, abs=10.0 / 111111000)
-    assert y_direct == pytest.approx(y_inv, abs=10.0 / 111111000)
+    assert lonlatalt[0][0] == pytest.approx(x_inv, abs=10.0 / 111111000)
+    assert lonlatalt[0][1] == pytest.approx(y_inv, abs=10.0 / 111111000)
 
 
 def test_rpc_direct_inverse_iterative_vs_direct_multiple_points():
@@ -351,11 +351,11 @@ def test_rpc_direct_inverse_iterative(col, row, alt):
 
     fctrat = RPC.from_dimap_v1(file_dimap)
 
-    (lon, lat, __) = fctrat.direct_loc_h(row, col, alt)
-    (row_inv, col_inv, __) = fctrat.inverse_loc(lon, lat, alt)
+    lonlatalt = fctrat.direct_loc_h(row, col, alt)
+    (row_inv, col_inv, __) = fctrat.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
     (lon_iter, lat_iter, __) = fctrat.direct_loc_inverse_iterative(row_inv, col_inv, alt)
-    assert lon == lon_iter
-    assert lat == lat_iter
+    assert lonlatalt[0][0] == lon_iter
+    assert lonlatalt[0][1] == lat_iter
 
 
 @pytest.mark.parametrize(

@@ -207,9 +207,9 @@ def test_sensor_loc_dir_h(col, row, h, valid_lon, valid_lat, valid_alt):
     lonlatalt = loc.direct(row, col, h)
 
     assert gri.epsg == 4269
-    assert valid_lon == pytest.approx(lonlatalt[0], abs=1e-12)
-    assert valid_lat == pytest.approx(lonlatalt[1], abs=1e-12)
-    assert valid_alt == pytest.approx(lonlatalt[2], abs=1e-8)
+    assert valid_lon == pytest.approx(lonlatalt[0][0], abs=1e-12)
+    assert valid_lat == pytest.approx(lonlatalt[0][1], abs=1e-12)
+    assert valid_alt == pytest.approx(lonlatalt[0][2], abs=1e-8)
 
 
 @pytest.mark.unit_tests
@@ -301,9 +301,9 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     loc_rpc = Localization(fctrat)
     lonlatalt_rpc = loc_rpc.direct(row, col, h)
 
-    diff_lon = lonlatalt[0] - lonlatalt_rpc[0]
-    diff_lat = lonlatalt[1] - lonlatalt_rpc[1]
-    diff_alt = lonlatalt[2] - lonlatalt_rpc[2]
+    diff_lon = lonlatalt[0][0] - lonlatalt_rpc[0][0]
+    diff_lat = lonlatalt[0][1] - lonlatalt_rpc[0][1]
+    diff_alt = lonlatalt[0][2] - lonlatalt_rpc[0][2]
     assert diff_lon == pytest.approx(0.0, abs=1e-7)
     assert diff_lat == pytest.approx(0.0, abs=1e-7)
     assert diff_alt == pytest.approx(0.0, abs=1e-7)
@@ -479,8 +479,8 @@ def test_loc_dir_loc_inv(row, col, h):
     ___, gri = prepare_loc()
     # init des predicteurs
     gri.estimate_inverse_loc_predictor()
-    (lon, lat, alt) = gri.direct_loc_h(row, col, h)
-    inv_row, inv_col, h = gri.inverse_loc(lon, lat, alt)
+    lonlatalt = gri.direct_loc_h(row, col, h)
+    inv_row, inv_col, h = gri.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
 
     assert row == pytest.approx(inv_row, abs=1e-2)
     assert col == pytest.approx(inv_col, abs=1e-2)
@@ -508,7 +508,7 @@ def test_loc_dir_loc_inv_rpc(id_scene, rpc, row, col, h):
     fichier_dimap = os.path.join(data_folder, "rpc", rpc)
 
     fctrat = RPC.from_any(fichier_dimap, topleftconvention=True)
-    (inv_row, inv_col, __) = fctrat.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    (inv_row, inv_col, __) = fctrat.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
     assert row == pytest.approx(inv_row, abs=1e-2)
     assert col == pytest.approx(inv_col, abs=1e-2)
 
@@ -542,7 +542,7 @@ def test_loc_dir_loc_inv_couple(lig, col, h):
     # init des predicteurs
     gri_right.estimate_inverse_loc_predictor()
     lonlatalt = gri_left.direct_loc_h(lig, col, h)
-    inv_lig, inv_col, __ = gri_right.inverse_loc(lonlatalt[0], lonlatalt[1], lonlatalt[2])
+    inv_lig, inv_col, __ = gri_right.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
 
     print(f"lig {inv_lig} col {inv_col}")
     # assert(lig == pytest.approx(inv_lig,abs=1e-2))
@@ -593,7 +593,7 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     loc_left = Localization(geom_model_left, elevation=None, image=image_left)
     lonlath = loc_left.direct(row_phys, col_phys, h)
     loc_right = Localization(geom_model_right, elevation=None, image=image_right)
-    row_inv, col_inv, h = loc_right.inverse(lonlath[0], lonlath[1], lonlath[2])
+    row_inv, col_inv, h = loc_right.inverse(lonlath[0][0], lonlath[0][1], lonlath[0][2])
     origin_right = [5162.0, 4915.0]
     pix_size_right = [0.5, 0.5]
     row_index = (row_inv - origin_right[0]) / pix_size_right[0] - 0.5

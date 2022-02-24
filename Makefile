@@ -99,4 +99,4 @@ clean: ## clean: remove all generated files: venv, cache, ...
 	@rm -rf docs/build/
 	@rm -rf tmp.*
 	@rm -rf tmp/
-	@rm -rf .ipynb_checkpoints/
+	@find . -type d -name '.ipynb_checkpoints' | xargs rm -rf

@@ -5,7 +5,7 @@
 
 <h4>Shareloc, a simple remote sensing geometric library</h4>
 
-[![Python](https://img.shields.io/badge/python-v3.6+-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![Python](https://img.shields.io/badge/python-v3.7+-blue.svg)](https://www.python.org/downloads/release/python-370/)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0/)
 [![Documentation](https://readthedocs.org/projects/shareloc/badge/?version=latest)](https://shareloc.readthedocs.io/?badge=latest)

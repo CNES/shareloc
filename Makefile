@@ -36,17 +36,13 @@ venv: ## create virtualenv in "venv" dir if not exists
 	@touch ${VENV}/bin/activate
 
 install: venv ## install shareloc in dev mode
-	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[dev]
+	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[dev,doc]
 	@test -f .git/hooks/pre-commit || echo "  Install pre-commit hook"
 	@test -f .git/hooks/pre-commit || ${VENV}/bin/pre-commit install -t pre-commit
 	@echo "Shareloc ${SHARELOC_VERSION} installed in dev mode in virtualenv ${VENV}"
 	@echo "Shareloc venv usage : source ${VENV}/bin/activate; python3 -c 'import shareloc'"
 
-install-doc: install  ## install shareloc with Sphinx documentation dependencies
-	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[doc]
-	@echo "Shareloc ${SHARELOC_VERSION} in virtualenv ${ENV} installed with Sphinx docs dependencies"
-
-doc: install-doc ## build sphinx documentation
+doc: install ## build sphinx documentation
 	@${VENV}/bin/sphinx-build -M clean docs/source/ docs/build
 	# @${VENV}/bin/sphinx-apidoc -o docs/source/apidoc/ shareloc
 	@${VENV}/bin/sphinx-build -M html docs/source/ docs/build

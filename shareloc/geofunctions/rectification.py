@@ -125,12 +125,14 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, e
     # Only one point, expand the shape of the array
     if len(left_point.shape) == 1:
         left_point = np.expand_dims(left_point, axis=0)
+
     # Right correspondent of the left coordinates
     right_corr = np.zeros((left_point.shape[0], 3))
     right_corr[:, 0], right_corr[:, 1], right_corr[:, 2] = coloc(
         geom_model_left, geom_model_right, left_point[:, 0], left_point[:, 1], elevation
     )
     ground_elev = np.array(right_corr[:, 2])
+
     # Find the beginning of the epipolar line in the left image, using right correspondent at lower elevation
     right_corr[:, 2] = ground_elev - elevation_offset
     epi_line_start = np.zeros((left_point.shape[0], 3))
@@ -251,7 +253,7 @@ def get_epipolar_extent(
     left_im, geom_model_left, geom_model_right, elevation=0.0, epi_step=30.0, elevation_offset=50.0, margin=0.0
 ):
     """
-    return epipolar footprint using reprojetion of epipolar geomeztry in left image.
+    return epipolar footprint using reprojection of epipolar geometry in left image.
 
     :param left_im: left image
     :type left_im: shareloc.image object
@@ -296,6 +298,7 @@ def initialize_grids(epi_step, nb_row, nb_col):
     """
     # Initialize left and right epipolar grids
     left_grid = Image(image_path=None)
+
     # Convention :
     # | col pixel size, row rotation , origin col upper-left|
     # | col rotation,   row pixel size,  , origin row upper-left|

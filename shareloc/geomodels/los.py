@@ -35,7 +35,8 @@ class LOS:
 
     def __init__(self, sensor_positions, geometrical_model, alt_min_max=None, fill_nan=False):
         """
-        Constructor
+        LOS Constructor
+
         :param sensor_positions: sensor_positions
         :type sensor_positions: numpy array (Nx2)
         :param geometrical_model: geometrical model
@@ -54,6 +55,7 @@ class LOS:
     def los_creation(self, alt_min_max, fill_nan=False):
         """
         create los from extrema : los starting point, and normalized viewing vector
+
         :param alt_min_max: min/max  altitude to compute los, if None model min/max will be used
         :type alt_min_max : list
         """
@@ -62,7 +64,7 @@ class LOS:
         if alt_min_max is None:
             alt_min, alt_max = self.geometrical_model.get_alt_min_max()
 
-        # los construction right
+        # LOS construction right
         los_extrema = np.zeros([2 * self.los_nb, 3])
         list_col, list_row = (self.sensors_positions[:, 0], self.sensors_positions[:, 1])
         los_extrema[np.arange(0, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(
@@ -87,6 +89,8 @@ class LOS:
     def get_sis(self):
         """
         returns los hat
+        TODO: not used. Use python property instead
+
         :return sis
         :rtype numpy array
         """
@@ -95,6 +99,8 @@ class LOS:
     def get_vis(self):
         """
         returns los viewing vector
+        TODO: not used. Use python property instead
+
         :return vis
         :rtype numpy array
         """

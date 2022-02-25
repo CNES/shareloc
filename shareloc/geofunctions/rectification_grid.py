@@ -30,13 +30,15 @@ from scipy import interpolate
 
 
 class RectificationGrid:
-    """rectification grid"""
+    """
+    Rectification grid
+    """
 
     def __init__(self, grid_filename):
         """
         Constructor
-        :param grid_filename: grid filename
-        :type grid_filename: string
+        :param filename: grid filename
+        :type filename: string
         """
         self.filename = grid_filename
 
@@ -46,7 +48,7 @@ class RectificationGrid:
         step_col = transform[0]
         step_row = transform[4]
         # 0 or 0.5
-        [ori_col, ori_row] = transform * (0.5, 0.5)  # positions au centre pixel
+        [ori_col, ori_row] = transform * (0.5, 0.5)  # center pixel position
 
         # print("ori {} {} step {} {}".format(ori_col,ori_y,step_x,step_y))
         last_col = ori_col + step_col * dataset.width
@@ -66,6 +68,7 @@ class RectificationGrid:
     def get_positions(self):
         """
         return grid positions
+
         :return grid positions
         :rtype  numpy array, numpy array
         """
@@ -74,6 +77,7 @@ class RectificationGrid:
     def interpolate(self, positions):
         """
         interpolate position
+
         :param positions : positions to interpolate : array  Nx2 [col,row]
         :type positions: np.array
         :return interpolated positions : array  Nx2 [col,row]

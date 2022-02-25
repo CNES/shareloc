@@ -68,18 +68,19 @@ def sensor_triangulation(
     :return intersections in cartesian crs, intersections in wgs84 crs and optionnaly residues
     :rtype (numpy.array,numpy,array,numpy.array)
     """
-    # los construction
+    # LOS instantiation
     matches_left = matches[:, 0:2]
     left_los = LOS(matches_left, geometrical_model_left, left_min_max, fill_nan)
     matches_right = matches[:, 2:4]
     right_los = LOS(matches_right, geometrical_model_right, right_min_max, fill_nan)
 
-    # los conversion
-    # los intersection
+    # LOS conversion
+    # LOS intersection
     intersections_ecef = los_triangulation(left_los, right_los)
     in_crs = 4978
     out_crs = 4326
     intersections_wgs84 = coordinates_conversion(intersections_ecef, in_crs, out_crs)
+
     # refine matches
     intersections_residues = None
     if residues is True:
@@ -89,8 +90,8 @@ def sensor_triangulation(
 
 def distance_point_los(los, points):
     """
-    distance between points and los
-    norm of cross prodcut between vector defined by los sis and point and los vis
+    distance between points and LOS
+    norm of cross prodcut between vector defined by LOS sis and point and LOS vis
 
     :param los :  line of sight
     :type los : shareloc.los
@@ -109,7 +110,7 @@ def distance_point_los(los, points):
 
 def los_triangulation(left_los, right_los):
     """
-    los triangulation
+    LOS triangulation
 
     :param left_los :  left los
     :type left_los : shareloc.los
@@ -224,6 +225,7 @@ def epipolar_triangulation(
     # interpolate left
     rectif_grid_left = RectificationGrid(grid_left)
     rectif_grid_right = RectificationGrid(grid_right)
+
     # interpolate_right
     matches_sensor_left = rectif_grid_left.interpolate(epi_pos_left)
     matches_sensor_right = rectif_grid_right.interpolate(epi_pos_right)
@@ -241,4 +243,5 @@ def epipolar_triangulation(
     intersections_ecef_masked[values_ok, :] = intersections_ecef
     intersections_wgs84_masked[values_ok, :] = intersections_wgs84
     intersections_residues_masked[values_ok, 0] = intersections_residues
+
     return intersections_ecef_masked, intersections_wgs84_masked, intersections_residues_masked

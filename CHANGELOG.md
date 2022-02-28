@@ -15,7 +15,7 @@ A new section Unreleased is opened then for next dev phase.
 ### Fixed
 
 
-## 0.1.0 First Open Source Official Release (March 2022)
+## 0.1.1 First Open Source Official Release (March 2022)
 
 ### Added
 - Shareloc library first release

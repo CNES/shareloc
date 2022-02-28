@@ -14,7 +14,6 @@
   <a href="#overview">Overview</a> .
   <a href="#why-shareloc">Why Shareloc</a> .
   <a href="#quick-start">Quick Start</a> .
-  <a href="#main-functions">Main Functions</a> .
   <a href="#documentation">Documentation</a> .
   <a href="#contribution">Contribution</a> .
 </p>
@@ -70,10 +69,6 @@ source venv/bin/activate # to go in installed dev environment
 ```
 
 Dependencies : **git**, **make**
-
-### Example
-
-Shareloc is designed as a library. Please refer the [notebook directory](notebooks) for examples. 
 
 ## Documentation
 

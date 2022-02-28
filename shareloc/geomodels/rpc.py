@@ -237,8 +237,6 @@ class RPC:
         self.colmax = self.offset_col + self.scale_col
         self.row0 = self.offset_row - self.scale_row
         self.rowmax = self.offset_row + self.scale_row
-        # logging.info("col %s %s",self.col0,self.colmax)
-        # logging.info("row %s %s",self.row0,self.rowmax)
 
     @classmethod
     def from_dimap(cls, dimap_filepath, topleftconvention=True):

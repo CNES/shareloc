@@ -216,9 +216,6 @@ def epipolar_triangulation(
         values_ok = np.full((matches.shape[0]), True, dtype=bool)
     elif matches_type == "disp":
         [epi_pos_left, epi_pos_right, values_ok] = transform_disp_to_matches(matches, mask)
-        # epi_pos_left = matches[:,0:2]
-        # epi_disp_right= matches[:,2:4]
-
     else:
         raise Exception("matches type should be sift or disp")
 

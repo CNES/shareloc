@@ -41,23 +41,32 @@ def test_dtm_fillnodata():
     """
     Test dtm image fillnodata
     """
+    # Set test data SRTM dtm path
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+
     my_image_with_nodata = DTMImage(dtm_file, read_data=True, fill_nodata=None)
     nodata_index = np.argwhere(my_image_with_nodata.mask == 0)[0]
     assert my_image_with_nodata.data[nodata_index[0], nodata_index[1]] == -32768
+
     my_image_rio_fillnodata = DTMImage(dtm_file, read_data=True, fill_nodata="rio_fillnodata")
     assert my_image_rio_fillnodata.data[nodata_index[0], nodata_index[1]] == 783
+
     my_image_mean = DTMImage(dtm_file, read_data=True, fill_nodata="mean")
     assert my_image_mean.data[nodata_index[0], nodata_index[1]] == 872
+
     my_image_min = DTMImage(dtm_file, read_data=True, fill_nodata="min")
     assert my_image_min.data[nodata_index[0], nodata_index[1]] == 32
+
     my_image_max = DTMImage(dtm_file, read_data=True, fill_nodata="max")
     assert my_image_max.data[nodata_index[0], nodata_index[1]] == 2757
+
     my_image_median = DTMImage(dtm_file, read_data=True, fill_nodata="median")
     assert my_image_median.data[nodata_index[0], nodata_index[1]] == 840
+
     my_image_constant = DTMImage(dtm_file, read_data=True, fill_nodata="constant", fill_value=100.0)
     assert my_image_constant.data[nodata_index[0], nodata_index[1]] == 100.0
 
+    # Set test data with hole in srtm
     dtm_file_srtm_hole = os.path.join(data_path(), "dtm", "srtm_ventoux", "N44E005_big_hole.tif")
     my_image_fill_hole = DTMImage(dtm_file_srtm_hole, read_data=True, fill_nodata="rio_fillnodata")
     assert my_image_fill_hole.data[403, 1119] == 32

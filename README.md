@@ -1,4 +1,3 @@
-
  
 <div align="center">
   <a href="https://github.com/CNES/shareloc"><img src="docs/source/images/shareloc_picto.svg" alt="Shareloc" title="Shareloc"  width="20%"></a>
@@ -55,7 +54,8 @@ Shareloc can be installed in a [virtualenv](https://docs.python.org/3/library/ve
 
 ```
 python -m venv venv
-source venv
+source venv/bin/activate
+pip install --upgrade pip
 pip install shareloc
 ```
 
@@ -70,9 +70,21 @@ source venv/bin/activate # to go in installed dev environment
 
 Dependencies : **git**, **make**
 
+### Import
+
+To test the import of the library:
+
+```
+python3
+>>> import shareloc
+```
+
+And go to [Getting started](https://shareloc.readthedocs.io/en/latest/getting_started.html) in [Shareloc Documentation](https://shareloc.readthedocs.io/) for an example.
+
+
 ## Documentation
 
-Go to [Shareloc Main Documentation](https://shareloc.readthedocs.io/?badge=latest)  
+Go to [Shareloc Main Documentation](https://shareloc.readthedocs.io/)  
 
 ## Contribution
 

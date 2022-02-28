@@ -36,26 +36,21 @@ venv: ## create virtualenv in "venv" dir if not exists
 	@touch ${VENV}/bin/activate
 
 install: venv ## install shareloc in dev mode
-	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[dev]
+	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install -e .[dev,doc,notebook]
 	@test -f .git/hooks/pre-commit || echo "  Install pre-commit hook"
 	@test -f .git/hooks/pre-commit || ${VENV}/bin/pre-commit install -t pre-commit
 	@echo "Shareloc ${SHARELOC_VERSION} installed in dev mode in virtualenv ${VENV}"
 	@echo "Shareloc venv usage : source ${VENV}/bin/activate; python3 -c 'import shareloc'"
 
-install-doc: install  ## install shareloc with Sphinx documentation dependencies
-	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/pip install --verbose -e .[doc]
-	@echo "Shareloc ${SHARELOC_VERSION} in virtualenv ${ENV} installed with Sphinx docs dependencies"
-
-doc: install-doc ## build sphinx documentation
+doc: install ## build sphinx documentation (depends install)
 	@${VENV}/bin/sphinx-build -M clean docs/source/ docs/build
 	# @${VENV}/bin/sphinx-apidoc -o docs/source/apidoc/ shareloc
 	@${VENV}/bin/sphinx-build -M html docs/source/ docs/build
 
-
-test: install ## run all tests + coverage html
+test: install ## run all tests + coverage html (depends install)
 	@${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --cov-config=.coveragerc --cov-report html --cov
 
-test-ci: install ## run all + coverage for ci to sonarqube
+test-ci: install ## run all + coverage for ci to sonarqube (depends install)
 	@${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --junitxml=pytest-report.xml --cov-config=.coveragerc --cov-report xml --cov
 
 lint: install ## run lint tools (depends install)
@@ -72,13 +67,13 @@ format: install  ## run black and isort formatting (depends install)
 	@${VENV}/bin/isort shareloc tests
 	@${VENV}/bin/black shareloc tests
 
-notebook: install ## Install Jupyter notebook kernel with venv and shareloc install
+notebook: install ## install Jupyter notebook kernel with venv and shareloc install
 	@echo "Install Jupyter Kernel and launch Jupyter notebooks environment"
 	@${VENV}/bin/python -m ipykernel install --sys-prefix --name=shareloc-$(VENV) --display-name=shareloc-$(SHARELOC_VERSION)
 	@echo "--> After Shareloc virtualenv activation, please use following command to launch local jupyter notebook to open Shareloc Notebooks:"
 	@echo "jupyter notebook"
 
-clean: ## clean: remove all generated files: venv, cache, ...
+clean: ## remove all generated files: venv, cache, ...
 	@find . -type f -name '*.pyc' -delete
 	@find . -type d -name '__pycache__' | xargs rm -rf
 	@rm -rf .eggs/

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).

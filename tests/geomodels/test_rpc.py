@@ -264,8 +264,9 @@ def test_rpc_direct_inverse_iterative_vs_direct(col, row, alt):
     # (col,lig,alt)=(100,1000,400)
     lonlatalt = fctrat.direct_loc_h(row, col, alt)
     (x_inv, y_inv, __) = fctrat.direct_loc_inverse_iterative(row, col, alt)
-    # print("comparaison loc directe RPC / loc inverse RPC iterative""")
-    # """Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
+
+    #  Comparison direct loc RPC / inverse loc RPC iterative
+    # The errors observed are due to the differences between loc dir and loc inv RPC
     assert lonlatalt[0][0] == pytest.approx(x_inv, abs=10.0 / 111111000)
     assert lonlatalt[0][1] == pytest.approx(y_inv, abs=10.0 / 111111000)
 
@@ -285,8 +286,9 @@ def test_rpc_direct_inverse_iterative_vs_direct_multiple_points():
     (rowinv, colinv, __) = fctrat.inverse_loc(p_direct[:, 0], p_direct[:, 1], alt)
     p_direct_iterative = fctrat.direct_loc_inverse_iterative(rowinv, colinv, alt)
 
-    # print("comparaison loc directe RPC / loc inverse RPC iterative""")
-    # """Les erreurs constates sont dus aux differences entre loc dir et loc inv RPC"""
+    # Comparison direct loc RPC / inverse loc RPC iterative
+    # The errors observed are due to the differences between loc dir and loc inv RPC
+
     # Point error col = 600, row = 200
     assert p_direct[0, 0] == p_direct_iterative[0][0]
     assert p_direct[0, 1] == p_direct_iterative[1][0]
@@ -318,7 +320,7 @@ def test_rpc_direct_iterative_all_nan():
     """
     test iterative direct localization with all nan
     """
-    # comparasion between tabs en tab containing Nan cf. issue #46
+    # comparison between tabs en tab containing Nan cf. issue #46
     data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")

@@ -134,8 +134,9 @@ class RPC:
             self.datum = "ellipsoid"
 
         self.lim_extrapol = 1.0001
-        # chaque mononome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
-        ordre_monomes_lai = [
+
+        # Each monome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
+        monomes_order = [
             [1, 0, 0, 0],
             [1, 1, 0, 0],
             [1, 0, 1, 0],
@@ -158,9 +159,9 @@ class RPC:
             [1, 0, 0, 3],
         ]
 
-        self.monomes = np.array(ordre_monomes_lai)
+        self.monomes = np.array(monomes_order)
 
-        # coefficient des degres monomes avec derivation 1ere variable
+        # coefficient of monome degrees with 1st variable derivation
         self.monomes_deriv_1 = np.array(
             [
                 [0, 0, 0, 0],
@@ -186,7 +187,7 @@ class RPC:
             ]
         )
 
-        # coefficient des degres monomes avec derivation 1ere variable
+        # coefficient of monome degrees with 2nd variable derivation
         self.monomes_deriv_2 = np.array(
             [
                 [0, 0, 0, 0],
@@ -241,7 +242,9 @@ class RPC:
 
     @classmethod
     def from_dimap(cls, dimap_filepath, topleftconvention=True):
-        """load from dimap
+        """
+        Load from Dimap
+
         param dimap_filepath  : dimap xml file
         :type dimap_filepath  : str
         :param topleftconvention  : [0,0] position
@@ -262,7 +265,9 @@ class RPC:
 
     @classmethod
     def from_dimap_v2(cls, dimap_filepath, topleftconvention=True):
-        """load from dimap  v2
+        """
+        Load from Dimap v2
+
         :param dimap_filepath  : dimap xml file
         :type dimap_filepath  : str
         :param topleftconvention  : [0,0] position
@@ -336,7 +341,9 @@ class RPC:
 
     @classmethod
     def from_dimap_v1(cls, dimap_filepath, topleftconvention=True):
-        """load from dimap  v1
+        """
+        Load from dimap v1
+
         :param dimap_filepath  : dimap xml file
         :type dimap_filepath  : str
         :param topleftconvention  : [0,0] position
@@ -400,7 +407,9 @@ class RPC:
 
     @classmethod
     def from_geotiff(cls, image_filename, topleftconvention=True):
-        """Load from a  geotiff image file
+        """
+        Load from a  geotiff image file
+
         :param image_filename  : image filename
         :type image_filename  : str
         :param topleftconvention  : [0,0] position
@@ -443,7 +452,9 @@ class RPC:
 
     @classmethod
     def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=True):
-        """Load from a geom file
+        """
+        Load from a geom file
+
         :param topleftconvention  : [0,0] position
         :type topleftconvention  : boolean
         If False : [0,0] is at the center of the Top Left pixel
@@ -501,7 +512,9 @@ class RPC:
 
     @classmethod
     def from_any(cls, primary_file, topleftconvention=True):
-        """load from any RPC (auto identify driver)
+        """
+        Load from any RPC (auto identify driver)
+
         :param primary_file  : rpc filename (dimap, ossim kwl, geotiff)
         :type primary_file  : str
         :param topleftconvention  : [0,0] position
@@ -524,40 +537,10 @@ class RPC:
             return cls.from_geotiff(primary_file, topleftconvention)
         raise ValueError("can not read rpc file")
 
-    def calcule_derivees_inv(self, lon, lat, alt):
-        """calcul analytiques des derivees partielles de la loc inverse
-        DCdx: derivee de loc_inv_C p/r a X
-        DLdy: derivee de loc_inv_L p/r a Y
-        """
-        if not isinstance(alt, (list, np.ndarray)):
-            alt = np.array([alt])
-
-        if alt.shape[0] != lon.shape[0]:
-            alt = np.full(lon.shape[0], fill_value=alt[0])
-
-        lon_norm = (lon - self.offset_x) / self.scale_x
-        lat_norm = (lat - self.offset_y) / self.scale_y
-        alt_norm = (alt - self.offset_alt) / self.scale_alt
-
-        dcol_dlon, dcol_dlat, drow_dlon, drow_dlat = calcule_derivees_inv_numba(
-            lon_norm,
-            lat_norm,
-            alt_norm,
-            self.num_col,
-            self.den_col,
-            self.num_row,
-            self.den_row,
-            self.scale_col,
-            self.scale_x,
-            self.scale_row,
-            self.scale_y,
-        )
-
-        return (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat)
-
     def direct_loc_h(self, row, col, alt, fill_nan=False):
         """
         direct localization at constant altitude
+
         :param row :  line sensor position
         :type row : float or 1D numpy.ndarray dtype=float64
         :param col :  column sensor position
@@ -622,8 +605,10 @@ class RPC:
         return points
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
-        """calcule une grille de loc directe a partir des RPC directs
-        direct localization  grid at constant altitude
+        """
+        calculates a direct loc grid (lat, lon) from the direct RPCs at constant altitude
+        TODO: not tested.
+
         :param row0 :  grid origin (row)
         :type row0 : int
         :param col0 :  grid origin (col)
@@ -638,8 +623,8 @@ class RPC:
         :type nbcol : int
         :param alt : altitude of the grid
         :type alt  : float
-        :return direct localization grid
-        :rtype numpy.array
+        :return: direct localization grid longitude and latitude
+        :rtype Tuple(numpy.array, numpy.array)
         """
         gri_lon = np.zeros((nbrow, nbcol))
         gri_lat = np.zeros((nbrow, nbcol))
@@ -653,12 +638,13 @@ class RPC:
     def direct_loc_dtm(self, row, col, dtm):
         """
         direct localization on dtm
+
         :param row :  line sensor position
         :type row : float
         :param col :  column sensor position
         :type col : float
-        :param dtm : dtm model
-        :type dtm  : shareloc.dtm
+        :param dtm : dtm intersection model
+        :type dtm  : shareloc.geofunctions.dtm_intersection
         :return ground position (lon,lat,h) in dtm coordinates system
         :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
@@ -775,6 +761,42 @@ class RPC:
 
         return filter_nan, x_out, y_out
 
+    def compute_loc_inverse_derivates(self, lon, lat, alt):
+        """
+        Inverse loc partial derivatives analytical compute
+
+        :param lon: longitude coordinate
+        :param lat: latitude coordinate
+        :param alt: altitude coordinate
+        :return: partials derivatives of inverse localization
+        :rtype: Tuple(dcol_dlon np.array, dcol_dlat np.array, drow_dlon np.array, drow_dlat np.array)
+        """
+        if not isinstance(alt, (list, np.ndarray)):
+            alt = np.array([alt])
+
+        if alt.shape[0] != lon.shape[0]:
+            alt = np.full(lon.shape[0], fill_value=alt[0])
+
+        lon_norm = (lon - self.offset_x) / self.scale_x
+        lat_norm = (lat - self.offset_y) / self.scale_y
+        alt_norm = (alt - self.offset_alt) / self.scale_alt
+
+        dcol_dlon, dcol_dlat, drow_dlon, drow_dlat = compute_loc_inverse_derivates_numba(
+            lon_norm,
+            lat_norm,
+            alt_norm,
+            self.num_col,
+            self.den_col,
+            self.num_row,
+            self.den_row,
+            self.scale_col,
+            self.scale_x,
+            self.scale_row,
+            self.scale_y,
+        )
+
+        return (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat)
+
     def direct_loc_inverse_iterative(self, row, col, alt, nb_iter_max=10, fill_nan=False):
         """
         Iterative direct localization using inverse RPC
@@ -835,7 +857,7 @@ class RPC:
                 iter_ = np.where((abs(delta_col) > eps) | (abs(delta_row) > eps))[0]
 
                 # partial derivatives
-                (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = self.calcule_derivees_inv(
+                (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = self.compute_loc_inverse_derivates(
                     lon[iter_], lat[iter_], alt[iter_]
                 )
                 det = dcol_dlon * drow_dlat - drow_dlon * dcol_dlat
@@ -1109,7 +1131,7 @@ def derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, coeff):
     cache=True,
     fastmath=True,
 )
-def calcule_derivees_inv_numba(
+def compute_loc_inverse_derivates_numba(
     lon_norm, lat_norm, alt_norm, num_col, den_col, num_lin, den_lin, scale_col, scale_lon, scale_lin, scale_lat
 ):
     """

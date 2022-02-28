@@ -51,7 +51,7 @@ def test_localize_direct_rpc():
     Test direct localization using image indexing and RPC model
     """
 
-    # we wants to localize the first pixel center of phr_ventoux left image
+    # we want to localize the first pixel center of phr_ventoux left image
     row = 0
     col = 0
 
@@ -88,7 +88,7 @@ def test_localize_direct_grid():
     Test direct localization using image indexing and grid model
     """
 
-    # we wants to localize the first pixel center of phr_ventoux left image
+    # we want to localize the first pixel center of phr_ventoux left image
     row = 0
     col = 0
 
@@ -434,7 +434,7 @@ def test_pred_loc_inv(
     """
     Test inverse localization
     """
-    # init des predicteurs
+    # init predictors
     ___, gri = prepare_loc()
     gri.estimate_inverse_loc_predictor()
 
@@ -477,7 +477,7 @@ def test_loc_dir_loc_inv(row, col, h):
     Test direct localization followed by inverse one
     """
     ___, gri = prepare_loc()
-    # init des predicteurs
+    # init predictors
     gri.estimate_inverse_loc_predictor()
     lonlatalt = gri.direct_loc_h(row, col, h)
     inv_row, inv_col, h = gri.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
@@ -500,7 +500,7 @@ def test_loc_dir_loc_inv_rpc(id_scene, rpc, row, col, h):
     Test direct localization followed by inverse one
     """
     ___, gri = prepare_loc("ellipsoide", id_scene)
-    # init des predicteurs
+    # init predictors
     gri.estimate_inverse_loc_predictor()
     lonlatalt = gri.direct_loc_h(row, col, h)
 
@@ -539,7 +539,7 @@ def test_loc_dir_loc_inv_couple(lig, col, h):
     ___, gri_right = prepare_loc("ellipsoide", id_scene_right)
     id_scene_left = "P1BP--2017092838284574CP"
     ___, gri_left = prepare_loc("ellipsoide", id_scene_left)
-    # init des predicteurs
+    # init predictors
     gri_right.estimate_inverse_loc_predictor()
     lonlatalt = gri_left.direct_loc_h(lig, col, h)
     inv_lig, inv_col, __ = gri_right.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])

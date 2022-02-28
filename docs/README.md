@@ -19,10 +19,10 @@ Shareloc installation with Sphinx dependencies
 
 First, create a virtualenv and install Shareloc following [Shareloc Installation](./docs/source/install.rst)
 
-You can use the following command line at CARS root directory:
+You can use the following command line at Shareloc root directory:
 
 ```
-make install-doc
+make install
 ```
 
 This installs Shareloc in a virtualenv with sphinx documentation dependencies using : `pip install .[doc]`  

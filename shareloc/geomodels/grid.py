@@ -38,7 +38,10 @@ from shareloc.proj_utils import coordinates_conversion
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
 class Grid:
-    """multi H direct localization grid handling class. please refers documentation regarding grid format
+    """
+    multi H direct localization grid handling class.
+    please refers to the main documentation grid format
+
     :param filename: grid path
     :type filename: str
     :param row0: grid first pixel center along Y axis (row).
@@ -70,7 +73,7 @@ class Grid:
     :param alts_down: altitudes in decreasing order
     :type alts_down: list
     :param type: geometric model type
-    :type tpye: str
+    :type type: str
     """
 
     def __init__(self, grid_filename):
@@ -88,8 +91,8 @@ class Grid:
         self.stepcol = None
         self.repter = None
         self.nbalt = None
-        self.lon_data = None  #: longitude array
-        self.lat_data = None  #: latitude array
+        self.lon_data = None  # longitude array
+        self.lat_data = None  # latitude array
         self.alts_down = None
         self.rowmax = None
         self.colmax = None
@@ -110,7 +113,7 @@ class Grid:
         grid_image = Image(self.filename, read_data=True)
         if grid_image.dataset.driver != "GTiff":
             raise Exception(
-                "Only Geotiff grids are accepted. Please refers the documentation for grid supported format."
+                "Only Geotiff grids are accepted. Please refer to the documentation for grid supported format."
             )
         metadata = grid_image.dataset.tags()
         self.nbalt = int(grid_image.dataset.count / 2)
@@ -134,6 +137,7 @@ class Grid:
     def parse_metadata_alti(self, metadata):
         """
         parse metadata to sort altitude in decreasing order
+
         :param metadata :  Geotiff metadata
         :type metadata : dict
         """
@@ -149,6 +153,7 @@ class Grid:
     def get_alt_min_max(self):
         """
         returns altitudes min and max layers
+
         :return alt_min,lat_max
         :rtype list
         """
@@ -157,6 +162,7 @@ class Grid:
     def direct_loc_h(self, row, col, alt, fill_nan=False):
         """
         direct localization at constant altitude
+
         :param row :  line sensor position
         :type row : float or 1D numpy.ndarray dtype=float64
         :param col :  column sensor position
@@ -206,7 +212,8 @@ class Grid:
 
     def compute_los(self, row, col, epsg):
         """
-        compute los
+        Compute Line of Sight
+
         :param row :  line sensor position
         :type row : float
         :param col :  column sensor position
@@ -256,7 +263,7 @@ class Grid:
             if position_cube is not None:
                 (__, __, points_dtm[point_index, :]) = dtm.intersection(los, position_cube, alti)
             else:
-                logging.warning("los doesn't instersect DTM cube")
+                logging.warning("LOS doesn't instersect DTM cube")
                 points_dtm[point_index, :] = np.full(3, fill_value=np.nan)
         return points_dtm
 
@@ -315,7 +322,8 @@ class Grid:
 
         lon_data = np.zeros((nbalt, nbrow, nbcol))
         lat_data = np.zeros((nbalt, nbrow, nbcol))
-        # """genere un cube de visee interpole de nrow/ncol visee"""
+
+        # generates an interpolated direction cube of nrow/ncol directions
         # row_max = self.row0 + self.steprow * (self.nbrow-1)
         # col_max = self.col0 + self.stepcol * (self.nbcol-1)
 
@@ -370,28 +378,31 @@ class Grid:
     def return_grid_index(self, alt):
         """
         return layer index enclosing a given altitude
+
         :param alt :  altitude
         :type alt : float
         :return grid index (up,down)
         :rtype tuple
         """
         if alt > self.alts_down[0]:
-            (indicehaut, indicebas) = (0, 0)
+            (high_index, low_index) = (0, 0)
         elif alt < self.alts_down[-1]:
-            (indicehaut, indicebas) = (self.nbalt - 1, self.nbalt - 1)
+            (high_index, low_index) = (self.nbalt - 1, self.nbalt - 1)
         else:
             i = 0
             while i < self.nbalt and self.alts_down[i] >= alt:
                 i += 1
-            if i == self.nbalt:  # pour gerer alt min
+            if i == self.nbalt:  # to handle alt min
                 i = self.nbalt - 1
-            indicebas = i  # indice grille bas
-            indicehaut = i - 1  # indice grille haut
-        return (indicehaut, indicebas)
+            low_index = i  # grid low index
+            high_index = i - 1  # grid high index
+        return (high_index, low_index)
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
         """
         direct localization  grid at constant altitude
+        TODO: not tested.
+
         :param row0 :  grid origin (row)
         :type row0 : int
         :param col0 :  grid origin (col)
@@ -537,33 +548,34 @@ class Grid:
     def inverse_loc_predictor(self, lon, lat, alt=0.0):
         """
         evaluate inverse localization predictor at a given geographic position
+
         :param lon : longitude
         :type lon : float
         :param lat : latitude
         :type lat : float
         :param alt : altitude (0.0 by default)
         :type alt : float
-        :return sensor position (row,col, is extrapolated)
-        :rtype tuple (float,float,boolean)
+        :return sensor position and extrapolation state (row,col, is extrapolated)
+        :rtype tuple (float, float, boolean)
         """
-        seuil_extrapol = 20.0
-        extrapol = False
+        extrapolation_threshold = 20.0
+        is_extrapolated = False
         altmin = self.alts_down[-1]
         altmax = self.alts_down[0]
 
-        # normalisation
+        # normalization
         lon_n = (lon - self.pred_ofset_scale_lon[0]) / self.pred_ofset_scale_lon[1]
         lat_n = (lat - self.pred_ofset_scale_lat[0]) / self.pred_ofset_scale_lat[1]
-        if abs(lon_n) > (1 + seuil_extrapol / 100.0):
+        if abs(lon_n) > (1 + extrapolation_threshold / 100.0):
             # pylint: disable=logging-too-many-args
-            logging.warning("Attention, en extrapolation de %1.8f en longitude:", lon_n)
-            extrapol = True
-        if abs(lat_n) > (1 + seuil_extrapol / 100.0):
+            logging.warning("Be careful: longitude extrapolation: %1.8f", lon_n)
+            is_extrapolated = True
+        if abs(lat_n) > (1 + extrapolation_threshold / 100.0):
             # pylint: disable=logging-too-many-args
-            logging.warning("Attention, en extrapolation de %1.8f en latitude:", lat_n)
-            extrapol = True
+            logging.warning("Be careful: latitude extrapolation: %1.8f", lat_n)
+            is_extrapolated = True
 
-        # application polynome
+        # polynome application
         vect_sol = np.array([1, lon_n, lat_n, lon_n**2, lat_n**2, lon_n * lat_n])
         col_min = ((self.pred_col_min * vect_sol).sum() * self.pred_ofset_scale_col[1]) + self.pred_ofset_scale_col[0]
         row_min = ((self.pred_row_min * vect_sol).sum() * self.pred_ofset_scale_row[1]) + self.pred_ofset_scale_row[0]
@@ -582,7 +594,7 @@ class Grid:
             col = self.colmax
         if col < self.col0:
             col = self.col0
-        return row, col, extrapol
+        return row, col, is_extrapolated
 
     # gitlab issue #58
     # pylint: disable=too-many-locals
@@ -595,6 +607,7 @@ class Grid:
         dlon/dlat in microrad
         M is calculated on each node of grid
         M is necessary for direct localization inversion in iterative inverse loc
+
         :param lon : longitude
         :type lon : float
         :param lat : latitude
@@ -648,12 +661,12 @@ class Grid:
         if abs(det) > 0.000000000001:
             partial_derivative_mat = np.array([[dlat_l, -dlon_l], [-dlat_c, dlon_c]]) / det
         else:
-            logging.error("nul determinant")
+            logging.error("determinant null")
         return partial_derivative_mat
 
     def inverse_loc(self, lon, lat, alt=0.0, nb_iterations=15):
         """
-        inverse localization at a given geographic position
+        Inverse localization at a given geographic position
         First initialize position,
         * apply inverse predictor lon,lat,at ->  col_0,row_0
         * direct loc col_0,row_0 -> lon_0, lat_0
@@ -700,24 +713,24 @@ class Grid:
             coslon = np.cos(np.deg2rad(lat_i))
             rtx = 1e-12 * 6378000**2
             (row_i, col_i, extrapol) = self.inverse_loc_predictor(lon_i, lat_i, alt_i)
-            erreur_m2 = 10.0
-            point_valide = 0
+            m2_error = 10.0
+            valid_point = 0
             if not extrapol:
-                # Processus iteratif
-                # while erreur > seuil:1mm
-                while (erreur_m2 > 1e-6) and (iteration < nb_iterations):
+                # Iterative process
+                # while error in m2 > 1mm
+                while (m2_error > 1e-6) and (iteration < nb_iterations):
                     position = self.direct_loc_h(row_i, col_i, alt_i)
                     dlon_microrad = (position[0][0] - lon_i) * deg2mrad
                     dlat_microrad = (position[0][1] - lat_i) * deg2mrad
-                    erreur_m2 = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
+                    m2_error = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
                     dsol = np.array([dlon_microrad, dlat_microrad])
                     mat_dp = self.inverse_partial_derivative(row_i, col_i, alt_i)
                     dimg = mat_dp @ dsol
                     col_i += -dimg[0]
                     row_i += -dimg[1]
                     iteration += 1
-                    point_valide = 1
-            if point_valide == 0:
+                    valid_point = 1
+            if valid_point == 0:
                 (row_i, col_i) = (None, None)
             row[point_index] = row_i
             col[point_index] = col_i
@@ -728,6 +741,7 @@ def coloc(multi_h_grid_src, multi_h_grid_dst, dtm, origin, step, size):
     """
     colocalization grid on dtm
     localization on dtm from src grid, then inverse localization in right grid
+
     :param multi_h_grid_src : source grid
     :type multi_h_grid_src : shareloc.grid
     :param multi_h_grid_dst : destination grid

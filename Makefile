@@ -50,8 +50,9 @@ doc: install ## build sphinx documentation (depends install)
 test: install ## run all tests + coverage html (depends install)
 	@${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --cov-config=.coveragerc --cov-report html --cov
 
-test-ci: install ## run all + coverage for ci to sonarqube (depends install)
-	@${VENV}/bin/pytest -o log_cli=true -o log_cli_level=${LOGLEVEL} --junitxml=pytest-report.xml --cov-config=.coveragerc --cov-report xml --cov
+test-ci: install ## tox run all tests with python3.7 and python3.8 + coverage (depends install)
+	# Run tox (recreate venv (-r) and parallel mode (-p auto)) for CI
+	@${VENV}/bin/tox -r -p auto
 
 lint: install ## run lint tools (depends install)
 	@echo "Linting isort check"

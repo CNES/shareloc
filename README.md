@@ -53,8 +53,8 @@ Shareloc development has been motivated by the need of a full python component f
 Shareloc can be installed in a [virtualenv](https://docs.python.org/3/library/venv) from Pypi repository: 
 
 ```
-python -m venv venv
-source venv/bin/activate
+python -m venv shareloc-venv
+source shareloc-venv/bin/activate
 pip install --upgrade pip
 pip install shareloc
 ```

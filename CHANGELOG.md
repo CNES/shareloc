@@ -4,15 +4,20 @@ Only the first "Unreleased" section of this file corresponding of next release c
 When publication of a new release, the section "Unreleased" is blocked to the next chosen version and name of the milestone at a given date.
 A new section Unreleased is opened then for next dev phase.
 
-
 ## Unreleased
 
 ### Added
 
 ### Changed
 
+### Fixed
+
+
+## 0.1.2 First Open Source Official Release - Quick fix (March 2022)
 
 ### Fixed
+
+- Documentation and quick start fixed (wrong URL and detailed install)
 
 
 ## 0.1.1 First Open Source Official Release (March 2022)

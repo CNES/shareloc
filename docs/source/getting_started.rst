@@ -15,9 +15,10 @@ Quick Start
 
 .. code-block:: console
 
-    $ python -m venv venv
-    $ source venv/bin/activate
-    $ pip install shareloc 
+    $ python -m venv shareloc-venv       # Create python virtualenv
+    $ source shareloc-venv/bin/activate  # Activate virtualenv
+    $ pip install --upgrade pip          # Be sure to have the last PIP version in virtualenv
+    $ pip install shareloc               # Install shareloc in virtualenv
 
 
 * Quick example for direct localization at constant elevation on a grid
@@ -26,21 +27,28 @@ Quick Start
 
 .. code-block:: console
     
-    $ wget https://raw.githubusercontent.com/CNES/shareloc/tests/data/geoide/P1BP--2017030824934340CP/grilles_gld_xH/P1BP--2017030824934340CP.tif    
+    $ wget https://raw.githubusercontent.com/CNES/shareloc/master/tests/data/rpc/phr_ventoux/left_image.geom --no-check-certificate
 
-2. Use shareloc API for direct localization 
+2. Use shareloc API for direct localization using RPC model
       
 .. code-block:: console    
 
     $ python3
-    >>> from shareloc.geomodels.grid import Grid
+    >>> # Import shareloc modules rpc and localization
+    >>> from shareloc.geomodels.rpc import RPC
     >>> from shareloc.geofunctions.localization import Localization
-    >>> grid_geom_file = "P1BP--2017030824934340CP.tif"
-    >>> grid = Grid(grid_geom_file)
-    >>> loc = Localization(grid)
-    >>> loc.direct(50.5, 100.5, 100.0)
-    array([ 57.21682531,  21.9593944 , 100.        ])
-    
-    # --> Result in latitude, longitude, altitude.
+
+    >>> # Create RPC object from downloaded geometry file
+    >>> rpc_geom_file = "left_image.geom"
+    >>> rpc = RPC.from_any(rpc_geom_file)
+
+    >>> # Create Localization object from created RPC
+    >>> loc = Localization(rpc)
+
+    >>> # Direct localization at first (0, 0) pixel
+    >>> loc.direct(0, 0)
+    array([[ 5.1608318 , 44.22955181,  0.        ]])
+
+    # --> Result in latitude, longitude, altitude (null because not used here).
 
 see :ref:`user_manual_functions` section for more examples.

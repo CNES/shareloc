@@ -11,8 +11,8 @@ Quick install
 
 .. code-block:: console
 
-    $ python -m venv venv
-    $ source venv/bin/activate
+    $ python -m venv shareloc-venv
+    $ source shareloc-venv/bin/activate
     $ python3 -m pip install --upgrade pip setuptools
     
 * Install Shareloc from Pypi

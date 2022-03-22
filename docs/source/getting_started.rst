@@ -23,7 +23,7 @@ Quick Start
 
 * Quick example for direct localization at constant elevation on a grid
 
-1. Get Grid TIF file from shareloc tests
+1. Get an example of RPC model geom file from shareloc tests
 
 .. code-block:: console
     
@@ -49,6 +49,6 @@ Quick Start
     >>> loc.direct(0, 0)
     array([[ 5.1608318 , 44.22955181,  0.        ]])
 
-    # --> Result in latitude, longitude, altitude (null because not used here).
+    # --> Result in latitude, longitude, altitude (0 meter over ellipsoid, since altitude is not specified in loc.direct() method)
 
 see :ref:`user_manual_functions` section for more examples.

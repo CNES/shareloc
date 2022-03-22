@@ -161,7 +161,7 @@ class RPC:
 
         self.monomes = np.array(monomes_order)
 
-        # coefficient of monome degrees with 1st variable derivation
+        # monomial coefficients of 1st variable derivative
         self.monomes_deriv_1 = np.array(
             [
                 [0, 0, 0, 0],
@@ -187,7 +187,7 @@ class RPC:
             ]
         )
 
-        # coefficient of monome degrees with 2nd variable derivation
+        # monomial coefficients of 2nd variable derivative
         self.monomes_deriv_2 = np.array(
             [
                 [0, 0, 0, 0],

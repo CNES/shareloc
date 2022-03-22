@@ -37,7 +37,7 @@ class RectificationGrid:
     def __init__(self, grid_filename):
         """
         Constructor
-        :param filename: grid filename
+        :param grid_filename: grid filename
         :type filename: string
         """
         self.filename = grid_filename

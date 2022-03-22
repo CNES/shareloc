@@ -10,7 +10,7 @@ Shareloc has several main functions:
 - :ref:`Triangulation`
 - :ref:`Rectification Grid Computation`
 
-Examples can be found in `tests directory <https://github.com/CNES/shareloc/tests/geofunctions>`_ of Shareloc source code.
+Examples can be found in `tests directory <https://github.com/CNES/shareloc/tree/master/tests/geofunctions>`_ of Shareloc source code.
 
 Localization
 ============

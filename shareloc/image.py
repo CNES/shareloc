@@ -188,6 +188,7 @@ class Image:
         :return: index coordinates (row, col)
         :rtype: Tuple(row float or 1D np.array, col float or 1D np.array)
         """
-        trans_inv = ~self.transform
+        # bitwise not inversion (Affine.__invert implemented, pylint bug)
+        trans_inv = ~self.transform  # pylint: disable=invalid-unary-operand-type
         col, row = trans_inv * (col_geo, row_geo)
         return row - 0.5, col - 0.5

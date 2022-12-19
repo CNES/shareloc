@@ -331,7 +331,6 @@ class Grid:
         stepcol = (self.colmax - self.col0) / (nbcol - 1)
 
         for index, alt in enumerate(list_alts):
-
             res = self.direct_loc_grid_h(self.row0, self.col0, steprow, stepcol, nbrow, nbcol, alt)
             lon_data[index] = res[0]
             lat_data[index] = res[1]
@@ -503,7 +502,6 @@ class Grid:
         imes = 0
         for irow in range(nbrow_pred):
             for icol in range(nbcol_pred):
-
                 b_col[imes] = gcol_norm[irow, icol]
                 b_row[imes] = grow_norm[irow, icol]
                 a_min[imes, 0] = 1.0

@@ -940,7 +940,6 @@ class DTMIntersection:
                     h_intersect_p2 = alti[i_0]
 
                 else:
-
                     # LDD - We looped on the meshes, we found nothing and we did not reach the next plane
                     # It means we're getting out of the grip, no need to continue
                     b_trouve = False

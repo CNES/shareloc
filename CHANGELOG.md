@@ -12,6 +12,12 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.1.3 First Open Source Official Release - Quick fix 2 (April 2022)
+
+### Fixed
+
+- Documentation typos
+
 
 ## 0.1.2 First Open Source Official Release - Quick fix (March 2022)
 

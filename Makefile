@@ -57,7 +57,7 @@ endif
 
 .PHONY: help
 help: ## this help
-	@echo "      SHARELOC MAKE HELP  LOGLEVEL=${LOGLEVEL}"
+	@echo "      SHARELOC MAKE HELP"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' | sort
 
 ## Install section
@@ -165,7 +165,7 @@ notebook-clean-output:
 
 ## Docker section
 
-docker: git ## Build docker image (and check Dockerfile)
+docker: ## Build docker image (and check Dockerfile)
 	@echo "Check Dockerfile with hadolint"
 	@docker pull hadolint/hadolint
 	@docker run --rm -i hadolint/hadolint < Dockerfile

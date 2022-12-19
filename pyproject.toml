@@ -1,8 +1,10 @@
 # pyproject.toml
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+requires = ["setuptools>=65.5", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
+
 [tool.setuptools_scm]
+# Enable version inference: https://pypi.org/project/setuptools-scm/#description
 
 [tool.black]
 # https://github.com/psf/black

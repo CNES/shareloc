@@ -12,12 +12,31 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+
+## 0.1.4 Clean packaging and documentation (December 2022)
+
+### Added
+
+- Authors file
+- docstring sphinx autoapi generation in documentation
+
+### Changed
+- setup to python >=3.8
+
+### Fixed
+
+- Clean Makefile
+- Clean python packaging
+- fix math formula in sphinx generation
+- fix recursion limit in astroid for sphinx autoapi and pylint
+- fix lint errors (pylint, flake8, black, isort)
+
+
 ## 0.1.3 First Open Source Official Release - Quick fix 2 (April 2022)
 
 ### Fixed
 
 - Documentation typos
-
 
 ## 0.1.2 First Open Source Official Release - Quick fix (March 2022)
 

@@ -44,29 +44,30 @@ def sensor_triangulation(
     triangulation in sensor geometry
 
     according to the formula:
-    .. math::
-        x =
-        \\left(\\sum_i I-\\hat v_i \\hat v_i^\\top\\right)^{-1} \\left(\\sum_i (I-\\hat v_i \\hat v_i^\\top) s_i\\right)
+        .. math::
+
+            x = \\left(\\sum_i I-\\hat v_i \\hat v_i^\\top\\right)^{-1}
+            \\left(\\sum_i (I-\\hat v_i \\hat v_i^\\top) s_i\\right)
+
     Delvit J.M. et al. "The geometric supersite of Salon de Provence", ISPRS Congress Paris, 2006.
 
-
-    :param matches :  matches in sensor coordinates Nx[row (left), col (left), row (right), col (right)]
-    :type matches : np.array
-    :param geometrical_model_left : left image geometrical model
-    :type geometrical_model_left : shareloc.grid or shareloc.rpc
-    :param geometrical_model_right : right image geometrical model
-    :type geometrical_model_right : shareloc.grid or shareloc.rpc
-    :param left_min_max : left min/max for los creation, if None model min/max will be used
-    :type left_min_max : list
-    :param right_min_max : right min/max for los creation, if None model min/max will be used
-    :type right_min_max : list
-    :param residues : calculates residues (distance in meters between los and 3D points)
-    :type residues : boolean
-    :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+    :param matches:  matches in sensor coordinates Nx[row (left), col (left), row (right), col (right)]
+    :type matches: np.array
+    :param geometrical_model_left: left image geometrical model
+    :type geometrical_model_left: shareloc.grid or shareloc.rpc
+    :param geometrical_model_right: right image geometrical model
+    :type geometrical_model_right: shareloc.grid or shareloc.rpc
+    :param left_min_max: left min/max for los creation, if None model min/max will be used
+    :type left_min_max: list
+    :param right_min_max: right min/max for los creation, if None model min/max will be used
+    :type right_min_max: list
+    :param residues: calculates residues (distance in meters between los and 3D points)
+    :type residues: boolean
+    :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
         otherwise
-    :type fill_nan : boolean
-    :return intersections in cartesian crs, intersections in wgs84 crs and optionnaly residues
-    :rtype (numpy.array,numpy,array,numpy.array)
+    :type fill_nan: boolean
+    :return: intersections in cartesian crs, intersections in wgs84 crs and optionnaly residues
+    :rtype: (numpy.array,numpy,array,numpy.array)
     """
     # LOS instantiation
     matches_left = matches[:, 0:2]
@@ -93,12 +94,12 @@ def distance_point_los(los, points):
     distance between points and LOS
     norm of cross prodcut between vector defined by LOS sis and point and LOS vis
 
-    :param los :  line of sight
-    :type los : shareloc.los
-    :param points :  3D points
-    :type points : numpy.array
-    :return distance
-    :rtype numpy.array
+    :param los:  line of sight
+    :type los: shareloc.los
+    :param points:  3D points
+    :type points: numpy.array
+    :return: distance
+    :rtype: numpy.array
     """
     # norm(BA vect u)/norm(u)
 
@@ -112,12 +113,12 @@ def los_triangulation(left_los, right_los):
     """
     LOS triangulation
 
-    :param left_los :  left los
-    :type left_los : shareloc.los
-    :param right_los :  right los
-    :type right_los : shareloc.los
-    :return intersections in cartesian crs
-    :rtype numpy.array
+    :param left_los:  left los
+    :type left_los: shareloc.los
+    :param right_los:  right los
+    :type right_los: shareloc.los
+    :return: intersections in cartesian crs
+    :rtype: numpy.array
     """
     vis = np.dstack((left_los.vis, right_los.vis))
     vis = np.swapaxes(vis, 1, 2)
@@ -141,12 +142,12 @@ def transform_disp_to_matches(disp, mask=None):
     """
     transform disparity map to matches
 
-    :param disp :  dispartiy xarray
-    :type disp : xarray
-    :param mask :  mask
-    :type mask : numpy.array
-    :return epipolar matches and logical non masked values
-    :rtype list of numpy.arrray
+    :param disp:  disparity xarray
+    :type disp: xarray
+    :param mask:  mask
+    :type mask: numpy.array
+    :return: epipolar matches and logical non masked values
+    :rtype: list of numpy.arrray
     """
 
     col, row = np.meshgrid(disp.col, disp.row)
@@ -182,31 +183,31 @@ def epipolar_triangulation(
     """
     epipolar triangulation
 
-    :param matches :  matches
-    :type matches :
-    :param mask :  mask
-    :type mask :
-    :param matches_type :  'disp' or 'sift'
-    :type matches_type : str
-    :param geometrical_model_left : left image geometrical model
-    :type geometrical_model_left : shareloc.grid or shareloc.rpc
-    :param geometrical_model_right : right image geometrical model
-    :type geometrical_model_right : shareloc.grid or shareloc.rpc
-    :param grid_left : left rectification grid filename
-    :type grid_left : str
-    :param grid_right : right rectification grid filename
-    :type grid_right : str
-    :param left_min_max : left min/max for los creation, if None model min/max will be used
-    :type left_min_max : list
-    :param right_min_max : right min/max for los creation, if None model min/max will be used
-    :type right_min_max : list
-    :param residues : calculates residues (distance in meters)
-    :type residues : boolean
-    :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+    :param matches:  matches
+    :type matches: dependent of disp or sift
+    :param mask:  mask for disparity (see transform_disp_to_matches)
+    :type mask: numpy.array
+    :param matches_type:  'disp' or 'sift'
+    :type matches_type: str
+    :param geometrical_model_left: left image geometrical model
+    :type geometrical_model_left: shareloc.grid or shareloc.rpc
+    :param geometrical_model_right: right image geometrical model
+    :type geometrical_model_right: shareloc.grid or shareloc.rpc
+    :param grid_left: left rectification grid filename
+    :type grid_left: str
+    :param grid_right: right rectification grid filename
+    :type grid_right: str
+    :param left_min_max: left min/max for los creation, if None model min/max will be used
+    :type left_min_max: list
+    :param right_min_max: right min/max for los creation, if None model min/max will be used
+    :type right_min_max: list
+    :param residues: calculates residues (distance in meters)
+    :type residues: boolean
+    :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
         otherwise
-    :type fill_nan : boolean
-    :return intersections in cartesian crs
-    :rtype numpy.array
+    :type fill_nan: boolean
+    :return: intersections in cartesian crs
+    :rtype: numpy.array
     """
 
     # retrieve point matches in sensor geometry

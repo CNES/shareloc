@@ -54,10 +54,12 @@ class LOS:
 
     def los_creation(self, alt_min_max, fill_nan=False):
         """
-        create los from extrema : los starting point, and normalized viewing vector
+        create los from extrema: los starting point, and normalized viewing vector
 
         :param alt_min_max: min/max  altitude to compute los, if None model min/max will be used
-        :type alt_min_max : list
+        :type alt_min_max: list
+        :param fill_nan: option to fill with nan ot not.
+        :type fill_nan: boolean
         """
 
         self.los_nb = self.sensors_positions.shape[0]
@@ -91,8 +93,8 @@ class LOS:
         returns los hat
         TODO: not used. Use python property instead
 
-        :return sis
-        :rtype numpy array
+        :return: sis
+        :rtype: numpy array
         """
         return self.sis
 
@@ -101,7 +103,7 @@ class LOS:
         returns los viewing vector
         TODO: not used. Use python property instead
 
-        :return vis
-        :rtype numpy array
+        :return: vis
+        :rtype: numpy array
         """
         return self.vis

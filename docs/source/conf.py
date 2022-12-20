@@ -64,6 +64,10 @@ extensions = [
     "autoapi.extension",
     "sphinx_tabs.tabs",
 ]
+
+# imgmath configuration
+imgmath_embed = True
+
 # Autoapi configuration
 autoapi_dirs = ["../../shareloc"]
 autoapi_root = "api_reference"

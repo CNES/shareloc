@@ -43,7 +43,7 @@ def write_epipolar_grid(grid, filename, xy_convention=True):
     :param filename:  output filename
     :type filename: string
     :param xy_convention: True: write grid with xy convention : [band 1 = col displacement, band 2 = row displacement]
-                          False: write grid with yx convention : [band 1 = row displacement, band 2 = col displacement]
+        False: write grid with yx convention : [band 1 = row displacement, band 2 = col displacement]
     :param xy_convention: bool
     """
     band, row, col = grid.data.shape
@@ -68,7 +68,7 @@ def compute_epipolar_angle(end_line, start_line):
     :param start_line: beginning of the epipolar line (georeferenced coordinates)
     :type start_line: 1D np.array [row, col, altitude] or 2D np.array [number of points, [row, col, altitude]]
     :return: epipolar angle
-    :rtype : float or 1D np.array
+    :rtype: float or 1D np.array
     """
     # Only one point, expand the shape of the array
     if len(end_line.shape) == 1:
@@ -168,7 +168,7 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: int
-    :return: return :
+    :return:
         - epipolar grids spacing (pixel size), 1D np.array [row pixel size, col pixel size]
         - epipolar grids size, 1D np.array [number of row, number of columns]
         - epipolar images size, 1D np.array [number of row, number of columns]
@@ -268,9 +268,9 @@ def get_epipolar_extent(
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
     :param margin: footprint margin (in degrees)
-    :type margin : float
-    :return extent : [lon_min,lat_min,lon max,lat max] (2D np.array)
-    :rtype numpy.array
+    :type margin: float
+    :return: [lon_min,lat_min,lon max,lat max] (2D np.array)
+    :rtype: numpy.array
     """
     footprint = np.zeros([2, 2])
     __, __, __, left_epi_origin, left_epi_end = prepare_rectification(
@@ -294,7 +294,7 @@ def initialize_grids(epi_step, nb_row, nb_col):
     :param nb_row: rows of the grid
     :param nb_col: columns of the grid
     :return: left epipolar grid, right epipolar grid
-    :rtype : Tuple(shareloc.Image, shareloc.Image)
+    :rtype: Tuple(shareloc.Image, shareloc.Image)
     """
     # Initialize left and right epipolar grids
     left_grid = Image(image_path=None)
@@ -420,7 +420,7 @@ def compute_stereorectification_epipolar_grids(
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
-    :return: return :
+    :return:
         - left epipolar grid, shareloc.image object convention [[row displacement, col displacement], nb rows, nb cols]
         - right epipolar grid, shareloc.image object convention [[row displacement, col displacement], nb rows, nb cols]
         - number of rows of the epipolar image, int

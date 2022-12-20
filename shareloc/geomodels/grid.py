@@ -40,7 +40,7 @@ from shareloc.proj_utils import coordinates_conversion
 class Grid:
     """
     multi H direct localization grid handling class.
-    please refers to the main documentation grid format
+    please refer to the main documentation grid format
 
     :param filename: grid path
     :type filename: str
@@ -78,7 +78,8 @@ class Grid:
 
     def __init__(self, grid_filename):
         """
-        Constructor
+        Grid Constructor
+
         :param grid_filename: grid filename (Geotiff)
         :type grid_filename: string
         """
@@ -102,10 +103,11 @@ class Grid:
 
     def load(self):
         """
-        Load grid and fill Class attributes
-        The grid is read as an shareloc.image.Image and class attributes are filled.
+        Load grid and fill Class attributes.
+
+        The grid is read as an shareloc.image. Image and class attributes are filled.
         Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
-        2 data cubes are defined :
+        2 data cubes are defined:
         - lon_data : [alt,row,col]
         - lat_data : [alt,row,col]
         """
@@ -138,8 +140,8 @@ class Grid:
         """
         parse metadata to sort altitude in decreasing order
 
-        :param metadata :  Geotiff metadata
-        :type metadata : dict
+        :param metadata: Geotiff metadata
+        :type metadata: dict
         """
         alt_array = np.zeros([self.nbalt])
         for key in metadata.keys():
@@ -154,8 +156,8 @@ class Grid:
         """
         returns altitudes min and max layers
 
-        :return alt_min,lat_max
-        :rtype list
+        :return: alt_min,lat_max
+        :rtype: list
         """
         return [self.alts_down[-1], self.alts_down[0]]
 
@@ -163,17 +165,17 @@ class Grid:
         """
         direct localization at constant altitude
 
-        :param row :  line sensor position
-        :type row : float or 1D numpy.ndarray dtype=float64
-        :param col :  column sensor position
-        :type col : float or 1D numpy.ndarray dtype=float64
-        :param alt :  altitude
-        :type alt : float
-        :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
-            otherwise
-        :type fill_nan : boolean
-        :return ground position (lon,lat,h)
-        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
+        :param row: line sensor position
+        :type row: float or 1D numpy.ndarray dtype=float64
+        :param col: column sensor position
+        :type col: float or 1D numpy.ndarray dtype=float64
+        :param alt: altitude
+        :type alt: float
+        :param fill_nan: fill numpy.nan values with lon and lat offset
+            if true (same as OTB/OSSIM), nan is returned otherwise
+        :type fill_nan: boolean
+        :return: ground position (lon,lat,h)
+        :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
         # Vectorization doesn't handle yet altitude as np.ndarray (3D interpolation work).
         # TODO: clean interfaces to remove this part
@@ -214,14 +216,14 @@ class Grid:
         """
         Compute Line of Sight
 
-        :param row :  line sensor position
-        :type row : float
-        :param col :  column sensor position
-        :type col : float
-        :param  epsg  : epsg code
-        :type epsg  : int
-        :return los
-        :rtype numpy.array
+        :param row: line sensor position
+        :type row: float
+        :param col: column sensor position
+        :type col: float
+        :param epsg: epsg code
+        :type epsg: int
+        :return: los
+        :rtype: numpy.array
         """
         los = np.zeros((3, self.nbalt))
         loslonlat = self.interpolate_grid_in_plani(row, col)
@@ -237,17 +239,17 @@ class Grid:
         """
         direct localization on dtm
 
-        TODO: explain algorithm
-        TODO: optimize code (for loop, ...)
+        TODO explain algorithm
+        TODO optimize code (for loop, ...)
 
-        :param row :  line sensor position
-        :type row : float
-        :param col :  column sensor position
-        :type col : float
-        :param dtm : dtm model
-        :type dtm  : shareloc.dtm
-        :return ground position (lon,lat,h) in dtm coordinates system.
-        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
+        :param row: line sensor position
+        :type row: float
+        :param col: column sensor position
+        :type col: float
+        :param dtm: dtm model
+        :type dtm: shareloc.dtm
+        :return: ground position (lon,lat,h) in dtm coordinates system.
+        :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
         if not isinstance(row, (list, np.ndarray)):
             row = np.array([row])
@@ -270,16 +272,17 @@ class Grid:
     def los_extrema(self, row, col, alt_min, alt_max):
         """
         compute los extrema
-        :param row :  line sensor position
-        :type row : float
-        :param col :  column sensor position
-        :type col : float
-        :param alt_min : los alt min
-        :type alt_min  : float
-        :param alt_max : los alt max
-        :type alt_max : float
-        :return los extrema
-        :rtype numpy.array (2x3)
+
+        :param row: line sensor position
+        :type row: float
+        :param col: column sensor position
+        :type col: float
+        :param alt_min: los alt min
+        :type alt_min: float
+        :param alt_max: los alt max
+        :type alt_max: float
+        :return: los extrema
+        :rtype: numpy.array (2x3)
         """
         los_edges = np.zeros([2, 3])
         los_edges[0, :] = self.direct_loc_h(row, col, alt_max)
@@ -289,12 +292,13 @@ class Grid:
     def interpolate_grid_in_plani(self, row, col):
         """
         interpolate positions on multi h grid
-        :param row :  line sensor position
-        :type row : float
-        :param col :  column sensor position
-        :type col : float
-        :return interpolated positions
-        :rtype list
+
+        :param row: line sensor position
+        :type row: float
+        :param col: column sensor position
+        :type col: float
+        :return: interpolated positions
+        :rtype: list
         """
         pos_row = (row - self.row0) / self.steprow
         pos_col = (col - self.col0) / self.stepcol
@@ -305,14 +309,15 @@ class Grid:
     def interpolate_grid_in_altitude(self, nbrow, nbcol, nbalt=None):
         """
         interpolate equally spaced grid (in altitude)
-        :param nbrow :  grid nb row
-        :type nbrow : int
-        :param nbcol :  grid nb col
-        :type nbcol : int
-        :param nbalt :  grid nb alt, of None self.nbalt is used instead
-        :type nbalt : int
-        :return equally spaced grid
-        :rtype numpy.array
+
+        :param nbrow: grid nb row
+        :type nbrow: int
+        :param nbcol: grid nb col
+        :type nbcol: int
+        :param nbalt: grid nb alt, of None self.nbalt is used instead
+        :type nbalt: int
+        :return: equally spaced grid
+        :rtype: numpy.array
         """
         if not nbalt:
             nbalt = self.nbalt
@@ -339,22 +344,23 @@ class Grid:
     def direct_loc_grid_dtm(self, row0, col0, steprow, stepcol, nbrow, nbcol, dtm):
         """
         direct localization  grid on dtm
-        :param row0 :  grid origin (row)
-        :type row0 : int
-        :param col0 :  grid origin (col)
-        :type col0 : int
-        :param steprow :  grid step (row)
-        :type steprow : int
-        :param stepcol :  grid step (col)
-        :type stepcol : int
-        :param nbrow :  grid nb row
-        :type nbrow : int
-        :param nbcol :  grid nb col
-        :type nbcol : int
-        :param dtm : dtm model
-        :type dtm  : shareloc.dtm
-        :return direct localization grid
-        :rtype numpy.array
+
+        :param row0: grid origin (row)
+        :type row0: int
+        :param col0: grid origin (col)
+        :type col0: int
+        :param steprow: grid step (row)
+        :type steprow: int
+        :param stepcol: grid step (col)
+        :type stepcol: int
+        :param nbrow: grid nb row
+        :type nbrow: int
+        :param nbcol: grid nb col
+        :type nbcol: int
+        :param dtm: dtm model
+        :type dtm: shareloc.dtm
+        :return: direct localization grid
+        :rtype: numpy.array
         """
         glddtm = np.zeros((3, nbrow, nbcol))
         los = np.zeros((3, self.nbalt))
@@ -378,10 +384,10 @@ class Grid:
         """
         return layer index enclosing a given altitude
 
-        :param alt :  altitude
-        :type alt : float
-        :return grid index (up,down)
-        :rtype tuple
+        :param alt: altitude
+        :type alt: float
+        :return: grid index (up,down)
+        :rtype: tuple
         """
         if alt > self.alts_down[0]:
             (high_index, low_index) = (0, 0)
@@ -400,24 +406,24 @@ class Grid:
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
         """
         direct localization  grid at constant altitude
-        TODO: not tested.
+        TODO not tested.
 
-        :param row0 :  grid origin (row)
-        :type row0 : int
-        :param col0 :  grid origin (col)
-        :type col0 : int
-        :param steprow :  grid step (row)
-        :type steprow : int
-        :param stepcol :  grid step (col)
-        :type stepcol : int
-        :param nbrow :  grid nb row
-        :type nbrow : int
-        :param nbcol :  grid nb col
-        :type nbcol : int
-        :param alt : altitude of the grid
-        :type alt  : float
-        :return direct localization grid
-        :rtype numpy.array
+        :param row0: grid origin (row)
+        :type row0: int
+        :param col0: grid origin (col)
+        :type col0: int
+        :param steprow: grid step (row)
+        :type steprow: int
+        :param stepcol: grid step (col)
+        :type stepcol: int
+        :param nbrow: grid nb row
+        :type nbrow: int
+        :param nbcol: grid nb col
+        :type nbcol: int
+        :param alt: altitude of the grid
+        :type alt: float
+        :return: direct localization grid
+        :rtype: numpy.array
         """
         if isinstance(alt, (list, np.ndarray)):
             logging.warning("grid doesn't handle alt as array, first value is used")
@@ -452,17 +458,18 @@ class Grid:
     def estimate_inverse_loc_predictor(self, nbrow_pred=3, nbcol_pred=3):
         """
         initialize inverse localization polynomial predictor
-        it composed of 4 polynoms estimated on a grid at hmin and hmax :
+        it composed of 4 polynoms estimated on a grid at hmin and hmax
 
         col_min = a0 + a1*lon + a2*lat + a3*lon**2 + a4*lat**2 + a5*lon*lat
         row_min = b0 + b1*lon + b2*lat + b3*lon**2 + b4*lat**2 + b5*lon*lat
         col_max = a0 + a1*lon + a2*lat + a3*lon**2 + a4*lat**2 + a5*lon*lat
         row_max = b0 + b1*lon + b2*lat + b3*lon**2 + b4*lat**2 + b5*lon*lat
         least squarred method is used to calculate coefficients, which are noramlized in [-1,1]
-        :param nbrow_pred :  predictor nb row (3 by default)
-        :type nbrow_pred : int
-        :param nbcol_pred :  predictor nb col (3 by default)
-        :type nbcol_pred : int
+
+        :param nbrow_pred: predictor nb row (3 by default)
+        :type nbrow_pred: int
+        :param nbcol_pred: predictor nb col (3 by default)
+        :type nbcol_pred: int
         """
         nb_alt = 2
         nb_coeff = 6
@@ -547,14 +554,14 @@ class Grid:
         """
         evaluate inverse localization predictor at a given geographic position
 
-        :param lon : longitude
-        :type lon : float
-        :param lat : latitude
-        :type lat : float
-        :param alt : altitude (0.0 by default)
-        :type alt : float
-        :return sensor position and extrapolation state (row,col, is extrapolated)
-        :rtype tuple (float, float, boolean)
+        :param lon: longitude
+        :type lon: float
+        :param lat: latitude
+        :type lat: float
+        :param alt: altitude (0.0 by default)
+        :type alt: float
+        :return: sensor position and extrapolation state (row,col, is extrapolated)
+        :rtype: tuple (float, float, boolean)
         """
         extrapolation_threshold = 20.0
         is_extrapolated = False
@@ -606,14 +613,14 @@ class Grid:
         M is calculated on each node of grid
         M is necessary for direct localization inversion in iterative inverse loc
 
-        :param lon : longitude
-        :type lon : float
-        :param lat : latitude
-        :type lat : float
-        :param alt : altitude (0.0 by default)
-        :type alt : float
-        :return matrix
-        :rtype numpy.array
+        :param lon: longitude
+        :type lon: float
+        :param lat: latitude
+        :type lat: float
+        :param alt: altitude (0.0 by default)
+        :type alt: float
+        :return: matrix
+        :rtype: numpy.array
         """
         pos_row = (row - self.row0) / self.steprow
         pos_col = (col - self.col0) / self.stepcol
@@ -673,19 +680,19 @@ class Grid:
         * calculate senor correction dlon,dlat -> dcol,drow
         * apply direct localization  -> lon_i,lat_i
 
-        TODO: explain algo
-        TODO: optimization (for loop,...)
+        TODO explain algo
+        TODO optimization (for loop,...)
 
-        :param lon : longitude
+        :param lon: longitude
         :type lon: float
-        :param lat : latitude
+        :param lat: latitude
         :type lat: float
-        :param alt : altitude
+        :param alt: altitude
         :type alt: float
-        :param nb_iterations : max number of iterations (15 by default)
-        :type nb_iterations : int
-        :return sensor position (row,col,alt)
-        :rtype tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
+        :param nb_iterations: max number of iterations (15 by default)
+        :type nb_iterations: int
+        :return: sensor position (row,col,alt)
+        :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
 
         # Test added for rectification to work
@@ -740,18 +747,18 @@ def coloc(multi_h_grid_src, multi_h_grid_dst, dtm, origin, step, size):
     colocalization grid on dtm
     localization on dtm from src grid, then inverse localization in right grid
 
-    :param multi_h_grid_src : source grid
-    :type multi_h_grid_src : shareloc.grid
-    :param multi_h_grid_dst : destination grid
-    :type multi_h_grid_dst : shareloc.grid
-     :param origin :  grid origin in src grid (row,col)
-     :type origin : list(int)
-     :param step :  grid step (row,col)
-     :type step : list(int)
-     :param size :  grid nb row and nb col
-     :type size : list(int)
-     :return colocalization grid
-     :rtype numpy.array
+    :param multi_h_grid_src: source grid
+    :type multi_h_grid_src: shareloc.grid
+    :param multi_h_grid_dst: destination grid
+    :type multi_h_grid_dst: shareloc.grid
+    :param origin: grid origin in src grid (row,col)
+    :type origin: list(int)
+    :param step: grid step (row,col)
+    :type step: list(int)
+    :param size: grid nb row and nb col
+    :type size: list(int)
+    :return: colocalization grid
+    :rtype: numpy.array
     """
     [l0_src, c0_src] = origin
     [steprow_src, stepcol_src] = step

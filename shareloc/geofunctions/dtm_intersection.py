@@ -44,11 +44,11 @@ def interpolate_geoid_height(geoid_filename, positions, interpolation_method="li
     :param geoid_filename: geoid_filename
     :type geoid_filename: str
     :param positions: geodetic coordinates
-    :type positions: 2D numpy array : (number of points, [long coord, lat coord])
-    :parama interpolation_method default is 'linear' (interpn interpolation method)
-    :type str
-    :return geoid height
-    :rtype 1 numpy array (nuber of points)
+    :type positions: 2D numpy array: (number of points, [long coord, lat coord])
+    :param interpolation_method: default is 'linear' (interpn interpolation method)
+    :type interpolation_method: str
+    :return: geoid height
+    :rtype: 1 numpy array (number of points)
     """
 
     geoid_image = Image(geoid_filename, read_data=True)
@@ -93,16 +93,16 @@ class DTMIntersection:
         :type dtm_filename: string
         :param geoid_filename: geoid filename, if None datum is ellispoid
         :type geoid_filename: string
-        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
+        :param roi: region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
              roi_is_in_physical_space activated
-        :type roi  : list
-        :param roi_is_in_physical_space  : roi value in physical space
-        :type roi_is_in_physical_space  : bool
-        :param fill_nodata  fill_nodata strategy in None/'constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/
-        :type fill_nodata  : str
-        :param fill_value  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
-        if None 'min' is used
-        :type fill_value  : float
+        :type roi: list
+        :param roi_is_in_physical_space: roi value in physical space
+        :type roi_is_in_physical_space: bool
+        :param fill_nodata:  fill_nodata strategy in None/'constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/
+        :type fill_nodata: str
+        :param fill_value:  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
+            if None 'min' is used
+        :type fill_value: float
         """
         self.dtm_file = dtm_filename
         self.alt_data = None
@@ -182,8 +182,8 @@ class DTMIntersection:
         :type i: int
         :param position: position
         :type position: numpy.array (1x3)
-        :return evaluation on the plan
-        :rtype float
+        :return: evaluation on the plan
+        :rtype: float
         """
         return (
             self.plane_coef_a[i] * position[0]
@@ -198,8 +198,8 @@ class DTMIntersection:
 
         :param vect_ter: terrain coordinate (lon,lat)
         :type vect_ter: array (1x2 or 1x3) if dimension is 3 , last coordinate is unchanged (alt)
-        :return index coordinates (col,row)
-        :rtype array (1x2 or 1x3)
+        :return: index coordinates (col,row)
+        :rtype: array (1x2 or 1x3)
         """
         vect_dtm = vect_ter.copy()
         (vect_dtm[0], vect_dtm[1]) = self.dtm_image.transform_physical_point_to_index(vect_ter[1], vect_ter[0])
@@ -211,8 +211,8 @@ class DTMIntersection:
 
         :param vect_ters: terrain coordinates
         :type vect_ters: array (nx2 or nx3) if dimension is 3 , last coordinates is unchanged (alt)
-        :return index coordinates
-        :rtype array (nx2 or nx3)
+        :return: index coordinates
+        :rtype: array (nx2 or nx3)
         """
         vect_dtms = vect_ters.copy()
         for i, vect_ter in enumerate(vect_ters):
@@ -225,8 +225,8 @@ class DTMIntersection:
 
         :param vect_dtm: index coordinate (col,row)
         :type vect_dtm: array (1x2 or 1x3) if dimension is 3 , last coordinate is unchanged (alt)
-        :return terrain coordinates (lon,lat)
-        :rtype array (1x2 or 1x3)
+        :return: terrain coordinates (lon,lat)
+        :rtype: array (1x2 or 1x3)
         """
         vect_ter = vect_dtm.copy()
         (vect_ter[1], vect_ter[0]) = self.dtm_image.transform_index_to_physical_point(vect_dtm[0], vect_dtm[1])
@@ -238,8 +238,8 @@ class DTMIntersection:
 
         :param epsg: epsg code to compare with
         :type epsg: int
-        :return min/max altimetric difference between epsg in parameter minus dtm alti expressed in dtm epsg
-        :rtype list of float (1x2)
+        :return: min/max altimetric difference between epsg in parameter minus dtm alti expressed in dtm epsg
+        :rtype: list of float (1x2)
         """
         if epsg != self.epsg:
             alti_moy = (self.alt_min + self.alt_max) / 2.0
@@ -263,8 +263,8 @@ class DTMIntersection:
         :type pos_row: float
         :param pos_col: cell position col
         :type pos_col: float
-        :return interpolated altitude
-        :rtype float
+        :return: interpolated altitude
+        :rtype: float
         """
         alt = interpol_bilin(
             [self.alt_data[np.newaxis, :, :]], self.dtm_image.nb_rows, self.dtm_image.nb_columns, pos_row, pos_col
@@ -337,11 +337,11 @@ class DTMIntersection:
         """
         DTM cube intersection
 
-        :param los :  line of sight
-        :type los : numpy.array
-        :return intersection information
-          (True,an intersection has been found ?, (lon,lat) of dtm position, altitude)
-        :rtype tuple (bool, bool, numpy.array, float)
+        :param los:  line of sight
+        :type los: numpy.array
+        :return: intersection information
+            (True,an intersection has been found ?, (lon,lat) of dtm position, altitude)
+        :rtype: tuple (bool, bool, numpy.array, float)
         """
         # los: (n,3):
         point_b = None
@@ -518,14 +518,14 @@ class DTMIntersection:
         """
         DTM intersection
 
-        :param los :  line of sight
-        :type los : numpy.array
-        :param point_b :  position of intersection in DTM cube
-        :type point_b : numpy.array
-        :param h_intersect :  altitude in DTM cube
-        :type h_intersect : float
-        :return intersection information (True,an intersection has been found ?, position of intersection)
-        :rtype tuple (bool, bool, numpy.array)
+        :param los:  line of sight
+        :type los: numpy.array
+        :param point_b:  position of intersection in DTM cube
+        :type point_b: numpy.array
+        :param h_intersect:  altitude in DTM cube
+        :type h_intersect: float
+        :return: intersection information (True,an intersection has been found ?, position of intersection)
+        :rtype: tuple (bool, bool, numpy.array)
         """
         los_index = self.ters_to_indexs(los)
         point_b_dtm = self.ter_to_index(point_b)

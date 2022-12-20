@@ -25,7 +25,7 @@ The Rational Function Polynomial equation numerators and denominators are 20-ter
 This relationship between ground and image is called inverse RPC coefficients.
 Only inverse coefficients are compulsory, if direct ones are not available then direct localization is computed by iterating on inverse one
  
-Direct mapping, if available  can be summarized as: 
+Direct mapping, if available  can be summarized as:
 
 :math:`(lon,lat) = (h(R,C,H),i(R,C,H))`
 

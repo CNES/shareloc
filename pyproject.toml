@@ -1,8 +1,10 @@
 # pyproject.toml
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+requires = ["setuptools>=65.5", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
+
 [tool.setuptools_scm]
+# Enable version inference: https://pypi.org/project/setuptools-scm/#description
 
 [tool.black]
 # https://github.com/psf/black
@@ -12,3 +14,20 @@ exclude = "(.eggs|.git|.mypy_cache|.nox|.tox|_build|build|dist|venv)"
 [tool.isort]
 profile = 'black'
 line_length = 120
+
+[tool.mypy]
+no_implicit_optional = false
+strict_optional = false
+allow_redefinition = true
+allow_untyped_globals = true
+local_partial_types = false
+warn_unused_ignores = true
+check_untyped_defs = true
+ignore_missing_imports = true
+disable_error_code = 'attr-defined'
+
+[[tool.mypy.overrides]]
+module = [
+    'setuptools',
+]
+ignore_missing_imports = true

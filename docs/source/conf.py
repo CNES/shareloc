@@ -16,12 +16,14 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../.."))
-sys.setrecursionlimit(1500)
+
+# Extend Recursion limit for RecursionError in big files (bug astroid)
+sys.setrecursionlimit(8 * sys.getrecursionlimit())
 
 # -- Project information -----------------------------------------------------
 
 project = "Shareloc"
-copyright = "2022, CNES"
+copyright = "2023, CNES"
 author = "Shareloc Team"
 
 # The full version, including alpha/beta/rc tags
@@ -37,6 +39,11 @@ except Exception as error:
 
 # The master toctree document.
 master_doc = "index"
+
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
+# source_suffix = ['.rst', '.md']
+source_suffix = ".rst"
 
 # -- General configuration ---------------------------------------------------
 
@@ -54,7 +61,28 @@ extensions = [
     "sphinx.ext.autodoc",  # apidoc automatic generation
     "sphinx.ext.viewcode",  # viewcode in automatic apidoc
     "sphinx.ext.autosectionlabel",  # label automatic in sections.
+    "autoapi.extension",
+    "sphinx_tabs.tabs",
 ]
+
+# imgmath configuration
+imgmath_embed = True
+
+# Autoapi configuration
+autoapi_dirs = ["../../shareloc"]
+autoapi_root = "api_reference"
+autoapi_keep_files = True
+autoapi_options = [
+    "members",
+    "undoc-members",
+    "private-members",
+    "show-inheritance",
+    "show-module-summary",
+    "special-members",
+]
+
+# add autohint
+autodoc_typehints = "description"
 
 # remove warning autosectionlabel
 suppress_warnings = ["autosectionlabel.*"]

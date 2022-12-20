@@ -47,5 +47,6 @@ Be aware that the project is new and is evolving to maturity with your help.
    install
    user_manual
    developer
+   api_reference/index.rst
    glossary
 

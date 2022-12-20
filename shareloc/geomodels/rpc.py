@@ -44,10 +44,11 @@ config.THREADING_LAYER = "omp"
 def parse_coeff_line(coeff_str):
     """
     split str coef to float list
-    :param coeff_str : line coef
-    :type coeff_str : str
-    :return coeff list
-    :rtype list()
+
+    :param coeff_str: line coef
+    :type coeff_str: str
+    :return: coeff list
+    :rtype: list()
     """
     return [float(el) for el in coeff_str.split()]
 
@@ -55,10 +56,11 @@ def parse_coeff_line(coeff_str):
 def identify_dimap(xml_file):
     """
     parse xml file to identify dimap and its version
-    :param xml_file : dimap rpc file
-    :type xml_file : str
-    :return dimap info : dimap_version and None if not an dimap file
-    :rtype str
+
+    :param xml_file: dimap rpc file
+    :type xml_file: str
+    :return: dimap info : dimap_version and None if not an dimap file
+    :rtype: str
     """
     try:
         xmldoc = minidom.parse(xml_file)
@@ -78,10 +80,11 @@ def identify_dimap(xml_file):
 def identify_ossim_kwl(ossim_kwl_file):
     """
     parse geom file to identify if it is an ossim model
-    :param ossim_kwl_file : ossim keyword list file
-    :type ossim_kwl_file : str
-    :return ossim kwl info : ossimmodel or None if not an ossim kwl file
-    :rtype str
+
+    :param ossim_kwl_fil : ossim keyword list file
+    :type ossim_kwl_file: str
+    :return: ossimmodel or None if not an ossim kwl file
+    :rtype: str
     """
     try:
         with open(ossim_kwl_file, encoding="utf-8") as ossim_file:
@@ -101,10 +104,11 @@ def identify_ossim_kwl(ossim_kwl_file):
 def identify_geotiff_rpc(image_filename):
     """
     read image file to identify if it is a geotiff which contains RPCs
-    :param image_filename : image_filename
-    :type image_filename : str
-    :return rpc info : rpc dict or None  if not a geotiff with rpc
-    :rtype str
+
+    :param image_filename: image_filename
+    :type image_filename: str
+    :return: rpc info, rpc dict or None  if not a geotiff with rpc
+    :rtype: str
     """
     try:
         dataset = rio.open(image_filename)
@@ -243,10 +247,10 @@ class RPC:
         """
         Load from Dimap
 
-        param dimap_filepath  : dimap xml file
-        :type dimap_filepath  : str
-        :param topleftconvention  : [0,0] position
-        :type topleftconvention  : boolean
+        param dimap_filepath: dimap xml file
+        :type dimap_filepath: str
+        :param topleftconvention: [0,0] position
+        :type topleftconvention: boolean
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
@@ -266,12 +270,12 @@ class RPC:
         """
         Load from Dimap v2
 
-        :param dimap_filepath  : dimap xml file
-        :type dimap_filepath  : str
-        :param topleftconvention  : [0,0] position
-        :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        :param dimap_filepath: dimap xml file
+        :type dimap_filepath: str
+        :param topleftconvention: [0,0] position
+        :type topleftconvention: boolean
+            If False : [0,0] is at the center of the Top Left pixel
+            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
 
         rpc_params = {}
@@ -342,12 +346,12 @@ class RPC:
         """
         Load from dimap v1
 
-        :param dimap_filepath  : dimap xml file
-        :type dimap_filepath  : str
-        :param topleftconvention  : [0,0] position
-        :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        :param dimap_filepath: dimap xml file
+        :type dimap_filepath: str
+        :param topleftconvention: [0,0] position
+        :type topleftconvention: boolean
+            If False : [0,0] is at the center of the Top Left pixel
+            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
 
         if not basename(dimap_filepath).upper().endswith("XML"):
@@ -406,14 +410,14 @@ class RPC:
     @classmethod
     def from_geotiff(cls, image_filename, topleftconvention=True):
         """
-        Load from a  geotiff image file
+        Load from a geotiff image file
 
-        :param image_filename  : image filename
-        :type image_filename  : str
-        :param topleftconvention  : [0,0] position
-        :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        :param image_filename: image filename
+        :type image_filename: str
+        :param topleftconvention: [0,0] position
+        :type topleftconvention: boolean
+            If False : [0,0] is at the center of the Top Left pixel
+            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns="RPC")
@@ -453,10 +457,10 @@ class RPC:
         """
         Load from a geom file
 
-        :param topleftconvention  : [0,0] position
-        :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        :param topleftconvention: [0,0] position
+        :type topleftconvention: boolean
+            If False : [0,0] is at the center of the Top Left pixel
+            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         rpc_params = {}
         # OSSIM keyword list
@@ -513,12 +517,12 @@ class RPC:
         """
         Load from any RPC (auto identify driver)
 
-        :param primary_file  : rpc filename (dimap, ossim kwl, geotiff)
-        :type primary_file  : str
-        :param topleftconvention  : [0,0] position
-        :type topleftconvention  : boolean
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        :param primary_file: rpc filename (dimap, ossim kwl, geotiff)
+        :type primary_file: str
+        :param topleftconvention: [0,0] position
+        :type topleftconvention: boolean
+            If False : [0,0] is at the center of the Top Left pixel
+            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
         if basename(primary_file.upper()).endswith("XML"):
             dimap_version = identify_dimap(primary_file)
@@ -539,16 +543,16 @@ class RPC:
         """
         direct localization at constant altitude
 
-        :param row :  line sensor position
-        :type row : float or 1D numpy.ndarray dtype=float64
-        :param col :  column sensor position
-        :type col : float or 1D numpy.ndarray dtype=float64
-        :param alt :  altitude
-        :param fill_nan : fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+        :param row:  line sensor position
+        :type row: float or 1D numpy.ndarray dtype=float64
+        :param col:  column sensor position
+        :type col: float or 1D numpy.ndarray dtype=float64
+        :param alt:  altitude
+        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
             otherwise
-        :type fill_nan : boolean
-        :return ground position (lon,lat,h)
-        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
+        :type fill_nan: boolean
+        :return: ground position (lon,lat,h)
+        :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
         if not isinstance(col, (list, np.ndarray)):
             col = np.array([col])
@@ -607,22 +611,22 @@ class RPC:
         calculates a direct loc grid (lat, lon) from the direct RPCs at constant altitude
         TODO: not tested.
 
-        :param row0 :  grid origin (row)
-        :type row0 : int
-        :param col0 :  grid origin (col)
-        :type col0 : int
-        :param steprow :  grid step (row)
-        :type steprow : int
-        :param stepcol :  grid step (col)
-        :type stepcol : int
-        :param nbrow :  grid nb row
-        :type nbrow : int
-        :param nbcol :  grid nb col
-        :type nbcol : int
-        :param alt : altitude of the grid
-        :type alt  : float
+        :param row0:  grid origin (row)
+        :type row0: int
+        :param col0:  grid origin (col)
+        :type col0: int
+        :param steprow:  grid step (row)
+        :type steprow: int
+        :param stepcol:  grid step (col)
+        :type stepcol: int
+        :param nbrow:  grid nb row
+        :type nbrow: int
+        :param nbcol:  grid nb col
+        :type nbcol: int
+        :param alt: altitude of the grid
+        :type alt: float
         :return: direct localization grid longitude and latitude
-        :rtype Tuple(numpy.array, numpy.array)
+        :rtype: Tuple(numpy.array, numpy.array)
         """
         gri_lon = np.zeros((nbrow, nbcol))
         gri_lat = np.zeros((nbrow, nbcol))
@@ -637,14 +641,14 @@ class RPC:
         """
         direct localization on dtm
 
-        :param row :  line sensor position
-        :type row : float
-        :param col :  column sensor position
-        :type col : float
-        :param dtm : dtm intersection model
-        :type dtm  : shareloc.geofunctions.dtm_intersection
-        :return ground position (lon,lat,h) in dtm coordinates system
-        :rtype numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
+        :param row:  line sensor position
+        :type row: float
+        :param col:  column sensor position
+        :type col: float
+        :param dtm: dtm intersection model
+        :type dtm: shareloc.geofunctions.dtm_intersection
+        :return: ground position (lon,lat,h) in dtm coordinates system
+        :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
         if isinstance(col, (list, np.ndarray)):
             points_nb = len(col)
@@ -678,13 +682,13 @@ class RPC:
         Inverse localization
 
         :param lon: longitude position
-        :type lon : float or 1D numpy.ndarray dtype=float64
+        :type lon: float or 1D numpy.ndarray dtype=float64
         :param lat: latitude position
-        :type lat : float or 1D numpy.ndarray dtype=float64
+        :type lat: float or 1D numpy.ndarray dtype=float64
         :param alt: altitude
-        :type alt : float
+        :type alt: float
         :return: sensor position (row, col, alt)
-        :rtype tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
+        :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
         if self.inverse_coefficient:
             if not isinstance(lon, (list, np.ndarray)):
@@ -729,17 +733,17 @@ class RPC:
         """
         Filter nan input values
 
-        :param first_coord :  first coordinate
-        :type first_coord : 1D numpy.ndarray dtype=float64
-        :param second_coord :  second coordinate
-        :type second_coord : 1D numpy.ndarray dtype=float64
+        :param first_coord:  first coordinate
+        :type first_coord: 1D numpy.ndarray dtype=float64
+        :param second_coord:  second coordinate
+        :type second_coord: 1D numpy.ndarray dtype=float64
         :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
             otherwise
-        :type fill_nan : boolean
-        :param direction :  direct or inverse localisation
-        :type direction : str in ('direct', 'inverse')
+        :type fill_nan: boolean
+        :param direction:  direct or inverse localisation
+        :type direction: str in ('direct', 'inverse')
         :return: filtered coordinates
-        :rtype list of numpy.array (index of nan, first filtered, second filtered)
+        :rtype: list of numpy.array (index of nan, first filtered, second filtered)
         """
         filter_nan = np.logical_not(np.logical_or(np.isnan(first_coord), np.isnan(second_coord)))
 
@@ -799,19 +803,19 @@ class RPC:
         """
         Iterative direct localization using inverse RPC
 
-        :param row :  line sensor position
-        :type row : float or 1D numpy.ndarray dtype=float64
-        :param col :  column sensor position
-        :type col : float or 1D numpy.ndarray dtype=float64
-        :param alt :  altitude
-        :type alt : float
+        :param row:  line sensor position
+        :type row: float or 1D numpy.ndarray dtype=float64
+        :param col:  column sensor position
+        :type col: float or 1D numpy.ndarray dtype=float64
+        :param alt:  altitude
+        :type alt: float
         :param nb_iter_max: max number of iteration
-        :type alt : int
+        :type alt: int
         :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
             otherwise
-        :type fill_nan : boolean
+        :type fill_nan: boolean
         :return: ground position (lon,lat,h)
-        :rtype list of numpy.array
+        :rtype: list of numpy.array
         """
         if self.inverse_coefficient:
             if not isinstance(row, (list, np.ndarray)):
@@ -887,26 +891,28 @@ class RPC:
     def get_alt_min_max(self):
         """
         returns altitudes min and max layers
-        :return alt_min,lat_max
-        :rtype list
+
+        :return: alt_min,lat_max
+        :rtype: list
         """
         return [self.offset_alt - self.scale_alt / 2.0, self.offset_alt + self.scale_alt / 2.0]
 
     def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False, epsg=None):
         """
         compute los extrema
-        :param row  :  line sensor position
-        :type row  : float
-        :param col :  column sensor position
-        :type col : float
-        :param alt_min : los alt min
-        :type alt_min  : float
-        :param alt_max : los alt max
-        :type alt_max : float
-        :param epsg : epsg code of the dtm
-        :type epsg  : int
-        :return los extrema
-        :rtype numpy.array (2x3)
+
+        :param row:  line sensor position
+        :type row: float
+        :param col:  column sensor position
+        :type col: float
+        :param alt_min: los alt min
+        :type alt_min: float
+        :param alt_max: los alt max
+        :type alt_max: float
+        :param epsg: epsg code of the dtm
+        :type epsg: int
+        :return: los extrema
+        :rtype: numpy.array (2x3)
         """
         extrapolate = False
         if alt_min is None or alt_max is None:
@@ -1039,7 +1045,7 @@ def compute_rational_function_polynomial(
     :param offset_lin: Line offset
     :type offset_lin: float 64
     :return: for inverse localization : sensor position (row, col). for direct localization : ground position (lon, lat)
-    :rtype Tuple(np.ndarray, np.ndarray)
+    :rtype: Tuple(np.ndarray, np.ndarray)
     """
     assert lon_col_norm.shape == alt_norm.shape
 

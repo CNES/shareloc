@@ -36,7 +36,7 @@ from shareloc.image import Image
 
 class DTMImage(Image):
     """
-    class DTM  Image to handle DTM image data
+    class DTMImage to handle DTM image data
     Inherits from Image Class with DTM particularities
     """
 
@@ -52,23 +52,24 @@ class DTMImage(Image):
     ):
         """
         constructor
-        :param image_path : image path
-        :type image_path  : string or None
-        :param read_data  : read image data
-        :type read_data  : bool
-        :param datum  :  datum "geoid" or "ellipsoid", datum is auto identified from babel header if image format is BSQ
-           otherwise if None datum is set to "geoid"
-        :type datum  : str
-        :param roi  : region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
-             roi_is_in_physical_space activated
-        :type roi  : list
-        :param roi_is_in_physical_space  : roi value in physical space
-        :type roi_is_in_physical_space  : bool
-        :param fill_nodata  fill_nodata strategy in None/'constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/
-        :type fill_nodata  : str
-        :param fill_value  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
+
+        :param image_path: image path
+        :type image_path: string or None
+        :param read_data: read image data
+        :type read_data: bool
+        :param datum:  datum "geoid" or "ellipsoid", datum is auto identified from babel header if image format is BSQ
+            otherwise if None datum is set to "geoid"
+        :type datum: str
+        :param roi: region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
+            roi_is_in_physical_space activated
+        :type roi: list
+        :param roi_is_in_physical_space: roi value in physical space
+        :type roi_is_in_physical_space: bool
+        :param fill_nodata:  fill_nodata strategy in None/'constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/
+        :type fill_nodata: str
+        :param fill_value:  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
         if None 'min' is used
-        :type fill_value  : float
+        :type fill_value: float
         """
 
         super().__init__(image_path, read_data=read_data, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space)
@@ -100,9 +101,9 @@ class DTMImage(Image):
         :type max_search_distance: float
         :param smoothing_iterations: smoothing_iterations
         :type smoothing_iterations: int
-        :param fill_value  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
-        if None 'min' is used
-        :type fill_value  : float
+        :param fill_value: fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
+            if None 'min' is used
+        :type fill_value: float
         """
         if self.mask is not None:
             if strategy in self.stats:

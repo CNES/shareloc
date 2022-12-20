@@ -35,21 +35,23 @@ from shareloc.proj_utils import coordinates_conversion
 
 
 class Localization:
-    """base class for localization function.
+    """
+    Base class for localization function.
     Underlying model can be both multi layer localization grids or RPCs models
     """
 
     def __init__(self, model, elevation=None, image=None, epsg=None):
         """
-        constructor
-        :param model : geometric model
-        :type model  : shareloc.grid or  shareloc.rpc
-        :param elevation  : dtm or default elevation over ellipsoid if None elevation is set to 0
-        :type elevation  : shareloc.dtm or float or np.ndarray
-        :param image  : image class to handle geotransform
-        :type image  : shareloc.image.Image
-        :param epsg  : coordinate system of world points, if None model coordiante system will be used
-        :type epsg  : int
+        Localization constructor
+
+        :param model: geometric model
+        :type model: shareloc.grid or  shareloc.rpc
+        :param elevation: dtm or default elevation over ellipsoid if None elevation is set to 0
+        :type elevation: shareloc.dtm or float or np.ndarray
+        :param image: image class to handle geotransform
+        :type image: shareloc.image.Image
+        :param epsg: coordinate system of world points, if None model coordiante system will be used
+        :type epsg: int
         """
         self.use_rpc = model.type == "rpc"
         self.model = model
@@ -65,16 +67,17 @@ class Localization:
     def direct(self, row, col, h=None, using_geotransform=False):
         """
         direct localization
-        :param row :  sensor row
-        :type row : float or 1D np.ndarray
-        :param col : sensor col
-        :type col : float or 1D np.ndarray
+
+        :param row: sensor row
+        :type row: float or 1D np.ndarray
+        :param col: sensor col
+        :type col: float or 1D np.ndarray
         :param h: altitude, if none DTM is used
-        :type h : float or 1D np.ndarray
+        :type h: float or 1D np.ndarray
         :param using_geotransform: using_geotransform
-        :type using_geotransform : boolean
-        :return coordinates : [lon,lat,h] (2D np.array)
-        :rtype np.ndarray of 2D dimension
+        :type using_geotransform: boolean
+        :return coordinates: [lon,lat,h] (2D np.array)
+        :rtype: np.ndarray of 2D dimension
         """
         if using_geotransform and self.image is not None:
             row, col = self.image.transform_index_to_physical_point(row, col)
@@ -98,10 +101,11 @@ class Localization:
             * whole validity domains if image is not given
             * image footprint if image is set
             * epipolar footprint if right_model is set
+
         :param margin: footprint margin (in degrees)
-        :type margin : float
-        :return extent : [lon_min,lat_min,lon max,lat max] (2D np.array)
-        :rtype numpy.array
+        :type margin: float
+        :return: extent [lon_min,lat_min,lon max,lat max] (2D np.array)
+        :rtype: numpy.array
         """
         footprint = np.zeros([2, 2])
         if self.image is not None:
@@ -122,13 +126,14 @@ class Localization:
     def inverse(self, lon, lat, h=None, using_geotransform=False):
         """
         inverse localization
-        :param lat :  latitude (or y)
-        :param lon : longitude (or x)
-        :param h : altitude
+
+        :param lat:  latitude (or y)
+        :param lon: longitude (or x)
+        :param h: altitude
         :param using_geotransform: using_geotransform
-        :type using_geotransform : boolean
-        :return coordinates : [row,col,h] (1D np.ndarray)
-        :rtype Tuple(1D np.ndarray row position, 1D np.ndarray col position, 1D np.ndarray alt)
+        :type using_geotransform: boolean
+        :return: coordinates [row,col,h] (1D np.ndarray)
+        :rtype: Tuple(1D np.ndarray row position, 1D np.ndarray col position, 1D np.ndarray alt)
         """
 
         if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
@@ -170,14 +175,14 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
     :type col: int or 1D numpy array
     :param elevation: elevation
     :type elevation: shareloc.dtm or float or 1D numpy array
-    :param image1  : image class to handle geotransform
-    :type image1  : shareloc.image.Image
-    :param image2  : image class to handle geotransform
-    :type image2  : shareloc.image.Image
+    :param image1: image class to handle geotransform
+    :type image1: shareloc.image.Image
+    :param image2: image class to handle geotransform
+    :type image2: shareloc.image.Image
     :param using_geotransform: using_geotransform
-    :type using_geotransform : boolean
+    :type using_geotransform: boolean
     :return: Corresponding sensor position [row, col, True] in the geometric model 2
-    :rtype : Tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
+    :rtype: Tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
     """
     geometric_model1 = Localization(model1, elevation, image=image1)
     geometric_model2 = Localization(model2, elevation, image=image2)

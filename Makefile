@@ -20,8 +20,8 @@ ifndef VENV
 	VENV = "venv"
 endif
 
-# Software version from setup.py and setuptools_scm
-VERSION = $(shell python3 setup.py --version)
+# Get setuptools_scm version 
+VERSION = $(shell python3 -c 'from importlib.metadata import version; print(version("shareloc"))')
 VERSION_MIN = $(shell echo ${VERSION} | cut -d . -f 1,2,3)
 
 # Browser definition

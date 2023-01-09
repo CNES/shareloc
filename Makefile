@@ -21,7 +21,7 @@ ifndef VENV
 endif
 
 # Get setuptools_scm version 
-VERSION = $(shell python3 -c 'from importlib.metadata import version; print(version("shareloc"))')
+VERSION = $(shell python3 -c 'from shareloc import __version__; print(__version__)')
 VERSION_MIN = $(shell echo ${VERSION} | cut -d . -f 1,2,3)
 
 # Browser definition

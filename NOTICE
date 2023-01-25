@@ -32,11 +32,6 @@ Copyright (c) 2016, MapBox All rights reserved.
 Website: https://github.com/mapbox/rasterio
 License: BSD 3 Clause.
 
-netCDF4: Python/numpy interface to the netCDF C library.
-Copyright (c) 2008 Jeffrey Whitaker
-Website: https://github.com/Unidata/netcdf4-python
-Licence: MIT.
-
 Python: programming language that lets you work quickly and integrate systems more effectively.
 Copyright (c) 2001-2022 Python Software Foundation. All Rights reserved.
 Website: http://python.org/

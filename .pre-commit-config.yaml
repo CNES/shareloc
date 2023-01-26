@@ -28,3 +28,12 @@ repos:
     language: system
     entry: pylint --rcfile=.pylintrc
     files: \.py$
+
+  - id: sphinx-checking
+    name: Checking Sphinx building
+    entry: sphinx-build -M html docs/source/ docs/build -W --keep-going
+    language: system
+    files: ^(docs/.*|shareloc/.*)$
+    pass_filenames: False
+    stages: [push]
+

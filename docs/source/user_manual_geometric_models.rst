@@ -69,6 +69,11 @@ It can be viewed at 3D grid (row,col,h) as illustrated below :
 
     direct location grid
 
+.. note::
+    Within the grid a bilinear interpolation is used between the grid nodes.
+    If a point location outside the grid is requested, shareloc computes an extrapolation that is equivalent
+    to scipy.interpolation.interpn() function.
+
 Shareloc grid format specifications
 -----------------------------------
 

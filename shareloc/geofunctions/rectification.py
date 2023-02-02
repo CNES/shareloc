@@ -154,7 +154,7 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, e
 def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset):
     """
     Determine size and spacing of the epipolar grids.
-    Determine size of the epipolare images and the upper-left origin of the stereo-rectified left image (starting point)
+    Determine size of the epipolar images and the upper-left origin of the stereo-rectified left image (starting point)
 
     :param left_im: left image
     :type left_im: shareloc.image object
@@ -172,8 +172,8 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
         - epipolar grids spacing (pixel size), 1D np.array [row pixel size, col pixel size]
         - epipolar grids size, 1D np.array [number of row, number of columns]
         - epipolar images size, 1D np.array [number of row, number of columns]
-        - epipolar image starting point in the left image, 1D np.array [georef row, georef col, altitude]
-        - epipolar image estimated ending point in the left image, 1D np.array [georef row, georef col, altitude]
+        - epipolar grid corners in left image geometry [ul, ll, lr, ur]
+            2D np.array [georef corner_row, georef corner_col, altitude]
     :rtype: Tuple
     """
     # Choose a square spacing
@@ -229,24 +229,35 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     # 5) Compute the size of epipolar images
     rectified_image_size = [int((maxy - miny) / mean_spacing), int((maxx - minx) / mean_spacing)]
 
-    # 6) Georeferenced coordinates of the upper-left and lower right position of left epipolar image
-    # (starting point, end point)
-    left_epi_origin = [
+    # 6) Georeferenced coordinates of the [ul, ll, lr, ur] position of left epipolar image
+    left_epi_ul = [
         left_origin[0] + (unit_vector_along_epi_y * minx + unit_vector_ortho_epi_y * miny),
         left_origin[1] + (unit_vector_along_epi_x * minx + unit_vector_ortho_epi_x * miny),
         (local_epi_start[2] + local_epi_end[2]) / 2.0,
     ]
-
-    left_epi_end = [
-        left_origin[0] + (unit_vector_along_epi_y * maxx + unit_vector_ortho_epi_y * maxy),
-        left_origin[1] + (unit_vector_along_epi_x * maxx + unit_vector_ortho_epi_x * maxy),
+    left_epi_lr = [
+        left_origin[0] + (unit_vector_along_epi_y * (maxx + epi_step) + unit_vector_ortho_epi_y * (maxy + epi_step)),
+        left_origin[1] + (unit_vector_along_epi_x * (maxx + epi_step) + unit_vector_ortho_epi_x * (maxy + epi_step)),
+        (local_epi_start[2] + local_epi_end[2]) / 2.0,
+    ]
+    left_epi_ur = [
+        left_origin[0] + (unit_vector_along_epi_y * minx + unit_vector_ortho_epi_y * (maxy + epi_step)),
+        left_origin[1] + (unit_vector_along_epi_x * minx + unit_vector_ortho_epi_x * (maxy + epi_step)),
+        (local_epi_start[2] + local_epi_end[2]) / 2.0,
+    ]
+    left_epi_ll = [
+        left_origin[0] + (unit_vector_along_epi_y * (maxx + epi_step) + unit_vector_ortho_epi_y * miny),
+        left_origin[1] + (unit_vector_along_epi_x * (maxx + epi_step) + unit_vector_ortho_epi_x * miny),
         (local_epi_start[2] + local_epi_end[2]) / 2.0,
     ]
 
+    footprint = np.array([left_epi_ul, left_epi_ll, left_epi_lr, left_epi_ur])
+
     # 7) Compute the size of the epipolar grids, convention [nb_row, nb_col]
+    # Two cells are added to the grid in order to harmonize the OTB conventions.
     grid_size = [int(rectified_image_size[0] / epi_step + 2), int(rectified_image_size[1] / epi_step + 2)]
 
-    return grid_pixel_size, grid_size, rectified_image_size, left_epi_origin, left_epi_end
+    return grid_pixel_size, grid_size, rectified_image_size, footprint
 
 
 def get_epipolar_extent(
@@ -272,17 +283,16 @@ def get_epipolar_extent(
     :return: [lon_min,lat_min,lon max,lat max] (2D np.array)
     :rtype: numpy.array
     """
-    footprint = np.zeros([2, 2])
-    __, __, __, left_epi_origin, left_epi_end = prepare_rectification(
+    __, __, __, footprint = prepare_rectification(
         left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset
     )
-    footprint[0, :] = left_epi_origin[0:2]
-    footprint[1, :] = left_epi_end[0:2]
-    using_geotransform = False
+
     loc_left = Localization(geom_model_left, image=left_im)
-    on_ground_pos = loc_left.direct(footprint[:, 0], footprint[:, 1], 0, using_geotransform=using_geotransform)
+    footprint = footprint[:, 0:2]
+    on_ground_pos = loc_left.direct(footprint[:, 0], footprint[:, 1], 0, using_geotransform=False)
     [lon_min, lat_min, __] = np.min(on_ground_pos, 0)
     [lon_max, lat_max, __] = np.max(on_ground_pos, 0)
+
     return np.array([lat_min - margin, lon_min - margin, lat_max + margin, lon_max + margin])
 
 
@@ -430,7 +440,7 @@ def compute_stereorectification_epipolar_grids(
     """
     # Retrieve grids : spacing (pixel size) and size
     # Retrieve epipolar image : size and upper-left origin in the left image geometry (starting point)
-    __, grid_size, rectified_image_size, left_epi_origin, __ = prepare_rectification(
+    __, grid_size, rectified_image_size, footprint = prepare_rectification(
         left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset
     )
 
@@ -440,7 +450,7 @@ def compute_stereorectification_epipolar_grids(
     left_grid, right_grid = initialize_grids(epi_step, grid_size[0], grid_size[1])
 
     # Starting points are the upper-left origin of the left epipolar image, and it's correspondent in the right image
-    start_left = np.copy(left_epi_origin)
+    start_left = np.copy(footprint[0])
     start_right = np.zeros(3, dtype=start_left.dtype)
     start_right[0], start_right[1], start_right[2] = coloc(
         geom_model_left, geom_model_right, start_left[0], start_left[1], elevation

@@ -114,7 +114,7 @@ class Grid:
 
         grid_image = Image(self.filename, read_data=True)
         if grid_image.dataset.driver != "GTiff":
-            raise Exception(
+            raise TypeError(
                 "Only Geotiff grids are accepted. Please refer to the documentation for grid supported format."
             )
         metadata = grid_image.dataset.tags()

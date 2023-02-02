@@ -73,8 +73,8 @@ def identify_dimap(xml_file):
         version = mtd[0].getElementsByTagName(version_tag)[0].attributes.items()[0][1]
     except Exception:  # pylint: disable=broad-except
         return None
-    else:
-        return version
+
+    return version
 
 
 def identify_ossim_kwl(ossim_kwl_file):

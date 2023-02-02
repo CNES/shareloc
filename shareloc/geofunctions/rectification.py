@@ -221,10 +221,10 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     )
 
     # Bounding box
-    minx = min(min(min(urx, llx), lrx), ulx)
-    miny = min(min(min(ury, lly), lry), uly)
-    maxx = max(max(max(urx, llx), lrx), ulx)
-    maxy = max(max(max(ury, lly), lry), uly)
+    minx = min(urx, llx, lrx, ulx)
+    miny = min(ury, lly, lry, uly)
+    maxx = max(urx, llx, lrx, ulx)
+    maxy = max(ury, lly, lry, uly)
 
     # 5) Compute the size of epipolar images
     rectified_image_size = [int((maxy - miny) / mean_spacing), int((maxx - minx) / mean_spacing)]

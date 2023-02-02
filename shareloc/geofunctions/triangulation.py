@@ -218,7 +218,7 @@ def epipolar_triangulation(
     elif matches_type == "disp":
         [epi_pos_left, epi_pos_right, values_ok] = transform_disp_to_matches(matches, mask)
     else:
-        raise Exception("matches type should be sift or disp")
+        raise KeyError("matches type should be sift or disp")
 
     # interpolate left
     rectif_grid_left = RectificationGrid(grid_left)

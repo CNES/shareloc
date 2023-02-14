@@ -771,5 +771,6 @@ def coloc(multi_h_grid_src, multi_h_grid_dst, dtm, origin, step, size):
             # TODO: refacto interfaces to avoid np.squeeze if not necessary
             (lon, lat, alt) = np.squeeze(multi_h_grid_src.direct_loc_dtm(row, col, dtm))
             pos_dst = multi_h_grid_dst.inverse_loc(lon, lat, alt)
+            pos_dst = np.array([*pos_dst])[:, 0]
             gricoloc[:, index_row, index_col] = pos_dst
     return gricoloc

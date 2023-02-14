@@ -61,7 +61,7 @@ def test_sensor_triangulation(row, col, h):
     inv_row, inv_col, __ = grid_right.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
     # matches are defined as Nx4 array, here N=1
     matches = np.zeros([1, 4])
-    matches[0, :] = [col, row, inv_col, inv_row]
+    matches[0, :] = [col, row, inv_col[0], inv_row[0]]
 
     # compute triangulation with residues (see sensor_triangulation docstring for further details),
     point_ecef, point_wgs84, distance = sensor_triangulation(matches, grid_left, grid_right, residues=True)

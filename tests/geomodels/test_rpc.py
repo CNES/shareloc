@@ -31,6 +31,7 @@ import os
 # Third party imports
 import numpy as np
 import pytest
+import rasterio
 
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
@@ -189,6 +190,7 @@ def test_rpc_direct_iterative(id_scene, lon, lat, alt):
     assert lat == pytest.approx(lat2, abs=1e-2)
 
 
+@pytest.mark.filterwarnings("ignore", category=rasterio.errors.NotGeoreferencedWarning)
 @pytest.mark.parametrize(
     "prod, can_read",
     [

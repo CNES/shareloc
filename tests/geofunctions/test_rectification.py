@@ -20,6 +20,8 @@
 #
 """
 Test module for rectification grid interpolation class shareloc/geofunctions/rectification*.py
+Ground truth references (gt_{left/right}_grid*.tif) have been generated using OTB StereoRectificationGridGenerator
+application.
 """
 
 # Standard imports

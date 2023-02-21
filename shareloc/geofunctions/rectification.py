@@ -292,7 +292,7 @@ def get_epipolar_extent(
     on_ground_pos = loc_left.direct(footprint[:, 0], footprint[:, 1], 0, using_geotransform=False)
     [lon_min, lat_min, __] = np.min(on_ground_pos, 0)
     [lon_max, lat_max, __] = np.max(on_ground_pos, 0)
-
+    # Sometimes a margin is added because we don't know the epipolar grid footprint size.
     return np.array([lat_min - margin, lon_min - margin, lat_max + margin, lon_max + margin])
 
 

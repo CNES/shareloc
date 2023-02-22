@@ -95,7 +95,7 @@ def test_localize_direct_grid():
     # first instanciate the Grid geometric model
     # data = os.path.join(data_path(), "rpc/phr_ventoux/", "left_image.geom")
     # geom_model_1 = RPC.from_any(data)
-    data = os.path.join(data_path(), "grid/phr_ventoux/", "left_image_grid.tif")
+    data = os.path.join(data_path(), "grid/phr_ventoux/", "GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif")
     geom_model = Grid(data)
     # then read the Image to retrieve its geotransform
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")

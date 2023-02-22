@@ -121,17 +121,20 @@ class Grid:
         self.nbalt = int(grid_image.dataset.count / 2)
         self.nbrow = grid_image.nb_rows
         self.nbcol = grid_image.nb_columns
+        # data in global or specific metadata namespace
+        for tags in grid_image.dataset.tag_namespaces():
+            metadata.update(grid_image.dataset.tags(ns=tags))
         indexes = self.parse_metadata_alti(metadata)
         lon_indexes = indexes * 2
         self.lon_data = grid_image.data[lon_indexes, :, :]
         self.lat_data = grid_image.data[lon_indexes + 1, :, :]
         self.stepcol = grid_image.pixel_size_col
         self.steprow = grid_image.pixel_size_row
-        self.col0 = grid_image.origin_col + self.stepcol / 2.0
-        self.row0 = grid_image.origin_row + self.steprow / 2.0
+        self.col0 = grid_image.origin_col
+        self.row0 = grid_image.origin_row
         self.rowmax = self.row0 + self.steprow * (self.nbrow - 1)
         self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
-        for key in metadata.keys():
+        for key in metadata:
             if key.endswith("REF"):
                 self.repter = metadata[key]
                 self.epsg = int(metadata[key].split(":")[1])

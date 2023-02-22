@@ -73,13 +73,13 @@ def test_grid_extrapolation(get_geotiff_grid):
     grid_step = np.array([grid_image.pixel_size_row, grid_image.pixel_size_col])
     grid_origin = np.array(
         [
-            grid_image.origin_row + grid_image.pixel_size_row / 2.0,
-            grid_image.origin_col + grid_image.pixel_size_col / 2.0,
+            grid_image.origin_row,
+            grid_image.origin_col,
         ]
     )
 
     # Point to extrapolate in row col
-    point = [-49.5, -49.5]
+    point = [0.5, 0.5]
 
     # Row array coordinates
     row_indexes = np.arange(grid_origin[0], grid_origin[0] + grid_image.nb_rows * grid_step[0], grid_step[0])

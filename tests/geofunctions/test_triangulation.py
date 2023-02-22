@@ -26,11 +26,11 @@ import logging
 
 # Standard imports
 import os
+import pickle
 
 # Third party imports
 import numpy as np
 import pytest
-import xarray as xr
 
 # Shareloc imports
 from shareloc.geofunctions.triangulation import distance_point_los, epipolar_triangulation, sensor_triangulation
@@ -211,37 +211,6 @@ def stats_diff(cloud, array_epi):
     return stats
 
 
-def create_dataset(disp, point_wgs84, point_ecef, residuals):
-    """
-    create new dataset from existing one
-    :param point_wgs84 :  points WGS84
-    :type point_wgs84 : numpy.array
-    :param point_ecef :  points ECEF
-    :type point_ecef : numpy.array
-    :param residuals :  traingulations residuals
-    :type residuals : numpy.array
-    :return dataset
-    :rtype xarray.dataset
-    """
-    array_shape = disp.disp.values.shape
-    array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1], 3))
-    array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
-    array_residuals = residuals.reshape((array_shape[0], array_shape[1]))
-    pc_dataset = xr.Dataset(
-        {
-            "pc_wgs84_x": (["row", "col"], array_epi_wgs84[:, :, 0]),
-            "pc_wgs84_y": (["row", "col"], array_epi_wgs84[:, :, 1]),
-            "pc_wgs84_z": (["row", "col"], array_epi_wgs84[:, :, 2]),
-            "pc_ecef_x": (["row", "col"], array_epi_ecef[:, :, 0]),
-            "pc_ecef_y": (["row", "col"], array_epi_ecef[:, :, 1]),
-            "pc_ecef_z": (["row", "col"], array_epi_ecef[:, :, 2]),
-            "residues": (["row", "col"], array_residuals),
-        },
-        coords={"row": disp.coords["row"], "col": disp.coords["col"]},
-    )
-    return pc_dataset
-
-
 @pytest.mark.unit_tests
 def test_epi_triangulation_disp_rpc():
     """
@@ -263,18 +232,17 @@ def test_epi_triangulation_disp_rpc():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
 
-    disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.nc")
-    disp = xr.load_dataset(disp_filename)
-
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(
+    disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.pickle")
+    with open(disp_filename, "rb") as disp_file:
+        disp = pickle.load(disp_file)
+    point_ecef, _, _ = epipolar_triangulation(
         disp, None, "disp", geom_model_left, geom_model_right, grid_left_filename, grid_right_filename, residues=True
     )
-    pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
-    disp = xr.merge((disp, pc_dataset))
 
     # open cloud
-    cloud_filename = os.path.join(data_path(), "triangulation", "cloud_ECEF.nc")
-    cloud = xr.load_dataset(cloud_filename)
+    cloud_filename = os.path.join(data_path(), "triangulation", "cloud_ECEF.pickle")
+    with open(cloud_filename, "rb") as cloud_file:
+        cloud = pickle.load(cloud_file)
     array_shape = disp.disp.values.shape
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
     stats = stats_diff(cloud, array_epi_ecef)
@@ -299,9 +267,9 @@ def test_epi_triangulation_disp_rpc_roi():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid_ventoux.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid_ventoux.tif")
 
-    disp_filename = os.path.join(data_path(), "triangulation", "disp1_ref.nc")
-    disp = xr.load_dataset(disp_filename)
-
+    disp_filename = os.path.join(data_path(), "triangulation", "disp1_ref.pickle")
+    with open(disp_filename, "rb") as disp_file:
+        disp = pickle.load(disp_file)
     __, point_wgs84, __ = epipolar_triangulation(
         disp,
         None,
@@ -313,11 +281,11 @@ def test_epi_triangulation_disp_rpc_roi():
         residues=True,
         fill_nan=True,
     )
-    # pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
 
     # open cloud
-    cloud_filename = os.path.join(data_path(), "triangulation", "triangulation1_ref.nc")
-    cloud = xr.load_dataset(cloud_filename)
+    cloud_filename = os.path.join(data_path(), "triangulation", "triangulation1_ref.pickle")
+    with open(cloud_filename, "rb") as cloud_file:
+        cloud = pickle.load(cloud_file)
     array_shape = disp.disp.values.shape
     array_epi_wgs84 = point_wgs84.reshape((array_shape[0], array_shape[1], 3))
     stats = stats_diff(cloud, array_epi_wgs84)
@@ -348,18 +316,18 @@ def test_epi_triangulation_disp_grid():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
 
-    disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.nc")
-    disp = xr.load_dataset(disp_filename)
+    disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.pickle")
+    with open(disp_filename, "rb") as disp_file:
+        disp = pickle.load(disp_file)
 
-    point_ecef, point_wgs84, residuals = epipolar_triangulation(
+    point_ecef, _, _ = epipolar_triangulation(
         disp, None, "disp", gri_left, gri_right, grid_left_filename, grid_right_filename, residues=True
     )
-    pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
-    disp = xr.merge((disp, pc_dataset))
 
     # open cloud
-    cloud_filename = os.path.join(data_path(), "triangulation", "cloud_ECEF.nc")
-    cloud = xr.load_dataset(cloud_filename)
+    cloud_filename = os.path.join(data_path(), "triangulation", "cloud_ECEF.pickle")
+    with open(cloud_filename, "rb") as cloud_file:
+        cloud = pickle.load(cloud_file)
     array_shape = disp.disp.values.shape
     array_epi_ecef = point_ecef.reshape((array_shape[0], array_shape[1], 3))
 
@@ -386,12 +354,12 @@ def test_epi_triangulation_disp_grid_masked():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
 
-    disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.nc")
-    disp = xr.load_dataset(disp_filename)
+    disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.pickle")
+    with open(disp_filename, "rb") as disp_file:
+        disp = pickle.load(disp_file)
     mask_array = disp.msk.values
     point_ecef, __, __ = epipolar_triangulation(
         disp, mask_array, "disp", gri_left, gri_right, grid_left_filename, grid_right_filename, residues=True
     )
-    # pc_dataset = create_dataset(disp, point_wgs84, point_ecef, residuals)
-    # disp = xr.merge((disp, pc_dataset))
+
     assert np.array_equal(point_ecef[0, :], [0, 0, 0])

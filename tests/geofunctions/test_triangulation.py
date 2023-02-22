@@ -20,6 +20,10 @@
 #
 """
 Test module for triangulation class shareloc/geofunctions/triangulation.py
+
+Netcdf4 historical ref data converted to pickle to avoid netcdf4 dependency :
+pickle.dump(xarray_data, open('xarray_data_file.pickle','wb'))
+To be changed with CARS output when interface is stable
 """
 
 import logging

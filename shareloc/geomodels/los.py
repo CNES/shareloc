@@ -65,7 +65,8 @@ class LOS:
         self.los_nb = self.sensors_positions.shape[0]
         if alt_min_max is None:
             alt_min, alt_max = self.geometrical_model.get_alt_min_max()
-
+        else:
+            alt_min, alt_max = alt_min_max
         # LOS construction right
         los_extrema = np.zeros([2 * self.los_nb, 3])
         list_col, list_row = (self.sensors_positions[:, 0], self.sensors_positions[:, 1])

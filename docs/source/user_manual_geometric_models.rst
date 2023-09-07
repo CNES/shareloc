@@ -39,7 +39,7 @@ Further details are given in `RPC in Geotiff`_, `STDI-0002 2.1 (16Nov2000) speci
 Supported RPC formats
 ---------------------
 
-* DIMAP format (V1/V2)
+* DIMAP format (V1/V2/V3)
 * OSSIM keywordlist
 * Geotiff RPC
 

@@ -20,6 +20,10 @@ ifndef VENV
 	VENV = "venv"
 endif
 
+# Check shareloc install
+CHECK_SHARELOC = $(shell ${VENV}/bin/python -m pip list|grep shareloc)
+
+
 # Get setuptools_scm version 
 VERSION = $(shell python3 -c 'from shareloc import __version__; print(__version__)')
 VERSION_MIN = $(shell echo ${VERSION} | cut -d . -f 1,2,3)
@@ -70,8 +74,8 @@ venv: ## create virtualenv in "venv" dir if not exists
 
 .PHONY: install
 install: venv  ## install the package in dev mode in virtualenv
-	@test -f ${VENV}/bin/shareloc || echo "Install shareloc package from local directory"
-	@test -f ${VENV}/bin/shareloc || ${VENV}/bin/python -m pip install -e .[dev,docs,notebook]
+	[ "${CHECK_SHARELOC}" ] || echo "Install shareloc package from local directory"
+	[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/python -m pip install -e .[dev,docs,notebook]
 	@test -f .git/hooks/pre-commit || echo "Install pre-commit"
 	@test -f .git/hooks/pre-commit || ${VENV}/bin/pre-commit install -t pre-commit
 	@test -f .git/hooks/pre-push || ${VENV}/bin/pre-commit install -t pre-push	

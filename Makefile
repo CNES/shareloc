@@ -20,6 +20,10 @@ ifndef VENV
 	VENV = "venv"
 endif
 
+# Check shareloc install
+CHECK_SHARELOC = $(shell ${VENV}/bin/python -m pip list|grep shareloc)
+
+
 # Get setuptools_scm version 
 VERSION = $(shell python3 -c 'from shareloc import __version__; print(__version__)')
 VERSION_MIN = $(shell echo ${VERSION} | cut -d . -f 1,2,3)
@@ -65,13 +69,13 @@ help: ## this help
 .PHONY: venv
 venv: ## create virtualenv in "venv" dir if not exists
 	@test -d ${VENV} || python3 -m venv ${VENV}
-	@${VENV}/bin/python -m pip install --upgrade pip setuptools wheel # no check to upgrade each time
+	@${VENV}/bin/python -m pip install --upgrade pip setuptools wheel # no check to upgrade each time install is run
 	@touch ${VENV}/bin/activate
 
 .PHONY: install
 install: venv  ## install the package in dev mode in virtualenv
-	@test -f ${VENV}/bin/shareloc || echo "Install shareloc package from local directory"
-	@test -f ${VENV}/bin/shareloc || ${VENV}/bin/python -m pip install -e .[dev,docs,notebook]
+	[ "${CHECK_SHARELOC}" ] || echo "Install shareloc package from local directory"
+	[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/python -m pip install -e .[dev,docs,notebook]
 	@test -f .git/hooks/pre-commit || echo "Install pre-commit"
 	@test -f .git/hooks/pre-commit || ${VENV}/bin/pre-commit install -t pre-commit
 	@test -f .git/hooks/pre-push || ${VENV}/bin/pre-commit install -t pre-push	
@@ -81,15 +85,15 @@ install: venv  ## install the package in dev mode in virtualenv
 ## Test section
 
 .PHONY: test
-test: install ## run tests and coverage quickly with the default Python
-	@${VENV}/bin/pytest -o log_cli=true  -o log_cli_level=${LOGLEVEL} --cov-config=.coveragerc --cov --cov-report=term-missing
+test: ## run tests and coverage quickly with the default Python
+	@${VENV}/bin/pytest -o log_cli_level=${LOGLEVEL} --cov-config=.coveragerc --cov --cov-report=term-missing
 
 .PHONY: test-all
-test-all: install ## run tests on every Python version with tox
+test-all: ## run tests on every Python version with tox
 	@${VENV}/bin/tox -r -p auto  ## recreate venv (-r) and parallel mode (-p auto)
 
 .PHONY: coverage
-coverage: install ## check code coverage quickly with the default Python
+coverage: ## check code coverage quickly with the default Python
 	@${VENV}/bin/coverage run --source shareloc -m pytest
 	@${VENV}/bin/coverage report -m
 	@${VENV}/bin/coverage html
@@ -100,22 +104,22 @@ coverage: install ## check code coverage quickly with the default Python
 ### Format with isort and black
 
 .PHONY: format
-format: install format/isort format/black  ## run black and isort formatting (depends install)
+format: format/isort format/black  ## run black and isort formatting
 
 .PHONY: format/isort
-format/isort: install  ## run isort formatting (depends install)
+format/isort: ## run isort formatting
 	@echo "+ $@"
 	@${VENV}/bin/isort shareloc tests
 
 .PHONY: format/black
-format/black: install  ## run black formatting (depends install)
+format/black: ## run black formatting
 	@echo "+ $@"
 	@${VENV}/bin/black shareloc tests
 
 ### Check code quality and linting : isort, black, flake8, pylint
 
 .PHONY: lint
-lint: install lint/isort lint/black lint/flake8 lint/pylint ## check code quality and linting
+lint:  lint/isort lint/black lint/flake8 lint/pylint ## check code quality and linting
 
 .PHONY: lint/isort
 lint/isort: ## check imports style with isort
@@ -153,7 +157,7 @@ docs: install ## generate Sphinx HTML documentation, including API docs
 ## Notebook section
 
 .PHONY: notebook
-notebook: install ## Install Jupyter notebook kernel with venv
+notebook: ## Install Jupyter notebook kernel with venv
 	@echo "Install Jupyter Kernel and launch Jupyter notebooks environment"
 	@${VENV}/bin/python -m ipykernel install --sys-prefix --name=shareloc-$(VENV) --display-name=shareloc-$(VERSION)
 	@echo " --> After virtualenv activation, please use following command to launch local jupyter notebook to open Notebooks:"
@@ -189,15 +193,15 @@ release: dist ## package and upload a release
 ## Clean section
 
 .PHONY: clean
-clean: clean-venv clean-build clean-precommit clean-pyc clean-test clean-docs clean-notebook ## remove all build, test, precommit, coverage, notebook checkpoints and Python artifacts
+clean: clean-venv clean-build clean-precommit clean-pyc clean-test clean-docs clean-notebook ## remove all venv, build, precommit, python artifacts, test, docs, notebook cache
 
 .PHONY: clean-venv
-clean-venv:
+clean-venv: ## clean installed venv
 	@echo "+ $@"
 	@rm -rf ${VENV}
 
 .PHONY: clean-build
-clean-build: ## remove build artifacts
+clean-build: ## clean build artifacts
 	@echo "+ $@"
 	@rm -fr build/
 	@rm -fr dist/
@@ -206,19 +210,19 @@ clean-build: ## remove build artifacts
 	@find . -name '*.egg' -exec rm -f {} +
 
 .PHONY: clean-precommit
-clean-precommit:
+clean-precommit: ## clean precommit
 	@rm -f .git/hooks/pre-commit
 	@rm -f .git/hooks/pre-push
 
 .PHONY: clean-pyc
-clean-pyc: ## remove Python file artifacts
+clean-pyc: ## clean python file artifacts
 	@echo "+ $@"
 	@find . -type f -name "*.py[co]" -exec rm -fr {} +
 	@find . -type d -name "__pycache__" -exec rm -fr {} +
 	@find . -name '*~' -exec rm -fr {} +
 
 .PHONY: clean-test
-clean-test: ## remove test and coverage artifacts
+clean-test: ## clean test and coverage artifacts
 	@echo "+ $@"
 	@rm -fr .tox/
 	@rm -f .coverage
@@ -231,19 +235,19 @@ clean-test: ## remove test and coverage artifacts
 	@rm -f debug.log
 
 .PHONY: clean-docs
-clean-docs:
+clean-docs: ## clean generated docs
 	@echo "+ $@"
 	@rm -rf docs/build/
 	@rm -rf docs/source/api_reference/
 	@rm -rf docs/source/apidoc/
 
 .PHONY: clean-notebook
-clean-notebook:
+clean-notebook: ## clean notebooks cache
 	@echo "+ $@"
 	@find . -type d -name ".ipynb_checkpoints" -exec rm -fr {} +
 
 .PHONY: clean-docker
-clean-docker:
+clean-docker: ## clean shareloc docker images
 		@echo "+ $@"
 		@echo "Clean Docker image shareloc ${VERSION_MIN}"
 		@docker image rm cnes/shareloc:${VERSION_MIN}

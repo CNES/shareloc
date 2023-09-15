@@ -51,7 +51,7 @@ class Image:
         :param roi  : region of interest [row_min,col_min,row_max,col_max] or [ymin,xmin,ymax,xmax] if
              roi_is_in_physical_space activated
         :type roi  : list
-        :param roi_is_in_physical_space  : roi value in physical space
+        :param roi_is_in_physical_space  : ROI value in physical space
         :type roi_is_in_physical_space  : bool
         """
         if image_path is not None:
@@ -68,6 +68,7 @@ class Image:
 
             roi_window = None
             if roi is not None:
+                # User have set ROI in physical space or not
                 if roi_is_in_physical_space:
                     row_off, col_off = self.transform_physical_point_to_index(roi[0], roi[1])
                     row_max, col_max = self.transform_physical_point_to_index(roi[2], roi[3])
@@ -83,8 +84,7 @@ class Image:
                     col_off = np.floor(col_off)
                     width = int(np.ceil(col_max - col_off))
                     height = int(np.ceil(row_max - row_off))
-                    # pylint: disable=logging-too-many-args
-                    logging.info("roi in image , offset : %s %s size %s %s", col_off, row_off, width, height)
+                    logging.debug("roi in image , offset : %s %s size %s %s", col_off, row_off, width, height)
                 else:
                     row_off = roi[0]
                     col_off = roi[1]
@@ -95,7 +95,7 @@ class Image:
                 self.nb_rows = height
                 self.nb_columns = width
             else:
-                # Image size
+                # Image size if no ROI
                 self.nb_rows = self.dataset.height
                 self.nb_columns = self.dataset.width
                 roi_window = None
@@ -126,8 +126,7 @@ class Image:
                 self.data = np.squeeze(self.dataset.read(window=roi_window))
                 if self.nodata is not None:
                     self.mask = np.squeeze(self.dataset.read_masks(window=roi_window))
-                    # pylint: disable=logging-too-many-args
-                    logging.info("image contains %d nodata values ", np.sum(self.mask == 0))
+                    logging.debug("image contains %d nodata values ", np.sum(self.mask == 0))
 
     def set_metadata(self, nb_row, nb_col, nb_band, transform, datatype=np.float32):
         """

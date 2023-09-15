@@ -26,8 +26,6 @@ pickle.dump(xarray_data, open('xarray_data_file.pickle','wb'))
 To be changed with CARS output when interface is stable
 """
 
-import logging
-
 # Standard imports
 import os
 import pickle
@@ -66,12 +64,8 @@ def test_sensor_triangulation(row, col, h):
     # matches are defined as Nx4 array, here N=1
     matches = np.zeros([1, 4])
     matches[0, :] = [col, row, inv_col[0], inv_row[0]]
-
     # compute triangulation with residues (see sensor_triangulation docstring for further details),
-    point_ecef, point_wgs84, distance = sensor_triangulation(matches, grid_left, grid_right, residues=True)
-
-    logging.info("cartesian coordinates :")
-    logging.info(point_ecef)
+    _, point_wgs84, distance = sensor_triangulation(matches, grid_left, grid_right, residues=True)
 
     assert lonlatalt[0][0] == pytest.approx(point_wgs84[0, 0], abs=1e-8)
     assert lonlatalt[0][1] == pytest.approx(point_wgs84[0, 1], abs=1e-8)

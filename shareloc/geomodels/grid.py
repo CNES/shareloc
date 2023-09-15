@@ -186,7 +186,6 @@ class Grid:
             logging.debug("grid doesn't handle alt as array, first value is used")
             alt = alt[0]
         if fill_nan:
-            # pylint: disable=logging-too-many-args
             logging.debug("fill nan %s", fill_nan)
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
         alt_down = self.alts_down[grid_index_down]
@@ -575,11 +574,9 @@ class Grid:
         lon_n = (lon - self.pred_ofset_scale_lon[0]) / self.pred_ofset_scale_lon[1]
         lat_n = (lat - self.pred_ofset_scale_lat[0]) / self.pred_ofset_scale_lat[1]
         if abs(lon_n) > (1 + extrapolation_threshold / 100.0):
-            # pylint: disable=logging-too-many-args
             logging.warning("Be careful: longitude extrapolation: %1.8f", lon_n)
             is_extrapolated = True
         if abs(lat_n) > (1 + extrapolation_threshold / 100.0):
-            # pylint: disable=logging-too-many-args
             logging.warning("Be careful: latitude extrapolation: %1.8f", lat_n)
             is_extrapolated = True
 
@@ -669,7 +666,7 @@ class Grid:
         if abs(det) > 0.000000000001:
             partial_derivative_mat = np.array([[dlat_l, -dlon_l], [-dlat_c, dlon_c]]) / det
         else:
-            logging.error("determinant null")
+            logging.warning("inverse_loc() inverse_partial_derivative() determinant is null")
         return partial_derivative_mat
 
     def inverse_loc(self, lon, lat, alt=0.0, nb_iterations=15):

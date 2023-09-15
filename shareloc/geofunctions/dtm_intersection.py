@@ -120,10 +120,11 @@ class DTMIntersection:
         self.alt_max_cell = None
         self.tol_z = 0.0001
 
-        # lecture mnt
+        # DTM reading
         datum = "ellipsoid"
         if geoid_filename is not None:
             datum = "geoid"
+
         self.dtm_image = DTMImage(
             self.dtm_file,
             read_data=True,
@@ -148,9 +149,9 @@ class DTMIntersection:
                 geoid_height = interpolate_geoid_height(geoid_filename, positions)
                 self.alt_data += geoid_height.reshape(lon.shape)
             else:
-                logging.warning("dtm datum is geoid but no geoid file is given")
+                logging.warning("DTM datum is geoid but no geoid file is given")
         else:
-            logging.info("no geoid file is given dtm is assumed to be w.r.t ellipsoid")
+            logging.debug("no geoid file is given dtm is assumed to be w.r.t ellipsoid")
 
         self.init_min_max()
         self.alt_max = self.alt_data.max()

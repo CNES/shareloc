@@ -422,7 +422,6 @@ class RPC:
         dataset = rio.open(image_filename)
         rpc_dict = dataset.tags(ns="RPC")
         if not rpc_dict:
-            # pylint: disable=logging-too-many-args
             logging.error("%s does not contains RPCs ", image_filename)
             raise ValueError
         rpc_params = {
@@ -725,7 +724,7 @@ class RPC:
                 self.offset_row,
             )
         else:
-            logging.error("inverse localisation can't be performed, inverse coefficients have not been defined")
+            logging.warning("inverse localisation can't be performed, inverse coefficients have not been defined")
             (col_out, row_out) = (None, None)
         return row_out, col_out, alt
 
@@ -883,7 +882,7 @@ class RPC:
             lat_out[filter_nan] = lat
 
         else:
-            logging.error("inverse localisation can't be performed, inverse coefficients have not been defined")
+            logging.warning("inverse localisation can't be performed, inverse coefficients have not been defined")
             (long_out, lat_out) = (None, None)
 
         return long_out, lat_out, alt

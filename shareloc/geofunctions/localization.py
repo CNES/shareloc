@@ -181,20 +181,29 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
     :type image2: shareloc.image.Image
     :param using_geotransform: using_geotransform
     :type using_geotransform: boolean
-    :return: Corresponding sensor position [row, col, True] in the geometric model 2
+    :return: Corresponding sensor position [row, col, altitude] in the geometric model 2
     :rtype: Tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
+       using row and col input dimensions
     """
-    geometric_model1 = Localization(model1, elevation, image=image1)
-    geometric_model2 = Localization(model2, elevation, image=image2)
-
+    # Standardize row and col inputs in ndarray
     if not isinstance(row, (list, np.ndarray)):
         row = np.array([row])
         col = np.array([col])
+    # Check row and col
+    if (row.shape[0] != col.shape[0]) or (row.shape[0] <= 0) or (col.shape[0] <= 0):
+        raise ValueError("coloc: row and col inputs sizes are not similar or <=0")
+    # get input row or col shape for ndarray output shape.
+    output_shape = row.shape[0]
 
+    # prepare geomodel 1 and 2
+    geometric_model1 = Localization(model1, elevation, image=image1)
+    geometric_model2 = Localization(model2, elevation, image=image2)
+
+    # Direct loc on (row, col) with model 1
     ground_coord = geometric_model1.direct(row, col, using_geotransform=using_geotransform)
 
     # Estimate sensor position (row, col, altitude) using inverse localization with model2
-    sensor_coord = np.zeros((row.shape[0], 3), dtype=np.float64)
+    sensor_coord = np.zeros((output_shape, 3), dtype=np.float64)
     sensor_coord[:, 0], sensor_coord[:, 1], sensor_coord[:, 2] = geometric_model2.inverse(
         ground_coord[:, 0], ground_coord[:, 1], ground_coord[:, 2], using_geotransform
     )

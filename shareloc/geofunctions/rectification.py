@@ -359,9 +359,15 @@ def moving_to_next_line(geom_model_left, geom_model_right, current_line, mean_sp
 
     # Find the corresponding starting point in the right image
     next_line_start_right = np.zeros(3, dtype=np.float64)
-    next_line_start_right[0], next_line_start_right[1], next_line_start_right[2] = coloc(
+    row, col, alt = coloc(
         geom_model_left, geom_model_right, next_line_start_left[0], next_line_start_left[1], elevation
     )
+    # Convert ndarray coloc output into float 64 (Bug python3.9 et 3.10 not allowed anymore)
+    # TODO: clean epipolar grids generation conversion globally with refacto/optimization
+    next_line_start_right[0] = row[0]
+    next_line_start_right[1] = col[0]
+    next_line_start_right[2] = alt[0]
+
     return next_line_start_left, next_line_start_right
 
 
@@ -452,9 +458,12 @@ def compute_stereorectification_epipolar_grids(
     # Starting points are the upper-left origin of the left epipolar image, and it's correspondent in the right image
     start_left = np.copy(footprint[0])
     start_right = np.zeros(3, dtype=start_left.dtype)
-    start_right[0], start_right[1], start_right[2] = coloc(
-        geom_model_left, geom_model_right, start_left[0], start_left[1], elevation
-    )
+    init_row, init_col, init_alt = coloc(geom_model_left, geom_model_right, start_left[0], start_left[1], elevation)
+    # Convert ndarray coloc output into float 64 (Bug python3.9 et 3.10 not allowed anymore)
+    # TODO: clean epipolar grids generation conversion globally with refacto/optimization
+    start_right[0] = init_row[0]
+    start_right[1] = init_col[0]
+    start_right[2] = init_alt[0]
 
     mean_baseline_ratio = 0
 

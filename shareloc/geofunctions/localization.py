@@ -189,9 +189,10 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
     if not isinstance(row, (list, np.ndarray)):
         row = np.array([row])
         col = np.array([col])
+
     # Check row and col
-    if (row.shape[0] != col.shape[0]) or (row.shape[0] <= 0) or (col.shape[0] <= 0):
-        raise ValueError("coloc: row and col inputs sizes are not similar or <=0")
+    if row.shape[0] != col.shape[0]:
+        raise ValueError("coloc: row and col inputs sizes are not similar")
     # get input row or col shape for ndarray output shape.
     output_shape = row.shape[0]
 

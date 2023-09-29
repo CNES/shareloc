@@ -2,6 +2,7 @@
 # coding: utf8
 #
 # Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2023 CS GROUP - France, https://csgroup.eu
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -20,7 +21,7 @@
 #
 """
 This module contains the RPC class corresponding to the RPC models.
-RPC models covered are : DIMAP V1, DIMAP V2, ossim (geom file), geotiff.
+RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotiff.
 """
 # pylint: disable=no-member
 

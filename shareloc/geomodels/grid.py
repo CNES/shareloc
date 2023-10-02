@@ -30,6 +30,8 @@ import logging
 import numpy as np
 
 # Shareloc imports
+from shareloc.geomodels.geomodel import GeoModel
+from shareloc.geomodels.geomodel_template import GeoModelTemplate
 from shareloc.image import Image
 from shareloc.math_utils import interpol_bilin_grid, interpol_bilin_vectorized
 from shareloc.proj_utils import coordinates_conversion
@@ -37,7 +39,8 @@ from shareloc.proj_utils import coordinates_conversion
 
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
-class Grid:
+@GeoModel.register("grid")
+class Grid(GeoModelTemplate):
     """
     multi H direct localization grid handling class.
     please refer to the main documentation grid format
@@ -83,7 +86,8 @@ class Grid:
         :param grid_filename: grid filename (Geotiff)
         :type grid_filename: string
         """
-        self.filename = grid_filename
+        # Instanciate GeoModelTemplate generic init with shared parameters
+        super().__init__(grid_filename)
         self.row0 = None
         self.col0 = None
         self.nbrow = None

@@ -36,6 +36,8 @@ import rasterio as rio
 from numba import config, njit, prange
 
 # Shareloc imports
+from shareloc.geomodels.geomodel import GeoModel
+from shareloc.geomodels.geomodel_template import GeoModelTemplate
 from shareloc.proj_utils import coordinates_conversion
 
 # Set numba type of threading layer before parallel target compilation
@@ -119,7 +121,8 @@ def identify_geotiff_rpc(image_filename):
         return None
 
 
-class RPC:
+@GeoModel.register("RPC")
+class RPC(GeoModelTemplate):
     """
     RPC class including direct and inverse localization instance methods
     """

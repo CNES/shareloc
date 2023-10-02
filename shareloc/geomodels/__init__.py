@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -20,4 +20,10 @@
 #
 """
 Shareloc geomodels module
+Imports are used to simplify calls to module API Coregistration.
 """
+# Demcompare imports
+from . import grid, rpc
+from .geomodel import GeoModel
+
+__all__ = ["rpc", "grid", "GeoModel"]  # To avoid flake8 F401

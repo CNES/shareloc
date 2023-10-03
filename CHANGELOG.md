@@ -12,6 +12,22 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.1.6 Minor bugs, dimap v3 experimental (October 2023)
+
+### Added
+
+- Add first dimap v3 experimental support [#155]
+
+### Changed
+
+- Clean logs for cars default output [#204]
+
+### Fixed
+
+- fix pandas.core.indexes.numeric evolution [#190]
+- fix alt_min_max not referenced in los.py [#194]
+- fix ValueError bug setting an array element with a sequence in py39 and py310 [#218]
+
 ## 0.1.5 Reliability enhancement (February 2023)
 
 ### Added
@@ -52,7 +68,6 @@ A new section Unreleased is opened then for next dev phase.
 - fix recursion limit in astroid for sphinx autoapi and pylint
 - fix lint errors (pylint, flake8, black, isort)
 
-
 ## 0.1.3 First Open Source Official Release - Quick fix 2 (April 2022)
 
 ### Fixed
@@ -65,10 +80,10 @@ A new section Unreleased is opened then for next dev phase.
 
 - Documentation and quick start fixed (wrong URL and detailed install)
 
-
 ## 0.1.1 First Open Source Official Release (March 2022)
 
 ### Added
+
 - Shareloc library first release
 - geometric functions: localization, rectification, triangulation, earth elevation management
 - geometric models: RPC and multi altitudes layers location grids

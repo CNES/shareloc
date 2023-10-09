@@ -65,8 +65,9 @@ class Image:
             # | pixel size col,   row rotation, origin col |
             # | col rotation  , pixel size row, origin row |
             self.transform = self.dataset.transform
+            # bitwise not inversion (Affine.__invert implemented, pylint bug)
+            self.trans_inv = ~self.transform  # pylint: disable=invalid-unary-operand-type
 
-            roi_window = None
             if roi is not None:
                 # User have set ROI in physical space or not
                 if roi_is_in_physical_space:
@@ -90,8 +91,11 @@ class Image:
                     col_off = roi[1]
                     width = roi[3] - roi[1]
                     height = roi[2] - roi[0]
+
                 roi_window = rasterio.windows.Window(col_off, row_off, width, height)
                 self.transform = self.dataset.window_transform(roi_window)
+                # bitwise not inversion (Affine.__invert implemented, pylint bug)
+                self.trans_inv = ~self.transform  # pylint: disable=invalid-unary-operand-type
                 self.nb_rows = height
                 self.nb_columns = width
             else:
@@ -187,7 +191,5 @@ class Image:
         :return: index coordinates (row, col)
         :rtype: Tuple(row float or 1D np.array, col float or 1D np.array)
         """
-        # bitwise not inversion (Affine.__invert implemented, pylint bug)
-        trans_inv = ~self.transform  # pylint: disable=invalid-unary-operand-type
-        col, row = trans_inv * (col_geo, row_geo)
+        col, row = self.trans_inv * (col_geo, row_geo)
         return row - 0.5, col - 0.5

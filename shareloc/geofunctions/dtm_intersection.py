@@ -276,61 +276,30 @@ class DTMIntersection:
         """
         initialize min/max at each dtm cell
         """
-        column_nb_minus = self.dtm_image.nb_columns - 1
-        row_nb_minus = self.dtm_image.nb_rows - 1
 
-        self.alt_max_cell = np.zeros((row_nb_minus, column_nb_minus))
-        self.alt_min_cell = np.zeros((row_nb_minus, column_nb_minus))
+        # Extract subarrays for alt_data
+        subarray1 = self.alt_data[:-1, :-1]
+        subarray2 = self.alt_data[:-1, 1:]
+        subarray3 = self.alt_data[1:, :-1]
+        subarray4 = self.alt_data[1:, 1:]
+        array_3d = np.stack([subarray1, subarray2, subarray3, subarray4])
 
-        # Computation of the min and max altitudes of the DTM
-        n_min = 32000
-        n_max = -32000
+        # Calculate min and max altitudes for each subarray
+        alt_min = np.min(array_3d, axis=0)
+        alt_max = np.max(array_3d, axis=0)
 
-        for i in range(row_nb_minus):
-            k = 0
-            for j in range(column_nb_minus):
-                k += 1
-                d_alt_min = n_min
-                d_alt_max = n_max
-
-                d_z1 = self.alt_data[i, j]
-                if d_z1 < d_alt_min:
-                    d_alt_min = d_z1
-                if d_z1 > d_alt_max:
-                    d_alt_max = d_z1
-
-                d_z2 = self.alt_data[i, j + 1]
-                if d_z2 < d_alt_min:
-                    d_alt_min = d_z2
-                if d_z2 > d_alt_max:
-                    d_alt_max = d_z2
-
-                d_z3 = self.alt_data[i + 1, j]
-                if d_z3 < d_alt_min:
-                    d_alt_min = d_z3
-                if d_z3 > d_alt_max:
-                    d_alt_max = d_z3
-
-                d_z4 = self.alt_data[i + 1, j + 1]
-                if d_z4 < d_alt_min:
-                    d_alt_min = d_z4
-                if d_z4 > d_alt_max:
-                    d_alt_max = d_z4
-
-                # GDN Correction BUG Intersector
-                # It is important not to take the mathematical rounding for several reasons:
-                # 1. the subsequent algorithm does not always resist well when the mesh is flat,
-                #    it is therefore not recommended to output i_altmin = i_altmax
-                #    unless this is really the case in real values
-                # 2. the consecutive meshes must not be initialized in the same way by rounding
-                #   because if the min altitude of one corresponds to
-                # the max altitude of the other they must be distinguished
-                #     by a ceil and a floor so that the cubes overlap slightly in altitude
-                #    and not strictly contiguous
-                i_altmin = np.floor(d_alt_min)
-                i_altmax = np.ceil(d_alt_max)
-                self.alt_min_cell[i, j] = i_altmin
-                self.alt_max_cell[i, j] = i_altmax
+        # GDN Correction BUG Intersector
+        # It is important not to take the mathematical rounding for several reasons:
+        # 1. the subsequent algorithm does not always resist well when the mesh is flat,
+        #    it is therefore not recommended to output i_altmin = i_altmax
+        #    unless this is really the case in real values
+        # 2. the consecutive meshes must not be initialized in the same way by rounding
+        #   because if the min altitude of one corresponds to
+        # the max altitude of the other they must be distinguished
+        #     by a ceil and a floor so that the cubes overlap slightly in altitude
+        #    and not strictly contiguous
+        self.alt_min_cell = np.floor(alt_min)
+        self.alt_max_cell = np.ceil(alt_max)
 
     # gitlab issue #56
     # pylint: disable=too-many-branches

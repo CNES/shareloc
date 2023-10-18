@@ -26,12 +26,18 @@ generic coregistration code to avoid duplication.
 
 # Standard imports
 from abc import ABCMeta, abstractmethod
-from typing import Dict
 
-# Third party imports
+# Global variable for optimization mode (functions in C)
+# SHARELOC_OPTIM_GEOMODEL = False
 
+# TODO: Override functions depending on optimization or not
+
+# if(SHARELOC_OPTIM_GEOMODEL == True):
+#     GeoModelTemplate.direct_loc_dtm = GeoModelTemplate.direct_loc_dtm_optim
 
 # pylint: disable=too-few-public-methods
+
+
 class GeoModelTemplate(metaclass=ABCMeta):
     """
     Class for general specification of a geometric model
@@ -39,20 +45,16 @@ class GeoModelTemplate(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def __init__(self, geomodel_file: str, geomodel_params: Dict = None):
+    def __init__(self, geomodel_path: str):
         """
         Return the geomodel object associated with the geomodel_type
         given in the configuration
 
-        :param geomodel_file: path of the geomodel file to instanciate.
-        :type geomodel_file: string
-        :param geomodel_params: Geomodels parameters as dict (unused, just to fit RPC) TODO: evolve with new API
-        :type geomodel_params: Dict
+        :param geomodel_path: path of the geomodel file to instanciate.
+        :type geomodel_path: string
         """
         # geomodel filename path
-        self.filename = geomodel_file
+        self.geomodel_path: str = geomodel_path
 
-        # geomodel_params if exists (to evolve)
-        self.geomodels_params = geomodel_params
-
-        #
+        # geomodel type. Set by the subclass
+        self.type: str

@@ -19,9 +19,8 @@
 # limitations under the License.
 #
 """
-localisation functions from multi h direct grids.
+Localisation functions from multi h direct grids.
 """
-# pylint: disable=no-member
 
 # Standard imports
 import logging
@@ -39,14 +38,15 @@ from shareloc.proj_utils import coordinates_conversion
 
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
+# pylint: disable=no-member
 @GeoModel.register("grid")
 class Grid(GeoModelTemplate):
     """
     multi H direct localization grid handling class.
     please refer to the main documentation grid format
 
-    :param filename: grid path
-    :type filename: str
+    Derives from GeoModelTemplate
+
     :param row0: grid first pixel center along Y axis (row).
     :type row0: float
     :param col0: grid first pixel center along X axis (column).
@@ -79,15 +79,18 @@ class Grid(GeoModelTemplate):
     :type type: str
     """
 
-    def __init__(self, grid_filename):
+    def __init__(self, geomodel_path: str):
         """
         Grid Constructor
 
-        :param grid_filename: grid filename (Geotiff)
-        :type grid_filename: string
+        :param geomodel_path: grid filename (Geotiff)
+        :type geomodel_path: string
         """
         # Instanciate GeoModelTemplate generic init with shared parameters
-        super().__init__(grid_filename)
+        super().__init__(geomodel_path)
+        self.type = "multi H grid"
+
+        # GeoModel Grid parameters definition (see documentation)
         self.row0 = None
         self.col0 = None
         self.nbrow = None
@@ -102,8 +105,9 @@ class Grid(GeoModelTemplate):
         self.rowmax = None
         self.colmax = None
         self.epsg = 0
+
+        # Load function of grid parameters from grid file to grid object
         self.load()
-        self.type = "multi H grid"
 
     def load(self):
         """
@@ -116,7 +120,7 @@ class Grid(GeoModelTemplate):
         - lat_data : [alt,row,col]
         """
 
-        grid_image = Image(self.filename, read_data=True)
+        grid_image = Image(self.geomodel_path, read_data=True)
         if grid_image.dataset.driver != "GTiff":
             raise TypeError(
                 "Only Geotiff grids are accepted. Please refer to the documentation for grid supported format."

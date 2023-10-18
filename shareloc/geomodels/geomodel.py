@@ -25,6 +25,8 @@ with geomodel configuration "geomodel_name"
 (from registered GeoModelTemplate class)
 
 ** Experimental and not used as API for now**
+** Will be used with an automatic switcher between Grid file format and
+RPC file format obj = GeoModel("file_geom") only without geomodel_type
 """
 
 # Standard imports
@@ -48,6 +50,8 @@ class GeoModel:
         associated with the "geomodel_name" given in the configuration
         through create_geomodel local method for clarity.
 
+        TODO: optional geomodel_type would profit to have an automatic switcher between geomodels (RPC, grids, ...)
+
         :param geomodel_path: Path of geomodel file
         :type geomodel_path: string
         :param geomodel_type: Type of the geomodel, default "rpc", used as key for specific geomodel subclass instance
@@ -68,7 +72,7 @@ class GeoModel:
         :type geomodel_type: string
         """
 
-        # If no type is given, the default is "rpc"
+        # If no type is given, the default is "RPC"
 
         # Create geomodel object with geomodel_path parameter from geomodel_type if exists
         try:

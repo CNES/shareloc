@@ -23,11 +23,11 @@
 This module contains the RPC class corresponding to the RPC models.
 RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotiff.
 """
-# pylint: disable=no-member
 
 # Standard imports
 import logging
 from os.path import basename
+from typing import Dict
 from xml.dom import minidom
 
 # Third party imports
@@ -121,6 +121,9 @@ def identify_geotiff_rpc(image_filename):
         return None
 
 
+# pylint: disable=no-member
+
+
 @GeoModel.register("RPC")
 class RPC(GeoModelTemplate):
     """
@@ -129,13 +132,25 @@ class RPC(GeoModelTemplate):
 
     # gitlab issue #61
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, rpc_params):
+    def __init__(self, geomodel_path: str):
+        # Instanciate GeoModelTemplate generic init with shared parameters
+        super().__init__(geomodel_path)
+        self.type = "RPC"
+
+        # initiate epsg and datum, can overriden by rpc_params
         self.epsg = None
         self.datum = None
-        for key, value in rpc_params.items():
+
+        # RPC parameters as Dict
+        self.rpc_params: Dict = {}
+
+        # RPC parameters are load from geomodel_path to rpc params
+        self.load()
+
+        # set class parameters from rpc_params (epsg and datum can be overriden)
+        for key, value in self.rpc_params.items():
             setattr(self, key, value)
 
-        self.type = "rpc"
         if self.epsg is None:
             self.epsg = 4326
         if self.datum is None:
@@ -143,31 +158,32 @@ class RPC(GeoModelTemplate):
 
         self.lim_extrapol = 1.0001
 
+        # Monomes seems not used in shareloc code: Clean ?
         # Each monome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
-        monomes_order = [
-            [1, 0, 0, 0],
-            [1, 1, 0, 0],
-            [1, 0, 1, 0],
-            [1, 0, 0, 1],
-            [1, 1, 1, 0],
-            [1, 1, 0, 1],
-            [1, 0, 1, 1],
-            [1, 2, 0, 0],
-            [1, 0, 2, 0],
-            [1, 0, 0, 2],
-            [1, 1, 1, 1],
-            [1, 3, 0, 0],
-            [1, 1, 2, 0],
-            [1, 1, 0, 2],
-            [1, 2, 1, 0],
-            [1, 0, 3, 0],
-            [1, 0, 1, 2],
-            [1, 2, 0, 1],
-            [1, 0, 2, 1],
-            [1, 0, 0, 3],
-        ]
-
-        self.monomes = np.array(monomes_order)
+        self.monomes = np.array(
+            [
+                [1, 0, 0, 0],
+                [1, 1, 0, 0],
+                [1, 0, 1, 0],
+                [1, 0, 0, 1],
+                [1, 1, 1, 0],
+                [1, 1, 0, 1],
+                [1, 0, 1, 1],
+                [1, 2, 0, 0],
+                [1, 0, 2, 0],
+                [1, 0, 0, 2],
+                [1, 1, 1, 1],
+                [1, 3, 0, 0],
+                [1, 1, 2, 0],
+                [1, 1, 0, 2],
+                [1, 2, 1, 0],
+                [1, 0, 3, 0],
+                [1, 0, 1, 2],
+                [1, 2, 0, 1],
+                [1, 0, 2, 1],
+                [1, 0, 0, 3],
+            ]
+        )
 
         # monomial coefficients of 1st variable derivative
         self.monomes_deriv_1 = np.array(
@@ -246,153 +262,164 @@ class RPC(GeoModelTemplate):
         self.row0 = self.offset_row - self.scale_row
         self.rowmax = self.offset_row + self.scale_row
 
-    @classmethod
-    def from_dimap(cls, dimap_filepath, topleftconvention=True):
+    def load(self):
         """
-        Load from Dimap
+        Load from any RPC (auto identify driver)
+        from filename (dimap, ossim kwl, geotiff)
 
-        param dimap_filepath: dimap xml file
-        :type dimap_filepath: str
-        :param topleftconvention: [0,0] position
-        :type topleftconvention: boolean
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        TODO: topleftconvention always to True, set a standard and remove the option
+
+        topleftconvention boolean: [0,0] position
+            If False : [0,0] is at the center of the Top Left pixel
+            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-        dimap_version = identify_dimap(dimap_filepath)
-        if identify_dimap(dimap_filepath) is not None:
-            if float(dimap_version) < 2.0:
-                return cls.from_dimap_v1(dimap_filepath, topleftconvention)
-            if float(dimap_version) >= 2.0:
-                return cls.read_dimap_coeff(dimap_filepath, topleftconvention)
+        # Set topleftconvention (keeping historic option): to clean
+        topleftconvention = True
+
+        # If ends with XML --> DIMAP
+        if basename(self.geomodel_path.upper()).endswith("XML"):
+            dimap_version = identify_dimap(self.geomodel_path)
+            if dimap_version is not None:
+                if float(dimap_version) < 2.0:
+                    self.load_dimap_v1(topleftconvention)
+                if float(dimap_version) >= 2.0:
+                    self.load_dimap_coeff(topleftconvention)
         else:
-            raise ValueError("can''t read dimap file")
+            # If not DIMAP, identify ossim
+            ossim_model = identify_ossim_kwl(self.geomodel_path)
+            if ossim_model is not None:
+                self.load_ossim_kwl(topleftconvention)
+            else:
+                # Otherwise, check if RPC is in geotif
+                geotiff_rpc_dict = identify_geotiff_rpc(self.geomodel_path)
+                if geotiff_rpc_dict is not None:
+                    self.load_geotiff(topleftconvention)
+                else:
+                    # Raise error if no file recognized.
+                    raise ValueError("can not read rpc file")
 
-        return None
-
-    @classmethod
-    def read_dimap_coeff(cls, dimap_filepath, topleftconvention=True):
+    def load_dimap_coeff(self, topleftconvention=True):
         """
         Load from Dimap v2 and V3
 
-        :param dimap_filepath: dimap xml file
-        :type dimap_filepath: str
         :param topleftconvention: [0,0] position
         :type topleftconvention: boolean
             If False : [0,0] is at the center of the Top Left pixel
             If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
 
-        rpc_params = {}
-        if not basename(dimap_filepath).upper().endswith("XML"):
+        if not basename(self.geomodel_path).upper().endswith("XML"):
             raise ValueError("dimap must ends with .xml")
 
-        xmldoc = minidom.parse(dimap_filepath)
+        xmldoc = minidom.parse(self.geomodel_path)
 
         mtd = xmldoc.getElementsByTagName("Metadata_Identification")
         version = mtd[0].getElementsByTagName("METADATA_FORMAT")[0].attributes.items()[0][1]
-        rpc_params["driver_type"] = "dimap_v" + version
+        self.rpc_params["driver_type"] = "dimap_v" + version
         global_rfm = xmldoc.getElementsByTagName("Global_RFM")[0]
         normalisation_coeffs = global_rfm.getElementsByTagName("RFM_Validity")[0]
-        rpc_params["offset_row"] = float(normalisation_coeffs.getElementsByTagName("LINE_OFF")[0].firstChild.data)
-        rpc_params["offset_col"] = float(normalisation_coeffs.getElementsByTagName("SAMP_OFF")[0].firstChild.data)
+        self.rpc_params["offset_row"] = float(normalisation_coeffs.getElementsByTagName("LINE_OFF")[0].firstChild.data)
+        self.rpc_params["offset_col"] = float(normalisation_coeffs.getElementsByTagName("SAMP_OFF")[0].firstChild.data)
         if float(version) >= 3:
             direct_coeffs = global_rfm.getElementsByTagName("ImagetoGround_Values")[0]
             inverse_coeffs = global_rfm.getElementsByTagName("GroundtoImage_Values")[0]
 
-            rpc_params["num_x"] = [
+            self.rpc_params["num_x"] = [
                 float(direct_coeffs.getElementsByTagName(f"LON_NUM_COEFF_{index}")[0].firstChild.data)
                 for index in range(1, 21)
             ]
-            rpc_params["den_x"] = [
+            self.rpc_params["den_x"] = [
                 float(direct_coeffs.getElementsByTagName(f"LON_DEN_COEFF_{index}")[0].firstChild.data)
                 for index in range(1, 21)
             ]
-            rpc_params["num_y"] = [
+            self.rpc_params["num_y"] = [
                 float(direct_coeffs.getElementsByTagName(f"LAT_NUM_COEFF_{index}")[0].firstChild.data)
                 for index in range(1, 21)
             ]
-            rpc_params["den_y"] = [
+            self.rpc_params["den_y"] = [
                 float(direct_coeffs.getElementsByTagName(f"LAT_DEN_COEFF_{index}")[0].firstChild.data)
                 for index in range(1, 21)
             ]
-            rpc_params["offset_col"] -= 0.5
-            rpc_params["offset_row"] -= 0.5
+            self.rpc_params["offset_col"] -= 0.5
+            self.rpc_params["offset_row"] -= 0.5
 
         else:
             direct_coeffs = global_rfm.getElementsByTagName("Direct_Model")[0]
             inverse_coeffs = global_rfm.getElementsByTagName("Inverse_Model")[0]
 
-            rpc_params["num_x"] = [
+            self.rpc_params["num_x"] = [
                 float(direct_coeffs.getElementsByTagName(f"SAMP_NUM_COEFF_{index}")[0].firstChild.data)
                 for index in range(1, 21)
             ]
-            rpc_params["den_x"] = [
+            self.rpc_params["den_x"] = [
                 float(direct_coeffs.getElementsByTagName(f"SAMP_DEN_COEFF_{index}")[0].firstChild.data)
                 for index in range(1, 21)
             ]
-            rpc_params["num_y"] = [
+            self.rpc_params["num_y"] = [
                 float(direct_coeffs.getElementsByTagName(f"LINE_NUM_COEFF_{index}")[0].firstChild.data)
                 for index in range(1, 21)
             ]
-            rpc_params["den_y"] = [
+            self.rpc_params["den_y"] = [
                 float(direct_coeffs.getElementsByTagName(f"LINE_DEN_COEFF_{index}")[0].firstChild.data)
                 for index in range(1, 21)
             ]
-            rpc_params["offset_col"] -= 1.0
-            rpc_params["offset_row"] -= 1.0
+            self.rpc_params["offset_col"] -= 1.0
+            self.rpc_params["offset_row"] -= 1.0
 
-        rpc_params["num_col"] = [
+        self.rpc_params["num_col"] = [
             float(inverse_coeffs.getElementsByTagName(f"SAMP_NUM_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["den_col"] = [
+        self.rpc_params["den_col"] = [
             float(inverse_coeffs.getElementsByTagName(f"SAMP_DEN_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["num_row"] = [
+        self.rpc_params["num_row"] = [
             float(inverse_coeffs.getElementsByTagName(f"LINE_NUM_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
-        rpc_params["den_row"] = [
+        self.rpc_params["den_row"] = [
             float(inverse_coeffs.getElementsByTagName(f"LINE_DEN_COEFF_{index}")[0].firstChild.data)
             for index in range(1, 21)
         ]
 
-        rpc_params["scale_col"] = float(normalisation_coeffs.getElementsByTagName("SAMP_SCALE")[0].firstChild.data)
-        rpc_params["scale_row"] = float(normalisation_coeffs.getElementsByTagName("LINE_SCALE")[0].firstChild.data)
-        rpc_params["offset_alt"] = float(normalisation_coeffs.getElementsByTagName("HEIGHT_OFF")[0].firstChild.data)
-        rpc_params["scale_alt"] = float(normalisation_coeffs.getElementsByTagName("HEIGHT_SCALE")[0].firstChild.data)
-        rpc_params["offset_x"] = float(normalisation_coeffs.getElementsByTagName("LONG_OFF")[0].firstChild.data)
-        rpc_params["scale_x"] = float(normalisation_coeffs.getElementsByTagName("LONG_SCALE")[0].firstChild.data)
-        rpc_params["offset_y"] = float(normalisation_coeffs.getElementsByTagName("LAT_OFF")[0].firstChild.data)
-        rpc_params["scale_y"] = float(normalisation_coeffs.getElementsByTagName("LAT_SCALE")[0].firstChild.data)
+        self.rpc_params["scale_col"] = float(normalisation_coeffs.getElementsByTagName("SAMP_SCALE")[0].firstChild.data)
+        self.rpc_params["scale_row"] = float(normalisation_coeffs.getElementsByTagName("LINE_SCALE")[0].firstChild.data)
+        self.rpc_params["offset_alt"] = float(
+            normalisation_coeffs.getElementsByTagName("HEIGHT_OFF")[0].firstChild.data
+        )
+        self.rpc_params["scale_alt"] = float(
+            normalisation_coeffs.getElementsByTagName("HEIGHT_SCALE")[0].firstChild.data
+        )
+        self.rpc_params["offset_x"] = float(normalisation_coeffs.getElementsByTagName("LONG_OFF")[0].firstChild.data)
+        self.rpc_params["scale_x"] = float(normalisation_coeffs.getElementsByTagName("LONG_SCALE")[0].firstChild.data)
+        self.rpc_params["offset_y"] = float(normalisation_coeffs.getElementsByTagName("LAT_OFF")[0].firstChild.data)
+        self.rpc_params["scale_y"] = float(normalisation_coeffs.getElementsByTagName("LAT_SCALE")[0].firstChild.data)
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
-            rpc_params["offset_col"] += 0.5
-            rpc_params["offset_row"] += 0.5
-        return cls(rpc_params)
+            self.rpc_params["offset_col"] += 0.5
+            self.rpc_params["offset_row"] += 0.5
 
-    @classmethod
-    def from_dimap_v1(cls, dimap_filepath, topleftconvention=True):
+    def load_dimap_v1(self, topleftconvention=True):
         """
         Load from dimap v1
 
-        :param dimap_filepath: dimap xml file
-        :type dimap_filepath: str
+        ** Deprecated, to clean ? **
+
         :param topleftconvention: [0,0] position
         :type topleftconvention: boolean
             If False : [0,0] is at the center of the Top Left pixel
             If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
 
-        if not basename(dimap_filepath).upper().endswith("XML"):
+        if not basename(self.geomodel_path).upper().endswith("XML"):
             raise ValueError("dimap must ends with .xml")
 
-        xmldoc = minidom.parse(dimap_filepath)
+        xmldoc = minidom.parse(self.geomodel_path)
 
         mtd = xmldoc.getElementsByTagName("Metadata_Identification")
         version = mtd[0].getElementsByTagName("METADATA_PROFILE")[0].attributes.items()[0][1]
-        rpc_params = {"driver_type": "dimap_v" + version}
+        self.rpc_params = {"driver_type": "dimap_v" + version}
 
         global_rfm = xmldoc.getElementsByTagName("Global_RFM")
         rfm_validity = xmldoc.getElementsByTagName("RFM_Validity")
@@ -412,50 +439,47 @@ class RPC(GeoModelTemplate):
         scale_row = float(rfm_validity[0].getElementsByTagName("Row")[0].getElementsByTagName("A")[0].firstChild.data)
         offset_row = float(rfm_validity[0].getElementsByTagName("Row")[0].getElementsByTagName("B")[0].firstChild.data)
 
-        rpc_params["offset_col"] = offset_col
-        rpc_params["scale_col"] = scale_col
-        rpc_params["offset_row"] = offset_row
-        rpc_params["scale_row"] = scale_row
-        rpc_params["offset_alt"] = offset_alt
-        rpc_params["scale_alt"] = scale_alt
-        rpc_params["offset_x"] = offset_lon
-        rpc_params["scale_x"] = scale_lon
-        rpc_params["offset_y"] = offset_lat
-        rpc_params["scale_y"] = scale_lat
-        rpc_params["num_x"] = coeff_lon[0:20]
-        rpc_params["den_x"] = coeff_lon[20::]
-        rpc_params["num_y"] = coeff_lat[0:20]
-        rpc_params["den_y"] = coeff_lat[20::]
-        rpc_params["num_col"] = coeff_col[0:20]
-        rpc_params["den_col"] = coeff_col[20::]
-        rpc_params["num_row"] = coeff_lig[0:20]
-        rpc_params["den_row"] = coeff_lig[20::]
-        rpc_params["offset_col"] -= 1.0
-        rpc_params["offset_row"] -= 1.0
+        self.rpc_params["offset_col"] = offset_col
+        self.rpc_params["scale_col"] = scale_col
+        self.rpc_params["offset_row"] = offset_row
+        self.rpc_params["scale_row"] = scale_row
+        self.rpc_params["offset_alt"] = offset_alt
+        self.rpc_params["scale_alt"] = scale_alt
+        self.rpc_params["offset_x"] = offset_lon
+        self.rpc_params["scale_x"] = scale_lon
+        self.rpc_params["offset_y"] = offset_lat
+        self.rpc_params["scale_y"] = scale_lat
+        self.rpc_params["num_x"] = coeff_lon[0:20]
+        self.rpc_params["den_x"] = coeff_lon[20::]
+        self.rpc_params["num_y"] = coeff_lat[0:20]
+        self.rpc_params["den_y"] = coeff_lat[20::]
+        self.rpc_params["num_col"] = coeff_col[0:20]
+        self.rpc_params["den_col"] = coeff_col[20::]
+        self.rpc_params["num_row"] = coeff_lig[0:20]
+        self.rpc_params["den_row"] = coeff_lig[20::]
+        self.rpc_params["offset_col"] -= 1.0
+        self.rpc_params["offset_row"] -= 1.0
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
-            rpc_params["offset_col"] += 0.5
-            rpc_params["offset_row"] += 0.5
-        return cls(rpc_params)
+            self.rpc_params["offset_col"] += 0.5
+            self.rpc_params["offset_row"] += 0.5
 
-    @classmethod
-    def from_geotiff(cls, image_filename, topleftconvention=True):
+    def load_geotiff(self, topleftconvention=True):
         """
         Load from a geotiff image file
 
-        :param image_filename: image filename
-        :type image_filename: str
+
         :param topleftconvention: [0,0] position
         :type topleftconvention: boolean
             If False : [0,0] is at the center of the Top Left pixel
             If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-        dataset = rio.open(image_filename)
+        dataset = rio.open(self.geomodel_path)
         rpc_dict = dataset.tags(ns="RPC")
         if not rpc_dict:
-            logging.error("%s does not contains RPCs ", image_filename)
+            logging.error("%s does not contains RPCs ", self.geomodel_path)
             raise ValueError
-        rpc_params = {
+        self.rpc_params = {
             "den_row": parse_coeff_line(rpc_dict["LINE_DEN_COEFF"]),
             "num_row": parse_coeff_line(rpc_dict["LINE_NUM_COEFF"]),
             "num_col": parse_coeff_line(rpc_dict["SAMP_NUM_COEFF"]),
@@ -478,12 +502,10 @@ class RPC(GeoModelTemplate):
         # inverse coeff are not defined
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
-            rpc_params["offset_col"] += 0.5
-            rpc_params["offset_row"] += 0.5
-        return cls(rpc_params)
+            self.rpc_params["offset_col"] += 0.5
+            self.rpc_params["offset_row"] += 0.5
 
-    @classmethod
-    def from_ossim_kwl(cls, ossim_kwl_filename, topleftconvention=True):
+    def load_ossim_kwl(self, topleftconvention=True):
         """
         Load from a geom file
 
@@ -492,10 +514,9 @@ class RPC(GeoModelTemplate):
             If False : [0,0] is at the center of the Top Left pixel
             If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
         """
-        rpc_params = {}
         # OSSIM keyword list
-        rpc_params["driver_type"] = "ossim_kwl"
-        with open(ossim_kwl_filename, "r", encoding="utf-8") as ossim_file:
+        self.rpc_params["driver_type"] = "ossim_kwl"
+        with open(self.geomodel_path, "r", encoding="utf-8") as ossim_file:
             content = ossim_file.readlines()
 
         geom_dict = {}
@@ -503,71 +524,43 @@ class RPC(GeoModelTemplate):
             (key, val) = line.split(": ")
             geom_dict[key] = val.rstrip()
 
-        rpc_params["den_row"] = [np.nan] * 20
-        rpc_params["num_row"] = [np.nan] * 20
-        rpc_params["den_col"] = [np.nan] * 20
-        rpc_params["num_col"] = [np.nan] * 20
+        self.rpc_params["den_row"] = [np.nan] * 20
+        self.rpc_params["num_row"] = [np.nan] * 20
+        self.rpc_params["den_col"] = [np.nan] * 20
+        self.rpc_params["num_col"] = [np.nan] * 20
         for index in range(0, 20):
             axis = "line"
             num_den = "den"
             key = f"{axis}_{num_den}_coeff_{index:02d}"
-            rpc_params["den_row"][index] = float(geom_dict[key])
+            self.rpc_params["den_row"][index] = float(geom_dict[key])
             num_den = "num"
             key = f"{axis}_{num_den}_coeff_{index:02d}"
-            rpc_params["num_row"][index] = float(geom_dict[key])
+            self.rpc_params["num_row"][index] = float(geom_dict[key])
             axis = "samp"
             key = f"{axis}_{num_den}_coeff_{index:02d}"
-            rpc_params["num_col"][index] = float(geom_dict[key])
+            self.rpc_params["num_col"][index] = float(geom_dict[key])
             num_den = "den"
             key = f"{axis}_{num_den}_coeff_{index:02d}"
-            rpc_params["den_col"][index] = float(geom_dict[key])
-        rpc_params["offset_col"] = float(geom_dict["samp_off"])
-        rpc_params["scale_col"] = float(geom_dict["samp_scale"])
-        rpc_params["offset_row"] = float(geom_dict["line_off"])
-        rpc_params["scale_row"] = float(geom_dict["line_scale"])
-        rpc_params["offset_alt"] = float(geom_dict["height_off"])
-        rpc_params["scale_alt"] = float(geom_dict["height_scale"])
-        rpc_params["offset_x"] = float(geom_dict["long_off"])
-        rpc_params["scale_x"] = float(geom_dict["long_scale"])
-        rpc_params["offset_y"] = float(geom_dict["lat_off"])
-        rpc_params["scale_y"] = float(geom_dict["lat_scale"])
+            self.rpc_params["den_col"][index] = float(geom_dict[key])
+        self.rpc_params["offset_col"] = float(geom_dict["samp_off"])
+        self.rpc_params["scale_col"] = float(geom_dict["samp_scale"])
+        self.rpc_params["offset_row"] = float(geom_dict["line_off"])
+        self.rpc_params["scale_row"] = float(geom_dict["line_scale"])
+        self.rpc_params["offset_alt"] = float(geom_dict["height_off"])
+        self.rpc_params["scale_alt"] = float(geom_dict["height_scale"])
+        self.rpc_params["offset_x"] = float(geom_dict["long_off"])
+        self.rpc_params["scale_x"] = float(geom_dict["long_scale"])
+        self.rpc_params["offset_y"] = float(geom_dict["lat_off"])
+        self.rpc_params["scale_y"] = float(geom_dict["lat_scale"])
         # inverse coeff are not defined
-        rpc_params["num_x"] = None
-        rpc_params["den_x"] = None
-        rpc_params["num_y"] = None
-        rpc_params["den_y"] = None
+        self.rpc_params["num_x"] = None
+        self.rpc_params["den_x"] = None
+        self.rpc_params["num_y"] = None
+        self.rpc_params["den_y"] = None
         # If top left convention, 0.5 pixel shift added on col/row offsets
         if topleftconvention:
-            rpc_params["offset_col"] += 0.5
-            rpc_params["offset_row"] += 0.5
-        return cls(rpc_params)
-
-    @classmethod
-    def from_any(cls, primary_file, topleftconvention=True):
-        """
-        Load from any RPC (auto identify driver)
-
-        :param primary_file: rpc filename (dimap, ossim kwl, geotiff)
-        :type primary_file: str
-        :param topleftconvention: [0,0] position
-        :type topleftconvention: boolean
-            If False : [0,0] is at the center of the Top Left pixel
-            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
-        """
-        if basename(primary_file.upper()).endswith("XML"):
-            dimap_version = identify_dimap(primary_file)
-            if dimap_version is not None:
-                if float(dimap_version) < 2.0:
-                    return cls.from_dimap_v1(primary_file, topleftconvention)
-                if float(dimap_version) >= 2.0:
-                    return cls.read_dimap_coeff(primary_file, topleftconvention)
-        ossim_model = identify_ossim_kwl(primary_file)
-        if ossim_model is not None:
-            return cls.from_ossim_kwl(primary_file, topleftconvention)
-        geotiff_rpc_dict = identify_geotiff_rpc(primary_file)
-        if geotiff_rpc_dict is not None:
-            return cls.from_geotiff(primary_file, topleftconvention)
-        raise ValueError("can not read rpc file")
+            self.rpc_params["offset_col"] += 0.5
+            self.rpc_params["offset_row"] += 0.5
 
     def direct_loc_h(self, row, col, alt, fill_nan=False):
         """

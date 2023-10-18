@@ -35,8 +35,6 @@ from abc import ABCMeta, abstractmethod
 # if(SHARELOC_OPTIM_GEOMODEL == True):
 #     GeoModelTemplate.direct_loc_dtm = GeoModelTemplate.direct_loc_dtm_optim
 
-# pylint: disable=too-few-public-methods
-
 
 class GeoModelTemplate(metaclass=ABCMeta):
     """
@@ -58,3 +56,52 @@ class GeoModelTemplate(metaclass=ABCMeta):
 
         # geomodel type. Set by the subclass
         self.type: str
+
+    # Define GeoModelTemplate functions interface
+
+    @abstractmethod
+    def direct_loc_h(self, row, col, alt, fill_nan=False):
+        """
+        direct localization at constant altitude
+
+        :param row:  line sensor position
+        :type row: float or 1D numpy.ndarray dtype=float64
+        :param col:  column sensor position
+        :type col: float or 1D numpy.ndarray dtype=float64
+        :param alt:  altitude
+        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan: boolean
+        :return: ground position (lon,lat,h)
+        :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
+        """
+
+    @abstractmethod
+    def direct_loc_dtm(self, row, col, dtm):
+        """
+        direct localization on dtm
+
+        :param row:  line sensor position
+        :type row: float
+        :param col:  column sensor position
+        :type col: float
+        :param dtm: dtm intersection model
+        :type dtm: shareloc.geofunctions.dtm_intersection
+        :return: ground position (lon,lat,h) in dtm coordinates system
+        :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
+        """
+
+    @abstractmethod
+    def inverse_loc(self, lon, lat, alt):
+        """
+        Inverse localization
+
+        :param lon: longitude position
+        :type lon: float or 1D numpy.ndarray dtype=float64
+        :param lat: latitude position
+        :type lat: float or 1D numpy.ndarray dtype=float64
+        :param alt: altitude
+        :type alt: float
+        :return: sensor position (row, col, alt)
+        :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
+        """

@@ -156,10 +156,10 @@ def test_epi_triangulation_sift_rpc():
     data_folder = data_path()
     id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
+    geom_model_left = RPC(file_geom)
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
+    geom_model_right = RPC(file_geom)
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
@@ -217,10 +217,10 @@ def test_epi_triangulation_disp_rpc():
     data_folder = data_path()
     id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
+    geom_model_left = RPC(file_geom)
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
+    geom_model_right = RPC(file_geom)
 
     # grid_left_filename = os.path.join(data_path(), "rectification_grids",
     #                                  "grid_{}.tif".format(id_scene_left))
@@ -258,9 +258,9 @@ def test_epi_triangulation_disp_rpc_roi():
     """
     data_folder = data_path()
     file_geom = os.path.join(data_folder, "rpc/phr_ventoux/left_image.geom")
-    geom_model_left = RPC.from_any(file_geom, topleftconvention=True)
+    geom_model_left = RPC(file_geom)
     file_geom = os.path.join(data_folder, "rpc/phr_ventoux/right_image.geom")
-    geom_model_right = RPC.from_any(file_geom, topleftconvention=True)
+    geom_model_right = RPC(file_geom)
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid_ventoux.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid_ventoux.tif")

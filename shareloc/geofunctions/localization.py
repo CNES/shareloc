@@ -53,7 +53,7 @@ class Localization:
         :param epsg: coordinate system of world points, if None model coordiante system will be used
         :type epsg: int
         """
-        self.use_rpc = model.type == "rpc"
+        self.use_rpc = model.type == "RPC"
         self.model = model
         self.default_elevation = 0.0
         self.dtm = None
@@ -137,6 +137,7 @@ class Localization:
         """
 
         if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
+            # for grids only
             self.model.estimate_inverse_loc_predictor()
         if h is None:
             h = self.default_elevation

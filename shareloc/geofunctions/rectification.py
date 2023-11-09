@@ -326,7 +326,7 @@ def initialize_grids(epi_step, nb_row, nb_col):
     return left_grid, right_grid
 
 
-def moving_to_next_line(geom_model_left, geom_model_right, current_line, mean_spacing, elevation, epi_step, alpha):
+def moving_along_axis(geom_model_left, geom_model_right, current_coords, spacing, elevation, epi_step, alphas, axis):
     """
     Moving to the next line in epipolar geometry
 
@@ -334,83 +334,49 @@ def moving_to_next_line(geom_model_left, geom_model_right, current_line, mean_sp
     :type geom_model_left: shareloc.grid or  shareloc.rpc
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: shareloc.grid or  shareloc.rpc
-    :param current_line: current line in the left epipolar geometry
-    :type current_line: 1D np.array [row, col, altitude]
-    :param mean_spacing: mean spacing of epipolar grids
-    :type mean_spacing: int
+    :param current_coords: current line in the left epipolar geometry
+        or current georeferenced coordinates in left epipolar line
+    :type current_coords: 1D np.array [row, col, altitude]
+        or 2D numpy array (number rows in epipolar geometry, [row, col, altitude])
+    :param spacing: mean spacing of epipolar grids
+    :type spacing: int
     :param elevation: elevation
     :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
     :type epi_step: int
-    :param alpha: epipolar angle
-    :type alpha: float
-    :return: left and right coordinates of the next line in epioplar geometry
+    :param alphas: epipolar angle
+    :type alphas: float or List
+    :param axis: displacement direction ( 0 = along columns, 1 = along lines)
+    :type axis: int
+    :return: left and right coordinates of the next line in epipolar geometry
+        or coordinates of next pixels in left epipolar line, coordinates of next pixels in right epipolar line
     :rtype: Tuple([row, col, altitude], [row, col, altitude])
+        or Tuple(2D numpy array (number rows in epipolar geometry, [row, col, altitude]),
+        2D numpy array (number rows in epipolar geometry, [row, col, altitude]))
     """
-    # Find the start of next line in epipolar geometry
-    # Unit vector orthogonal to epipolar direction
-    unit_vector_ortho_epi_y = epi_step * mean_spacing * math.cos(alpha)
-    unit_vector_ortho_epi_x = -1 * mean_spacing * epi_step * math.sin(alpha)
 
-    next_line_start_left = np.zeros(3, dtype=np.float64)
+    if axis not in [0, 1]:
+        raise ValueError(f"axis value {axis} is not available")
 
-    next_line_start_left[0] = np.copy(current_line[0]) + unit_vector_ortho_epi_y
-    next_line_start_left[1] = np.copy(current_line[1]) + unit_vector_ortho_epi_x
+    alphas = alphas + axis * np.pi / 2
 
-    # Find the corresponding starting point in the right image
-    next_line_start_right = np.zeros(3, dtype=np.float64)
-    row, col, alt = coloc(
-        geom_model_left, geom_model_right, next_line_start_left[0], next_line_start_left[1], elevation
-    )
-    # Convert ndarray coloc output into float 64 (Bug python3.9 et 3.10 not allowed anymore)
-    # TODO: clean epipolar grids generation conversion globally with refacto/optimization
-    next_line_start_right[0] = row[0]
-    next_line_start_right[1] = col[0]
-    next_line_start_right[2] = alt[0]
+    direction_1 = -1 if axis == 1 else 1
+    direction_0 = -1 if axis == 0 else 1
 
-    return next_line_start_left, next_line_start_right
+    unit_vector_along_epi_y = epi_step * direction_1 * spacing * np.cos(alphas)
+    unit_vector_along_epi_x = epi_step * direction_0 * spacing * np.sin(alphas)
 
-
-def moving_along_lines(
-    geom_model_left, geom_model_right, current_left_coords, mean_spacing, elevation, epi_step, alphas
-):
-    """
-    Determine the position of next pixels in the epipolare lines
-
-    :param geom_model_left: geometric model of the left image
-    :type geom_model_left: shareloc.grid or  shareloc.rpc
-    :param geom_model_right: geometric model of the right image
-    :type geom_model_right: shareloc.grid or  shareloc.rpc
-    :param current_left_coords: current georeferenced coordinates in left epipolare line
-    :type current_left_coords: 2D numpy array (number rows in epipolar geometry, [row, col, altitude])
-    :param mean_spacing: mean spacing of epipolar grids
-    :type mean_spacing: int
-    :param elevation: elevation
-    :type elevation: shareloc.dtm or float
-    :param epi_step: epipolar step
-    :type epi_step: int
-    :param alphas: epipolar angles of each local epipolar lines
-    :type alphas: List
-    :return: coordinates of next pixels in left epipolar line, coordinates of next pixels in right epipolar line
-    :rtype: Tuple(2D numpy array (number rows in epipolar geometry, [row, col, altitude]),
-                 2D numpy array (number rows in epipolar geometry, [row, col, altitude]))
-    """
-    # Determine position of next pixels in the epipolar line of the left image (moving along lines)
-    # Unit vector tangent to the epipolar line
-    unit_vector_along_epi_y = epi_step * mean_spacing * np.sin(alphas)
-    unit_vector_along_epi_x = epi_step * mean_spacing * np.cos(alphas)
-
-    # Move to the next pixels in left image
-    next_left_coords = np.copy(current_left_coords)
-    next_left_coords[:, 0] += unit_vector_along_epi_y
-    next_left_coords[:, 1] += unit_vector_along_epi_x
+    next_left = np.copy(current_coords)
+    next_left[:, 0] += unit_vector_along_epi_y
+    next_left[:, 1] += unit_vector_along_epi_x
 
     # Find the corresponding next pixels in the right image
-    next_right_coords = np.zeros(next_left_coords.shape, dtype=next_left_coords.dtype)
-    next_right_coords[:, 0], next_right_coords[:, 1], next_right_coords[:, 2] = coloc(
-        geom_model_left, geom_model_right, next_left_coords[:, 0], next_left_coords[:, 1], elevation
+    next_right = np.zeros(next_left.shape, dtype=next_left.dtype)
+    next_right[:, 0], next_right[:, 1], next_right[:, 2] = coloc(
+        geom_model_left, geom_model_right, next_left[:, 0], next_left[:, 1], elevation
     )
-    return next_left_coords, next_right_coords
+
+    return next_left, next_right
 
 
 # disable for api symmetry between left and right data
@@ -456,14 +422,18 @@ def compute_stereorectification_epipolar_grids(
     left_grid, right_grid = initialize_grids(epi_step, grid_size[0], grid_size[1])
 
     # Starting points are the upper-left origin of the left epipolar image, and it's correspondent in the right image
-    start_left = np.copy(footprint[0])
+    start_left = np.array(np.copy(footprint[0]))
+    start_left = np.reshape(start_left, (1, -1))
     start_right = np.zeros(3, dtype=start_left.dtype)
-    init_row, init_col, init_alt = coloc(geom_model_left, geom_model_right, start_left[0], start_left[1], elevation)
+    start_right = np.reshape(start_right, (1, -1))
+    init_row, init_col, init_alt = coloc(
+        geom_model_left, geom_model_right, start_left[:, 0], start_left[:, 1], elevation
+    )
     # Convert ndarray coloc output into float 64 (Bug python3.9 et 3.10 not allowed anymore)
     # TODO: clean epipolar grids generation conversion globally with refacto/optimization
-    start_right[0] = init_row[0]
-    start_right[1] = init_col[0]
-    start_right[2] = init_alt[0]
+    start_right[:, 0] = init_row[0]
+    start_right[:, 1] = init_col[0]
+    start_right[:, 2] = init_alt[0]
 
     mean_baseline_ratio = 0
 
@@ -482,8 +452,15 @@ def compute_stereorectification_epipolar_grids(
         # epipolar angle using the begin and the end of the left local epipolar line
         alpha = compute_epipolar_angle(local_epi_end, local_epi_start)
         # Find the start of next line in epipolar geometry
-        next_epi_line_left, next_epi_line_right = moving_to_next_line(
-            geom_model_left, geom_model_right, left_epi_lines[-1], mean_spacing, elevation, epi_step, alpha
+        next_epi_line_left, next_epi_line_right = moving_along_axis(
+            geom_model_left,
+            geom_model_right,
+            left_epi_lines[-1],
+            mean_spacing,
+            elevation,
+            epi_step,
+            alpha,
+            0,
         )
 
         # Save the starting points, useful to be able to move along the lines in the next loop
@@ -491,8 +468,8 @@ def compute_stereorectification_epipolar_grids(
         right_epi_lines.append(np.copy(next_epi_line_right))
 
     # Left and right epipolar coordinates of the current point
-    left_epi_coords = np.array(left_epi_lines)
-    right_epi_coords = np.array(right_epi_lines)
+    left_epi_coords = np.squeeze(np.array(left_epi_lines))
+    right_epi_coords = np.squeeze(np.array(right_epi_lines))
 
     # Moving along epipolar lines
     rows = np.arange(grid_size[0])
@@ -522,8 +499,8 @@ def compute_stereorectification_epipolar_grids(
         alphas = compute_epipolar_angle(local_epi_end, local_epi_start)
 
         # Move to the next pixels in the epipolar line (moving along lines)
-        left_epi_coords, right_epi_coords = moving_along_lines(
-            geom_model_left, geom_model_right, left_epi_coords, mean_spacing, elevation, epi_step, alphas
+        left_epi_coords, right_epi_coords = moving_along_axis(
+            geom_model_left, geom_model_right, left_epi_coords, mean_spacing, elevation, epi_step, alphas, 1
         )
 
     # Compute the mean baseline ratio

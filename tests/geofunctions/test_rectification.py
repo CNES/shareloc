@@ -39,8 +39,7 @@ from shareloc.geofunctions.rectification import (  # write_epipolar_grid,
     compute_epipolar_angle,
     compute_stereorectification_epipolar_grids,
     get_epipolar_extent,
-    moving_along_lines,
-    moving_to_next_line,
+    moving_along_axis,
     prepare_rectification,
 )
 from shareloc.geofunctions.rectification_grid import RectificationGrid
@@ -506,7 +505,7 @@ def test_prepare_rectification_footprint():
 
 
 @pytest.mark.unit_tests
-def test_rectification_moving_along_line():
+def test_rectification_moving_along_lines():
     """
     Test moving along line in epipolar geometry
     """
@@ -517,7 +516,7 @@ def test_rectification_moving_along_line():
         os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
     )
 
-    current_left_coords = np.array([[5000.5, 5000.5, 0.0]], dtype=np.float64)
+    current_coords = np.array([[5000.5, 5000.5, 0.0]], dtype=np.float64)
     mean_spacing = 1
     epi_step = 1
     alphas = 0
@@ -527,8 +526,15 @@ def test_rectification_moving_along_line():
     col_pixel_size = 1.0
     reference_next_cords = np.array([[5000.5, 5000.5 + col_pixel_size, 0.0]], dtype=np.float64)
 
-    next_cords, _ = moving_along_lines(
-        geom_model_left, geom_model_right, current_left_coords, mean_spacing, default_elev, epi_step, alphas
+    next_cords, _ = moving_along_axis(
+        geom_model_left,
+        geom_model_right,
+        current_coords,
+        mean_spacing,
+        default_elev,
+        epi_step,
+        alphas,
+        1,
     )
 
     np.testing.assert_array_equal(reference_next_cords, next_cords)
@@ -546,7 +552,7 @@ def test_rectification_moving_to_next_line():
         os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
     )
 
-    current_left_coords = np.array([5000.5, 5000.5, 0.0], dtype=np.float64)
+    current_coords = np.array([[5000.5, 5000.5, 0.0]], dtype=np.float64)
     mean_spacing = 1
     epi_step = 1
     alphas = 0
@@ -554,13 +560,44 @@ def test_rectification_moving_to_next_line():
     # ground truth next pixel
     # row pixel size of the image
     row_pixel_size = 1.0
-    reference_next_cords = np.array([5000.5 + row_pixel_size, 5000.5, 0.0], dtype=np.float64)
+    reference_next_cords = np.array([[5000.5 + row_pixel_size, 5000.5, 0.0]], dtype=np.float64)
 
-    next_cords, _ = moving_to_next_line(
-        geom_model_left, geom_model_right, current_left_coords, mean_spacing, default_elev, epi_step, alphas
+    next_cords, _ = moving_along_axis(
+        geom_model_left,
+        geom_model_right,
+        current_coords,
+        mean_spacing,
+        default_elev,
+        epi_step,
+        alphas,
+        0,
     )
 
     np.testing.assert_array_equal(reference_next_cords, next_cords)
+
+
+@pytest.mark.unit_tests
+def test_rectification_moving_to_axis_error():
+    """
+    Test moving along axis with wrong axis
+    """
+    geom_model_left = RPC.from_any(
+        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
+    )
+    geom_model_right = RPC.from_any(
+        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
+    )
+
+    current_coords = np.array([5000.5, 5000.5, 0.0], dtype=np.float64)
+    mean_spacing = 1
+    epi_step = 1
+    alphas = 0
+    default_elev = 0.0
+
+    with pytest.raises(ValueError):
+        _, _ = moving_along_axis(
+            geom_model_left, geom_model_right, current_coords, mean_spacing, default_elev, epi_step, alphas, 2
+        )
 
 
 @pytest.mark.unit_tests

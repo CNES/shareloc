@@ -81,6 +81,7 @@ class LOS:
         out_crs = 4978
         ecef_coord = coordinates_conversion(los_extrema, in_crs, out_crs)
         self.sis = ecef_coord[0::2, :]
+        self.sis2 = ecef_coord[1::2, :]
         vis = self.sis - ecef_coord[1::2, :]
         # /!\ normalized
         #
@@ -98,6 +99,16 @@ class LOS:
         :rtype: numpy array
         """
         return self.sis
+
+    def get_sis2(self):
+        """
+        returns los bottom
+        TODO: not used. Use python property instead
+
+        :return: sis2
+        :rtype: numpy array
+        """
+        return self.sis2
 
     def get_vis(self):
         """

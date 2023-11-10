@@ -1,9 +1,15 @@
+"""Module sys to set python path to root"""
 import sys
+
 sys.path.append(".")
-import libs.pbhelloworld as HWmodule
+
+# pylint: disable=wrong-import-position
+import libs.pbhelloworld as HWmodule  # noqa: E402
+
+# pylint: enable=wrong-import-position
 
 
 def test_helloworld():
-    HWobject = HWmodule.HW()
+    hw_object = HWmodule.HW()
 
-    assert "Hello world !" == HWobject.hellow_world()
+    assert "Hello world !" == hw_object.hellow_world()

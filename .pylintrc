@@ -29,6 +29,8 @@ suggestion-mode=yes
 # active Python interpreter and may run arbitrary code.
 unsafe-load-any-extension=no
 
+# List of cpp allowed extension
+extension-pkg-whitelist= libs.pbhelloworld
 
 [MESSAGES CONTROL]
 

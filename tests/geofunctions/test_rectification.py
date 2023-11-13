@@ -534,7 +534,7 @@ def test_rectification_moving_along_lines():
         default_elev,
         epi_step,
         alphas,
-        1,
+        0,
     )
 
     np.testing.assert_array_equal(reference_next_cords, next_cords)
@@ -570,7 +570,7 @@ def test_rectification_moving_to_next_line():
         default_elev,
         epi_step,
         alphas,
-        0,
+        1,
     )
 
     np.testing.assert_array_equal(reference_next_cords, next_cords)

@@ -326,7 +326,7 @@ def initialize_grids(epi_step, nb_row, nb_col):
     return left_grid, right_grid
 
 
-def moving_along_axis(geom_model_left, geom_model_right, current_coords, spacing, elevation, epi_step, alphas, axis):
+def moving_along_axis(geom_model_left, geom_model_right, current_coords, spacing, elevation, epi_step, epi_angles, axis):
     """
     Moving to the next line in epipolar geometry
 
@@ -344,9 +344,9 @@ def moving_along_axis(geom_model_left, geom_model_right, current_coords, spacing
     :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
     :type epi_step: int
-    :param alphas: epipolar angle
-    :type alphas: float or List
-    :param axis: displacement direction ( 0 = along columns, 1 = along lines)
+    :param epi_angles: epipolar angle
+    :type epi_angles: np.ndarray
+    :param axis: displacement direction ( 0 = along lines, 1 = along columns)
     :type axis: int
     :return: left and right coordinates of the next line in epipolar geometry
         or coordinates of next pixels in left epipolar line, coordinates of next pixels in right epipolar line
@@ -358,13 +358,10 @@ def moving_along_axis(geom_model_left, geom_model_right, current_coords, spacing
     if axis not in [0, 1]:
         raise ValueError(f"axis value {axis} is not available")
 
-    alphas = alphas + axis * np.pi / 2
+    epi_angles = epi_angles + axis * np.pi / 2
 
-    direction_1 = -1 if axis == 1 else 1
-    direction_0 = -1 if axis == 0 else 1
-
-    unit_vector_along_epi_y = epi_step * direction_1 * spacing * np.cos(alphas)
-    unit_vector_along_epi_x = epi_step * direction_0 * spacing * np.sin(alphas)
+    unit_vector_along_epi_x = epi_step * spacing * np.cos(epi_angles)
+    unit_vector_along_epi_y = epi_step * spacing * np.sin(epi_angles)
 
     next_left = np.copy(current_coords)
     next_left[:, 0] += unit_vector_along_epi_y
@@ -460,7 +457,7 @@ def compute_stereorectification_epipolar_grids(
             elevation,
             epi_step,
             alpha,
-            0,
+            1,
         )
 
         # Save the starting points, useful to be able to move along the lines in the next loop
@@ -500,7 +497,7 @@ def compute_stereorectification_epipolar_grids(
 
         # Move to the next pixels in the epipolar line (moving along lines)
         left_epi_coords, right_epi_coords = moving_along_axis(
-            geom_model_left, geom_model_right, left_epi_coords, mean_spacing, elevation, epi_step, alphas, 1
+            geom_model_left, geom_model_right, left_epi_coords, mean_spacing, elevation, epi_step, alphas, 0
         )
 
     # Compute the mean baseline ratio

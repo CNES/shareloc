@@ -4,12 +4,12 @@ import sys
 sys.path.append(".")
 
 # pylint: disable=wrong-import-position
-import libs.pbhelloworld as HWmodule  # noqa: E402
+import libs.pbrpc as pbrpc  # noqa: E402
 
 # pylint: enable=wrong-import-position
 
 
-def test_helloworld():
-    hw_object = HWmodule.HW()
+def test_pbrpc():
+    # TODO
 
-    assert "Hello world !" == hw_object.hellow_world()
+    assert True

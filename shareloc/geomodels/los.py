@@ -48,6 +48,10 @@ class LOS:
         :type fill_nan : boolean
         """
 
+        self._los_nb = None
+        self._sis = None  # los starting point
+        self._vis = None  # los viewing direction
+        self._eis = None  # los ending point
         self.geometrical_model = geometrical_model
         self.sensors_positions = sensor_positions
         self.los_creation(alt_min_max, fill_nan)
@@ -62,60 +66,70 @@ class LOS:
         :type fill_nan: boolean
         """
 
-        self.los_nb = self.sensors_positions.shape[0]
+        self._los_nb = self.sensors_positions.shape[0]
         if alt_min_max is None:
             alt_min, alt_max = self.geometrical_model.get_alt_min_max()
         else:
             alt_min, alt_max = alt_min_max
         # LOS construction right
-        los_extrema = np.zeros([2 * self.los_nb, 3])
+        los_extrema = np.zeros([2 * self._los_nb, 3])
         list_col, list_row = (self.sensors_positions[:, 0], self.sensors_positions[:, 1])
-        los_extrema[np.arange(0, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(
+        los_extrema[np.arange(0, 2 * self._los_nb, 2), :] = self.geometrical_model.direct_loc_h(
             list_row, list_col, alt_max, fill_nan
         )
-        los_extrema[np.arange(1, 2 * self.los_nb, 2), :] = self.geometrical_model.direct_loc_h(
+        los_extrema[np.arange(1, 2 * self._los_nb, 2), :] = self.geometrical_model.direct_loc_h(
             list_row, list_col, alt_min, fill_nan
         )
 
         in_crs = 4326
         out_crs = 4978
         ecef_coord = coordinates_conversion(los_extrema, in_crs, out_crs)
-        self.sis = ecef_coord[0::2, :]
-        self.sis2 = ecef_coord[1::2, :]
-        vis = self.sis - ecef_coord[1::2, :]
+        self._sis = ecef_coord[0::2, :]
+        self._eis = ecef_coord[1::2, :]
+        vis = self._sis - ecef_coord[1::2, :]
         # /!\ normalized
         #
         #  direction vector creation
         vis_norm = np.linalg.norm(vis, axis=1)
         rep_vis_norm = np.tile(vis_norm, (3, 1)).transpose()
-        self.vis = vis / rep_vis_norm
+        self._vis = vis / rep_vis_norm
 
-    def get_sis(self):
+    @property
+    def sis(self):
         """
         returns los hat
-        TODO: not used. Use python property instead
 
         :return: sis
         :rtype: numpy array
         """
-        return self.sis
+        return self._sis
 
-    def get_sis2(self):
+    @property
+    def eis(self):
         """
         returns los bottom
-        TODO: not used. Use python property instead
 
-        :return: sis2
+        :return: eis
         :rtype: numpy array
         """
-        return self.sis2
+        return self._eis
 
-    def get_vis(self):
+    @property
+    def vis(self):
         """
         returns los viewing vector
-        TODO: not used. Use python property instead
 
         :return: vis
         :rtype: numpy array
         """
-        return self.vis
+        return self._vis
+
+    @property
+    def los_nb(self):
+        """
+        returns los number
+
+        :return: los_nb
+        :rtype: int
+        """
+        return self._los_nb

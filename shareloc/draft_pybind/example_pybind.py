@@ -13,7 +13,7 @@ row = [1.0, 1.0, 1.0]
 col = [1.0, 1.0, 1.0]
 alt = 1.0
 
-GM_object = pbrpc.GeoModelTemplate("geomdel_path")
+GM_object = pbrpc.GeoModelTemplate()
 lonlatalt1 = GM_object.direct_loc_h(row, col, alt, False)
 lonlatalt1 = GM_object.inverse_loc(row, col, alt)
 del GM_object

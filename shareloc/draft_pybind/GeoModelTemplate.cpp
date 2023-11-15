@@ -1,10 +1,8 @@
 
 
 
-GeoModelTemplate::GeoModelTemplate(string geomodel_path_arg) {
+GeoModelTemplate::GeoModelTemplate() {
     cout<<"GeoModelTemplate : constructor"<<endl;
-    geomodel_path = geomodel_path_arg;
-
 }
 GeoModelTemplate::~GeoModelTemplate() {
     cout<<"GeoModelTemplate : destructor"<<endl;

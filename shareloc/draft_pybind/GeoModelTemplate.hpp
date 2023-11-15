@@ -14,7 +14,7 @@ private:
     string geomodel_path;
     string type;
 public:
-    GeoModelTemplate(string geomodel_path_arg);
+    GeoModelTemplate();
     ~GeoModelTemplate();
     vector<vector<double>> direct_loc_h(vector<double> row, vector<double> col, double alt, bool fill_nan=false);
     vector<vector<double>> direct_loc_dtm(vector<double> row, vector<double> col, string dtm);

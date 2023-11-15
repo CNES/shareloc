@@ -8,13 +8,13 @@ namespace py = pybind11;
 PYBIND11_MODULE(pbrpc, m) {
 
     py::class_<GeoModelTemplate>(m, "GeoModelTemplate")
-        .def(py::init<string>())
+        .def(py::init<>())
         .def("direct_loc_h", &GeoModelTemplate::direct_loc_h)
         .def("direct_loc_dtm", &GeoModelTemplate::direct_loc_dtm)
         .def("inverse_loc", &GeoModelTemplate::inverse_loc);
 
     py::class_<RPC,GeoModelTemplate>(m, "RPC")
-        .def(py::init<string>())
+        .def(py::init<>())
         .def("direct_loc_h", &RPC::direct_loc_h)
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
         .def("direct_loc_dtm", &RPC::direct_loc_dtm)

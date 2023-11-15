@@ -40,7 +40,7 @@ Quick Start
 
     >>> # Create RPC object from downloaded geometry file
     >>> rpc_geom_file = "left_image.geom"
-    >>> rpc = RPC.from_any(rpc_geom_file)
+    >>> rpc = RPC(rpc_geom_file)
 
     >>> # Create Localization object from created RPC
     >>> loc = Localization(rpc)

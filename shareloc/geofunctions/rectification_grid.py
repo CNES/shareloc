@@ -40,7 +40,7 @@ class RectificationGrid:
         :param grid_filename: grid filename
         :type filename: string
         """
-        self.filename = grid_filename
+        self.grid_filename = grid_filename
 
         dataset = rio.open(grid_filename)
 

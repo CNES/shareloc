@@ -50,25 +50,25 @@ def test_rpc_drivers():
     # Test DIMAP RPC
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
-    fctrat_dimap = RPC.from_any(file_dimap)
+    fctrat_dimap = RPC(file_dimap)
     assert fctrat_dimap.driver_type == "dimap_v1.4"
 
     # Test OSSIM KWL GEOM RPC
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    fctrat_geom = RPC.from_any(file_geom)
+    fctrat_geom = RPC(file_geom)
     assert fctrat_geom.driver_type == "ossim_kwl"
 
     # Test DIMAPv2 RPC
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_dimap_v2 = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
-    fctrat_dimap_v2 = RPC.from_any(file_dimap_v2, topleftconvention=True)
+    fctrat_dimap_v2 = RPC(file_dimap_v2)
     assert fctrat_dimap_v2.driver_type == "dimap_v2.15"
 
     # Test fake RPC
     fake_rpc = os.path.join(data_folder, "rpc/fake_rpc.txt")
     try:
-        RPC.from_any(fake_rpc, topleftconvention=True)  # Raise ValueError->True
+        RPC(fake_rpc)  # Raise ValueError->True
         raise AssertionError()  # Assert false if no exception raised
     except ValueError:
         assert True
@@ -123,7 +123,7 @@ def test_rpc_ossim_kwl(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     data_folder = data_path()
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    fctrat_geom = RPC.from_any(file_geom, topleftconvention=True)
+    fctrat_geom = RPC(file_geom)
 
     (row, col, __) = fctrat_geom.inverse_loc(lon, lat, alt)
     assert col == pytest.approx(col_vt, abs=1e-2)
@@ -165,7 +165,7 @@ def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
-    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+    fctrat = RPC(rpc_file)
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
     assert fctrat.epsg == 4326
     assert fctrat.datum == "ellipsoid"
@@ -183,7 +183,7 @@ def test_rpc_direct_iterative(id_scene, lon, lat, alt):
     """
     data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
-    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+    fctrat = RPC(rpc_file)
     (row, col, __) = fctrat.inverse_loc(lon, lat, alt)
     (lon2, lat2, __) = fctrat.direct_loc_inverse_iterative(row, col, alt)
     assert lon == pytest.approx(lon2, abs=1e-2)
@@ -205,7 +205,7 @@ def test_rpc_from_geotiff_without_rpc(prod, can_read):
     data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", prod)
     try:
-        RPC.from_geotiff(rpc_file, topleftconvention=True)
+        RPC(rpc_file)
         assert can_read
     except ValueError:
         assert not can_read
@@ -221,14 +221,14 @@ def test_rpc_dimap_v2(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     data_folder = data_path()
     file_dimap = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
-    fctrat_dimap = RPC.from_dimap(file_dimap, topleftconvention=True)
+    fctrat_dimap = RPC(file_dimap)
 
     (row, col, __) = fctrat_dimap.inverse_loc(lon, lat, alt)
     assert col == pytest.approx(col_vt, abs=1e-2)
     assert row == pytest.approx(row_vt, abs=1e-2)
 
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    fctrat_geom = RPC.from_any(file_geom, topleftconvention=True)
+    fctrat_geom = RPC(file_geom)
     (row, col, __) = fctrat_geom.inverse_loc(lon, lat, alt)
     assert col == pytest.approx(col_vt, abs=1e-2)
     assert row == pytest.approx(row_vt, abs=1e-2)
@@ -243,7 +243,7 @@ def test_rpc_phrdimap(col, row, alt):
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    fctrat = RPC.from_dimap(file_dimap)
+    fctrat = RPC(file_dimap)
 
     (lonlatalt) = fctrat.direct_loc_h(row, col, alt)
 
@@ -261,7 +261,7 @@ def test_rpc_direct_inverse_iterative_vs_direct(col, row, alt):
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    fctrat = RPC.from_dimap_v1(file_dimap)
+    fctrat = RPC(file_dimap)
 
     # (col,lig,alt)=(100,1000,400)
     lonlatalt = fctrat.direct_loc_h(row, col, alt)
@@ -281,7 +281,7 @@ def test_rpc_direct_inverse_iterative_vs_direct_multiple_points():
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    fctrat = RPC.from_dimap_v1(file_dimap)
+    fctrat = RPC(file_dimap)
 
     (col, row, alt) = (np.array([600, 610]), np.array([200, 210]), np.array([125]))
     p_direct = fctrat.direct_loc_h(row, col, alt)
@@ -308,7 +308,7 @@ def test_rpc_direct_iterative_nan():
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    fctrat = RPC.from_dimap_v1(file_dimap)
+    fctrat = RPC(file_dimap)
 
     (col, row, alt) = (np.array([600, np.nan]), np.array([200, 210]), np.array([125]))
     p_direct0 = fctrat.direct_loc_inverse_iterative(row, col, alt, fill_nan=True)
@@ -327,7 +327,7 @@ def test_rpc_direct_iterative_all_nan():
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    fctrat = RPC.from_dimap_v1(file_dimap)
+    fctrat = RPC(file_dimap)
 
     (col, row, alt) = (np.array([600, np.nan]), np.array([200, 210]), np.array([125]))
     direct_loc_tab = fctrat.direct_loc_inverse_iterative(row, col, alt, fill_nan=True)
@@ -353,7 +353,7 @@ def test_rpc_direct_inverse_iterative(col, row, alt):
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    fctrat = RPC.from_dimap_v1(file_dimap)
+    fctrat = RPC(file_dimap)
 
     lonlatalt = fctrat.direct_loc_h(row, col, alt)
     (row_inv, col_inv, __) = fctrat.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
@@ -374,7 +374,7 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
 
     data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
-    fctrat = RPC.from_any(rpc_file, topleftconvention=True)
+    fctrat = RPC(rpc_file)
     id_scene = "P1BP--2017092838284574CP"
     data_folder_mnt = data_path("ellipsoide", id_scene)
 
@@ -400,7 +400,7 @@ def test_rpc_los_extrapolation(id_scene, row, col):
     """
     data_folder = data_path()
     file_dimap = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
-    fctrat = RPC.from_dimap(file_dimap, topleftconvention=True)
+    fctrat = RPC(file_dimap)
     los_edges = fctrat.los_extrema(row, col)
     altmin = -10
     altmax = 2000
@@ -417,7 +417,7 @@ def test_rpc_minmax():
     data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     fichier_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
-    fctrat = RPC.from_any(fichier_dimap)
+    fctrat = RPC(fichier_dimap)
     (h_min, h_max) = fctrat.get_alt_min_max()
     assert h_min == 532.5
     assert h_max == 617.5

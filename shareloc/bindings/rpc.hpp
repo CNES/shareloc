@@ -57,7 +57,7 @@ public:
     tuple<vector<double>,vector<double>,vector<double>> inverse_loc(vector<double> lon, vector<double> lat, double alt);
     vector<vector<double>> filter_coordinates(vector<double> first_coord, vector<double> second_coord, bool fill_nan=false, string direction="direct");
     tuple<vector<double>,vector<double>,vector<double>,vector<double>> compute_loc_inverse_derivates(vector<double> lon, vector<double> lat, vector<double> alt);
-    vector<vector<double>> direct_loc_inverse_iterative(vector<double> row, vector<double> col, float alt, int nb_iter_max=10, bool fill_nan=false);
+    vector<vector<double>> direct_loc_inverse_iterative(vector<double> row, vector<double> col, double alt, int nb_iter_max=10, bool fill_nan=false);
     vector<double> get_alt_min_max();
     vector<vector<double>> los_extrema(double row, double col, double alt_min, double alt_max, bool fill_nan=false, int epsg=4326);
 };

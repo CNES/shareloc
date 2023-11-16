@@ -32,7 +32,7 @@ tuple<vector<double>,vector<double>,vector<double>,vector<double>> RPC::compute_
     return res;
 }
 
-vector<vector<double>> RPC::direct_loc_inverse_iterative(vector<double> row, vector<double> col, float alt, int nb_iter_max, bool fill_nan){
+vector<vector<double>> RPC::direct_loc_inverse_iterative(vector<double> row, vector<double> col, double alt, int nb_iter_max, bool fill_nan){
     vector<vector<double>> vect;
     return vect;
 }

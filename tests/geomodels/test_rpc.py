@@ -35,7 +35,8 @@ import rasterio
 
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
-from shareloc.geomodels.rpc import RPC, identify_dimap, identify_ossim_kwl
+from shareloc.geomodels.rpc import RPC
+from shareloc.geomodels.geomodel_template import GeoModelTemplate, identify_dimap, identify_ossim_kwl
 
 # Shareloc test imports
 from ..helpers import data_path

@@ -31,7 +31,7 @@ if not os.path.exists("libs"):
     os.makedirs("libs")
 
 # Main setup with setup.cfg file.
-extensions = [Pybind11Extension("libs.pbrpc", ["shareloc/draft_pybind/bind_helloworld.cpp"])]  # "lib.pbhelloworld"
+extensions = [Pybind11Extension("libs.pbrpc", ["shareloc/bindings/bind_helloworld.cpp"])]
 
 # extensions = intree_extensions("pbrpc", ["shareloc/draft_pybind/hello_world.cpp"])
 

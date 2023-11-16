@@ -28,8 +28,8 @@ import numpy as np
 import pytest
 
 # Shareloc imports
+from shareloc.geomodels import GeoModel
 from shareloc.geomodels.los import LOS
-from shareloc.geomodels.rpc import RPC
 from shareloc.proj_utils import coordinates_conversion
 
 # Shareloc test imports
@@ -51,7 +51,7 @@ def test_los_creation_with_different_alt(alt):
     # Load geometrical model
     id_scene = "P1BP--2017092838284574CP"
     file_dimap = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
-    geometrical_model = RPC(file_dimap)
+    geometrical_model = GeoModel(file_dimap)
     # Get alt max
     if alt is None:
         alt_min, alt_max = geometrical_model.get_alt_min_max()
@@ -103,7 +103,7 @@ def test_compare_two_altitude():
     # Load geometrical model
     id_scene = "P1BP--2017092838284574CP"
     file_dimap = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
-    geometrical_model = RPC(file_dimap)
+    geometrical_model = GeoModel(file_dimap)
 
     # Create los
     model_los = LOS(matches_left, geometrical_model, [310, 850])

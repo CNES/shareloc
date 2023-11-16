@@ -34,10 +34,10 @@ import pytest
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.geofunctions.localization import Localization
 from shareloc.geofunctions.localization import coloc as coloc_rpc
+from shareloc.geomodels import GeoModel
 
 # Shareloc imports
-from shareloc.geomodels.grid import Grid, coloc
-from shareloc.geomodels.rpc import RPC
+from shareloc.geomodels.grid import coloc
 from shareloc.image import Image
 from shareloc.proj_utils import coordinates_conversion
 
@@ -57,9 +57,9 @@ def test_localize_direct_rpc():
 
     # first instanciate the RPC geometric model
     # data = os.path.join(data_path(), "rpc/phr_ventoux/", "left_image.geom")
-    # geom_model = RPC(data)
+    # geom_model = GeoModel(data)
     data = os.path.join(data_path(), "rpc/phr_ventoux/", "RPC_PHR1B_P_201308051042194_SEN_690908101-001.XML")
-    geom_model = RPC(data)
+    geom_model = GeoModel(data)
     # then read the Image to retrieve its geotransform
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
@@ -94,9 +94,9 @@ def test_localize_direct_grid():
 
     # first instanciate the Grid geometric model
     # data = os.path.join(data_path(), "rpc/phr_ventoux/", "left_image.geom")
-    # geom_model_1 = RPC(data)
+    # geom_model_1 = GeoModel(data)
     data = os.path.join(data_path(), "grid/phr_ventoux/", "GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif")
-    geom_model = Grid(data)
+    geom_model = GeoModel(data)
     # then read the Image to retrieve its geotransform
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
@@ -136,7 +136,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     dtm = DTMIntersection(fic)
     # load grid model
     gld = os.path.join(data_folder, grid_name)
-    gri = Grid(gld)
+    gri = GeoModel(gld)
     return dtm, gri
 
 
@@ -230,7 +230,7 @@ def test_extent():
     Test  extent
     """
     data_left = os.path.join(data_path(), "rectification", "left_image")
-    geom_model = RPC(data_left + ".geom")
+    geom_model = GeoModel(data_left + ".geom")
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
     image = Image(image_filename)
     loc_rpc_image = Localization(geom_model, elevation=None, image=image)
@@ -246,7 +246,7 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     Test direct localization using image geotransform
     """
     data = os.path.join(data_path(), "rectification", "left_image")
-    geom_model_left = RPC(data + ".geom")
+    geom_model_left = GeoModel(data + ".geom")
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
 
@@ -267,7 +267,7 @@ def test_sensor_loc_dir_dtm_geoid_utm(col, row, valid_coord):
     Test direct localization using image geotransform
     """
     data = os.path.join(data_path(), "rectification", "left_image")
-    geom_model_left = RPC(data + ".geom")
+    geom_model_left = GeoModel(data + ".geom")
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
 
@@ -297,7 +297,7 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     data_folder = data_path()
     fichier_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    fctrat = RPC(fichier_dimap)
+    fctrat = GeoModel(fichier_dimap)
 
     loc_rpc = Localization(fctrat)
     lonlatalt_rpc = loc_rpc.direct(row, col, h)
@@ -392,7 +392,7 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     data_folder = data_path()
     fichier_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    fctrat = RPC(fichier_dimap)
+    fctrat = GeoModel(fichier_dimap)
 
     loc_rpc = Localization(fctrat)
     [row_rpc, col_rpc, __] = loc_rpc.inverse(lon, lat, alt)
@@ -508,7 +508,7 @@ def test_loc_dir_loc_inv_rpc(id_scene, rpc, row, col, h):
     data_folder = data_path()
     fichier_dimap = os.path.join(data_folder, "rpc", rpc)
 
-    fctrat = RPC(fichier_dimap)
+    fctrat = GeoModel(fichier_dimap)
     (inv_row, inv_col, __) = fctrat.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
     assert row == pytest.approx(inv_row, abs=1e-2)
     assert col == pytest.approx(inv_col, abs=1e-2)
@@ -560,7 +560,7 @@ def test_colocalization(col, row, alt):
     data_folder = data_path()
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
-    fctrat = RPC(file_dimap)
+    fctrat = GeoModel(file_dimap)
 
     row_coloc, col_coloc, _ = coloc_rpc(fctrat, fctrat, row, col, alt)
 
@@ -575,12 +575,12 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     Test direct localization using image geotransform
     """
     data_left = os.path.join(data_path(), "rectification", "left_image")
-    geom_model_left = RPC(data_left + ".geom")
+    geom_model_left = GeoModel(data_left + ".geom")
     image_filename_left = os.path.join(data_path(), "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
     image_left = Image(image_filename_left)
 
     data_right = os.path.join(data_path(), "rectification", "right_image")
-    geom_model_right = RPC(data_right + ".geom")
+    geom_model_right = GeoModel(data_right + ".geom")
     image_filename_right = os.path.join(data_path(), "image/phr_ventoux/", "right_image_pixsize_0_5.tif")
     image_right = Image(image_filename_right)
 
@@ -610,7 +610,7 @@ def test_sensor_loc_utm(col, row):
     Test direct localization using image geotransform
     """
     data_left = os.path.join(data_path(), "rectification", "left_image")
-    geom_model = RPC(data_left + ".geom")
+    geom_model = GeoModel(data_left + ".geom")
     epsg = 32631
     loc_wgs = Localization(geom_model)
     loc_utm = Localization(geom_model, epsg=epsg)
@@ -633,7 +633,7 @@ def test_sensor_loc_dir_dtm_multi_points():
 
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
-    geom_model = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")

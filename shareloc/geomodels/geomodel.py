@@ -77,7 +77,7 @@ class GeoModel:
         # Create geomodel object with geomodel_path parameter from geomodel_type if exists
         try:
             geomodel_class = cls.available_geomodels[geomodel_type]
-            geomodel = geomodel_class(geomodel_path)
+            geomodel = geomodel_class(geomodel_path).load()
             logging.debug("GeoModel type name: %s", geomodel_type)
         except KeyError:
             logging.error("Geomodel type named %s is not supported", geomodel_type)

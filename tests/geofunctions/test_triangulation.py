@@ -36,8 +36,7 @@ import pytest
 
 # Shareloc imports
 from shareloc.geofunctions.triangulation import distance_point_los, epipolar_triangulation, sensor_triangulation
-from shareloc.geomodels.grid import Grid
-from shareloc.geomodels.rpc import RPC
+from shareloc.geomodels import GeoModel
 
 # Shareloc test imports
 from ..helpers import data_path
@@ -86,7 +85,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     data_folder = data_path(alti, id_scene)
     # load grid
     gld = os.path.join(data_folder, f"GRID_{id_scene}.tif")
-    gri = Grid(gld)
+    gri = GeoModel(gld)
 
     return gri
 
@@ -156,10 +155,10 @@ def test_epi_triangulation_sift_rpc():
     data_folder = data_path()
     id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    geom_model_left = RPC(file_geom)
+    geom_model_left = GeoModel(file_geom)
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    geom_model_right = RPC(file_geom)
+    geom_model_right = GeoModel(file_geom)
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
@@ -217,10 +216,10 @@ def test_epi_triangulation_disp_rpc():
     data_folder = data_path()
     id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    geom_model_left = RPC(file_geom)
+    geom_model_left = GeoModel(file_geom)
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
-    geom_model_right = RPC(file_geom)
+    geom_model_right = GeoModel(file_geom)
 
     # grid_left_filename = os.path.join(data_path(), "rectification_grids",
     #                                  "grid_{}.tif".format(id_scene_left))
@@ -258,9 +257,9 @@ def test_epi_triangulation_disp_rpc_roi():
     """
     data_folder = data_path()
     file_geom = os.path.join(data_folder, "rpc/phr_ventoux/left_image.geom")
-    geom_model_left = RPC(file_geom)
+    geom_model_left = GeoModel(file_geom)
     file_geom = os.path.join(data_folder, "rpc/phr_ventoux/right_image.geom")
-    geom_model_right = RPC(file_geom)
+    geom_model_right = GeoModel(file_geom)
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid_ventoux.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid_ventoux.tif")

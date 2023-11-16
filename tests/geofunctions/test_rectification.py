@@ -44,8 +44,7 @@ from shareloc.geofunctions.rectification import (  # write_epipolar_grid,
     prepare_rectification,
 )
 from shareloc.geofunctions.rectification_grid import RectificationGrid
-from shareloc.geomodels.grid import Grid
-from shareloc.geomodels.rpc import RPC
+from shareloc.geomodels import GeoModel
 from shareloc.image import Image
 
 # Shareloc test imports
@@ -63,8 +62,8 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc():
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
     right_im = Image(os.path.join(data_path(), "rectification", "right_image.tif"))
 
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     epi_step = 30
     elevation_offset = 50
@@ -110,8 +109,8 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_alti():
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
     right_im = Image(os.path.join(data_path(), "rectification", "right_image.tif"))
 
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     epi_step = 30
     elevation_offset = 50
@@ -151,8 +150,8 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid():
     """
 
     # first instantiate geometric models left and right (here RPC geometrics model)
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     # read the images
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
@@ -207,8 +206,8 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid_roi()
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
     right_im = Image(os.path.join(data_path(), "rectification", "right_image.tif"))
 
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
@@ -257,10 +256,10 @@ def test_compute_stereorectification_epipolar_grids_geomodel_grid():
     """
 
     # first instantiate geometric models left and right (here Grid geometric model)
-    geom_model_left = Grid(
+    geom_model_left = GeoModel(
         os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif")
     )
-    geom_model_right = Grid(
+    geom_model_right = GeoModel(
         os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042523_SEN_690908101-002.tif")
     )
 
@@ -313,10 +312,10 @@ def test_compute_stereorectification_epipolar_grids_geomodel_grid_dtm_geoid():
     """
 
     # first instantiate geometric models left and right (here Grid geometrics model)
-    geom_model_left = Grid(
+    geom_model_left = GeoModel(
         os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif")
     )
-    geom_model_right = Grid(
+    geom_model_right = GeoModel(
         os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042523_SEN_690908101-002.tif")
     )
 
@@ -423,8 +422,8 @@ def test_prepare_rectification():
     """
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     epi_step = 30
     elevation_offset = 50
@@ -459,8 +458,8 @@ def test_prepare_rectification_footprint():
     """
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     epi_step = 30
     elevation_offset = 50
@@ -486,8 +485,8 @@ def test_rectification_moving_along_line():
     """
     Test moving along line in epipolar geometry
     """
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     current_left_coords = np.array([[5000.5, 5000.5, 0.0]], dtype=np.float64)
     mean_spacing = 1
@@ -511,8 +510,8 @@ def test_rectification_moving_to_next_line():
     """
     Test moving to next line in epipolar geometry
     """
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     current_left_coords = np.array([5000.5, 5000.5, 0.0], dtype=np.float64)
     mean_spacing = 1
@@ -628,8 +627,8 @@ def test_rectification_grid_pos_inside_prepare_footprint_bounding_box():
 
     # Compute shareloc epipolar footprint
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
-    geom_model_left = RPC(os.path.join(data_path(), "rectification", "left_image.geom"))
-    geom_model_right = RPC(os.path.join(data_path(), "rectification", "right_image.geom"))
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
     epi_step = 30
     elevation_offset = 50
     default_elev = 0.0

@@ -48,10 +48,10 @@ class LOS:
         :type fill_nan : boolean
         """
 
-        self._los_nb = None
-        self._sis = None  # los starting point
-        self._vis = None  # los viewing direction
-        self._eis = None  # los ending point
+        self._number = None
+        self._starting_points = None  # los starting point
+        self._viewing_vectors = None  # los viewing direction
+        self._ending_points = None  # los ending point
         self.geometrical_model = geometrical_model
         self.sensors_positions = sensor_positions
         self.los_creation(alt_min_max, fill_nan)
@@ -66,70 +66,68 @@ class LOS:
         :type fill_nan: boolean
         """
 
-        self._los_nb = self.sensors_positions.shape[0]
+        self._number = self.sensors_positions.shape[0]
         if alt_min_max is None:
             alt_min, alt_max = self.geometrical_model.get_alt_min_max()
         else:
             alt_min, alt_max = alt_min_max
         # LOS construction right
-        los_extrema = np.zeros([2 * self._los_nb, 3])
+        los_extrema = np.zeros([2 * self._number, 3])
         list_col, list_row = (self.sensors_positions[:, 0], self.sensors_positions[:, 1])
-        los_extrema[np.arange(0, 2 * self._los_nb, 2), :] = self.geometrical_model.direct_loc_h(
+        los_extrema[np.arange(0, 2 * self._number, 2), :] = self.geometrical_model.direct_loc_h(
             list_row, list_col, alt_max, fill_nan
         )
-        los_extrema[np.arange(1, 2 * self._los_nb, 2), :] = self.geometrical_model.direct_loc_h(
+        los_extrema[np.arange(1, 2 * self._number, 2), :] = self.geometrical_model.direct_loc_h(
             list_row, list_col, alt_min, fill_nan
         )
 
         in_crs = 4326
         out_crs = 4978
         ecef_coord = coordinates_conversion(los_extrema, in_crs, out_crs)
-        self._sis = ecef_coord[0::2, :]
-        self._eis = ecef_coord[1::2, :]
-        vis = self._sis - ecef_coord[1::2, :]
+        self._starting_points = ecef_coord[0::2, :]
+        self._ending_points = ecef_coord[1::2, :]
+        vis = self._starting_points - ecef_coord[1::2, :]
         # /!\ normalized
         #
         #  direction vector creation
         vis_norm = np.linalg.norm(vis, axis=1)
         rep_vis_norm = np.tile(vis_norm, (3, 1)).transpose()
-        self._vis = vis / rep_vis_norm
+        self._viewing_vectors = vis / rep_vis_norm
 
     @property
-    def sis(self):
+    def starting_points(self) -> np.ndarray:
         """
         returns los hat
 
         :return: sis
-        :rtype: numpy array
         """
-        return self._sis
+        return self._starting_points
 
     @property
-    def eis(self):
+    def ending_points(self) -> np.ndarray:
         """
         returns los bottom
 
         :return: eis
         :rtype: numpy array
         """
-        return self._eis
+        return self._ending_points
 
     @property
-    def vis(self):
+    def viewing_vectors(self):
         """
-        returns los viewing vector
+        returns los viewing vectors
 
         :return: vis
-        :rtype: numpy array
+
         """
-        return self._vis
+        return self._viewing_vectors
 
     @property
-    def los_nb(self):
+    def number(self) -> int:
         """
         returns los number
 
-        :return: los_nb
-        :rtype: int
+        :return: number
         """
-        return self._los_nb
+        return self._number

@@ -92,7 +92,7 @@ def sensor_triangulation(
 def distance_point_los(los, points):
     """
     distance between points and LOS
-    norm of cross prodcut between vector defined by LOS sis and point and LOS vis
+    norm of cross product between vector defined by LOS sis and point and LOS vis
 
     :param los:  line of sight
     :type los: shareloc.los
@@ -103,8 +103,8 @@ def distance_point_los(los, points):
     """
     # norm(BA vect u)/norm(u)
 
-    vis = los.vis
-    vect_sis_p = points - los.sis
+    vis = los.viewing_vectors
+    vect_sis_p = points - los.starting_points
     dist = np.linalg.norm(np.cross(vect_sis_p, vis), axis=1)
     return dist
 
@@ -120,10 +120,10 @@ def los_triangulation(left_los, right_los):
     :return: intersections in cartesian crs
     :rtype: numpy.array
     """
-    vis = np.dstack((left_los.vis, right_los.vis))
+    vis = np.dstack((left_los.viewing_vectors, right_los.viewing_vectors))
     vis = np.swapaxes(vis, 1, 2)
 
-    sis = np.dstack((left_los.sis, right_los.sis))
+    sis = np.dstack((left_los.starting_points, right_los.starting_points))
     sis = np.swapaxes(sis, 1, 2)
 
     vivi = vis[..., :, np.newaxis] * vis[..., np.newaxis, :]

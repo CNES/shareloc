@@ -101,25 +101,25 @@ def test_triangulation_residues():
         """line of sight class"""
 
         def __init__(self):
-            self.sis = np.array([[100.0, 10.0, 200.0], [100.0, 10.0, 200.0]])
-            self.vis = np.array([[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]])
+            self.starting_points = np.array([[100.0, 10.0, 200.0], [100.0, 10.0, 200.0]])
+            self.viewing_vectors = np.array([[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]])
 
         def print_sis(self):
             """
             print los hat
             """
-            print(self.sis)
+            print(self.starting_points)
 
         def print_vis(self):
             """
             print los viewing vector
             """
-            print(self.vis)
+            print(self.viewing_vectors)
 
     los = SimulatedLOS()
 
     distance = 10.0
-    point = los.sis + 100.0 * los.vis + distance * np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
+    point = los.starting_points + 100.0 * los.viewing_vectors + distance * np.array([[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]])
     residue = distance_point_los(los, point)
     assert distance == pytest.approx(residue, abs=1e-9)
 

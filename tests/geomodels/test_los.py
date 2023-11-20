@@ -83,9 +83,9 @@ def test_los_creation_with_different_alt(alt):
     rep_vis_norm = np.tile(vis_norm, (3, 1)).transpose()
     vis_gt = vis_gt / rep_vis_norm
 
-    assert left_los.los_nb == los_nb_gt
-    assert (left_los.sis == sis_gt).all
-    assert (left_los.vis == vis_gt).all
+    assert left_los.number == los_nb_gt
+    assert (left_los.starting_points == sis_gt).all
+    assert (left_los.viewing_vectors == vis_gt).all
 
 
 def test_compare_two_altitude():
@@ -109,5 +109,33 @@ def test_compare_two_altitude():
     model_los = LOS(matches_left, geometrical_model, [310, 850])
     wrong_los = LOS(matches_left, geometrical_model, [0, 210])
 
-    assert (model_los.sis != wrong_los.sis).all
-    assert (model_los.vis != wrong_los.vis).all
+    assert (model_los.starting_points != wrong_los.starting_points).all
+    assert (model_los.viewing_vectors != wrong_los.viewing_vectors).all
+
+
+def test_los_parameters():
+    """
+    test los parameters
+    """
+
+    data_folder = data_path()
+
+    # Load matches
+    matches = np.load(os.path.join(data_folder, "triangulation/matches-crop.npy"))
+    matches_left = matches[:, 0:2]
+
+    # Load geometrical model
+    id_scene = "P1BP--2017092838284574CP"
+    file_dimap = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
+    geometrical_model = RPC.from_any(file_dimap)
+
+    # Create los
+    model_los = LOS(matches_left, geometrical_model, [310, 850])
+    assert np.allclose(
+        model_los.starting_points[0], np.array([4581872.88696028, 566896.05875082, 4387122.99450132]), rtol=0, atol=1e-8
+    )
+    assert np.allclose(model_los.viewing_vectors[0], np.array([0.61688621, 0.00180051, 0.78705029]), rtol=0, atol=1e-8)
+    assert np.allclose(
+        model_los.ending_points[0], np.array([4581535.24740943, 566895.07328168, 4386692.2192622]), rtol=0, atol=1e-8
+    )
+    assert model_los.number == 121

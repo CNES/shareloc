@@ -341,7 +341,7 @@ def moving_along_axis(
         or current georeferenced coordinates in left epipolar line
     :type current_coords: 1D np.array [row, col, altitude]
         or 2D numpy array (number rows in epipolar geometry, [row, col, altitude])
-    :param spacing: mean spacing of epipolar grids
+    :param spacing: spacing of epipolar grids
     :type spacing: int
     :param elevation: elevation
     :type elevation: shareloc.dtm or float
@@ -520,7 +520,7 @@ def compute_strip_of_epipolar_grid(
     epi_step,
     elevation,
     elevation_offset,
-    alphas_array=None,
+    epipolar_angles=None,
 ):
     """
     Compute stereo-rectification epipolar grids by strip
@@ -529,10 +529,12 @@ def compute_strip_of_epipolar_grid(
     :type geom_model_left: shareloc.grid or  shareloc.rpc
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: shareloc.grid or  shareloc.rpc
-    :param size: grid size with strip
-    :type size: np.ndarray
-    :param positions_point: array containing
-    :type positions_point:
+    :param size: size of grid along one axis for strip generation
+    :type size: int
+    :param positions_point: array containing first positions
+    :type positions_point: np.ndarray
+    :param spacing: spacing of epipolar grids
+    :type spacing: int
     :param axis: displacement direction ( 0 = along lines, 1 = along columns)
     :type axis: int
     :param elevation: elevation
@@ -541,35 +543,45 @@ def compute_strip_of_epipolar_grid(
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
-    :param alphas_array: array containing alphas
-    :type alphas_array: np.
+    :param epipolar_angles: array containing alphas
+    :type epipolar_angles: np.ndarray
     :return:
         - left epipolar positions grid
         - right epipolar positions grid
+        - mean baseline ratio
     :rtype: Tuple
     """
 
+    # Instanciate mean baseline ratio
+    # equal 0 if one line or column is computed
     mean_baseline_ratio = 0
-    if alphas_array is None:
-        alpha_out = []
-    else:
-        alpha_out = alphas_array
 
+    # Help instanciate grid size, alphas size and mean baseline ratio
+    starting_point = positions_point.shape == (2, 3)
+
+    # requirements validation
+    if epipolar_angles is not None and starting_point:
+        raise ValueError("alphas must be empty at the beginning")
+    if size <= 3:
+        raise ValueError("Please, instantiate a size strip > 3")
+
+    # Alphas are stocked in a list
+    alpha_out = [] if epipolar_angles is None else epipolar_angles
+
+    # grid size depending on axis
     size_shape = (3, size, 1) if axis == 1 else (3, 1, size)
-    if positions_point.shape != (2, 3):
-        if axis == 1:
-            size_shape = (3, positions_point.shape[3], size) if axis == 1 else (3, size, positions_point.shape[3])
-        else:
-            size_shape = (3, positions_point.shape[2], size) if axis == 1 else (3, size, positions_point.shape[2])
-
+    if not starting_point:
+        size_shape = (3, size, positions_point.shape[3]) if axis == 1 else (3, positions_point.shape[2], size)
     left_grid, right_grid = np.zeros(size_shape), np.zeros(size_shape)
 
-    if positions_point.shape == (2, 3):
+    # Stock first point in grid
+    if starting_point:
         current_left_point = positions_point[0].reshape(1, -1)
         current_right_point = positions_point[1].reshape(1, -1)
         left_grid[:, 0, 0] = current_left_point
         right_grid[:, 0, 0] = current_right_point
 
+    # Stock first line/column in grid
     else:
         current_left_point = positions_point[0, :, :, :]
         current_right_point = positions_point[1, :, :, :]
@@ -580,31 +592,35 @@ def compute_strip_of_epipolar_grid(
         else:
             current_left_point = np.squeeze(current_left_point).T
             current_right_point = np.squeeze(current_right_point).T
-            left_grid[:, :, 0] = current_left_point.T.reshape(3, size)
-            right_grid[:, :, 0] = current_right_point.T.reshape(3, size)
+            left_grid[:, :, 0] = current_left_point.T
+            right_grid[:, :, 0] = current_right_point.T
 
+    # Grid creation
     for point in range(0, size):
-
         local_epi_start, local_epi_end = compute_local_epipolar_line(
             geom_model_left, geom_model_right, current_left_point, elevation, elevation_offset
         )
-        if current_left_point.shape != (1, 3):
+        # baseline ration is computed if we have a complete line or column
+        if not starting_point:
             local_baseline_ratio = np.sqrt(
                 (local_epi_end[:, 1] - local_epi_start[:, 1]) * (local_epi_end[:, 1] - local_epi_start[:, 1])
                 + (local_epi_end[:, 0] - local_epi_start[:, 0]) * (local_epi_end[:, 0] - local_epi_start[:, 0])
             ) / (2 * elevation_offset)
             mean_baseline_ratio += np.sum(local_baseline_ratio)
 
-        if alphas_array is None:
-            alphas_array = compute_epipolar_angle(local_epi_end, local_epi_start)
-            alpha_out.append(float(alphas_array))
+        # alphas are only computed at the beginning
+        if epipolar_angles is None:
+            epipolar_angles = compute_epipolar_angle(local_epi_end, local_epi_start)
+            alpha_out.append(float(epipolar_angles))
 
         current_left_point, current_right_point = moving_along_axis(
-            geom_model_left, geom_model_right, current_left_point, spacing, elevation, epi_step, alphas_array, axis
+            geom_model_left, geom_model_right, current_left_point, spacing, elevation, epi_step, epipolar_angles, axis
         )
+
+        # Stock values in good shape
         if point != size - 1:
-            if positions_point.shape == (2, 3):
-                alphas_array = None
+            if starting_point:
+                epipolar_angles = None
                 if axis == 1:
                     left_grid[:, point + 1, 0] = current_left_point
                     right_grid[:, point + 1, 0] = current_right_point
@@ -612,17 +628,23 @@ def compute_strip_of_epipolar_grid(
                     left_grid[:, 0, point + 1] = current_left_point
                     right_grid[:, 0, point + 1] = current_right_point
             else:
-                reshape_shape = (3, 1, size) if axis == 1 else (3, size, 1)
-
-                left_reshaped = np.squeeze(current_left_point).T.reshape(reshape_shape)
-                right_reshaped = np.squeeze(current_right_point).T.reshape(reshape_shape)
+                left_reshaped = current_left_point.T
+                right_reshaped = current_right_point.T
 
                 if axis == 1:
-                    left_grid[:, point + 1 : point + 2, :] = left_reshaped
-                    right_grid[:, point + 1 : point + 2, :] = right_reshaped
+                    left_grid[:, point + 1 : point + 2, :] = left_reshaped.reshape(
+                        (left_reshaped.shape[0], 1, left_reshaped.shape[1])
+                    )
+                    right_grid[:, point + 1 : point + 2, :] = right_reshaped.reshape(
+                        (left_reshaped.shape[0], 1, left_reshaped.shape[1])
+                    )
                 else:
-                    left_grid[:, :, point + 1 : point + 2] = left_reshaped
-                    right_grid[:, :, point + 1 : point + 2] = right_reshaped
+                    left_grid[:, :, point + 1 : point + 2] = left_reshaped.reshape(
+                        (left_reshaped.shape[0], left_reshaped.shape[1], 1)
+                    )
+                    right_grid[:, :, point + 1 : point + 2] = right_reshaped.reshape(
+                        (left_reshaped.shape[0], left_reshaped.shape[1], 1)
+                    )
 
     grids = np.stack([left_grid, right_grid])
     # Compute the mean baseline ratio

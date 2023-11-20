@@ -326,7 +326,9 @@ def initialize_grids(epi_step, nb_row, nb_col):
     return left_grid, right_grid
 
 
-def moving_along_axis(geom_model_left, geom_model_right, current_coords, spacing, elevation, epi_step, epi_angles, axis):
+def moving_along_axis(
+    geom_model_left, geom_model_right, current_coords, spacing, elevation, epi_step, epi_angles, axis
+):
     """
     Moving to the next line in epipolar geometry
 
@@ -348,8 +350,7 @@ def moving_along_axis(geom_model_left, geom_model_right, current_coords, spacing
     :type epi_angles: np.ndarray
     :param axis: displacement direction ( 0 = along lines, 1 = along columns)
     :type axis: int
-    :return: left and right coordinates of the next line in epipolar geometry
-        or coordinates of next pixels in left epipolar line, coordinates of next pixels in right epipolar line
+    :return: left and right positions in epipolar grid
     :rtype: Tuple([row, col, altitude], [row, col, altitude])
         or Tuple(2D numpy array (number rows in epipolar geometry, [row, col, altitude]),
         2D numpy array (number rows in epipolar geometry, [row, col, altitude]))

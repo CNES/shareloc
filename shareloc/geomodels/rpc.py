@@ -172,7 +172,7 @@ class RPC(GeoModelTemplate):
         self.rowmax = self.offset_row + self.scale_row
 
     @classmethod
-    def load(cls, geomodel_path, topleftconvention=True):
+    def load(cls, geomodel_path):
         """
         Load from any RPC (auto identify driver)
         from filename (dimap, ossim kwl, geotiff)
@@ -185,7 +185,7 @@ class RPC(GeoModelTemplate):
         """
         # Set topleftconvention (keeping historic option): to clean
         cls.geomodel_path = geomodel_path
-        return cls(rpc_reader(geomodel_path, topleftconvention))
+        return cls(rpc_reader(geomodel_path, topleftconvention=True))
 
     def direct_loc_h(self, row, col, alt, fill_nan=False):
         """

@@ -96,7 +96,7 @@ def test_localize_direct_grid():
     # data = os.path.join(data_path(), "rpc/phr_ventoux/", "left_image.geom")
     # geom_model_1 = GeoModel(data)
     data = os.path.join(data_path(), "grid/phr_ventoux/", "GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif")
-    geom_model = GeoModel(data)
+    geom_model = GeoModel(data, "grid")
     # then read the Image to retrieve its geotransform
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
@@ -136,7 +136,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     dtm = DTMIntersection(fic)
     # load grid model
     gld = os.path.join(data_folder, grid_name)
-    gri = GeoModel(gld)
+    gri = GeoModel(gld, "grid")
     return dtm, gri
 
 

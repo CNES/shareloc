@@ -43,17 +43,11 @@ class GeoModelTemplate(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def __init__(self, geomodel_path: str):
+    def __init__(self):
         """
         Return the geomodel object associated with the geomodel_type
         given in the configuration
-
-        :param geomodel_path: path of the geomodel file to instanciate.
-        :type geomodel_path: string
         """
-        # geomodel filename path
-        self.geomodel_path: str = geomodel_path
-
         # geomodel type. Set by the subclass
         self.type: str
 
@@ -104,4 +98,11 @@ class GeoModelTemplate(metaclass=ABCMeta):
         :type alt: float
         :return: sensor position (row, col, alt)
         :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
+        """
+
+    @classmethod
+    @abstractmethod
+    def load(cls, geomodel_path):
+        """
+        load function with class specific args
         """

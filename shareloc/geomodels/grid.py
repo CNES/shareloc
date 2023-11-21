@@ -87,9 +87,9 @@ class Grid(GeoModelTemplate):
         :type geomodel_path: string
         """
         # Instanciate GeoModelTemplate generic init with shared parameters
-        super().__init__(geomodel_path)
+        super().__init__()
         self.type = "multi H grid"
-
+        self.geomodel_path = geomodel_path
         # GeoModel Grid parameters definition (see documentation)
         self.row0 = None
         self.col0 = None
@@ -105,11 +105,10 @@ class Grid(GeoModelTemplate):
         self.rowmax = None
         self.colmax = None
         self.epsg = 0
+        self.read()
 
-        # Load function of grid parameters from grid file to grid object
-        self.load()
-
-    def load(self):
+    @classmethod
+    def load(cls, geomodel_path):
         """
         Load grid and fill Class attributes.
 
@@ -119,7 +118,18 @@ class Grid(GeoModelTemplate):
         - lon_data : [alt,row,col]
         - lat_data : [alt,row,col]
         """
+        return cls(geomodel_path)
 
+    def read(self):
+        """
+        Load grid and fill Class attributes.
+
+        The grid is read as an shareloc.image. Image and class attributes are filled.
+        Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
+        2 data cubes are defined:
+        - lon_data : [alt,row,col]
+        - lat_data : [alt,row,col]
+        """
         grid_image = Image(self.geomodel_path, read_data=True)
         if grid_image.dataset.driver != "GTiff":
             raise TypeError(

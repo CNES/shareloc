@@ -257,10 +257,10 @@ def test_compute_stereorectification_epipolar_grids_geomodel_grid():
 
     # first instantiate geometric models left and right (here Grid geometric model)
     geom_model_left = GeoModel(
-        os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif")
+        os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif"), "grid"
     )
     geom_model_right = GeoModel(
-        os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042523_SEN_690908101-002.tif")
+        os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042523_SEN_690908101-002.tif"), "grid"
     )
 
     # read the images
@@ -313,10 +313,10 @@ def test_compute_stereorectification_epipolar_grids_geomodel_grid_dtm_geoid():
 
     # first instantiate geometric models left and right (here Grid geometrics model)
     geom_model_left = GeoModel(
-        os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif")
+        os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif"), "grid"
     )
     geom_model_right = GeoModel(
-        os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042523_SEN_690908101-002.tif")
+        os.path.join(data_path(), "grid/phr_ventoux/GRID_PHR1B_P_201308051042523_SEN_690908101-002.tif"), "grid"
     )
 
     # read the images

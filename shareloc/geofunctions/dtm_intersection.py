@@ -33,7 +33,11 @@ from scipy import interpolate
 from shareloc.dtm_image import DTMImage
 from shareloc.image import Image
 from shareloc.math_utils import interpol_bilin
-from shareloc.proj_utils import coordinates_conversion
+from shareloc.proj_utils import (
+    coordinates_conversion,
+    transform_index_to_physical_point,
+    transform_physical_point_to_index,
+)
 
 
 def interpolate_geoid_height(geoid_filename, positions, interpolation_method="linear"):
@@ -65,7 +69,7 @@ def interpolate_geoid_height(geoid_filename, positions, interpolation_method="li
     positions[:, 0] -= (positions[:, 0] - max_lon > 0) * 360.0
     if np.any(np.abs(positions[:, 1]) > 90.0):
         raise RuntimeError("Geoid cannot handle latitudes greater than 90 deg.")
-    indexes_geoid = geoid_image.transform_physical_point_to_index(positions[:, 1], positions[:, 0])
+    indexes_geoid = transform_physical_point_to_index(geoid_image.trans_inv, positions[:, 1], positions[:, 0])
     return interpolate.interpn(points, geoid_image.data[:, :], indexes_geoid, method=interpolation_method)
 
 
@@ -142,7 +146,7 @@ class DTMIntersection:
                 self.grid_row, self.grid_col = np.mgrid[
                     0 : self.dtm_image.nb_rows : 1, 0 : self.dtm_image.nb_columns : 1
                 ]
-                lat, lon = self.dtm_image.transform_index_to_physical_point(self.grid_row, self.grid_col)
+                lat, lon = transform_index_to_physical_point(self.dtm_image.transform, self.grid_row, self.grid_col)
                 positions = np.vstack([lon.flatten(), lat.flatten()]).transpose()
                 if self.epsg != 4326:
                     positions = coordinates_conversion(positions, self.epsg, 4326)
@@ -203,7 +207,9 @@ class DTMIntersection:
         :rtype: array (1x2 or 1x3)
         """
         vect_dtm = vect_ter.copy()
-        (vect_dtm[0], vect_dtm[1]) = self.dtm_image.transform_physical_point_to_index(vect_ter[1], vect_ter[0])
+        (vect_dtm[0], vect_dtm[1]) = transform_physical_point_to_index(
+            self.dtm_image.trans_inv, vect_ter[1], vect_ter[0]
+        )
         return vect_dtm
 
     def ters_to_indexs(self, vect_ters):
@@ -230,7 +236,9 @@ class DTMIntersection:
         :rtype: array (1x2 or 1x3)
         """
         vect_ter = vect_dtm.copy()
-        (vect_ter[1], vect_ter[0]) = self.dtm_image.transform_index_to_physical_point(vect_dtm[0], vect_dtm[1])
+        (vect_ter[1], vect_ter[0]) = transform_index_to_physical_point(
+            self.dtm_image.transform, vect_dtm[0], vect_dtm[1]
+        )
         return vect_ter
 
     def get_alt_offset(self, epsg):
@@ -250,7 +258,9 @@ class DTMIntersection:
             corners -= 0.5  # index to corner
             ground_corners = np.zeros([3, 4])
             ground_corners[2, :] = alti_moy
-            ground_corners[1::-1, :] = self.dtm_image.transform_index_to_physical_point(corners[:, 0], corners[:, 1])
+            ground_corners[1::-1, :] = transform_index_to_physical_point(
+                self.dtm_image.transform, corners[:, 0], corners[:, 1]
+            )
             converted_corners = coordinates_conversion(ground_corners.transpose(), self.epsg, epsg)
             return [np.min(converted_corners[:, 2]) - alti_moy, np.max(converted_corners[:, 2]) - alti_moy]
         return [0.0, 0.0]

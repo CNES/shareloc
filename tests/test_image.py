@@ -29,6 +29,7 @@ import pytest
 
 # Shareloc imports
 from shareloc.image import Image
+from shareloc.proj_utils import transform_index_to_physical_point, transform_physical_point_to_index
 
 # Shareloc test imports
 from .helpers import data_path
@@ -62,11 +63,11 @@ def test_image_metadata(
     assert my_image.pixel_rotation_row == pixel_rotation_row
     assert my_image.pixel_rotation_col == pixel_rotation_col
 
-    [phys_row, phys_col] = my_image.transform_index_to_physical_point(row, col)
+    [phys_row, phys_col] = transform_index_to_physical_point(my_image.transform, row, col)
     assert phys_row == origin_row + (row + 0.5) * pixel_size_row + (col + 0.5) * pixel_rotation_row
     assert phys_col == origin_col + (col + 0.5) * pixel_size_col + (row + 0.5) * pixel_rotation_col
 
-    row_index, col_index = my_image.transform_physical_point_to_index(phys_row, phys_col)
+    row_index, col_index = transform_physical_point_to_index(my_image.trans_inv, phys_row, phys_col)
     assert row == row_index
     assert col == col_index
 
@@ -105,11 +106,11 @@ def test_image_metadata_roi(
 
     phy_valid_row = origin_row + (row + 0.5) * pixel_size_row + (col + 0.5) * pixel_rotation_row
     phy_valid_col = origin_col + (col + 0.5) * pixel_size_col + (row + 0.5) * pixel_rotation_col
-    [phys_row, phys_col] = my_image_roi.transform_index_to_physical_point(row - start_row, col - start_col)
+    [phys_row, phys_col] = transform_index_to_physical_point(my_image_roi.transform, row - start_row, col - start_col)
     assert phys_row == phy_valid_row
     assert phys_col == phy_valid_col
 
-    row_index, col_index = my_image_roi.transform_physical_point_to_index(phys_row, phys_col)
+    row_index, col_index = transform_physical_point_to_index(my_image_roi.trans_inv, phys_row, phys_col)
     assert row == row_index + start_row
     assert col == col_index + start_col
 
@@ -120,6 +121,8 @@ def test_image_metadata_roi(
     end_phys_col = origin_col + end_col * pixel_size_col + end_row * pixel_rotation_col
     roi = [start_phys_row, start_phys_col, end_phys_row, end_phys_col]
     my_image_roi_phys = Image(image_filename, roi=roi, roi_is_in_physical_space=True)
-    [phys_row, phys_col] = my_image_roi_phys.transform_index_to_physical_point(row - start_row, col - start_col)
+    [phys_row, phys_col] = transform_index_to_physical_point(
+        my_image_roi_phys.transform, row - start_row, col - start_col
+    )
     assert phys_row == phy_valid_row
     assert phys_col == phy_valid_col

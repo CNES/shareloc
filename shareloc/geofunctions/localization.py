@@ -31,7 +31,11 @@ import numbers
 import numpy as np
 
 # Shareloc imports
-from shareloc.proj_utils import coordinates_conversion
+from shareloc.proj_utils import (
+    coordinates_conversion,
+    transform_index_to_physical_point,
+    transform_physical_point_to_index,
+)
 
 
 class Localization:
@@ -80,7 +84,7 @@ class Localization:
         :rtype: np.ndarray of 2D dimension
         """
         if using_geotransform and self.image is not None:
-            row, col = self.image.transform_index_to_physical_point(row, col)
+            row, col = transform_index_to_physical_point(self.image.transform, row, col)
 
         if h is not None:
             coords = self.model.direct_loc_h(row, col, h)
@@ -159,7 +163,7 @@ class Localization:
         row, col, __ = self.model.inverse_loc(lon, lat, h)
 
         if using_geotransform and self.image is not None:
-            row, col = self.image.transform_physical_point_to_index(row, col)
+            row, col = transform_physical_point_to_index(self.image.trans_inv, row, col)
         return row, col, h
 
 

@@ -102,7 +102,7 @@ class GeoModelTemplate(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def load(cls, geomodel_path):
+    def load(cls, geomodel_path, **kwargs):
         """
         load function with class specific args
         """

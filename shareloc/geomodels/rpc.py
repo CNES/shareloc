@@ -695,9 +695,9 @@ class RPC:
         los = self.los_extrema(row, col, min_dtm, max_dtm, epsg=dtm.epsg)
         for i in range(points_nb):
             los_i = los[2 * i : 2 * i + 2, :]
-            (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los_i)
+            (__, __, position_cube, alti, los_index) = dtm.intersect_dtm_cube(los_i)
             if position_cube is not None:
-                (__, __, position) = dtm.intersection(los_i, position_cube, alti)
+                (__, __, position) = dtm.intersection(los_index, position_cube, alti)
                 direct_dtm[i, :] = position
             else:
                 position = np.full(3, fill_value=np.nan)

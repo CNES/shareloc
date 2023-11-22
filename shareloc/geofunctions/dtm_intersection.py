@@ -310,8 +310,8 @@ class DTMIntersection:
         :param los:  line of sight
         :type los: numpy.array
         :return: intersection information
-            (True,an intersection has been found ?, (lon,lat) of dtm position, altitude)
-        :rtype: tuple (bool, bool, numpy.array, float)
+            (True,an intersection has been found ?, (lon,lat) of dtm position, altitude, line of sight in index frame)
+        :rtype: tuple (bool, bool, numpy.array, float, numpy.array)
         """
         # los: (n,3):
         point_b = None
@@ -455,54 +455,50 @@ class DTMIntersection:
         # No solution if 0 or 1 single point is found (we have tangent to the cube)
         if nbi < 2:
             b_trouve = False
-            return True, b_trouve, point_b, h_intersect
+            return (True, b_trouve, point_b, h_intersect, los_index)
         # -----------------------------------------------------------------------
         # There are only 2 points left so we cross the cube
         # LAIG-FA-MAJA-2168-CNES: no more filtering on identical points. There may be a number of points > 2
         # Init the current point
         # DTM coordinates
-        point_dtm = np.zeros(3)
-        point_dtm[0] = coord_col_i[0]
-        point_dtm[1] = coord_row_i[0]
-        point_dtm[2] = coord_alt_i[0]
+        point_b = np.zeros(3)
+        point_b[0] = coord_col_i[0]
+        point_b[1] = coord_row_i[0]
+        point_b[2] = coord_alt_i[0]
         # point_dtm is the first intersection with the cube (line, column)
         # -----------------------------------------------------------------------
         # h is gld 3D
         h_intersect = alti_layer_i[0]
         # h_intersect is the h interpolation index (not integer)
         # -----------------------------------------------------------------------
-        # Terrain coordinates
-        point_b = self.index_to_ter(point_dtm)
-        # point_b is the terrain point (lon,lat)
-        # -----------------------------------------------------------------------
         # End, return
         b_trouve = True
-        return (True, b_trouve, point_b, h_intersect)
+
+        return (True, b_trouve, point_b, h_intersect, los_index)
 
     # gitlab issue #56
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-function-args
     # pylint: disable=too-many-nested-blocks
     # pylint: disable=too-many-statements
-    def intersection(self, los, point_b, h_intersect):  # noqa: C901
+    def intersection(self, los_index, point_b, h_intersect):  # noqa: C901
         """
         DTM intersection
 
-        :param los:  line of sight
-        :type los: numpy.array
-        :param point_b:  position of intersection in DTM cube
+        :param los_index:  line of sight in index frame
+        :type los_index: numpy.array
+        :param point_b:  position of intersection in DTM cube in index frame
         :type point_b: numpy.array
         :param h_intersect:  altitude in DTM cube
         :type h_intersect: float
         :return: intersection information (True,an intersection has been found ?, position of intersection)
         :rtype: tuple (bool, bool, numpy.array)
         """
-        los_index = self.ters_to_indexs(los)
-        point_b_dtm = self.ter_to_index(point_b)
+
+        npl = los_index.shape[0]
         point_r = np.zeros(3)
-        (npl, _) = los.shape
         alti = np.arange(npl, -1.0, -1.0)
-        p_1 = point_b_dtm.copy()  # [p_1[0],p_1[1],p_1[2]]
+        p_1 = point_b.copy()  # [p_1[0],p_1[1],p_1[2]]
 
         h_intersect_p1 = h_intersect
 
@@ -528,7 +524,7 @@ class DTMIntersection:
         i_0 = int(np.floor(h_intersect_p1))
 
         #   1.3 - Init the starting point (in p_2)
-        p_2 = point_b_dtm.copy()
+        p_2 = point_b.copy()
         h_intersect_p2 = h_intersect
 
         nb_planes = los_index.shape[0]

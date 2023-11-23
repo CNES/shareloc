@@ -30,7 +30,7 @@ suggestion-mode=yes
 unsafe-load-any-extension=no
 
 # List of cpp allowed extension
-extension-pkg-whitelist= libs.pbhelloworld
+extension-pkg-whitelist= shareloc.geomodels.pbrpc
 
 [MESSAGES CONTROL]
 

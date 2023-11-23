@@ -20,50 +20,57 @@
 # limitations under the License.
 #
 """
-This module contains the RPC class corresponding to the RPC models.
+This module contains the optimized (with cpp bindings) RPC class corresponding to the RPC models.
 RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotiff.
 """
+# pylint: disable=abstract-method, c-extension-no-member
 
-# Standard imports
-import logging
-from os.path import basename
-from typing import Dict
-from xml.dom import minidom
+
+# Cpp bidings imports
+import sys
 
 # Third party imports
-import numpy as np
-import rasterio as rio
-from numba import config, njit, prange
+from numba import config
 
 # Shareloc imports
 from shareloc.geomodels.geomodel import GeoModel
 from shareloc.geomodels.geomodel_template import GeoModelTemplate
-from shareloc.proj_utils import coordinates_conversion
+from shareloc.geomodels.rpc_readers import rpc_reader
 
-
-import sys
 sys.path.append(".")
-import libs.pbrpc as bind
-
+import libs.pbrpc as bind  # noqa: E402 # pylint: disable=wrong-import-position
 
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
 
 
-
-@GeoModel.register("RPC_optim")
-class RPC_optim(bind.RPC,GeoModelTemplate):
+@GeoModel.register("RpcOptim")
+class RpcOptim(bind.RPC, GeoModelTemplate):
     """
     RPC optimizes with cpp bindings class including direct and inverse localization instance methods
     """
 
-    # pylint: disable=too-many-instance-attributes
-    def __init__(self,geomodel_path: str):
-
+    def __init__(self, rpc_params):
         bind.RPC.__init__(self)
-        GeoModelTemplate.__init__(self,geomodel_path)
+        GeoModelTemplate.__init__(self)
 
-        self.type = "RPC_optim"
+        self.type = "RpcOptim"
 
-        # RPC parameters are load from geomodel_path to rpc params
-        self.load()
+        for key, value in rpc_params.items():
+            setattr(self, key, value)
+
+    @classmethod
+    def load(cls, geomodel_path):
+        """
+        Load from any RPC (auto identify driver)
+        from filename (dimap, ossim kwl, geotiff)
+
+        TODO: topleftconvention always to True, set a standard and remove the option
+
+        topleftconvention boolean: [0,0] position
+            If False : [0,0] is at the center of the Top Left pixel
+            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
+        # Set topleftconvention (keeping historic option): to clean
+        cls.geomodel_path = geomodel_path
+        return cls(rpc_reader(geomodel_path, topleftconvention=True))

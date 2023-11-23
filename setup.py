@@ -23,16 +23,14 @@ Main part is in setup.cfg file.
 import os
 
 # from setuptools.command.build_ext import build_ext
-from pybind11.setup_helpers import Pybind11Extension, build_ext, intree_extensions
-from setuptools import Extension, setup
+from pybind11.setup_helpers import Pybind11Extension, build_ext
+from setuptools import setup
 
 # create libs folder to contain .so files (if it doesn't exist)
 if not os.path.exists("libs"):
     os.makedirs("libs")
 
 # Main setup with setup.cfg file.
-extensions = [Pybind11Extension("libs.pbrpc", ["shareloc/bindings/bind_helloworld.cpp"])]
-
-# extensions = intree_extensions("pbrpc", ["shareloc/draft_pybind/hello_world.cpp"])
+extensions = [Pybind11Extension("libs.pbrpc", ["shareloc/bindings/bind.cpp"])]
 
 setup(use_scm_version=True, cmdclass={"build_ext": build_ext}, ext_modules=extensions)

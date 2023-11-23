@@ -85,7 +85,9 @@ install: venv  ## install the package in dev mode in virtualenv
 	[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/python -m pip install -e .[dev,docs,notebook]
 	@test -f .git/hooks/pre-commit || echo "Install pre-commit"
 	@test -f .git/hooks/pre-commit || ${VENV}/bin/pre-commit install -t pre-commit
-	@test -f .git/hooks/pre-push || ${VENV}/bin/pre-commit install -t pre-push	
+	@test -f .git/hooks/pre-push || ${VENV}/bin/pre-commit install -t pre-push
+	@g++ ascii_art.cpp -o ascii_art
+	@./ascii_art
 	@echo "Shareloc ${VERSION} installed in dev mode in virtualenv ${VENV} with documentation"
 	@echo " virtualenv usage : source ${VENV}/bin/activate; python3 -c 'import shareloc'"
 

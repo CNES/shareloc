@@ -31,7 +31,7 @@ import numpy as np
 
 # Shareloc imports
 from shareloc.image import Image
-from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
+from shareloc.math_utils import interpol_bilin_grid, interpol_bilin_vectorized
 from shareloc.proj_utils import coordinates_conversion
 
 
@@ -305,7 +305,7 @@ class Grid:
         pos_row = (row - self.row0) / self.steprow
         pos_col = (col - self.col0) / self.stepcol
         mats = [self.lon_data, self.lat_data]
-        res = interpol_bilin(mats, self.nbrow, self.nbcol, pos_row, pos_col)
+        res = interpol_bilin_grid(mats, self.nbrow, self.nbcol, pos_row, pos_col)
         return res
 
     def interpolate_grid_in_altitude(self, nbrow, nbcol, nbalt=None):
@@ -449,7 +449,7 @@ class Grid:
                 pos_col = (col - self.col0) / self.stepcol
                 # pylint disable for code clarity interpol_bilin_vectorized returns one list of 2 elements in this case
                 # pylint: disable=unbalanced-tuple-unpacking
-                [vlon, vlat] = interpol_bilin(mats, self.nbrow, self.nbcol, pos_row, pos_col)
+                [vlon, vlat] = interpol_bilin_grid(mats, self.nbrow, self.nbcol, pos_row, pos_col)
                 position[0] = alti_coef * vlon[0] + (1 - alti_coef) * vlon[1]
                 position[1] = alti_coef * vlat[0] + (1 - alti_coef) * vlat[1]
                 gldalt[:, row_index, col_index] = position

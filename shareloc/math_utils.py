@@ -25,7 +25,7 @@ This module contains the mathematical functions for shareloc
 import numpy as np
 
 
-def interpol_bilin(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col):
+def interpol_bilin_grid(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col):
     """
     bilinear interpolation on multi layer  matrix
     :param mats: multi layer grid (: , nb_rows,nb_cols)

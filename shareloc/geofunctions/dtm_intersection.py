@@ -32,7 +32,7 @@ from scipy import interpolate
 # Shareloc imports
 from shareloc.dtm_image import DTMImage
 from shareloc.image import Image
-from shareloc.math_utils import interpol_bilin
+from shareloc.math_utils import interpol_bilin_grid
 from shareloc.proj_utils import coordinates_conversion
 
 
@@ -267,7 +267,7 @@ class DTMIntersection:
         :return: interpolated altitude
         :rtype: float
         """
-        alt = interpol_bilin(
+        alt = interpol_bilin_grid(
             [self.alt_data[np.newaxis, :, :]], self.dtm_image.nb_rows, self.dtm_image.nb_columns, pos_row, pos_col
         )[0][0]
         return alt

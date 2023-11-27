@@ -25,14 +25,19 @@ This module contains the mathematical functions for shareloc
 import numpy as np
 
 
-def interpol_bilin_grid(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col):
+def interpol_bilin_grid(mats: list, nb_rows: int, nb_cols: int, delta_shift_row: float, delta_shift_col: float) -> list:
     """
     bilinear interpolation on multi layer  matrix
     :param mats: multi layer grid (: , nb_rows,nb_cols)
+    :type mats: list
     :param nb_rows: line number of mats
+    :type nb_rows: int
     :param nb_cols: column number of mats
+    :type nb_cols: int
     :param delta_shift_row: position (line)
+    :type nb_cols: float
     :param delta_shift_col: position (column)
+    :type nb_cols: float
     :return interpolated value on each layer
     :rtype list
     """
@@ -67,19 +72,68 @@ def interpol_bilin_grid(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col
     return matis
 
 
-def interpol_bilin_vectorized(mats, nb_rows, nb_cols, delta_shift_row, delta_shift_col):
+def interpol_bilin(
+    mat: np.ndarray, nb_rows: int, nb_cols: int, delta_shift_row: float, delta_shift_col: float
+) -> float:
+    """
+    bilinear interpolation on multi layer matrix
+    :param mat: multi layer grid (nb_rows,nb_cols, :)
+    :type mat: np.ndarray
+    :param nb_rows: line number of mats
+    :type nb_rows: int
+    :param nb_cols: column number of mats
+    :type nb_cols: int
+    :param delta_shift_row: position (line)
+    :type nb_cols: float
+    :param delta_shift_col: position (column)
+    :type nb_cols: float
+    :return interpolated value on each layer
+    :rtype: float
+    """
+    if delta_shift_row < 0:
+        lower_shift_row = 0
+    elif delta_shift_row >= nb_rows - 1:
+        lower_shift_row = nb_rows - 2
+    else:
+        lower_shift_row = int(np.floor(delta_shift_row))
+    upper_shift_row = lower_shift_row + 1
+
+    if delta_shift_col < 0:
+        lower_shift_col = 0
+    elif delta_shift_col >= nb_cols - 1:
+        lower_shift_col = nb_cols - 2
+    else:
+        lower_shift_col = int(np.floor(delta_shift_col))
+
+    upper_shift_col = lower_shift_col + 1
+
+    # (col_shift, row_shift) are subpixel distance to interpolate along each axis
+    col_shift = delta_shift_col - lower_shift_col
+    row_shift = delta_shift_row - lower_shift_row
+
+    interp_value = (
+        (1 - col_shift) * (1 - row_shift) * mat[lower_shift_row, lower_shift_col]
+        + col_shift * (1 - row_shift) * mat[lower_shift_row, upper_shift_col]
+        + (1 - col_shift) * row_shift * mat[upper_shift_row, lower_shift_col]
+        + col_shift * row_shift * mat[upper_shift_row, upper_shift_col]
+    )
+
+    return interp_value
+
+
+def interpol_bilin_vectorized(mats, nb_rows: int, nb_cols: int, delta_shift_row: float, delta_shift_col: float) -> list:
     """
     bilinear interpolation on multi points and layer  matrix
     :param mats: multi layer grid (: , nb_rows,nb_cols)
-    :type mats : list
+    :type mats: list
     :param nb_rows: line number of mats
-    :type nb_rows : int
+    :type nb_rows: int
     :param nb_cols: column number of mats
-    :type nb_cols : int
+    :type nb_cols: int
     :param delta_shift_row: position (line)
-    :type delta_shift_row: 1D numpy.ndarray, dtype=float64
+    :type nb_cols: float
     :param delta_shift_col: position (column)
-    :type delta_shift_col: 1D numpy.ndarray, dtype=float64
+    :type nb_cols: float
     :return interpolated value on each layer
     :rtype list
     """

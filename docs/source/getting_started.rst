@@ -35,12 +35,12 @@ Quick Start
 
     $ python3
     >>> # Import shareloc modules rpc and localization
-    >>> from shareloc.geomodels.rpc import RPC
+    >>> from shareloc.geomodels import GeoModel
     >>> from shareloc.geofunctions.localization import Localization
 
     >>> # Create RPC object from downloaded geometry file
     >>> rpc_geom_file = "left_image.geom"
-    >>> rpc = RPC(rpc_geom_file)
+    >>> rpc = GeoModel(rpc_geom_file)
 
     >>> # Create Localization object from created RPC
     >>> loc = Localization(rpc)

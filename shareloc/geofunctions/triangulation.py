@@ -54,9 +54,9 @@ def sensor_triangulation(
     :param matches:  matches in sensor coordinates Nx[row (left), col (left), row (right), col (right)]
     :type matches: np.array
     :param geometrical_model_left: left image geometrical model
-    :type geometrical_model_left: shareloc.grid or shareloc.rpc
+    :type geometrical_model_left: GeomodelTemplate
     :param geometrical_model_right: right image geometrical model
-    :type geometrical_model_right: shareloc.grid or shareloc.rpc
+    :type geometrical_model_right: GeomodelTemplate
     :param left_min_max: left min/max for los creation, if None model min/max will be used
     :type left_min_max: list
     :param right_min_max: right min/max for los creation, if None model min/max will be used
@@ -190,9 +190,9 @@ def epipolar_triangulation(
     :param matches_type:  'disp' or 'sift'
     :type matches_type: str
     :param geometrical_model_left: left image geometrical model
-    :type geometrical_model_left: shareloc.grid or shareloc.rpc
+    :type geometrical_model_left: GeomodelTemplate
     :param geometrical_model_right: right image geometrical model
-    :type geometrical_model_right: shareloc.grid or shareloc.rpc
+    :type geometrical_model_right: GeomodelTemplate
     :param grid_left: left rectification grid filename
     :type grid_left: str
     :param grid_right: right rectification grid filename

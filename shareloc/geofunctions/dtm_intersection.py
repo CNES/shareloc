@@ -267,9 +267,7 @@ class DTMIntersection:
         :return: interpolated altitude
         :rtype: float
         """
-        alt = interpol_bilin(
-            [self.alt_data[np.newaxis, :, :]], self.dtm_image.nb_rows, self.dtm_image.nb_columns, pos_row, pos_col
-        )[0][0]
+        alt = interpol_bilin(self.alt_data, self.dtm_image.nb_rows, self.dtm_image.nb_columns, pos_row, pos_col)
         return alt
 
     def init_min_max(self):

@@ -136,9 +136,10 @@ class Localization:
         :rtype: Tuple(1D np.ndarray row position, 1D np.ndarray col position, 1D np.ndarray alt)
         """
 
-        if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
+        if not self.use_rpc:
             # for grids only
-            self.model.estimate_inverse_loc_predictor()
+            if self.model.pred_ofset_scale_lon is None:
+                self.model.estimate_inverse_loc_predictor()
         if h is None:
             h = self.default_elevation
 

@@ -40,7 +40,7 @@ Quick Start
 
     >>> # Create RPC object from downloaded geometry file
     >>> rpc_geom_file = "left_image.geom"
-    >>> rpc = GeoModel(rpc_geom_file, "rpc")
+    >>> rpc = GeoModel(rpc_geom_file, "rpc") # "rpc" is the geomodel type in ("rpc", "grid") with default value "rpc"
 
     >>> # Create Localization object from created RPC
     >>> loc = Localization(rpc)

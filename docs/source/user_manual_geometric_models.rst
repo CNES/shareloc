@@ -52,7 +52,7 @@ RPC class API Example
     $ python3
     >>> from shareloc.geomodels import GeoModel
     >>> file_dimap = "RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML")
-    >>> rpc_dimap = GeoModel(file_dimap)
+    >>> rpc_dimap = GeoModel(file_dimap, "rpc")
 
 
 Direct location grids

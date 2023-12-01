@@ -127,7 +127,7 @@ def test_los_parameters():
     # Load geometrical model
     id_scene = "P1BP--2017092838284574CP"
     file_dimap = os.path.join(data_folder, f"rpc/RPC_{id_scene}.XML")
-    geometrical_model = RPC.from_any(file_dimap)
+    geometrical_model = GeoModel(file_dimap)
 
     # Create los
     model_los = LOS(matches_left, geometrical_model, [310, 850])

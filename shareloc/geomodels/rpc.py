@@ -51,8 +51,6 @@ class RPC(GeoModelTemplate):
 
     # gitlab issue #61
     # pylint: disable=too-many-instance-attributes
-    # gitlab issue #61
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, rpc_params):
         super().__init__()
         self.epsg = None

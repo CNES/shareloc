@@ -548,12 +548,8 @@ def test_rectification_moving_to_axis_error():
     """
     Test moving along axis with wrong axis
     """
-    geom_model_left = RPC.from_any(
-        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
-    )
-    geom_model_right = RPC.from_any(
-        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
-    )
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     current_coords = np.array([5000.5, 5000.5, 0.0], dtype=np.float64)
     mean_spacing = 1

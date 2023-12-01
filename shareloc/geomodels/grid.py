@@ -38,7 +38,6 @@ from shareloc.proj_utils import coordinates_conversion
 
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
-# pylint: disable=no-member
 @GeoModel.register("grid")
 class Grid(GeoModelTemplate):
     """
@@ -105,6 +104,17 @@ class Grid(GeoModelTemplate):
         self.rowmax = None
         self.colmax = None
         self.epsg = 0
+
+        # inverse loc predictor attributes
+        self.pred_col_min = None
+        self.pred_row_min = None
+        self.pred_col_max = None
+        self.pred_row_max = None
+        self.pred_ofset_scale_lon = None
+        self.pred_ofset_scale_lat = None
+        self.pred_ofset_scale_row = None
+        self.pred_ofset_scale_col = None
+
         self.read()
 
     @classmethod
@@ -545,7 +555,7 @@ class Grid(GeoModelTemplate):
                 a_max[imes, 5] = glonlat[0, irow, icol]
                 imes += 1
 
-        # Calcul des coeffcients
+        # Compute coefficients
         mat_a_min = np.array(a_min)
         mat_a_max = np.array(a_max)
 
@@ -559,16 +569,15 @@ class Grid(GeoModelTemplate):
         coef_col_max = t_aa_max_inv @ mat_a_max.T @ b_col
         coef_row_max = t_aa_max_inv @ mat_a_max.T @ b_row
 
-        # TODO: refactor to have only class parameters in __init__
         # seems not clear to understand with inverse_loc_predictor function ...
-        setattr(self, "pred_col_min", coef_col_min.flatten())  # noqa: 502
-        setattr(self, "pred_row_min", coef_row_min.flatten())  # noqa: 502
-        setattr(self, "pred_col_max", coef_col_max.flatten())  # noqa: 502
-        setattr(self, "pred_row_max", coef_row_max.flatten())  # noqa: 502
-        setattr(self, "pred_ofset_scale_lon", [lon_ofset, lon_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_lat", [lat_ofset, lat_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_row", [row_ofset, row_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_col", [col_ofset, col_scale])  # noqa: 502
+        self.pred_col_min = coef_col_min.flatten()
+        self.pred_row_min = coef_row_min.flatten()
+        self.pred_col_max = coef_col_max.flatten()
+        self.pred_row_max = coef_row_max.flatten()
+        self.pred_ofset_scale_lon = [lon_ofset, lon_scale]
+        self.pred_ofset_scale_lat = [lat_ofset, lat_scale]
+        self.pred_ofset_scale_row = [row_ofset, row_scale]
+        self.pred_ofset_scale_col = [col_ofset, col_scale]
 
     def inverse_loc_predictor(self, lon, lat, alt=0.0):
         """

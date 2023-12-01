@@ -27,14 +27,6 @@ generic coregistration code to avoid duplication.
 # Standard imports
 from abc import ABCMeta, abstractmethod
 
-# Global variable for optimization mode (functions in C)
-# SHARELOC_OPTIM_GEOMODEL = False
-
-# TODO: Override functions depending on optimization or not
-
-# if(SHARELOC_OPTIM_GEOMODEL == True):
-#     GeoModelTemplate.direct_loc_dtm = GeoModelTemplate.direct_loc_dtm_optim
-
 
 class GeoModelTemplate(metaclass=ABCMeta):
     """
@@ -102,7 +94,9 @@ class GeoModelTemplate(metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def load(cls, geomodel_path):
+    def load(cls, geomodel_path: str):
         """
         load function with class specific args
+
+        :param geomodel_path: filename of geomodel
         """

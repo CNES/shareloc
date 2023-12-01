@@ -103,7 +103,6 @@ class Grid(GeoModelTemplate):
         self.alts_down = None
         self.rowmax = None
         self.colmax = None
-        self.epsg = 0
 
         # inverse loc predictor attributes
         self.pred_col_min = None

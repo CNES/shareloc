@@ -42,6 +42,8 @@ class GeoModelTemplate(metaclass=ABCMeta):
         """
         # geomodel type. Set by the subclass
         self.type: str
+        # geomodel epsg projection code
+        self.epsg: int = None
 
     # Define GeoModelTemplate functions interface
 

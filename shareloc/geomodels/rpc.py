@@ -40,8 +40,6 @@ from shareloc.proj_utils import coordinates_conversion
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
 
-# pylint: disable=no-member
-
 
 @GeoModel.register("RPC")
 class RPC(GeoModelTemplate):
@@ -53,7 +51,18 @@ class RPC(GeoModelTemplate):
     # pylint: disable=too-many-instance-attributes
     def __init__(self, rpc_params):
         super().__init__()
-        self.epsg = None
+
+        self.offset_alt = None
+        self.scale_alt = None
+        self.offset_col = None
+        self.scale_col = None
+        self.offset_row = None
+        self.scale_row = None
+        self.offset_x = None
+        self.scale_x = None
+        self.offset_y = None
+        self.scale_y = None
+
         self.datum = None
         for key, value in rpc_params.items():
             setattr(self, key, value)

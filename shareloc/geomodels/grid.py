@@ -19,9 +19,8 @@
 # limitations under the License.
 #
 """
-localisation functions from multi h direct grids.
+Localisation functions from multi h direct grids.
 """
-# pylint: disable=no-member
 
 # Standard imports
 import logging
@@ -30,6 +29,8 @@ import logging
 import numpy as np
 
 # Shareloc imports
+from shareloc.geomodels.geomodel import GeoModel
+from shareloc.geomodels.geomodel_template import GeoModelTemplate
 from shareloc.image import Image
 from shareloc.math_utils import interpol_bilin_grid, interpol_bilin_vectorized
 from shareloc.proj_utils import coordinates_conversion
@@ -37,13 +38,14 @@ from shareloc.proj_utils import coordinates_conversion
 
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
-class Grid:
+@GeoModel.register("grid")
+class Grid(GeoModelTemplate):
     """
     multi H direct localization grid handling class.
     please refer to the main documentation grid format
 
-    :param filename: grid path
-    :type filename: str
+    Derives from GeoModelTemplate
+
     :param row0: grid first pixel center along Y axis (row).
     :type row0: float
     :param col0: grid first pixel center along X axis (column).
@@ -76,14 +78,18 @@ class Grid:
     :type type: str
     """
 
-    def __init__(self, grid_filename):
+    def __init__(self, geomodel_path: str):
         """
         Grid Constructor
 
-        :param grid_filename: grid filename (Geotiff)
-        :type grid_filename: string
+        :param geomodel_path: grid filename (Geotiff)
+        :type geomodel_path: string
         """
-        self.filename = grid_filename
+        # Instanciate GeoModelTemplate generic init with shared parameters
+        super().__init__()
+        self.type = "multi H grid"
+        self.geomodel_path = geomodel_path
+        # GeoModel Grid parameters definition (see documentation)
         self.row0 = None
         self.col0 = None
         self.nbrow = None
@@ -97,11 +103,21 @@ class Grid:
         self.alts_down = None
         self.rowmax = None
         self.colmax = None
-        self.epsg = 0
-        self.load()
-        self.type = "multi H grid"
 
-    def load(self):
+        # inverse loc predictor attributes
+        self.pred_col_min = None
+        self.pred_row_min = None
+        self.pred_col_max = None
+        self.pred_row_max = None
+        self.pred_ofset_scale_lon = None
+        self.pred_ofset_scale_lat = None
+        self.pred_ofset_scale_row = None
+        self.pred_ofset_scale_col = None
+
+        self.read()
+
+    @classmethod
+    def load(cls, geomodel_path):
         """
         Load grid and fill Class attributes.
 
@@ -111,8 +127,19 @@ class Grid:
         - lon_data : [alt,row,col]
         - lat_data : [alt,row,col]
         """
+        return cls(geomodel_path)
 
-        grid_image = Image(self.filename, read_data=True)
+    def read(self):
+        """
+        Load grid and fill Class attributes.
+
+        The grid is read as an shareloc.image. Image and class attributes are filled.
+        Shareloc geotiff grids are stored by increasing altitude H0 ... Hx
+        2 data cubes are defined:
+        - lon_data : [alt,row,col]
+        - lat_data : [alt,row,col]
+        """
+        grid_image = Image(self.geomodel_path, read_data=True)
         if grid_image.dataset.driver != "GTiff":
             raise TypeError(
                 "Only Geotiff grids are accepted. Please refer to the documentation for grid supported format."
@@ -527,7 +554,7 @@ class Grid:
                 a_max[imes, 5] = glonlat[0, irow, icol]
                 imes += 1
 
-        # Calcul des coeffcients
+        # Compute coefficients
         mat_a_min = np.array(a_min)
         mat_a_max = np.array(a_max)
 
@@ -541,16 +568,15 @@ class Grid:
         coef_col_max = t_aa_max_inv @ mat_a_max.T @ b_col
         coef_row_max = t_aa_max_inv @ mat_a_max.T @ b_row
 
-        # TODO: refactor to have only class parameters in __init__
         # seems not clear to understand with inverse_loc_predictor function ...
-        setattr(self, "pred_col_min", coef_col_min.flatten())  # noqa: 502
-        setattr(self, "pred_row_min", coef_row_min.flatten())  # noqa: 502
-        setattr(self, "pred_col_max", coef_col_max.flatten())  # noqa: 502
-        setattr(self, "pred_row_max", coef_row_max.flatten())  # noqa: 502
-        setattr(self, "pred_ofset_scale_lon", [lon_ofset, lon_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_lat", [lat_ofset, lat_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_row", [row_ofset, row_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_col", [col_ofset, col_scale])  # noqa: 502
+        self.pred_col_min = coef_col_min.flatten()
+        self.pred_row_min = coef_row_min.flatten()
+        self.pred_col_max = coef_col_max.flatten()
+        self.pred_row_max = coef_row_max.flatten()
+        self.pred_ofset_scale_lon = [lon_ofset, lon_scale]
+        self.pred_ofset_scale_lat = [lat_ofset, lat_scale]
+        self.pred_ofset_scale_row = [row_ofset, row_scale]
+        self.pred_ofset_scale_col = [col_ofset, col_scale]
 
     def inverse_loc_predictor(self, lon, lat, alt=0.0):
         """

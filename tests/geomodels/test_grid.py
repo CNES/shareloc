@@ -28,7 +28,7 @@ import pytest
 import scipy
 
 # Shareloc imports
-from shareloc.geomodels.grid import Grid
+from shareloc.geomodels import GeoModel
 from shareloc.image import Image
 
 # Shareloc test imports
@@ -41,7 +41,7 @@ def fixture_get_geotiff_grid():
     get grid and associated path
     """
     geotiff_grid_path = data_path("ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
-    gri_geotiff = Grid(geotiff_grid_path)
+    gri_geotiff = GeoModel(geotiff_grid_path, "grid")
     grid_image = Image(geotiff_grid_path, read_data=True)
 
     return gri_geotiff, grid_image

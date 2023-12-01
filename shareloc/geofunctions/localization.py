@@ -45,7 +45,7 @@ class Localization:
         Localization constructor
 
         :param model: geometric model
-        :type model: shareloc.grid or  shareloc.rpc
+        :type model: GeomodelTemplate
         :param elevation: dtm or default elevation over ellipsoid if None elevation is set to 0
         :type elevation: shareloc.dtm or float or np.ndarray
         :param image: image class to handle geotransform
@@ -53,7 +53,7 @@ class Localization:
         :param epsg: coordinate system of world points, if None model coordiante system will be used
         :type epsg: int
         """
-        self.use_rpc = model.type == "rpc"
+        self.use_rpc = model.type == "RPC"
         self.model = model
         self.default_elevation = 0.0
         self.dtm = None
@@ -136,8 +136,10 @@ class Localization:
         :rtype: Tuple(1D np.ndarray row position, 1D np.ndarray col position, 1D np.ndarray alt)
         """
 
-        if not self.use_rpc and not hasattr(self.model, "pred_ofset_scale_lon"):
-            self.model.estimate_inverse_loc_predictor()
+        if not self.use_rpc:
+            # for grids only
+            if self.model.pred_ofset_scale_lon is None:
+                self.model.estimate_inverse_loc_predictor()
         if h is None:
             h = self.default_elevation
 
@@ -166,9 +168,9 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
     Colocalization : direct localization with model1, then inverse localization with model2
 
     :param model1: geometric model 1
-    :type model1: shareloc.grid or  shareloc.rpc
+    :type model1: GeomodelTemplate
     :param model2: geometric model 2
-    :type model2: shareloc.grid or  shareloc.rpc
+    :type model2: GeomodelTemplate
     :param row: sensor row
     :type row: int or 1D numpy array
     :param col: sensor col

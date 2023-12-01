@@ -108,9 +108,9 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, e
     Estimate the beginning and the ending of local epipolar line in left image
 
     :param geom_model_left: geometric model of the left image
-    :type geom_model_left: shareloc.grid or shareloc.rpc
+    :type geom_model_left: GeomodelTemplate
     :param geom_model_right: geometric model of the right image
-    :type geom_model_right: shareloc.grid or shareloc.rpc
+    :type geom_model_right: GeomodelTemplate
     :param left_point: georeferenced coordinates in the left image
     :type left_point: 1D numpy array : [row coord, col coord, altitude]
                       or 2D numpy array : (number of points, [row coord, col coord, altitude])
@@ -159,9 +159,9 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     :param left_im: left image
     :type left_im: shareloc.image object
     :param geom_model_left: geometric model of the left image
-    :type geom_model_left: shareloc.grid or shareloc.rpc
+    :type geom_model_left: GeomodelTemplate
     :param geom_model_right: geometric model of the right image
-    :type geom_model_right: shareloc.grid or shareloc.rpc
+    :type geom_model_right: GeomodelTemplate
     :param elevation: elevation
     :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
@@ -269,9 +269,9 @@ def get_epipolar_extent(
     :param left_im: left image
     :type left_im: shareloc.image object
     :param geom_model_left: geometric model of the left image
-    :type geom_model_left: shareloc.grid or shareloc.rpc
+    :type geom_model_left: GeomodelTemplate
     :param geom_model_right: geometric model of the right image
-    :type geom_model_right: shareloc.grid or shareloc.rpc
+    :type geom_model_right: GeomodelTemplate
     :param elevation: elevation
     :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
@@ -333,9 +333,9 @@ def moving_along_axis(
     Moving to the next line in epipolar geometry
 
     :param geom_model_left: geometric model of the left image
-    :type geom_model_left: shareloc.grid or  shareloc.rpc
+    :type geom_model_left: GeomodelTemplate
     :param geom_model_right: geometric model of the right image
-    :type geom_model_right: shareloc.grid or  shareloc.rpc
+    :type geom_model_right: GeoModelTemplate
     :param current_coords: current line in the left epipolar geometry
         or current georeferenced coordinates in left epipolar line
     :type current_coords: 1D np.array [row, col, altitude]
@@ -389,11 +389,11 @@ def compute_stereorectification_epipolar_grids(
     :param left_im: left image
     :type left_im: shareloc.image object
     :param geom_model_left: geometric model of the left image
-    :type geom_model_left: shareloc.grid or  shareloc.rpc
+    :type geom_model_left: GeomodelTemplate
     :param right_im: right image
     :type right_im: shareloc.image object
     :param geom_model_right: geometric model of the right image
-    :type geom_model_right: shareloc.grid or  shareloc.rpc
+    :type geom_model_right: GeomodelTemplate
     :param elevation: elevation
     :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step

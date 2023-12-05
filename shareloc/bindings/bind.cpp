@@ -50,8 +50,7 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("compute_loc_inverse_derivates", &RPC::compute_loc_inverse_derivates)
         .def("direct_loc_inverse_iterative", &RPC::direct_loc_inverse_iterative)
         .def("get_alt_min_max", &RPC::get_alt_min_max)
-        .def("los_extrema", &RPC::los_extrema)
-        .def("method_arg_cpp", &RPC::method_arg_cpp);
+        .def("los_extrema", &RPC::los_extrema);
 
     //m.doc() = "Pybind hello world"; // optional module docstring
     m.def("parse_coeff_line", &parse_coeff_line, "TODO: doc");
@@ -61,7 +60,6 @@ PYBIND11_MODULE(rpc_c, m) {
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude, "TODO: doc");
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude, "TODO: doc");
     m.def("compute_loc_inverse_derivates_numba", &compute_loc_inverse_derivates_numba, "TODO: doc");
-    m.def("FuncArgClassCpp", &FuncArgClassCpp, "TODO: doc");
 }
 
 //c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) bind.cpp -o pbrpc$(python3-config --extension-suffix)

@@ -109,23 +109,6 @@ vector<vector<double>> RPC::los_extrema(
     return vect;
 }
 
-//---- Demo ----//
-
-GeoModelTemplate RPC::method_arg_cpp(
-    GeoModelTemplate geomt
-){
-    cout<<"--- DEBUT method_arg_cpp ---\n"<<endl;
-    cout<<"  -->Cette méthode de la classe RPC C++ prend un argument un objet de la classe C++ GeoModelTemplate, et appel sa méthode direct_loc_h"<<endl;
-    vector<vector<double>> vect;
-    vector<double> row;
-    vector<double> col;
-    double alt;
-    vect = geomt.direct_loc_h(row,col,alt,false);
-    cout<<"\n--- FIN method_arg_cpp ---\n"<<endl;
-    return geomt;
-}
-
-
 //---- Functions ----//
 
 vector<double> parse_coeff_line(string coeff_str){
@@ -197,19 +180,4 @@ tuple<vector<double>,vector<double>,vector<double>,vector<double>> compute_loc_i
 ){
     tuple<vector<double>,vector<double>,vector<double>,vector<double>> res;
     return res;
-}
-
-
-void FuncArgClassCpp(GeoModelTemplate class_cpp){
-
-    cout<<"\n--- Début de FuncArgClassCpp ---\n"<<endl;
-
-    vector<double> row;
-    vector<double> col;
-    double alt;
-    vector<vector<double>> res;
-
-    res = class_cpp.direct_loc_h(row, col, alt, false);
-    cout<<"\n--- Fin de FuncArgClassCpp ---\n"<<endl;
-
 }

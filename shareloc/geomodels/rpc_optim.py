@@ -23,22 +23,17 @@
 This module contains the optimized (with cpp bindings) RPC class corresponding to the RPC models.
 RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotiff.
 """
-# pylint: disable=abstract-method, c-extension-no-member
 
-
-# Cpp bidings imports
-import sys
 
 # Third party imports
 from numba import config
+
+import rpc_c as bind
 
 # Shareloc imports
 from shareloc.geomodels.geomodel import GeoModel
 from shareloc.geomodels.geomodel_template import GeoModelTemplate
 from shareloc.geomodels.rpc_readers import rpc_reader
-
-sys.path.append(".")
-import libs.pbrpc as bind  # noqa: E402 # pylint: disable=wrong-import-position
 
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
@@ -47,7 +42,7 @@ config.THREADING_LAYER = "omp"
 @GeoModel.register("RpcOptim")
 class RpcOptim(bind.RPC, GeoModelTemplate):
     """
-    RPC optimizes with cpp bindings class including direct and inverse localization instance methods
+    RPC optimized with cpp bindings class including direct and inverse localization instance methods
     """
 
     def __init__(self, rpc_params):

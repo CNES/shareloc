@@ -20,10 +20,12 @@
 #
 """
 Shareloc geomodels module
-Imports are used to simplify calls to module API Coregistration.
+Imports are used to simplify calls to module API.
 """
-# Demcompare imports
-from . import grid, rpc
+
+import rpc_c
+
+from . import grid, rpc, rpc_optim
 from .geomodel import GeoModel
 
-__all__ = ["rpc", "grid", "GeoModel"]  # To avoid flake8 F401
+__all__ = ["rpc", "grid", "GeoModel", "rpc_c", "rpc_optim"]  # To avoid flake8 F401

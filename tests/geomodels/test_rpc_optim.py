@@ -21,14 +21,12 @@
 """
 Module to test RpcOptim class
 """
-# pylint: disable=no-member, invalid-name
-
 
 # Third party imports
 import json
 
+# Shareloc imports
 from shareloc.geomodels import GeoModel
-from shareloc.geomodels.rpc_optim import RpcOptim  # noqa : F401 # pylint: disable=unused-import
 
 
 def test_load_rpc_params():
@@ -37,32 +35,32 @@ def test_load_rpc_params():
     """
     geom = GeoModel("tests/data/rpc/PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.geom", "RpcOptim").__dict__
     tif = GeoModel("tests/data/rpc/PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif", "RpcOptim").__dict__
-    PHRDIMAP = GeoModel("tests/data/rpc/PHRDIMAP_P1BP--2017030824934340CP.XML", "RpcOptim").__dict__
-    RPC_P1BP = GeoModel("tests/data/rpc/RPC_P1BP--2017092838284574CP.XML", "RpcOptim").__dict__
-    RPC_PHR1B = GeoModel("tests/data/rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML", "RpcOptim").__dict__
+    phrdimap = GeoModel("tests/data/rpc/PHRDIMAP_P1BP--2017030824934340CP.XML", "RpcOptim").__dict__
+    rpc_p1bp = GeoModel("tests/data/rpc/RPC_P1BP--2017092838284574CP.XML", "RpcOptim").__dict__
+    rpc_phr1b = GeoModel("tests/data/rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML", "RpcOptim").__dict__
 
     del geom["type"]
     del tif["type"]
-    del PHRDIMAP["type"]
-    del RPC_P1BP["type"]
-    del RPC_PHR1B["type"]
+    del phrdimap["type"]
+    del rpc_p1bp["type"]
+    del rpc_phr1b["type"]
 
     with open("tests/data/geomodel_template/geom.json", "r", encoding="utf-8") as f:
         geom_ref = json.load(f)
     with open("tests/data/geomodel_template/tif.json", "r", encoding="utf-8") as f:
         tif_ref = json.load(f)
     with open("tests/data/geomodel_template/PHRDIMAP.json", "r", encoding="utf-8") as f:
-        PHRDIMAP_ref = json.load(f)
+        phrdimap_ref = json.load(f)
     with open("tests/data/geomodel_template/RPC_P1BP.json", "r", encoding="utf-8") as f:
-        RPC_P1BP_ref = json.load(f)
+        rpc_p1bp_ref = json.load(f)
     with open("tests/data/geomodel_template/RPC_PHR1B.json", "r", encoding="utf-8") as f:
-        RPC_PHR1B_ref = json.load(f)
+        rpc_phr1b_ref = json.load(f)
 
     assert geom == geom_ref
     assert tif == tif_ref
-    assert PHRDIMAP == PHRDIMAP_ref
-    assert RPC_P1BP == RPC_P1BP_ref
-    assert RPC_PHR1B == RPC_PHR1B_ref
+    assert phrdimap == phrdimap_ref
+    assert rpc_p1bp == rpc_p1bp_ref
+    assert rpc_phr1b == rpc_phr1b_ref
 
 
 def test_function_rpc_cpp():

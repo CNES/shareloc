@@ -30,7 +30,7 @@ suggestion-mode=yes
 unsafe-load-any-extension=no
 
 # List of cpp allowed extension
-extension-pkg-whitelist= shareloc.geomodels.pbrpc
+extension-pkg-whitelist= rpc_c
 
 [MESSAGES CONTROL]
 

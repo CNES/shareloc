@@ -139,4 +139,9 @@ public:
         double alt_max,
         bool fill_nan=false,
         int epsg=4326);
+
+    GeoModelTemplate method_arg_cpp(
+    GeoModelTemplate geomt
+    );
 };
+

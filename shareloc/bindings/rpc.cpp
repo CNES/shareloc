@@ -75,7 +75,10 @@ vector<vector<double>> RPC::filter_coordinates(
     return vect;
 }
 
-tuple<vector<double>,vector<double>,vector<double>,vector<double>> RPC::compute_loc_inverse_derivates(
+tuple<vector<double>,
+vector<double>,
+vector<double>,
+vector<double>> RPC::compute_loc_inverse_derivates(
     vector<double> lon,
     vector<double> lat,
     vector<double> alt){
@@ -110,12 +113,6 @@ vector<vector<double>> RPC::los_extrema(
 }
 
 //---- Functions ----//
-
-vector<double> parse_coeff_line(string coeff_str){
-    vector<double> vect;
-    return vect;
-}
-
 
 double polynomial_equation(
     double xnorm,
@@ -165,7 +162,10 @@ double derivative_polynomial_longitude(
 }
 
 
-tuple<vector<double>,vector<double>,vector<double>,vector<double>> compute_loc_inverse_derivates_numba(
+tuple<vector<double>,
+vector<double>,
+vector<double>,
+vector<double>> compute_loc_inverse_derivates_numba(
     vector<double> lon_norm,
     vector<double> lat_norm,
     vector<double> alt_norm,

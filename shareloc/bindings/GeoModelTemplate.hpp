@@ -44,17 +44,27 @@ Abstract class GeoModelTemplate:
 class GeoModelTemplate {
 
 private:
-    string geomodel_path;
     string type;
+    int epsg;
 public:
     /**Constructor*/
     GeoModelTemplate();
     /**Destructor*/
     ~GeoModelTemplate();
     /**direct_loc_h*/
-    vector<vector<double>> direct_loc_h(vector<double> row, vector<double> col, double alt, bool fill_nan=false);
+    vector<vector<double>> direct_loc_h(
+        vector<double> row,
+        vector<double> col,
+        double alt,
+        bool fill_nan=false);
     /**direct_loc_dtm*/
-    vector<vector<double>> direct_loc_dtm(vector<double> row, vector<double> col, string dtm);
+    vector<vector<double>> direct_loc_dtm(
+        vector<double> row,
+        vector<double> col,
+        string dtm);
     /**inverse_loc*/
-    tuple<vector<double>,vector<double>,vector<double>> inverse_loc(vector<double> lon, vector<double> lat, double alt);
+    tuple<vector<double>,vector<double>,vector<double>> inverse_loc(
+        vector<double> lon,
+        vector<double> lat,
+        double alt);
 };

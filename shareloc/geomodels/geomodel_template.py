@@ -19,19 +19,17 @@
 # limitations under the License.
 #
 """
-This module contains the coregistration class template.
-It contains the structure for all coregistration methods in subclasses and
-generic coregistration code to avoid duplication.
+This module contains the GeoModel abstract class
 """
 
 # Standard imports
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 
-class GeoModelTemplate(metaclass=ABCMeta):
+class GeoModelTemplate:
     """
     Class for general specification of a geometric model
-    declined in rpc.py and grid.py
+    declined in rpc.py and grid.py and rpc_optim.py
     """
 
     @abstractmethod

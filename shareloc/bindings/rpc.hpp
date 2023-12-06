@@ -39,6 +39,7 @@ Squelette de la classe RPC.py de l'issue 221
 class RPC : public GeoModelTemplate{
 
 private:
+
     string type;
     int epsg;
     string datum;
@@ -75,7 +76,11 @@ private:
     double scale_col;
     double offset_alt;
     double scale_alt;
-    
+    double offset_x;
+    double scale_x;
+    double offset_y;
+    double scale_y;
+
 public:
     using GeoModelTemplate::GeoModelTemplate;
     /**direct_loc_h*/
@@ -115,7 +120,10 @@ public:
         string direction="direct");
 
     /**compute_loc_inverse_derivates*/
-    tuple<vector<double>,vector<double>,vector<double>,vector<double>> compute_loc_inverse_derivates(
+    tuple<vector<double>,
+    vector<double>,
+    vector<double>,
+    vector<double>> compute_loc_inverse_derivates(
         vector<double> lon,
         vector<double> lat,
         vector<double> alt);

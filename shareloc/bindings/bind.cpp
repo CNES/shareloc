@@ -53,7 +53,6 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("los_extrema", &RPC::los_extrema);
 
     //m.doc() = "Pybind hello world"; // optional module docstring
-    m.def("parse_coeff_line", &parse_coeff_line, "TODO: doc");
     m.def("polynomial_equation", &polynomial_equation, "TODO: doc");
     m.def("compute_rational_function_polynomial", &compute_rational_function_polynomial,
         "TODO: doc");
@@ -62,4 +61,5 @@ PYBIND11_MODULE(rpc_c, m) {
     m.def("compute_loc_inverse_derivates_numba", &compute_loc_inverse_derivates_numba, "TODO: doc");
 }
 
-//c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) bind.cpp -o pbrpc$(python3-config --extension-suffix)
+//c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes)
+//bind.cpp -o pbrpc$(python3-config --extension-suffix)

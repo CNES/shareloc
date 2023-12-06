@@ -40,7 +40,7 @@ It is possible to use geometric model directly using ``shareloc.grid.Grid`` and 
         """
         constructor
         :param model : geometric model
-        :type model  : shareloc.grid or  shareloc.rpc
+        :type model  : GeoModelTemplate
         :param elevation  : dtm or default elevation over ellipsoid if None elevation is set to 0
         :type elevation  : shareloc.dtm or float or np.ndarray
         :param image  : image class to handle geotransform
@@ -108,9 +108,9 @@ colocalization returns image positions (row2,col2) in image 2 from (row1,col1) p
         Colocalization : direct localization with model1, then inverse localization with model2
 
         :param model1: geometric model 1
-        :type model1: shareloc.grid or  shareloc.rpc
+        :type model1: GeomodelTemplate
         :param model2: geometric model 2
-        :type model2: shareloc.grid or  shareloc.rpc
+        :type model2: GeomodelTemplate
         :param row: sensor row
         :type row: int or 1D numpy array
         :param col: sensor col
@@ -163,9 +163,9 @@ where :math:`v_i` is the orientation of the :term:`LOS` i and :math:`s_i` the ha
         :param matches :  matches in sensor coordinates Nx[row (left), col (left), row (right), col (right)]
         :type matches : np.array
         :param geometrical_model_left : left image geometrical model
-        :type geometrical_model_left : shareloc.grid or shareloc.rpc
+        :type geometrical_model_left : GeomodelTemplate
         :param geometrical_model_right : right image geometrical model
-        :type geometrical_model_right : shareloc.grid or shareloc.rpc
+        :type geometrical_model_right : GeomodelTemplate
         :param left_min_max : left min/max for los creation, if None model min/max will be used
         :type left_min_max : list
         :param right_min_max : right min/max for los creation, if None model min/max will be used
@@ -207,11 +207,11 @@ Algorithm details can be found in reference below.
         :param left_im: left image
         :type left_im: shareloc.image object
         :param geom_model_left: geometric model of the left image
-        :type geom_model_left: shareloc.grid or  shareloc.rpc
+        :type geom_model_left: GeomodelTemplate
         :param right_im: right image
         :type right_im: shareloc.image object
         :param geom_model_right: geometric model of the right image
-        :type geom_model_right: shareloc.grid or  shareloc.rpc
+        :type geom_model_right: GeomodelTemplate
         :param elevation: elevation
         :type elevation: shareloc.dtm or float
         :param epi_step: epipolar step

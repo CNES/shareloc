@@ -23,18 +23,15 @@ This module contains the coregistration class template.
 It contains the structure for all coregistration methods in subclasses and
 generic coregistration code to avoid duplication.
 """
-# Global variable for optimization mode (functions in C)
-# SHARELOC_OPTIM_GEOMODEL = False
 
-# TODO: Override functions depending on optimization or not
-
-from abc import abstractmethod
+# Standard imports
+from abc import ABCMeta, abstractmethod
 
 
-class GeoModelTemplate:
+class GeoModelTemplate(metaclass=ABCMeta):
     """
     Class for general specification of a geometric model
-    declined in rpc.py and grid.py and rpc_optim.py
+    declined in rpc.py and grid.py
     """
 
     @abstractmethod
@@ -45,6 +42,8 @@ class GeoModelTemplate:
         """
         # geomodel type. Set by the subclass
         self.type: str
+        # geomodel epsg projection code
+        self.epsg: int = None
 
     # Define GeoModelTemplate functions interface
 
@@ -58,8 +57,8 @@ class GeoModelTemplate:
         :param col:  column sensor position
         :type col: float or 1D numpy.ndarray dtype=float64
         :param alt:  altitude
-        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM)
-            nan is returned otherwise
+        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
         :type fill_nan: boolean
         :return: ground position (lon,lat,h)
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
@@ -97,7 +96,9 @@ class GeoModelTemplate:
 
     @classmethod
     @abstractmethod
-    def load(cls, geomodel_path):
+    def load(cls, geomodel_path: str):
         """
         load function with class specific args
+
+        :param geomodel_path: filename of geomodel
         """

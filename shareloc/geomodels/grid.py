@@ -32,13 +32,12 @@ import numpy as np
 from shareloc.geomodels.geomodel import GeoModel
 from shareloc.geomodels.geomodel_template import GeoModelTemplate
 from shareloc.image import Image
-from shareloc.math_utils import interpol_bilin, interpol_bilin_vectorized
+from shareloc.math_utils import interpol_bilin_grid, interpol_bilin_vectorized
 from shareloc.proj_utils import coordinates_conversion
 
 
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
-# pylint: disable=no-member
 @GeoModel.register("grid")
 class Grid(GeoModelTemplate):
     """
@@ -104,7 +103,17 @@ class Grid(GeoModelTemplate):
         self.alts_down = None
         self.rowmax = None
         self.colmax = None
-        self.epsg = 0
+
+        # inverse loc predictor attributes
+        self.pred_col_min = None
+        self.pred_row_min = None
+        self.pred_col_max = None
+        self.pred_row_max = None
+        self.pred_ofset_scale_lon = None
+        self.pred_ofset_scale_lat = None
+        self.pred_ofset_scale_row = None
+        self.pred_ofset_scale_col = None
+
         self.read()
 
     @classmethod
@@ -281,9 +290,9 @@ class Grid(GeoModelTemplate):
             row_i = row[point_index]
             col_i = col[point_index]
             los = self.compute_los(row_i, col_i, dtm.epsg)
-            (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
+            (__, __, position_cube, alti, los_index) = dtm.intersect_dtm_cube(los)
             if position_cube is not None:
-                (__, __, points_dtm[point_index, :]) = dtm.intersection(los, position_cube, alti)
+                (__, __, points_dtm[point_index, :]) = dtm.intersection(los_index, position_cube, alti)
             else:
                 logging.warning("LOS doesn't instersect DTM cube")
                 points_dtm[point_index, :] = np.full(3, fill_value=np.nan)
@@ -323,7 +332,7 @@ class Grid(GeoModelTemplate):
         pos_row = (row - self.row0) / self.steprow
         pos_col = (col - self.col0) / self.stepcol
         mats = [self.lon_data, self.lat_data]
-        res = interpol_bilin(mats, self.nbrow, self.nbcol, pos_row, pos_col)
+        res = interpol_bilin_grid(mats, self.nbrow, self.nbcol, pos_row, pos_col)
         return res
 
     def interpolate_grid_in_altitude(self, nbrow, nbcol, nbalt=None):
@@ -389,9 +398,9 @@ class Grid(GeoModelTemplate):
                 col = col0 + stepcol * j
                 row = row0 + steprow * i
                 los = self.compute_los(row, col, dtm.epsg)
-                (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los)
+                (__, __, position_cube, alti, los_index) = dtm.intersect_dtm_cube(los)
                 if position_cube is not None:
-                    (__, __, point_dtm) = dtm.intersection(los, position_cube, alti)
+                    (__, __, point_dtm) = dtm.intersection(los_index, position_cube, alti)
                 else:
                     point_dtm = np.full(3, fill_value=np.nan)
                 # conversion of all tab
@@ -467,7 +476,7 @@ class Grid(GeoModelTemplate):
                 pos_col = (col - self.col0) / self.stepcol
                 # pylint disable for code clarity interpol_bilin_vectorized returns one list of 2 elements in this case
                 # pylint: disable=unbalanced-tuple-unpacking
-                [vlon, vlat] = interpol_bilin(mats, self.nbrow, self.nbcol, pos_row, pos_col)
+                [vlon, vlat] = interpol_bilin_grid(mats, self.nbrow, self.nbcol, pos_row, pos_col)
                 position[0] = alti_coef * vlon[0] + (1 - alti_coef) * vlon[1]
                 position[1] = alti_coef * vlat[0] + (1 - alti_coef) * vlat[1]
                 gldalt[:, row_index, col_index] = position
@@ -545,7 +554,7 @@ class Grid(GeoModelTemplate):
                 a_max[imes, 5] = glonlat[0, irow, icol]
                 imes += 1
 
-        # Calcul des coeffcients
+        # Compute coefficients
         mat_a_min = np.array(a_min)
         mat_a_max = np.array(a_max)
 
@@ -559,16 +568,15 @@ class Grid(GeoModelTemplate):
         coef_col_max = t_aa_max_inv @ mat_a_max.T @ b_col
         coef_row_max = t_aa_max_inv @ mat_a_max.T @ b_row
 
-        # TODO: refactor to have only class parameters in __init__
         # seems not clear to understand with inverse_loc_predictor function ...
-        setattr(self, "pred_col_min", coef_col_min.flatten())  # noqa: 502
-        setattr(self, "pred_row_min", coef_row_min.flatten())  # noqa: 502
-        setattr(self, "pred_col_max", coef_col_max.flatten())  # noqa: 502
-        setattr(self, "pred_row_max", coef_row_max.flatten())  # noqa: 502
-        setattr(self, "pred_ofset_scale_lon", [lon_ofset, lon_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_lat", [lat_ofset, lat_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_row", [row_ofset, row_scale])  # noqa: 502
-        setattr(self, "pred_ofset_scale_col", [col_ofset, col_scale])  # noqa: 502
+        self.pred_col_min = coef_col_min.flatten()
+        self.pred_row_min = coef_row_min.flatten()
+        self.pred_col_max = coef_col_max.flatten()
+        self.pred_row_max = coef_row_max.flatten()
+        self.pred_ofset_scale_lon = [lon_ofset, lon_scale]
+        self.pred_ofset_scale_lat = [lat_ofset, lat_scale]
+        self.pred_ofset_scale_row = [row_ofset, row_scale]
+        self.pred_ofset_scale_col = [col_ofset, col_scale]
 
     def inverse_loc_predictor(self, lon, lat, alt=0.0):
         """

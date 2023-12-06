@@ -40,8 +40,6 @@ from shareloc.proj_utils import coordinates_conversion
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
 
-# pylint: disable=no-member
-
 
 @GeoModel.register("RPC")
 class RPC(GeoModelTemplate):
@@ -53,7 +51,18 @@ class RPC(GeoModelTemplate):
     # pylint: disable=too-many-instance-attributes
     def __init__(self, rpc_params):
         super().__init__()
-        self.epsg = None
+
+        self.offset_alt = None
+        self.scale_alt = None
+        self.offset_col = None
+        self.scale_col = None
+        self.offset_row = None
+        self.scale_row = None
+        self.offset_x = None
+        self.scale_x = None
+        self.offset_y = None
+        self.scale_y = None
+
         self.datum = None
         for key, value in rpc_params.items():
             setattr(self, key, value)
@@ -314,9 +323,9 @@ class RPC(GeoModelTemplate):
         los = self.los_extrema(row, col, min_dtm, max_dtm, epsg=dtm.epsg)
         for i in range(points_nb):
             los_i = los[2 * i : 2 * i + 2, :]
-            (__, __, position_cube, alti) = dtm.intersect_dtm_cube(los_i)
+            (__, __, position_cube, alti, los_index) = dtm.intersect_dtm_cube(los_i)
             if position_cube is not None:
-                (__, __, position) = dtm.intersection(los_i, position_cube, alti)
+                (__, __, position) = dtm.intersection(los_index, position_cube, alti)
                 direct_dtm[i, :] = position
             else:
                 position = np.full(3, fill_value=np.nan)

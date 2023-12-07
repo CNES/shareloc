@@ -2,7 +2,6 @@
 # coding: utf8
 #
 # Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
-# Copyright (c) 2023 CS GROUP - France, https://csgroup.eu
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).

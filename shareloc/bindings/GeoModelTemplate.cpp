@@ -1,5 +1,4 @@
 /*
-!/usr/bin/env python
 coding: utf8
 
 Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).

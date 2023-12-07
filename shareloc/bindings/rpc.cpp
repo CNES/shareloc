@@ -1,5 +1,4 @@
 /*
-!/usr/bin/env python
 coding: utf8
 
 Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
@@ -27,6 +26,30 @@ Cpp copy of rpc.py
 #include "rpc.hpp"
 
 //---- RPC methodes ----//
+
+RPC::RPC(array<double, 20> num_col,
+        array<double, 20> den_col,
+        array<double, 20> num_row,
+        array<double, 20> den_row,
+        array<double, 10> norm_coeffs):GeoModelTemplate(){
+
+    num_col = num_col;
+    den_col = den_col;
+    num_row = num_row;
+    den_row = den_row;
+
+    offset_lon = norm_coeffs[0];
+    scale_lon = norm_coeffs[1];
+    offset_lat = norm_coeffs[2];
+    scale_lat = norm_coeffs[3];
+    offset_alt = norm_coeffs[4];
+    scale_alt = norm_coeffs[5];
+    offset_col = norm_coeffs[6];
+    scale_col = norm_coeffs[7];
+    offset_row = norm_coeffs[8];
+    scale_row = norm_coeffs[9];
+
+}
 
 vector<vector<double>> RPC::direct_loc_h(
     vector<double> row,

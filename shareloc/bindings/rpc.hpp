@@ -1,5 +1,4 @@
 /*
-!/usr/bin/env python
 coding: utf8
 
 Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
@@ -27,13 +26,10 @@ Cpp copy of rpc.py
 
 #include "GeoModelTemplate.hpp"
 #include "GeoModelTemplate.cpp"
-#include <map>
-
-using std::map;
 
 /**
 Class RPC
-Squelette de la classe RPC.py de l'issue 221
+Framework of the RPC python class.
 */
 
 class RPC : public GeoModelTemplate{
@@ -46,24 +42,24 @@ private:
     map<string, double> rpc_params;//map<string, double> is a simple dict -> maybe inappropiate here
     double lim_extrapol;
 
-    vector<vector<double>> monomes;
+    vector<vector<double>> monomes;// to convert to array
     vector<vector<double>> monomes_deriv_1;
     vector<vector<double>> monomes_deriv_2;
 
     bool inverse_coefficient;
     bool direct_coefficient;
 
-    vector<double> num_col;
-    vector<double> den_col;
-    vector<double> num_row;
-    vector<double> den_row;
+    array<double, 20> num_col;
+    array<double, 20> den_col;
+    array<double, 20> num_row;
+    array<double, 20> den_row;
 
-    vector<double> num_x;
-    vector<double> den_x;
-    vector<double> num_y;
-    vector<double> den_y;
+    array<double, 20> num_x;
+    array<double, 20> den_x;
+    array<double, 20> num_y;
+    array<double, 20> den_y;
 
-    vector<double> alt_minmax;
+    array<double, 2> alt_minmax;
 
     double col0;
     double colmax;
@@ -76,13 +72,22 @@ private:
     double scale_col;
     double offset_alt;
     double scale_alt;
-    double offset_x;
-    double scale_x;
-    double offset_y;
-    double scale_y;
+    double offset_lon;
+    double scale_lon;
+    double offset_lat;
+    double scale_lat;
+
 
 public:
     using GeoModelTemplate::GeoModelTemplate;
+
+    /**Constructor*/
+    RPC(array<double, 20> num_col,
+        array<double, 20> den_col,
+        array<double, 20> num_row,
+        array<double, 20> den_row,
+        array<double, 10> norm_coeffs);
+
     /**direct_loc_h*/
     vector<vector<double>> direct_loc_h(
         vector<double> row,

@@ -1,5 +1,4 @@
 /*
-!/usr/bin/env python
 coding: utf8
 
 Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
@@ -26,16 +25,20 @@ Abstract class GeoModelTemplate.
     Child class: RPC
 */
 
-#include <string>
 #include <iostream>
 #include <vector>
+#include <string>
 #include <tuple>
+#include <array>
+#include <map>
 
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 using std::tuple;
+using std::array;
+using std::map;
 
 /**
 Abstract class GeoModelTemplate:

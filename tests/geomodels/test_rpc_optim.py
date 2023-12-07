@@ -22,8 +22,9 @@
 Module to test RpcOptim class
 """
 
-# Third party imports
 import numpy as np
+
+# Third party imports
 import pytest
 
 import rpc_c
@@ -42,21 +43,29 @@ from shareloc.geomodels import GeoModel
         "tests/data/rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML",
     ],
 )
-def test_load_rpc_params(geom_path):
+def test_construtor(geom_path):
     """
-    test loading of rpc_params
+    Test RpcOptim constructor
     """
-    geom = GeoModel(geom_path, "RpcOptim").__dict__
-    geom_ref = GeoModel(geom_path).__dict__
 
-    del geom["type"]
-    del geom_ref["type"]
+    rpc_optim = GeoModel(geom_path, "RpcOptim")
+    rpc_py = GeoModel(geom_path, "RPC")
 
-    for key, value in geom.items():
-        if isinstance(value, np.ndarray):
-            np.testing.assert_array_equal(value, geom_ref[key])
-        else:
-            assert value == geom_ref[key]
+    assert rpc_py.offset_x == rpc_optim.offset_x
+    assert rpc_py.scale_x == rpc_optim.scale_x
+    assert rpc_py.offset_y == rpc_optim.offset_y
+    assert rpc_py.scale_y == rpc_optim.scale_y
+    assert rpc_py.offset_alt == rpc_optim.offset_alt
+    assert rpc_py.scale_alt == rpc_optim.scale_alt
+    assert rpc_py.offset_col == rpc_optim.offset_col
+    assert rpc_py.scale_col == rpc_optim.scale_col
+    assert rpc_py.offset_row == rpc_optim.offset_row
+    assert rpc_py.scale_row == rpc_optim.scale_row
+
+    np.testing.assert_array_equal(rpc_py.num_col, rpc_optim.num_col)
+    np.testing.assert_array_equal(rpc_py.den_col, rpc_optim.den_col)
+    np.testing.assert_array_equal(rpc_py.num_row, rpc_optim.num_row)
+    np.testing.assert_array_equal(rpc_py.den_row, rpc_optim.den_row)
 
 
 def test_method_rpc_cpp():

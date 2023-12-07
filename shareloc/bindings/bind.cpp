@@ -1,5 +1,4 @@
 /*
-!/usr/bin/env python
 coding: utf8
 
 Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
@@ -42,7 +41,7 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("inverse_loc", &GeoModelTemplate::inverse_loc);
 
     py::class_<RPC,GeoModelTemplate>(m, "RPC")
-        .def(py::init<>())
+        .def(py::init<array<double, 20>,array<double, 20>,array<double, 20>,array<double, 20>,array<double, 10>>())
         .def("direct_loc_h", &RPC::direct_loc_h)
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
         .def("direct_loc_dtm", &RPC::direct_loc_dtm)

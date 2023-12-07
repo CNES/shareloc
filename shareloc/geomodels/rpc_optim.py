@@ -2,7 +2,6 @@
 # coding: utf8
 #
 # Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
-# Copyright (c) 2023 CS GROUP - France, https://csgroup.eu
 #
 # This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
@@ -25,12 +24,10 @@ RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotif
 """
 
 
-import numpy as np
-
 # Third party imports
 from numba import config
 
-import rpc_c as bind
+import rpc_c
 
 # Shareloc imports
 from shareloc.geomodels.geomodel import GeoModel
@@ -41,143 +38,33 @@ from shareloc.geomodels.rpc_readers import rpc_reader
 config.THREADING_LAYER = "omp"
 
 
-# pylint: disable=duplicate-code
 @GeoModel.register("RpcOptim")
-class RpcOptim(bind.RPC, GeoModelTemplate):
+class RpcOptim(rpc_c.RPC, GeoModelTemplate):
     """
     RPC optimized with cpp bindings class including direct and inverse localization instance methods
     """
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, rpc_params):
-        bind.RPC.__init__(self)
         GeoModelTemplate.__init__(self)
 
-        self.offset_alt = None
-        self.scale_alt = None
-        self.offset_col = None
-        self.scale_col = None
-        self.offset_row = None
-        self.scale_row = None
-        self.offset_x = None
-        self.scale_x = None
-        self.offset_y = None
-        self.scale_y = None
-
-        self.datum = None
         for key, value in rpc_params.items():
             setattr(self, key, value)
 
-        self.type = "RpcOptim"
-        if self.epsg is None:
-            self.epsg = 4326
-        if self.datum is None:
-            self.datum = "ellipsoid"
-
-        self.lim_extrapol = 1.0001
-
-        # Each monome: c[0]*X**c[1]*Y**c[2]*Z**c[3]
-        monomes_order = [
-            [1, 0, 0, 0],
-            [1, 1, 0, 0],
-            [1, 0, 1, 0],
-            [1, 0, 0, 1],
-            [1, 1, 1, 0],
-            [1, 1, 0, 1],
-            [1, 0, 1, 1],
-            [1, 2, 0, 0],
-            [1, 0, 2, 0],
-            [1, 0, 0, 2],
-            [1, 1, 1, 1],
-            [1, 3, 0, 0],
-            [1, 1, 2, 0],
-            [1, 1, 0, 2],
-            [1, 2, 1, 0],
-            [1, 0, 3, 0],
-            [1, 0, 1, 2],
-            [1, 2, 0, 1],
-            [1, 0, 2, 1],
-            [1, 0, 0, 3],
+        norm_coeffs = [
+            self.offset_x,
+            self.scale_x,  # longitude
+            self.offset_y,
+            self.scale_y,  # latitude
+            self.offset_alt,
+            self.scale_alt,
+            self.offset_col,
+            self.scale_col,
+            self.offset_row,
+            self.scale_row,
         ]
 
-        self.monomes = np.array(monomes_order)
-
-        # monomial coefficients of 1st variable derivative
-        self.monomes_deriv_1 = np.array(
-            [
-                [0, 0, 0, 0],
-                [1, 0, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1],
-                [1, 0, 1, 0],
-                [1, 0, 0, 1],
-                [0, 0, 1, 1],
-                [2, 1, 0, 0],
-                [0, 0, 2, 0],
-                [0, 0, 0, 2],
-                [1, 0, 1, 1],
-                [3, 2, 0, 0],
-                [1, 0, 2, 0],
-                [1, 0, 0, 2],
-                [2, 1, 1, 0],
-                [0, 0, 3, 0],
-                [0, 0, 1, 2],
-                [2, 1, 0, 1],
-                [0, 0, 2, 1],
-                [0, 0, 0, 3],
-            ]
-        )
-
-        # monomial coefficients of 2nd variable derivative
-        self.monomes_deriv_2 = np.array(
-            [
-                [0, 0, 0, 0],
-                [0, 1, 0, 0],
-                [1, 0, 0, 0],
-                [0, 0, 0, 1],
-                [1, 1, 0, 0],
-                [0, 1, 0, 1],
-                [1, 0, 0, 1],
-                [0, 2, 0, 0],
-                [2, 0, 1, 0],
-                [0, 0, 0, 2],
-                [1, 1, 0, 1],
-                [0, 3, 0, 0],
-                [2, 1, 1, 0],
-                [0, 1, 0, 2],
-                [1, 2, 0, 0],
-                [3, 0, 2, 0],
-                [1, 0, 0, 2],
-                [0, 2, 0, 1],
-                [2, 0, 1, 1],
-                [0, 0, 0, 3],
-            ]
-        )
-
-        self.inverse_coefficient = False
-        self.direct_coefficient = False
-
-        # pylint: disable=access-member-before-definition
-        if self.num_col:
-            self.inverse_coefficient = True
-            self.num_col = np.array(self.num_col)
-            self.den_col = np.array(self.den_col)
-            self.num_row = np.array(self.num_row)
-            self.den_row = np.array(self.den_row)
-
-        # pylint: disable=access-member-before-definition
-        if self.num_x:
-            self.direct_coefficient = True
-            self.num_x = np.array(self.num_x)
-            self.den_x = np.array(self.den_x)
-            self.num_y = np.array(self.num_y)
-            self.den_y = np.array(self.den_y)
-
-        self.alt_minmax = [self.offset_alt - self.scale_alt, self.offset_alt + self.scale_alt]
-        self.col0 = self.offset_col - self.scale_col
-        self.colmax = self.offset_col + self.scale_col
-        self.row0 = self.offset_row - self.scale_row
-        self.rowmax = self.offset_row + self.scale_row
+        rpc_c.RPC.__init__(self, self.num_col, self.den_col, self.num_row, self.den_row, norm_coeffs)
 
     @classmethod
     def load(cls, geomodel_path):
@@ -194,3 +81,47 @@ class RpcOptim(bind.RPC, GeoModelTemplate):
         # Set topleftconvention (keeping historic option): to clean
         cls.geomodel_path = geomodel_path
         return cls(rpc_reader(geomodel_path, topleftconvention=True))
+
+    def direct_loc_h(self, row, col, alt, fill_nan=False):
+        """
+        direct localization at constant altitude
+
+        :param row:  line sensor position
+        :type row: float or 1D numpy.ndarray dtype=float64
+        :param col:  column sensor position
+        :type col: float or 1D numpy.ndarray dtype=float64
+        :param alt:  altitude
+        :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
+            otherwise
+        :type fill_nan: boolean
+        :return: ground position (lon,lat,h)
+        :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
+        """
+
+    def direct_loc_dtm(self, row, col, dtm):
+        """
+        direct localization on dtm
+
+        :param row:  line sensor position
+        :type row: float
+        :param col:  column sensor position
+        :type col: float
+        :param dtm: dtm intersection model
+        :type dtm: shareloc.geofunctions.dtm_intersection
+        :return: ground position (lon,lat,h) in dtm coordinates system
+        :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
+        """
+
+    def inverse_loc(self, lon, lat, alt):
+        """
+        Inverse localization
+
+        :param lon: longitude position
+        :type lon: float or 1D numpy.ndarray dtype=float64
+        :param lat: latitude position
+        :type lat: float or 1D numpy.ndarray dtype=float64
+        :param alt: altitude
+        :type alt: float
+        :return: sensor position (row, col, alt)
+        :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
+        """

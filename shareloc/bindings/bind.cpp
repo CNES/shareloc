@@ -41,7 +41,11 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("inverse_loc", &GeoModelTemplate::inverse_loc);
 
     py::class_<RPC,GeoModelTemplate>(m, "RPC")
-        .def(py::init<array<double, 20>,array<double, 20>,array<double, 20>,array<double, 20>,array<double, 10>>())
+        .def(py::init<array<double, 20>,
+        array<double, 20>,
+        array<double, 20>,
+        array<double, 20>,
+        array<double, 10>>())
         .def("direct_loc_h", &RPC::direct_loc_h)
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
         .def("direct_loc_dtm", &RPC::direct_loc_dtm)
@@ -49,7 +53,25 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("compute_loc_inverse_derivates", &RPC::compute_loc_inverse_derivates)
         .def("direct_loc_inverse_iterative", &RPC::direct_loc_inverse_iterative)
         .def("get_alt_min_max", &RPC::get_alt_min_max)
-        .def("los_extrema", &RPC::los_extrema);
+        .def("los_extrema", &RPC::los_extrema)
+        .def("get_num_col", &RPC::get_num_col)
+        .def("get_den_col", &RPC::get_den_col)
+        .def("get_num_row", &RPC::get_num_row)
+        .def("get_den_row", &RPC::get_den_row)
+        .def("get_num_lon", &RPC::get_num_lon)
+        .def("get_den_lon", &RPC::get_den_lon)
+        .def("get_num_lat", &RPC::get_num_lat)
+        .def("get_den_lat", &RPC::get_den_lat)
+        .def("get_offset_row", &RPC::get_offset_row)
+        .def("get_scale_row", &RPC::get_scale_row)
+        .def("get_offset_col", &RPC::get_offset_col)
+        .def("get_scale_col", &RPC::get_scale_col)
+        .def("get_offset_alt", &RPC::get_offset_alt)
+        .def("get_scale_alt", &RPC::get_scale_alt)
+        .def("get_offset_lon", &RPC::get_offset_lon)
+        .def("get_scale_lon", &RPC::get_scale_lon)
+        .def("get_offset_lat", &RPC::get_offset_lat)
+        .def("get_scale_lat", &RPC::get_scale_lat);
 
     //m.doc() = "Pybind hello world"; // optional module docstring
     m.def("polynomial_equation", &polynomial_equation, "TODO: doc");
@@ -57,7 +79,9 @@ PYBIND11_MODULE(rpc_c, m) {
         "TODO: doc");
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude, "TODO: doc");
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude, "TODO: doc");
-    m.def("compute_loc_inverse_derivates_numba", &compute_loc_inverse_derivates_numba, "TODO: doc");
+    m.def("compute_loc_inverse_derivates_optimized",
+    &compute_loc_inverse_derivates_optimized,
+    "TODO: doc");
 }
 
 //c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes)

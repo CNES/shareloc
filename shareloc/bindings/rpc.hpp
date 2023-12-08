@@ -1,6 +1,4 @@
 /*
-coding: utf8
-
 Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
 
 This file is part of shareloc
@@ -54,10 +52,10 @@ private:
     array<double, 20> num_row;
     array<double, 20> den_row;
 
-    array<double, 20> num_x;
-    array<double, 20> den_x;
-    array<double, 20> num_y;
-    array<double, 20> den_y;
+    array<double, 20> num_lon;
+    array<double, 20> den_lon;
+    array<double, 20> num_lat;
+    array<double, 20> den_lat;
 
     array<double, 2> alt_minmax;
 
@@ -152,5 +150,48 @@ public:
         double alt_max,
         bool fill_nan=false,
         int epsg=4326);
+    
+
+    //-- getter --//
+
+    /**get_num_col*/
+    array<double, 20> get_num_col();
+    /**get_den_col*/
+    array<double, 20> get_den_col();
+    /**get_num_row*/
+    array<double, 20> get_num_row();
+    /**get_den_row*/
+    array<double, 20> get_den_row();
+
+    /**get_num_lon*/
+    array<double, 20> get_num_lon();
+    /**get_den_lon*/
+    array<double, 20> get_den_lon();
+    /**get_num_lat*/
+    array<double, 20> get_num_lat();
+    /**get_den_lat*/
+    array<double, 20> get_den_lat();
+
+    /**get_offset_row*/
+    double get_offset_row();
+    /**get_scale_row*/
+    double get_scale_row();
+    /**get_offset_col*/
+    double get_offset_col();
+    /**get_scale_col*/
+    double get_scale_col();
+    /**get_offset_alt*/
+    double get_offset_alt();
+    /**get_scale_alt*/
+    double get_scale_alt();
+    /**get_offset_lon*/
+    double get_offset_lon();
+    /**get_scale_lon*/
+    double get_scale_lon();
+    /**get_offset_lat*/
+    double get_offset_lat();
+    /**get_scale_lat*/
+    double get_scale_lat();
 };
+
 

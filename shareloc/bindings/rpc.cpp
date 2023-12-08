@@ -1,6 +1,4 @@
 /*
-coding: utf8
-
 Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
 
 This file is part of shareloc
@@ -22,25 +20,26 @@ limitations under the License.
 /**
 Cpp copy of rpc.py
 */
-
+#include <typeinfo>
 #include "rpc.hpp"
 
 //---- RPC methodes ----//
 
-RPC::RPC(array<double, 20> num_col,
-        array<double, 20> den_col,
-        array<double, 20> num_row,
-        array<double, 20> den_row,
+RPC::RPC(array<double, 20> num_col_input,
+        array<double, 20> den_col_input,
+        array<double, 20> num_row_input,
+        array<double, 20> den_row_input,
         array<double, 10> norm_coeffs):GeoModelTemplate(){
 
-    num_col = num_col;
-    den_col = den_col;
-    num_row = num_row;
-    den_row = den_row;
 
-    offset_lon = norm_coeffs[0];
+    std::copy(num_col_input.begin(), num_col_input.end(), num_col.begin());
+    std::copy(den_col_input.begin(), den_col_input.end(), den_col.begin());
+    std::copy(num_row_input.begin(), num_row_input.end(), num_row.begin());
+    std::copy(den_row_input.begin(), den_row_input.end(), den_row.begin());
+
+    offset_lon = norm_coeffs[0];//offset_x
     scale_lon = norm_coeffs[1];
-    offset_lat = norm_coeffs[2];
+    offset_lat = norm_coeffs[2];//offset_t
     scale_lat = norm_coeffs[3];
     offset_alt = norm_coeffs[4];
     scale_alt = norm_coeffs[5];
@@ -135,6 +134,28 @@ vector<vector<double>> RPC::los_extrema(
     return vect;
 }
 
+array<double, 20> RPC::get_num_col(){return num_col;}
+array<double, 20> RPC::get_den_col(){return den_col;}
+array<double, 20> RPC::get_num_row(){return num_row;}
+array<double, 20> RPC::get_den_row(){return den_row;}
+
+array<double, 20> RPC::get_num_lon(){return num_lon;}
+array<double, 20> RPC::get_den_lon(){return den_lon;}
+array<double, 20> RPC::get_num_lat(){return num_lat;}
+array<double, 20> RPC::get_den_lat(){return den_lat;}
+
+double RPC::get_offset_row(){return offset_row;}
+double RPC::get_scale_row(){return scale_row;}
+double RPC::get_offset_col(){return offset_col;}
+double RPC::get_scale_col(){return scale_col;}
+double RPC::get_offset_alt(){return offset_alt;}
+double RPC::get_scale_alt(){return scale_alt;}
+double RPC::get_offset_lon(){return offset_lon;}
+double RPC::get_scale_lon(){return scale_lon;}
+double RPC::get_offset_lat(){return offset_lat;}
+double RPC::get_scale_lat(){return scale_lat;}
+
+
 //---- Functions ----//
 
 double polynomial_equation(
@@ -188,7 +209,7 @@ double derivative_polynomial_longitude(
 tuple<vector<double>,
 vector<double>,
 vector<double>,
-vector<double>> compute_loc_inverse_derivates_numba(
+vector<double>> compute_loc_inverse_derivates_optimized(
     vector<double> lon_norm,
     vector<double> lat_norm,
     vector<double> alt_norm,

@@ -48,23 +48,27 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
     def __init__(self, rpc_params):
         GeoModelTemplate.__init__(self)
 
-        for key, value in rpc_params.items():
-            setattr(self, key, value)
-
         norm_coeffs = [
-            self.offset_x,
-            self.scale_x,  # longitude
-            self.offset_y,
-            self.scale_y,  # latitude
-            self.offset_alt,
-            self.scale_alt,
-            self.offset_col,
-            self.scale_col,
-            self.offset_row,
-            self.scale_row,
+            rpc_params["offset_x"],
+            rpc_params["scale_x"],  # longitude
+            rpc_params["offset_y"],
+            rpc_params["scale_y"],  # latitude
+            rpc_params["offset_alt"],
+            rpc_params["scale_alt"],
+            rpc_params["offset_col"],
+            rpc_params["scale_col"],
+            rpc_params["offset_row"],
+            rpc_params["scale_row"],
         ]
 
-        rpc_c.RPC.__init__(self, self.num_col, self.den_col, self.num_row, self.den_row, norm_coeffs)
+        rpc_c.RPC.__init__(
+            self,
+            rpc_params["num_col"],
+            rpc_params["den_col"],
+            rpc_params["num_row"],
+            rpc_params["den_row"],
+            norm_coeffs,
+        )
 
     @classmethod
     def load(cls, geomodel_path):

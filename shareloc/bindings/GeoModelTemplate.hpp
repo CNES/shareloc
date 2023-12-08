@@ -1,6 +1,4 @@
 /*
-coding: utf8
-
 Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
 
 This file is part of shareloc

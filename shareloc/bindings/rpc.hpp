@@ -194,4 +194,25 @@ public:
     double get_scale_lat();
 };
 
+// function 
+double polynomial_equation(
+    double xnorm,
+    double ynorm,
+    double znorm,
+    vector<double> coeff);
+    
+tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
+    vector<double> lon_col_norm,
+    vector<double> lat_row_norm,
+    vector<double> alt_norm,
+    vector<double> num_col,
+    vector<double> den_col,
+    vector<double> num_lin,
+    vector<double> den_lin,
+    double scale_col,
+    double offset_col,
+    double scale_lin,
+    double offset_lin
+);
+
 

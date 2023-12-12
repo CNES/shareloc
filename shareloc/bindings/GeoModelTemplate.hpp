@@ -23,20 +23,16 @@ Abstract class GeoModelTemplate.
     Child class: RPC
 */
 
+#include <string>
 #include <iostream>
 #include <vector>
-#include <string>
 #include <tuple>
-#include <array>
 #include <map>
+#include <array>
+#include <algorithm>
+#include <cmath>
 
-using std::cout;
-using std::endl;
-using std::vector;
-using std::string;
-using std::tuple;
-using std::array;
-using std::map;
+using namespace std;
 
 /**
 Abstract class GeoModelTemplate:

@@ -74,9 +74,10 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("get_scale_lat", &RPC::get_scale_lat);
 
     //m.doc() = "Pybind hello world"; // optional module docstring
-    m.def("polynomial_equation", &polynomial_equation, "TODO: doc");
+    m.def("polynomial_equation", &polynomial_equation, "Compute polynomial equation");
     m.def("compute_rational_function_polynomial", &compute_rational_function_polynomial,
-        "TODO: doc");
+        "Compute rational function polynomial. Useful to compute direct and inverse localization"
+        "using direct or inverse RPC.");
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude, "TODO: doc");
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude, "TODO: doc");
     m.def("compute_loc_inverse_derivates_optimized",

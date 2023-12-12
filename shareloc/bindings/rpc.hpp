@@ -113,7 +113,7 @@ public:
     tuple<vector<double>,vector<double>,vector<double>> inverse_loc(
         vector<double> lon,
         vector<double> lat,
-        double alt);
+        vector<double> alt);
 
     /**filter_coordinates*/
     vector<vector<double>> filter_coordinates(
@@ -195,20 +195,24 @@ public:
 };
 
 // function 
+
+/**Compute polynomial equation"*/
 double polynomial_equation(
     double xnorm,
     double ynorm,
     double znorm,
-    vector<double> coeff);
-    
+    array<double, 20> coeff);
+
+/**Compute rational function polynomial. Useful to compute direct and inverse localization
+        "using direct or inverse RPC."*/
 tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
     vector<double> lon_col_norm,
     vector<double> lat_row_norm,
     vector<double> alt_norm,
-    vector<double> num_col,
-    vector<double> den_col,
-    vector<double> num_lin,
-    vector<double> den_lin,
+    array<double, 20> num_col,
+    array<double, 20> den_col,
+    array<double, 20> num_lin,
+    array<double, 20> den_lin,
     double scale_col,
     double offset_col,
     double scale_lin,

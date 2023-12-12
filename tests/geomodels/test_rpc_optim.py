@@ -126,18 +126,19 @@ def test_function_rpc_cpp():
     """
 
     vector_double = [1.0, 1.0, 1.0]
+    array20 = [1.0 for i in range(20)]
     double = 1.0
 
-    rpc_c.polynomial_equation(double, double, double, vector_double)
+    rpc_c.polynomial_equation(double, double, double, array20)
 
     rpc_c.compute_rational_function_polynomial(
         vector_double,
         vector_double,
         vector_double,
-        vector_double,
-        vector_double,
-        vector_double,
-        vector_double,
+        array20,
+        array20,
+        array20,
+        array20,
         double,
         double,
         double,

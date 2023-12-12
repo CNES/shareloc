@@ -21,7 +21,9 @@ Shareloc Setup.py kept for compatibility and setuptools_scm configuration.
 Main part is in setup.cfg file.
 """
 
+from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
 
-# Main setup with setup.cfg file.
-setup(use_scm_version=True)
+extensions = [Pybind11Extension("rpc_c", ["shareloc/bindings/bind.cpp"])]
+
+setup(use_scm_version=True, cmdclass={"build_ext": build_ext}, ext_modules=extensions)

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2023 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
-# This file is part of shareloc
+# This file is part of Shareloc
 # (see https://github.com/CNES/shareloc).
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,33 +19,73 @@
 # limitations under the License.
 #
 """
-This module contains the GeoModel abstract class
+This module contains the optimized (with cpp bindings) RPC class corresponding to the RPC models.
+RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotiff.
 """
 
-# Standard imports
-from abc import abstractmethod
+
+# Third party imports
+from numba import config
+
+import rpc_c
+
+# Shareloc imports
+from shareloc.geomodels.geomodel import GeoModel
+from shareloc.geomodels.geomodel_template import GeoModelTemplate
+from shareloc.geomodels.rpc_readers import rpc_reader
+
+# Set numba type of threading layer before parallel target compilation
+config.THREADING_LAYER = "omp"
 
 
-class GeoModelTemplate:
+@GeoModel.register("RpcOptim")
+class RpcOptim(rpc_c.RPC, GeoModelTemplate):
     """
-    Class for general specification of a geometric model
-    declined in rpc.py and grid.py and rpc_optim.py
+    RPC optimized with cpp bindings class including direct and inverse localization instance methods
     """
 
-    @abstractmethod
-    def __init__(self):
-        """
-        Return the geomodel object associated with the geomodel_type
-        given in the configuration
-        """
-        # geomodel type. Set by the subclass
-        self.type: str
-        # geomodel epsg projection code
-        self.epsg: int = None
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, rpc_params):
+        GeoModelTemplate.__init__(self)
 
-    # Define GeoModelTemplate functions interface
+        norm_coeffs = [
+            rpc_params["offset_x"],
+            rpc_params["scale_x"],  # longitude
+            rpc_params["offset_y"],
+            rpc_params["scale_y"],  # latitude
+            rpc_params["offset_alt"],
+            rpc_params["scale_alt"],
+            rpc_params["offset_col"],
+            rpc_params["scale_col"],
+            rpc_params["offset_row"],
+            rpc_params["scale_row"],
+        ]
 
-    @abstractmethod
+        rpc_c.RPC.__init__(
+            self,
+            rpc_params["num_col"],
+            rpc_params["den_col"],
+            rpc_params["num_row"],
+            rpc_params["den_row"],
+            norm_coeffs,
+        )
+
+    @classmethod
+    def load(cls, geomodel_path):
+        """
+        Load from any RPC (auto identify driver)
+        from filename (dimap, ossim kwl, geotiff)
+
+        TODO: topleftconvention always to True, set a standard and remove the option
+
+        topleftconvention boolean: [0,0] position
+            If False : [0,0] is at the center of the Top Left pixel
+            If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+        """
+        # Set topleftconvention (keeping historic option): to clean
+        cls.geomodel_path = geomodel_path
+        return cls(rpc_reader(geomodel_path, topleftconvention=True))
+
     def direct_loc_h(self, row, col, alt, fill_nan=False):
         """
         direct localization at constant altitude
@@ -62,7 +102,6 @@ class GeoModelTemplate:
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
 
-    @abstractmethod
     def direct_loc_dtm(self, row, col, dtm):
         """
         direct localization on dtm
@@ -77,7 +116,6 @@ class GeoModelTemplate:
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
 
-    @abstractmethod
     def inverse_loc(self, lon, lat, alt):
         """
         Inverse localization
@@ -90,13 +128,4 @@ class GeoModelTemplate:
         :type alt: float
         :return: sensor position (row, col, alt)
         :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
-        """
-
-    @classmethod
-    @abstractmethod
-    def load(cls, geomodel_path: str):
-        """
-        load function with class specific args
-
-        :param geomodel_path: filename of geomodel
         """

@@ -110,7 +110,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
         //         lon = vector<double>{lon};
         //         lat = vector<double>{lat};
         //     }catch(...){
-        //         cerr<<"Error : longitude/latitude not vector<double> and can't be converted"<<endl;
+        //      cerr<<"Error : longitude/latitude not vector<double> and can't be converted"<<endl;
         //     }
         //     };
         // if (!is_same<decltype(alt), vector<double>>::value){//if alt not a vector<double>
@@ -158,7 +158,9 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
             lat_norm[i] = (lat_norm[i] - offset_lat)/scale_lat;
             alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
 
-            if(abs(lon_norm[i])>lim_extrapol || abs(lat_norm[i])>lim_extrapol || abs(alt_norm[i])>lim_extrapol){
+            if(abs(lon_norm[i])>lim_extrapol || 
+               abs(lat_norm[i])>lim_extrapol ||
+               abs(alt_norm[i])>lim_extrapol){
                 cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
             }
         }
@@ -179,7 +181,8 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
         );
         return make_tuple(row_out, col_out, alt_res);
     }else{
-        cout<<"inverse localisation can't be performed, inverse coefficients have not been defined"<<endl;
+        cout<<"inverse localisation can't be performed";
+        cout<<" inverse coefficients have not been defined"<<endl;
         tuple<vector<double>, vector<double>, vector<double>> res;
         return res;
      };

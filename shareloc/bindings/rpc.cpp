@@ -30,8 +30,6 @@ RPC::RPC(array<double, 20> num_col_input,
         array<double, 20> den_row_input,
         array<double, 10> norm_coeffs):GeoModelTemplate(){
 
-    lim_extrapol = 1.0001;
-
     std::copy(num_col_input.begin(), num_col_input.end(), num_col.begin());
     std::copy(den_col_input.begin(), den_col_input.end(), den_col.begin());
     std::copy(num_row_input.begin(), num_row_input.end(), num_row.begin());
@@ -48,6 +46,7 @@ RPC::RPC(array<double, 20> num_col_input,
     offset_row = norm_coeffs[8];
     scale_row = norm_coeffs[9];
 
+    lim_extrapol = 1.0001;
 }
 
 vector<vector<double>> RPC::direct_loc_h(
@@ -96,87 +95,94 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
     :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
     */
     
+    // TODO : Nan filtering
+
     {
-    // vector<double> num_col_default = {0.}; // CHANGE rpc.hpp
-    // if (num_col!=num_col_default){ //so self.inverse_coefficient = True
-    //     if (!is_same<decltype(lon), vector<double>>::value){//if lon not a vector<double>
-    //         try{
-    //             lon = vector<double>{lon};
-    //             lat = vector<double>{lat};
-    //         }catch(...){
-    //             cerr<<"Error : longitude/latitude not vector<double> and can't be converted"<<endl;
-    //         }
-    //         };
-    //     if (!is_same<decltype(alt), vector<double>>::value){//if alt not a vector<double>
-    //         try{
-    //             alt = vector<double>{alt};
-    //         }catch(...){
-    //             cerr<<"Error : altitude not vector<double> and can't be converted"<<endl;
-    //         }
-    //         };
+    if (lim_extrapol == 1.0001){ 
+    //-- lim_extrapol == 1.0001 -> constructor has been called -> num_col has been filled 
+    //-> self.inverse_coefficient = True
 
+        cout<<"C++ : Computing inverse loc"<<endl;
+
+        //-- Useless c++ compiler return error if arg not good type (kept just in case)
+        // if (!is_same<decltype(lon), vector<double>>::value){//if lon not a vector<double>
+        //     try{
+        //         lon = vector<double>{lon};
+        //         lat = vector<double>{lat};
+        //     }catch(...){
+        //         cerr<<"Error : longitude/latitude not vector<double> and can't be converted"<<endl;
+        //     }
+        //     };
+        // if (!is_same<decltype(alt), vector<double>>::value){//if alt not a vector<double>
+        //     try{
+        //         alt = vector<double>{alt};
+        //     }catch(...){
+        //         cerr<<"Error : altitude not vector<double> and can't be converted"<<endl;
+        //     }
+        //     };
+
+        vector<double> lon_norm;
+        vector<double> lat_norm;
+        vector<double> alt_norm;
         
-    //     vector<double> lon_norm;
-    //     vector<double> lat_norm;
-    //     vector<double> alt_norm;
-        
-    //     // Check longitudes and latitudes sizes -> lon_norm and lat_norm
-    //     if(lat.size()<lon.size()){
-    //         cout<<"Warning : Inverse loc : compute_rational_function_polynomial : lat.size()!=lon.size() -> truncate lon"<<endl;
-    //         copy(lon.begin(), lon.begin()+lat.size(), back_inserter(lon_norm));
-    //         copy(lat.begin(), lat.begin(), back_inserter(lat_norm));
-    //     }else if (lat.size()>lon.size()){
-    //         cout<<"Warning : Inverse loc : compute_rational_function_polynomial : lat.size()!=lon.size() -> truncate lat "<<endl;
-    //         copy(lon.begin(), lon.begin(), back_inserter(lon_norm));
-    //         copy(lat.begin(), lat.begin()+lon.size(), back_inserter(lat_norm));
-    //     }else{
-    //         copy(lon.begin(), lon.begin(), back_inserter(lon_norm));
-    //         copy(lat.begin(), lat.begin(), back_inserter(lat_norm));
-    //     };
+        //-- Check longitudes and latitudes sizes -> lon_norm and lat_norm
+        if(lat.size()<lon.size()){
+            cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
+            cout<<" lat.size()!=lon.size() -> truncate lon"<<endl;
+            copy(lon.begin(), lon.begin()+lat.size(), back_inserter(lon_norm));
+            lat_norm = lat;
+        }else if (lat.size()>lon.size()){
+            cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
+            cout<<" lat.size()!=lon.size() -> truncate lat "<<endl;
+            lon_norm = lon;
+            copy(lat.begin(), lat.begin()+lon.size(), back_inserter(lat_norm));
+        }else{
+            lon_norm = lon;
+            lat_norm = lat;
+        };
 
-    //     //check altitude size -> lat_norm
-    //     if (alt.size()!=lon_norm.size()){
-    //         cout<<"Warning : Inverse loc : compute_rational_function_polynomial : alt.size()!=lon_norm.size() -> alt vect = alt[0]"<<endl;
-    //         alt_norm.resize(lon_norm.size(),alt[0]);
-    //     }else{
-    //         copy(alt.begin(), alt.begin(), back_inserter(alt_norm));
-    //     }
+        //check altitude size -> lat_norm
+        if (alt.size()!=lon_norm.size()){
+            cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
+            cout<<" alt.size()!=lon_norm.size() -> alt vect = alt[0]"<<endl;
+            alt_norm.resize(lon_norm.size(),alt[0]);
+        }else{
+            alt_norm =alt;
+        }
 
-    //     vector<double> alt_res = alt_norm;//save not normalised alt
+        vector<double> alt_res = alt_norm;//save not normalised alt
 
-    //     //Normalisation
-    //     for (int i =0;i<int(lon_norm.size());++i){
-    //         lon_norm[i] = (lon_norm[i] - offset_lon)/scale_lon;
-    //         lat_norm[i] = (lat_norm[i] - offset_lat)/scale_lat;
-    //         alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
+        //Normalisation
+        for (int i =0;i<int(lon_norm.size());++i){
+            lon_norm[i] = (lon_norm[i] - offset_lon)/scale_lon;
+            lat_norm[i] = (lat_norm[i] - offset_lat)/scale_lat;
+            alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
 
-    //         if(abs(lon_norm[i])>lim_extrapol || abs(lat_norm[i])>lim_extrapol || abs(alt_norm[i])>lim_extrapol){
-    //             cerr<<"Error : normalisation values exceed lim_extrapol"<<endl;
-    //         }
-    //     }
+            if(abs(lon_norm[i])>lim_extrapol || abs(lat_norm[i])>lim_extrapol || abs(alt_norm[i])>lim_extrapol){
+                cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
+            }
+        }
 
-    //     vector<double> row_out, col_out;
-    //     tie(row_out, col_out) = compute_rational_function_polynomial(
-    //         lon_norm,
-    //         lat_norm,
-    //         alt_norm,
-    //         num_col,
-    //         den_col,
-    //         num_row,
-    //         den_row,
-    //         scale_col,
-    //         offset_col,
-    //         scale_row,
-    //         offset_row
-    //     );
-    //     return make_tuple(row_out, col_out, alt_res);
-    // }else{
-    //     cout<<"inverse localisation can't be performed, inverse coefficients have not been defined"<<endl;
-    //     tuple<vector<double>, vector<double>, vector<double>> res;
-    //     return res;
-    //  };
-    tuple<vector<double>,vector<double>,vector<double>> res;
-    return res;
+        vector<double> row_out, col_out;
+        tie(row_out, col_out) = compute_rational_function_polynomial(
+            lon_norm,
+            lat_norm,
+            alt_norm,
+            num_col,
+            den_col,
+            num_row,
+            den_row,
+            scale_col,
+            offset_col,
+            scale_row,
+            offset_row
+        );
+        return make_tuple(row_out, col_out, alt_res);
+    }else{
+        cout<<"inverse localisation can't be performed, inverse coefficients have not been defined"<<endl;
+        tuple<vector<double>, vector<double>, vector<double>> res;
+        return res;
+     };
 }
 
 

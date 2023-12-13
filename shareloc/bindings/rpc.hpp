@@ -91,7 +91,7 @@ public:
         vector<double> row,
         vector<double> col,
         double alt,
-        bool fill_nan=false);
+        bool fill_nan=false);//override
 
     /**direct_loc_grid_h*/
     tuple<vector<vector<double>>,vector<vector<double>>> direct_loc_grid_h(
@@ -107,13 +107,13 @@ public:
     vector<vector<double>> direct_loc_dtm(
         double row,
         double col,
-        string dtm);// dtm is a python class not a string
+        string dtm);//override + dtm is a python class not a string
 
     /**inverse_loc*/
     tuple<vector<double>,vector<double>,vector<double>> inverse_loc(
         vector<double> lon,
         vector<double> lat,
-        vector<double> alt);
+        vector<double> alt) override;
 
     /**filter_coordinates*/
     vector<vector<double>> filter_coordinates(

@@ -49,6 +49,7 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("direct_loc_h", &RPC::direct_loc_h)
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
         .def("direct_loc_dtm", &RPC::direct_loc_dtm)
+        .def("inverse_loc", &GeoModelTemplate::inverse_loc)
         .def("filter_coordinates", &RPC::filter_coordinates)
         .def("compute_loc_inverse_derivates", &RPC::compute_loc_inverse_derivates)
         .def("direct_loc_inverse_iterative", &RPC::direct_loc_inverse_iterative)

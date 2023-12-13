@@ -112,7 +112,7 @@ def test_method_rpc_cpp():
     rpc.direct_loc_h(vector_double, vector_double, double, False)
     rpc.direct_loc_grid_h(integer, integer, integer, integer, integer, integer, double)
     rpc.direct_loc_dtm(double, double, string)
-    rpc.inverse_loc(vector_double, vector_double, double)
+    rpc.inverse_loc(vector_double, vector_double, vector_double)
     rpc.filter_coordinates(vector_double, vector_double, False, string)
     rpc.compute_loc_inverse_derivates(vector_double, vector_double, vector_double)
     rpc.direct_loc_inverse_iterative(vector_double, vector_double, double, integer, False)
@@ -287,3 +287,71 @@ def test_compute_rational_function_polynomial(geom_path):
 
     np.testing.assert_array_almost_equal(np.array(res_cpp[0]), res_py[0], 11)
     np.testing.assert_array_almost_equal(np.array(res_cpp[0]), res_py[0], 11)
+
+
+@pytest.mark.parametrize(
+    "id_scene,lon,lat,alt, col_vt,row_vt",
+    [
+        (
+            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.geom",
+            [7.048662660737769592],
+            [43.72774839443545858],
+            [0.0],
+            100.5,
+            200.5,
+        ),
+        (
+            "RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML",
+            [7.048662660737769592],
+            [43.72774839443545858],
+            [0.0],
+            100.5,
+            200.5,
+        ),
+        (
+            "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif",
+            [7.048662660737769592],
+            [43.72774839443545858],
+            [0.0],
+            100.5,
+            200.5,
+        ),
+    ],
+)
+def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
+    """
+    test inverse localization from any file
+    """
+    data_folder = data_path()
+    rpc_file = os.path.join(data_folder, "rpc", id_scene)
+
+    rpc_optim = GeoModel(rpc_file, "RpcOptim")
+
+    (row, col, alt_res) = rpc_optim.inverse_loc(lon, lat, alt)
+
+    assert col[0] == pytest.approx(col_vt, abs=1e-2)
+    assert row[0] == pytest.approx(row_vt, abs=1e-2)
+    assert alt_res[0] == alt[0]
+
+    # Check arg of differents sizes
+    lon_ext = lon * 3
+    lat_ext = lat * 2
+    (row, col, alt_res) = rpc_optim.inverse_loc(lon_ext, lat_ext, alt)
+
+    assert len(row) == 2
+    assert len(alt_res) == 2
+    assert len(alt_res) == 2
+    assert col[0] == pytest.approx(col_vt, abs=1e-2)
+    assert row[0] == pytest.approx(row_vt, abs=1e-2)
+    assert alt_res[0] == alt[0]
+
+    lon_ext = lon * 2
+    lat_ext = lat * 3
+    (row, col, alt_res) = rpc_optim.inverse_loc(lon_ext, lat_ext, alt)
+
+    assert len(row) == 2
+    assert len(alt_res) == 2
+    assert len(alt_res) == 2
+    assert col[0] == pytest.approx(col_vt, abs=1e-2)
+    assert row[0] == pytest.approx(row_vt, abs=1e-2)
+    assert alt_res[0] == alt[0]

@@ -285,8 +285,8 @@ def test_compute_rational_function_polynomial(geom_path):
         rpc_cpp.get_offset_row(),
     )
 
-    np.testing.assert_array_almost_equal(np.array(res_cpp[0]), res_py[0], 11)
-    np.testing.assert_array_almost_equal(np.array(res_cpp[0]), res_py[0], 11)
+    np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 1.5e-11)  # relatif diff = 1e-14
+    np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 1.5e-11)
 
 
 @pytest.mark.parametrize(

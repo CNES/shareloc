@@ -154,11 +154,11 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
         lat_norm[i] = (lat_norm[i] - offset_lat)/scale_lat;
         alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
 
-        if(abs(lon_norm[i])>lim_extrapol || 
-            abs(lat_norm[i])>lim_extrapol ||
-            abs(alt_norm[i])>lim_extrapol){
-            //cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
-        }
+        // if(abs(lon_norm[i])>lim_extrapol || 
+        //     abs(lat_norm[i])>lim_extrapol ||
+        //     abs(alt_norm[i])>lim_extrapol){
+        //     //cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
+        // }
     }
 
     vector<double> row_out, col_out;

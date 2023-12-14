@@ -160,7 +160,7 @@ def test_rpc_ossim_kwl(id_scene, lon, lat, alt, row_vt, col_vt):
         ),
     ],
 )
-def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
+def test_rpc_from_any_file(id_scene, lon, lat, alt, row_vt, col_vt):
     """
     test inverse localization from any file
     """

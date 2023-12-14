@@ -318,9 +318,9 @@ def test_compute_rational_function_polynomial(geom_path):
         ),
     ],
 )
-def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
+def test_inverse_loc_from_any_input(id_scene, lon, lat, alt, row_vt, col_vt):
     """
-    test inverse localization from any file
+    test inverse localization from any file and differents configuration of inputs
     """
     data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
@@ -355,3 +355,39 @@ def test_rpc_from_any(id_scene, lon, lat, alt, row_vt, col_vt):
     assert col[0] == pytest.approx(col_vt, abs=1e-2)
     assert row[0] == pytest.approx(row_vt, abs=1e-2)
     assert alt_res[0] == alt[0]
+
+
+def test_inverse_loc():
+    """
+    test inverse localization accuracy
+    """
+
+    rpc_path = os.path.join(data_path(), "rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML")
+
+    rpc_optim = GeoModel(rpc_path, "RpcOptim")
+    rpc_py = GeoModel(rpc_path, "RPC")
+
+    # INPUTS
+    nrb_point = 1e6
+    first_lon = 7.0477886581984
+    first_lat = 43.62208491280199
+    last_lon = 7.308411551163017
+    last_lat = 43.73298365695963
+    first_alt = -50
+    last_alt = 1000
+
+    lon_vect = np.linspace(first_lon, last_lon, int(nrb_point ** (1 / 3)) + 1)
+    lat_vect = np.linspace(first_lat, last_lat, int(nrb_point ** (1 / 3)) + 1)
+    alt_vect = np.linspace(first_alt, last_alt, int(nrb_point ** (1 / 3)) + 1)
+
+    lon_vect, lat_vect, alt_vect = np.meshgrid(lon_vect, lat_vect, alt_vect)
+
+    lon_vect = np.ndarray.flatten(lon_vect)
+    lat_vect = np.ndarray.flatten(lat_vect)
+    alt_vect = np.ndarray.flatten(alt_vect)
+
+    res_cpp = rpc_optim.inverse_loc(lon_vect, lat_vect, alt_vect)
+    res_py = rpc_py.inverse_loc(lon_vect, lat_vect, alt_vect)
+
+    np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 5e-11)
+    np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 5e-11)

@@ -157,7 +157,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
         if(abs(lon_norm[i])>lim_extrapol || 
             abs(lat_norm[i])>lim_extrapol ||
             abs(alt_norm[i])>lim_extrapol){
-            cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
+            //cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
         }
     }
 

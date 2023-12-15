@@ -797,11 +797,11 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular():
     ).read()
 
     # Check epipolar grids
-    np.testing.assert_allclose(reference_left_grid[0][:21, :], left_grid[:, :, 1], rtol=0, atol=2e-9)
-    np.testing.assert_allclose(reference_left_grid[1][:21, :], left_grid[:, :, 0], rtol=0, atol=2e-9)
+    assert np.array_equal(reference_left_grid[0][:21, :], left_grid[:, :, 1])
+    assert np.array_equal(reference_left_grid[1][:21, :], left_grid[:, :, 0])
 
-    np.testing.assert_allclose(reference_right_grid[0][:21, :], right_grid[:, :, 1], rtol=0, atol=2e-9)
-    np.testing.assert_allclose(reference_right_grid[1][:21, :], right_grid[:, :, 0], rtol=0, atol=2e-9)
+    assert np.array_equal(reference_right_grid[0][:21, :], right_grid[:, :, 1])
+    assert np.array_equal(reference_right_grid[1][:21, :], right_grid[:, :, 0])
 
     # Check mean_baseline_ratio
     reference_mean_br = 0.7024809
@@ -873,11 +873,11 @@ def test_compute_strip_of_epipolar_grid_columns_lines():
     ).read()
 
     # Check epipolar grids
-    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], rtol=0, atol=2e-9)
-    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], rtol=0, atol=2e-9)
+    assert np.array_equal(reference_left_grid[0], left_grid[:, :, 1])
+    assert np.array_equal(reference_left_grid[1], left_grid[:, :, 0])
 
-    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], rtol=0, atol=2e-9)
-    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], rtol=0, atol=2e-9)
+    assert np.array_equal(reference_right_grid[0], right_grid[:, :, 1])
+    assert np.array_equal(reference_right_grid[1], right_grid[:, :, 0])
 
     # Check mean_baseline_ratio
     # ground truth mean baseline ratio

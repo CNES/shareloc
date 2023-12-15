@@ -48,7 +48,7 @@ vector<vector<double>> GeoModelTemplate::direct_loc_dtm(
 tuple<vector<double>,vector<double>,vector<double>> GeoModelTemplate::inverse_loc(
     vector<double> lon,
     vector<double> lat,
-    double alt){
+    vector<double> alt){
     tuple<vector<double>,vector<double>,vector<double>> res;
     return res;
 }

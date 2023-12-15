@@ -118,7 +118,7 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
 
     def inverse_loc(self, lon, lat, alt):
         """
-        Inverse localization
+        Inverse localization using c++ bindings
 
         :param lon: longitude position
         :type lon: float or 1D numpy.ndarray dtype=float64
@@ -129,3 +129,5 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
         :return: sensor position (row, col, alt)
         :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
+        (row, col, alt) = super().inverse_loc(lon, lat, alt)
+        return row, col, alt

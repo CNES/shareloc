@@ -49,6 +49,7 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("direct_loc_h", &RPC::direct_loc_h)
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
         .def("direct_loc_dtm", &RPC::direct_loc_dtm)
+        .def("inverse_loc", &GeoModelTemplate::inverse_loc)
         .def("filter_coordinates", &RPC::filter_coordinates)
         .def("compute_loc_inverse_derivates", &RPC::compute_loc_inverse_derivates)
         .def("direct_loc_inverse_iterative", &RPC::direct_loc_inverse_iterative)
@@ -74,9 +75,10 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("get_scale_lat", &RPC::get_scale_lat);
 
     //m.doc() = "Pybind hello world"; // optional module docstring
-    m.def("polynomial_equation", &polynomial_equation, "TODO: doc");
+    m.def("polynomial_equation", &polynomial_equation, "Compute polynomial equation");
     m.def("compute_rational_function_polynomial", &compute_rational_function_polynomial,
-        "TODO: doc");
+        "Compute rational function polynomial. Useful to compute direct and inverse localization"
+        "using direct or inverse RPC.");
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude, "TODO: doc");
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude, "TODO: doc");
     m.def("compute_loc_inverse_derivates_optimized",

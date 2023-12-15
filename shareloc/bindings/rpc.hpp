@@ -91,7 +91,7 @@ public:
         vector<double> row,
         vector<double> col,
         double alt,
-        bool fill_nan=false);
+        bool fill_nan=false);//override
 
     /**direct_loc_grid_h*/
     tuple<vector<vector<double>>,vector<vector<double>>> direct_loc_grid_h(
@@ -107,13 +107,13 @@ public:
     vector<vector<double>> direct_loc_dtm(
         double row,
         double col,
-        string dtm);// dtm is a python class not a string
+        string dtm);//override + dtm is a python class not a string
 
     /**inverse_loc*/
     tuple<vector<double>,vector<double>,vector<double>> inverse_loc(
         vector<double> lon,
         vector<double> lat,
-        double alt);
+        vector<double> alt) override;
 
     /**filter_coordinates*/
     vector<vector<double>> filter_coordinates(
@@ -193,5 +193,30 @@ public:
     /**get_scale_lat*/
     double get_scale_lat();
 };
+
+// function 
+
+/**Compute polynomial equation"*/
+double polynomial_equation(
+    double xnorm,
+    double ynorm,
+    double znorm,
+    array<double, 20> coeff);
+
+/**Compute rational function polynomial. Useful to compute direct and inverse localization
+        "using direct or inverse RPC."*/
+tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
+    vector<double> lon_col_norm,
+    vector<double> lat_row_norm,
+    vector<double> alt_norm,
+    array<double, 20> num_col,
+    array<double, 20> den_col,
+    array<double, 20> num_lin,
+    array<double, 20> den_lin,
+    double scale_col,
+    double offset_col,
+    double scale_lin,
+    double offset_lin
+);
 
 

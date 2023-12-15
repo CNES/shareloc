@@ -24,6 +24,7 @@ This module contains functions to generate stereo-rectification epipolar grids
 
 # Standard imports
 import math
+from typing import Tuple, Union
 
 # Third party imports
 import numpy as np
@@ -31,7 +32,9 @@ import rasterio
 from affine import Affine
 
 # Shareloc imports
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.geofunctions.localization import Localization, coloc
+from shareloc.geomodels.geomodel_template import GeoModelTemplate
 from shareloc.image import Image
 from shareloc.proj_utils import transform_index_to_physical_point
 
@@ -515,44 +518,52 @@ def compute_stereorectification_epipolar_grids(
 
 # pylint: disable=too-many-arguments
 def compute_strip_of_epipolar_grid(
-    geom_model_left,
-    geom_model_right,
-    size,
-    positions_point,
-    spacing,
-    axis,
-    epi_step,
-    elevation,
-    elevation_offset,
-    epipolar_angles=None,
-):
+    geom_model_left: GeoModelTemplate,
+    geom_model_right: GeoModelTemplate,
+    strip_size: int,
+    positions_point: np.ndarray,
+    spacing: float,
+    axis: int,
+    epi_step: int = 1,
+    elevation: Union[float, DTMIntersection] = 0.0,
+    elevation_offset: float = 50.0,
+    epipolar_angles: np.ndarray = None,
+) -> Tuple[np.ndarray, np.ndarray, float]:
     """
-    Compute stereo-rectification epipolar grids by strip
+    Compute stereo-rectification epipolar grids by strip. We start with a starting positions_point,
+    and optional already computed epipolar_angles at these points, and we move strip_size times along axis direction
+    (0 = along lines, 1 = along columns) to compute a strip of epipolar grid. positions_points is a (2,rows,cols,3)
+    array containing at first dim : left and right (rows,cols) 3D coordinates (row,col,alt).  If axis==0 (resp. 1)
+    rows (resp. cols) dimension must be 1.
 
     :param geom_model_left: geometric model of the left image
-    :type geom_model_left: shareloc.grid or  shareloc.rpc
+    :type geom_model_left: GeomodelTemplate
     :param geom_model_right: geometric model of the right image
-    :type geom_model_right: shareloc.grid or  shareloc.rpc
-    :param size: size of grid along one axis for strip generation
-    :type size: int
-    :param positions_point: array containing first positions
+    :type geom_model_right: GeomodelTemplate
+    :param strip_size: desired size of grid along one axis for strip generation
+    :type strip_size: int
+    :param positions_point: array of size (2,rows,cols,3) containing first positions for left/right points
     :type positions_point: np.ndarray
-    :param spacing: spacing of epipolar grids
-    :type spacing: int
+    :param spacing: image spacing along axis dimension (in general mean image spacing)
+    :type spacing: float
     :param axis: displacement direction ( 0 = along lines, 1 = along columns)
     :type axis: int
     :param elevation: elevation
     :type elevation: shareloc.dtm or float
-    :param epi_step: epipolar step
+    :param epi_step: epipolar grid sampling step
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
-    :param epipolar_angles: array containing alphas
+    :param epipolar_angles: 2D array (rows,cols) containing epipolar angles at each grid node (angle in between epipolar
+        coordinate system and left image coordinate system), size must be coherent with positions_point 2nd,3rd dim
     :type epipolar_angles: np.ndarray
     :return:
-        - left/right epipolar positions grid in shape (2,rows,cols,3) with first dim is (left/right)
-        - epipolar angles
-        - mean baseline ratio
+        - left/right epipolar positions grid in shape (2,rows,cols,3) with first dim is (left/right) and rows
+            (resp. cols) is strip_size if axis = 0 (resp. 1)
+        - array of epipolar angles (rows,cols)
+        - mean baseline ratio of the strip computed on rows x cols elements minus provided epipolar angles shape.
+            We consider that if epipolar angles are provided, then baseline ratio for these elements have been
+            already computed.
     :rtype: Tuple
     """
 
@@ -560,7 +571,7 @@ def compute_strip_of_epipolar_grid(
     mean_baseline_ratio = 0
 
     # compute the output size depending on axis
-    size_shape = (size, positions_point.shape[2], 3) if axis == 1 else (positions_point.shape[1], size, 3)
+    size_shape = (strip_size, positions_point.shape[2], 3) if axis == 1 else (positions_point.shape[1], strip_size, 3)
     epi_angles_out = np.zeros((size_shape[0], size_shape[1]))
 
     # split left and right
@@ -608,7 +619,7 @@ def compute_strip_of_epipolar_grid(
     # 3/ compute locale epipolar angle
     # 4/ fill the output
     # 5/ compute and increment the baseline ratio
-    for point in range(1, size):
+    for point in range(1, strip_size):
         current_left_point, current_right_point = moving_along_axis(
             geom_model_left, geom_model_right, current_left_point, spacing, elevation, epi_step, epipolar_angles, axis
         )

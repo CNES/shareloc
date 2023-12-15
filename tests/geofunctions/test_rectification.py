@@ -740,12 +740,8 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular():
     """
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
-    geom_model_left = RPC.from_any(
-        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
-    )
-    geom_model_right = RPC.from_any(
-        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
-    )
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     epi_step = 30
     elevation_offset = 50
@@ -766,10 +762,10 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular():
         grid_size[0],
         position_point,
         spacing,
-        1,
-        epi_step,
-        default_elev,
-        elevation_offset,
+        axis=1,
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
     )
 
     complete_grids, alphas, mean_br = compute_strip_of_epipolar_grid(
@@ -778,11 +774,11 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular():
         grid_size[1],
         grids,
         spacing,
-        0,
-        epi_step,
-        default_elev,
-        elevation_offset,
-        alphas,
+        axis=0,
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+        epipolar_angles=alphas,
     )
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
         grid_size[1] * grid_size[0]
@@ -797,11 +793,11 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular():
     ).read()
 
     # Check epipolar grids
-    assert np.array_equal(reference_left_grid[0][:21, :], left_grid[:, :, 1])
-    assert np.array_equal(reference_left_grid[1][:21, :], left_grid[:, :, 0])
+    np.testing.assert_allclose(reference_left_grid[0][:21, :], left_grid[:, :, 1], rtol=0, atol=2e-9)
+    np.testing.assert_allclose(reference_left_grid[1][:21, :], left_grid[:, :, 0], rtol=0, atol=2e-9)
 
-    assert np.array_equal(reference_right_grid[0][:21, :], right_grid[:, :, 1])
-    assert np.array_equal(reference_right_grid[1][:21, :], right_grid[:, :, 0])
+    np.testing.assert_allclose(reference_right_grid[0][:21, :], right_grid[:, :, 1], rtol=0, atol=2e-9)
+    np.testing.assert_allclose(reference_right_grid[1][:21, :], right_grid[:, :, 0], rtol=0, atol=2e-9)
 
     # Check mean_baseline_ratio
     reference_mean_br = 0.7024809
@@ -818,12 +814,8 @@ def test_compute_strip_of_epipolar_grid_columns_lines():
     """
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
-    geom_model_left = RPC.from_any(
-        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
-    )
-    geom_model_right = RPC.from_any(
-        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
-    )
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     epi_step = 30
     elevation_offset = 50
@@ -842,10 +834,10 @@ def test_compute_strip_of_epipolar_grid_columns_lines():
         grid_size[0],
         position_point,
         spacing,
-        1,
-        epi_step,
-        default_elev,
-        elevation_offset,
+        axis=1,
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
     )
 
     complete_grids, alphas, mean_br = compute_strip_of_epipolar_grid(
@@ -854,11 +846,11 @@ def test_compute_strip_of_epipolar_grid_columns_lines():
         grid_size[1],
         grids,
         spacing,
-        0,
-        epi_step,
-        default_elev,
-        elevation_offset,
-        alphas,
+        axis=0,
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+        epipolar_angles=alphas,
     )
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
         grid_size[1] * grid_size[0]
@@ -873,11 +865,11 @@ def test_compute_strip_of_epipolar_grid_columns_lines():
     ).read()
 
     # Check epipolar grids
-    assert np.array_equal(reference_left_grid[0], left_grid[:, :, 1])
-    assert np.array_equal(reference_left_grid[1], left_grid[:, :, 0])
+    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], rtol=0, atol=2e-9)
+    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], rtol=0, atol=2e-9)
 
-    assert np.array_equal(reference_right_grid[0], right_grid[:, :, 1])
-    assert np.array_equal(reference_right_grid[1], right_grid[:, :, 0])
+    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], rtol=0, atol=2e-9)
+    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], rtol=0, atol=2e-9)
 
     # Check mean_baseline_ratio
     # ground truth mean baseline ratio
@@ -895,12 +887,8 @@ def test_compute_strip_of_epipolar_grid_lines_columns():
     """
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
-    geom_model_left = RPC.from_any(
-        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
-    )
-    geom_model_right = RPC.from_any(
-        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
-    )
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     epi_step = 30
     elevation_offset = 50
@@ -919,10 +907,10 @@ def test_compute_strip_of_epipolar_grid_lines_columns():
         grid_size[1],
         position_point,
         spacing,
-        0,
-        epi_step,
-        default_elev,
-        elevation_offset,
+        axis=0,
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
     )
 
     complete_grids, _, mean_br = compute_strip_of_epipolar_grid(
@@ -931,11 +919,11 @@ def test_compute_strip_of_epipolar_grid_lines_columns():
         grid_size[0],
         grids,
         spacing,
-        1,
-        epi_step,
-        default_elev,
-        elevation_offset,
-        alphas,
+        axis=1,
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+        epipolar_angles=alphas,
     )
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_line * grid_size[0]) / (
         grid_size[1] * grid_size[0]
@@ -973,12 +961,8 @@ def test_positions_to_displacement_grid():
     """
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
-    geom_model_left = RPC.from_any(
-        os.path.join(data_path(), "rectification", "left_image.geom"), topleftconvention=True
-    )
-    geom_model_right = RPC.from_any(
-        os.path.join(data_path(), "rectification", "right_image.geom"), topleftconvention=True
-    )
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
 
     epi_step = 30
     elevation_offset = 50
@@ -997,10 +981,10 @@ def test_positions_to_displacement_grid():
         grid_size[1],
         position_point,
         spacing,
-        1,
-        epi_step,
-        default_elev,
-        elevation_offset,
+        axis=1,
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
     )
 
     complete_grids, _, _ = compute_strip_of_epipolar_grid(
@@ -1009,11 +993,11 @@ def test_positions_to_displacement_grid():
         grid_size[0],
         grids,
         spacing,
-        0,
-        epi_step,
-        default_elev,
-        elevation_offset,
-        alphas,
+        axis=0,
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+        epipolar_angles=alphas,
     )
 
     left_grid, right_grid = positions_to_displacement_grid(complete_grids, epi_step)

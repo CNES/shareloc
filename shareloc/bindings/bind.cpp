@@ -79,11 +79,13 @@ PYBIND11_MODULE(rpc_c, m) {
     m.def("compute_rational_function_polynomial", &compute_rational_function_polynomial,
         "Compute rational function polynomial. Useful to compute direct and inverse localization"
         "using direct or inverse RPC.");
-    m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude, "TODO: doc");
-    m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude, "TODO: doc");
+    m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude,
+    "Compute latitude derivative polynomial equation");
+    m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude,
+    "Compute longitude derivative polynomial equation");
     m.def("compute_loc_inverse_derivates_optimized",
     &compute_loc_inverse_derivates_optimized,
-    "TODO: doc");
+    "Analytically compute the partials derivatives of inverse localization");
 }
 
 //c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes)

@@ -30,10 +30,10 @@ RPC::RPC(array<double, 20> num_col_input,
         array<double, 20> den_row_input,
         array<double, 10> norm_coeffs):GeoModelTemplate(){
 
-    std::copy(num_col_input.begin(), num_col_input.end(), num_col.begin());
-    std::copy(den_col_input.begin(), den_col_input.end(), den_col.begin());
-    std::copy(num_row_input.begin(), num_row_input.end(), num_row.begin());
-    std::copy(den_row_input.begin(), den_row_input.end(), den_row.begin());
+    copy(num_col_input.begin(), num_col_input.end(), num_col.begin());
+    copy(den_col_input.begin(), den_col_input.end(), den_col.begin());
+    copy(num_row_input.begin(), num_row_input.end(), num_row.begin());
+    copy(den_row_input.begin(), den_row_input.end(), den_row.begin());
 
     offset_lon = norm_coeffs[0];//offset_x
     scale_lon = norm_coeffs[1];
@@ -98,7 +98,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
     // TODO : Nan filtering
 
 {
-    cout<<"C++ : Computing inverse loc"<<endl;
+    //cout<<"C++ : Computing inverse loc"<<endl;
 
     //-- Useless c++ compiler return error if arg not good type (kept just in case)
     // if (!is_same<decltype(lon), vector<double>>::value){//if lon not a vector<double>
@@ -161,7 +161,8 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
         // }
     }
 
-    vector<double> row_out, col_out;
+    vector<double> row_out(lon_norm.size());
+    vector<double> col_out(lon_norm.size());
     tie(row_out, col_out) = compute_rational_function_polynomial(
         lon_norm,
         lat_norm,
@@ -179,13 +180,43 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
 }
 
 
-vector<vector<double>> RPC::filter_coordinates(
+tuple<vector<bool>,vector<double>,vector<double>> RPC::filter_coordinates(
     vector<double> first_coord,
     vector<double> second_coord,
     bool fill_nan,
     string direction){
-    vector<vector<double>> vect;
-    return vect;
+
+        // assert none problematic inputs
+        if (first_coord.size()!=second_coord.size()){
+            cerr<<"Error : C++ : filter_coordinates : ";
+            cerr<<"first_coord.size()!=second_coord.size()"<<endl;
+            exit(EXIT_FAILURE);
+        }
+
+        // filter_nan computation 
+        size_t size = second_coord.size();
+        vector<bool> filter_nan(size);
+        for (int i = 0; i < int(size); ++i) {
+            filter_nan[i] = !(isnan(first_coord[i]) || isnan(second_coord[i]));
+        }
+
+        // Output computation
+        vector<double>x_out(size,numeric_limits<double>::quiet_NaN());
+        vector<double>y_out(size,numeric_limits<double>::quiet_NaN());   
+        if (fill_nan){
+            double out_x_nan_value;
+            double out_y_nan_value;
+            if (direction=="direct"){
+                out_x_nan_value = offset_lon;
+                out_y_nan_value = offset_lat;
+            }else{
+                out_x_nan_value = offset_col;
+                out_y_nan_value = offset_row;              
+            }
+            fill(x_out.begin(), x_out.end(), out_x_nan_value);
+            fill(y_out.begin(), y_out.end(), out_y_nan_value);
+        }
+    return make_tuple(filter_nan, x_out, y_out);
 }
 
 tuple<vector<double>,
@@ -195,18 +226,254 @@ vector<double>> RPC::compute_loc_inverse_derivates(
     vector<double> lon,
     vector<double> lat,
     vector<double> alt){
-    tuple<vector<double>,vector<double>,vector<double>,vector<double>> res;
-    return res;
+
+    vector<double> lon_norm(lon.size());
+    vector<double> lat_norm(lat.size());
+    vector<double> alt_norm(lon.size());
+
+    //Python:Check if alt is an array. -> Useless in cpp
+
+    //check altitude size -> alt_norm
+    if (alt.size()!=lon.size()){
+        cout<<"Warning : Direct loc : compute_loc_inverse_derivates :";
+        cout<<" alt.size()!=lon.size() -> alt vect = alt[0]"<<endl;
+        alt_norm.assign(lon.size(),alt[0]);
+    }else{
+        alt_norm =alt;
+    }
+
+    //Normalisation
+    for (int i =0;i<int(lon_norm.size());++i){
+        lon_norm[i] = (lon[i] - offset_lon)/scale_lon;
+        lat_norm[i] = (lat[i] - offset_lat)/scale_lat;
+        alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
+
+    }
+
+    vector<double> dcol_dlon(lon_norm.size());
+    vector<double> dcol_dlat(lon_norm.size());
+    vector<double> drow_dlon(lon_norm.size());
+    vector<double> drow_dlat(lon_norm.size());
+
+    tie(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = compute_loc_inverse_derivates_optimized(
+        lon_norm,
+        lat_norm,
+        alt_norm,
+        num_col,
+        den_col,
+        num_row,
+        den_row,
+        scale_col,
+        scale_lon,
+        scale_row,
+        scale_lat);
+
+    return make_tuple(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat);
 }
 
-vector<vector<double>> RPC::direct_loc_inverse_iterative(
+tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iterative(
     vector<double> row,
     vector<double> col,
-    double alt,
+    vector<double> alt,
     int nb_iter_max,
     bool fill_nan){
-    vector<vector<double>> vect;
-    return vect;
+
+    //Py: If inbverse coeff: Useless in cpp. see inverse_loc -> same case
+    //Py: If not array -> transform to array: Useless in cpp
+
+    vector<double> col_norm;
+    vector<double> row_norm;
+
+    //-- Check columns and rows sizes -> col_norm and row_norm
+    if(row.size()<col.size()){
+        cout<<"Warning : Direct loc : direct_loc_inverse_iterative :";
+        cout<<" row.size()<col.size() -> truncate col"<<endl;
+        copy(col.begin(), col.begin()+row.size(), back_inserter(col_norm));
+        row_norm = row;
+    }else if (row.size()>col.size()){
+        cout<<"Warning : Direct loc : direct_loc_inverse_iterative :";
+        cout<<" row.size()>col.size() -> truncate row "<<endl;
+        col_norm = col;
+        copy(row.begin(), row.begin()+col.size(), back_inserter(row_norm));
+    }else{
+        col_norm = col;
+        row_norm = row;
+    };
+
+    vector<double> alt_norm(col_norm.size());
+
+    //check altitude size -> alt_norm
+    if (alt.size()!=col_norm.size()){
+        cout<<"Warning : Direct loc : direct_loc_inverse_iterative :";
+        cout<<" alt.size()!=col_norm.size() -> alt vect = alt[0]"<<endl;
+        alt_norm.assign(col_norm.size(),alt[0]);
+    }else{
+        alt_norm = alt;
+    }
+
+    // ** no suffix => _norm ** (same size) //
+
+    vector<double>long_out(col_norm.size());
+    vector<double>lat_out(col_norm.size());
+    vector<bool> filter_nan;
+
+    tie(filter_nan, long_out, lat_out) = filter_coordinates(row_norm, col_norm, fill_nan);
+
+    // if all coord contains Nan then return
+    bool allFalse = none_of(filter_nan.begin(),
+                                filter_nan.end(),
+                                [](bool value) { return value; });
+    if (allFalse){
+        cout<<"C++ : direct_loc_inverse_iterative: All coords are Nan"<<endl;
+        vector<double> alt_empty;
+        return make_tuple(long_out, lat_out, alt_empty);
+    }
+
+    // Filtering Nan ~=> row_local = row[filter_nan]
+    vector<double> row_local;
+    vector<double> col_local;
+    vector<double> alt_local;
+    copy_if(row_norm.begin(),row_norm.end(),back_inserter(row_local),
+    [&filter_nan, i = 0](int) mutable { return filter_nan[i++]; });//return filter_nan[i] then ++i
+    copy_if(col_norm.begin(),col_norm.end(),back_inserter(col_local),
+    [&filter_nan, i = 0](int) mutable { return filter_nan[i++]; });
+    copy_if(alt_norm.begin(),alt_norm.end(),back_inserter(alt_local),
+    [&filter_nan, i = 0](int) mutable { return filter_nan[i++]; });
+
+    // ** _norm => _local **  (Nan filtered) //
+
+
+    // inverse localization starting from the center of the scene
+    vector<double> lon = {offset_lon};
+    vector<double> lat = {offset_lat};
+
+    vector<double> row_start(1);
+    vector<double> col_start(1);
+    vector<double> alt_start(1);
+
+
+    tie(row_start, col_start, alt_start) = inverse_loc(lon, lat, alt_local);//alt_start useless
+
+    // desired precision in pixels
+    double eps = 1e-6;
+
+    int iteration = 0;
+    // computing the residue between the sensor positions and those estimated
+    //by the inverse localization
+    vector<double> delta_col(row_local.size());
+    vector<double> delta_row(row_local.size());
+
+    for (int i = 0;i<int(col_local.size());++i){
+        delta_col[i] = col_local[i] - col_start[0];
+        delta_row[i] = row_local[i] - row_start[0];
+    }
+
+    // ground coordinates (latitude and longitude) of each point
+    lon.resize(delta_col.size(),offset_lon);
+    lat.resize(delta_row.size(),offset_lat);
+
+    vector<double> iter_;
+    vector<double> lon_iter;
+    vector<double> lat_iter;
+    vector<double> alt_iter;
+
+    vector<double> drow_dlat;
+    vector<double> drow_dlon;
+    vector<double> dcol_dlat;
+    vector<double> dcol_dlon;
+
+    vector<double> det;
+    vector<double> delta_lon;
+    vector<double> delta_lat;
+
+    vector<double> row_estim;
+    vector<double> col_estim;
+    vector<double> alt_estim;
+
+    // while the required precision is not achieved
+    while ((max_abs(delta_col) > eps || max_abs(delta_row) > eps) && iteration < nb_iter_max){
+
+        // list of points that require another iteration
+        iter_.clear();//index of element still needing computing
+        lon_iter.clear();
+        lat_iter.clear();
+        alt_iter.clear();
+
+        // for loop on coord
+        for (int i = 0; i < int(delta_col.size()); ++i) {
+            if (abs(delta_col[i]) > eps || abs(delta_row[i]) > eps) {
+                iter_.push_back(i);
+                lon_iter.push_back(lon[i]);
+                lat_iter.push_back(lat[i]);
+                alt_iter.push_back(alt_local[i]);
+            }
+        }
+
+
+        size_t len_iter = iter_.size();
+
+        dcol_dlon.resize(len_iter,0.0);
+        dcol_dlat.resize(len_iter,0.0);
+        drow_dlon.resize(len_iter,0.0);
+        drow_dlat.resize(len_iter,0.0);
+
+        // partial derivatives
+        tie(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = compute_loc_inverse_derivates(
+            lon_iter, lat_iter, alt_iter
+        );
+
+        
+        det.resize(len_iter,0.0);
+        delta_lon.resize(len_iter,0.0);
+        delta_lat.resize(len_iter,0.0);
+
+        for (int i =0;i<int(len_iter);++i){
+            det[i] = dcol_dlon[i] * drow_dlat[i] - drow_dlon[i] * dcol_dlat[i];
+
+            delta_lon[i] = (drow_dlat[i] * delta_col[iter_[i]] - dcol_dlat[i] * delta_row[iter_[i]]) / det[i];
+            delta_lat[i] = (-drow_dlon[i] * delta_col[iter_[i]] + dcol_dlon[i] * delta_row[iter_[i]]) / det[i];
+
+            // update ground coordinates 
+            lon_iter[i] = lon_iter[i]+delta_lon[i];
+            lat_iter[i] = lat_iter[i]+delta_lat[i];
+        }
+
+
+        //reconsrtruction of lon/lat
+        for(int i =0;i<int(iter_.size());++i){
+            lon[iter_[i]] = lon_iter[i];
+            lat[iter_[i]] = lat_iter[i];
+        }
+
+        // inverse localization
+        row_estim.resize(len_iter,0.0);
+        col_estim.resize(len_iter,0.0);
+        alt_estim.resize(len_iter,0.0);
+
+        tie(row_estim, col_estim, alt_estim) = inverse_loc(lon_iter, lat_iter, alt_iter);
+        //5e-11 = maxerror w/r to python and alt_estim useless
+
+        // updating the residue between the sensor positions
+        // and those estimated by the inverse localization
+        for (int i =0;i<int(len_iter);++i){
+            delta_col[iter_[i]] = col_local[iter_[i]] - col_estim[i];
+            delta_row[iter_[i]] = row_local[iter_[i]] - row_estim[i];
+        }
+        ++iteration;
+    }
+
+    int i_lon = 0;
+    for (int i =0;i<int(long_out.size());++i){
+        if(filter_nan[i]){
+            long_out[i] = lon[i_lon];//long_out[filter_nan] = lon
+            lat_out[i] = lat[i_lon];
+            ++i_lon;
+        }else{
+
+        }
+    }
+
+    return make_tuple(long_out, lat_out, alt_local);
 }
 
 vector<double> RPC::get_alt_min_max(){
@@ -324,19 +591,37 @@ double derivative_polynomial_latitude(
     double lon_norm,
     double lat_norm,
     double alt_norm,
-    vector<double> coeff){
-    double res;
-    return res;
-}
+    array<double, 20> coeff){
 
+    return
+        coeff[2]
+        + coeff[4] * lon_norm
+        + coeff[6] * alt_norm
+        + 2 * coeff[8] * lat_norm
+        + coeff[10] * lon_norm * alt_norm
+        + 2 * coeff[12] * lon_norm * lat_norm
+        + coeff[14] * lon_norm*lon_norm
+        + 3 * coeff[15] * lat_norm*lat_norm
+        + coeff[16] * alt_norm*alt_norm
+        + 2 * coeff[18] * lat_norm * alt_norm;
+}
 
 double derivative_polynomial_longitude(
     double lon_norm,
     double lat_norm,
     double alt_norm,
-    vector<double> coeff){
-    double res;
-    return res;
+    array<double, 20> coeff){
+    return
+        coeff[1]
+        + coeff[4] * lat_norm
+        + coeff[5] * alt_norm
+        + 2 * coeff[7] * lon_norm
+        + coeff[10] * lat_norm * alt_norm
+        + 3 * coeff[11] * lon_norm*lon_norm
+        + coeff[12] * lat_norm*lat_norm
+        + coeff[13] * alt_norm*alt_norm
+        + 2 * coeff[14] * lat_norm * lon_norm
+        + 2 * coeff[17] * lon_norm * alt_norm;
 }
 
 
@@ -347,15 +632,59 @@ vector<double>> compute_loc_inverse_derivates_optimized(
     vector<double> lon_norm,
     vector<double> lat_norm,
     vector<double> alt_norm,
-    vector<double> num_col,
-    vector<double> den_col,
-    vector<double> num_lin,
-    vector<double> den_lin,
+    array<double, 20> num_col,
+    array<double, 20> den_col,
+    array<double, 20> num_lin,
+    array<double, 20> den_lin,
     double scale_col,
     double scale_lon,
     double scale_lin,
     double scale_lat
 ){
-    tuple<vector<double>,vector<double>,vector<double>,vector<double>> res;
-    return res;
+    size_t nbr_points = lon_norm.size();
+    vector<double> dcol_dlon (nbr_points);
+    vector<double> dcol_dlat (nbr_points);
+    vector<double> drow_dlon (nbr_points);
+    vector<double> drow_dlat (nbr_points);
+
+    double num_dcol;
+    double den_dcol;
+    double num_drow;
+    double den_drow;
+
+    double num_dcol_dlon;
+    double den_dcol_dlon;
+    double num_drow_dlon;
+    double den_drow_dlon;
+
+    double num_dcol_dlat;
+    double den_dcol_dlat;
+    double num_drow_dlat;
+    double den_drow_dlat;
+
+    for (int i = 0; i < int(nbr_points); ++i){
+
+        num_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], num_col);
+        den_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], den_col);
+        num_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], num_lin);
+        den_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], den_lin);
+
+        num_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], num_col);
+        den_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], den_col);
+        num_drow_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], num_lin);
+        den_drow_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], den_lin);
+
+        num_dcol_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], num_col);
+        den_dcol_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], den_col);
+        num_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], num_lin);
+        den_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], den_lin);
+
+        dcol_dlon[i] = scale_col / scale_lon * (num_dcol_dlon * den_dcol - den_dcol_dlon * num_dcol) / (den_dcol*den_dcol);
+        dcol_dlat[i] = scale_col / scale_lat * (num_dcol_dlat * den_dcol - den_dcol_dlat * num_dcol) / (den_dcol*den_dcol);
+        drow_dlon[i] = scale_lin / scale_lon * (num_drow_dlon * den_drow - den_drow_dlon * num_drow) / (den_drow*den_drow);
+        drow_dlat[i] = scale_lin / scale_lat * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / (den_drow*den_drow);
+
+    }
+
+    return make_tuple(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat);
 }

@@ -471,6 +471,7 @@ class RPC(GeoModelTemplate):
         :return: ground position (lon,lat,h)
         :rtype: list of numpy.array
         """
+
         if self.inverse_coefficient:
             if not isinstance(row, (list, np.ndarray)):
                 col = np.array([col])
@@ -483,13 +484,14 @@ class RPC(GeoModelTemplate):
                 alt = np.full(col.shape[0], fill_value=alt[0])
 
             filter_nan, long_out, lat_out = self.filter_coordinates(row, col, fill_nan)
-            row = row[filter_nan]
-            col = col[filter_nan]
-            alt = alt[filter_nan]
 
             # if all coord contains Nan then return
             if not np.any(filter_nan):
-                return long_out, lat_out, alt
+                return long_out, lat_out, alt[filter_nan]
+
+            row = row[filter_nan]
+            col = col[filter_nan]
+            alt = alt[filter_nan]
 
             # inverse localization starting from the center of the scene
             lon = np.array([self.offset_x])
@@ -507,8 +509,10 @@ class RPC(GeoModelTemplate):
             # ground coordinates (latitude and longitude) of each point
             lon = np.repeat(lon, delta_col.size)
             lat = np.repeat(lat, delta_col.size)
+
             # while the required precision is not achieved
             while (np.max(abs(delta_col)) > eps or np.max(abs(delta_row)) > eps) and iteration < nb_iter_max:
+
                 # list of points that require another iteration
                 iter_ = np.where((abs(delta_col) > eps) | (abs(delta_row) > eps))[0]
 
@@ -516,6 +520,7 @@ class RPC(GeoModelTemplate):
                 (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = self.compute_loc_inverse_derivates(
                     lon[iter_], lat[iter_], alt[iter_]
                 )
+
                 det = dcol_dlon * drow_dlat - drow_dlon * dcol_dlat
 
                 delta_lon = (drow_dlat * delta_col[iter_] - dcol_dlat * delta_row[iter_]) / det
@@ -531,6 +536,7 @@ class RPC(GeoModelTemplate):
                 # updating the residue between the sensor positions and those estimated by the inverse localization
                 delta_col[iter_] = col[iter_] - col_estim
                 delta_row[iter_] = row[iter_] - row_estim
+
                 iteration += 1
 
             long_out[filter_nan] = lon

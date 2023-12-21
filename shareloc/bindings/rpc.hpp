@@ -109,6 +109,12 @@ public:
         double col,
         string dtm);//override + dtm is a python class not a string
 
+    /**inverse_loc unitary*/
+    tuple<double,double,double> inverse_loc(
+        double lon,
+        double lat,
+        double alt);
+
     /**inverse_loc*/
     tuple<vector<double>,vector<double>,vector<double>> inverse_loc(
         vector<double> lon,
@@ -130,6 +136,15 @@ public:
         vector<double> lon,
         vector<double> lat,
         vector<double> alt);
+
+    /**compute_loc_inverse_derivates unitary*/
+    tuple<double,
+    double,
+    double,
+    double> compute_loc_inverse_derivates(
+        double lon,
+        double lat,
+        double alt);
 
     /**direct_loc_inverse_iterative*/
     tuple<vector<double>,vector<double>,vector<double>> direct_loc_inverse_iterative(
@@ -203,6 +218,22 @@ double polynomial_equation(
     double znorm,
     array<double, 20> coeff);
 
+/** compute_rational_function_polynomial unitary*/
+tuple<double,double> compute_rational_function_polynomial_unitary(
+    double lon_col_norm,
+    double lat_row_norm,
+    double alt_norm,
+    array<double, 20> num_col,
+    array<double, 20> den_col,
+    array<double, 20> num_lin,
+    array<double, 20> den_lin,
+    double scale_col,
+    double offset_col,
+    double scale_lin,
+    double offset_lin
+);
+
+
 /**Compute rational function polynomial. Useful to compute direct and inverse localization
         "using direct or inverse RPC."*/
 tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
@@ -217,6 +248,24 @@ tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
     double offset_col,
     double scale_lin,
     double offset_lin
+);
+
+/**Analytically compute the partials derivatives of inverse localization for only one point*/
+tuple<double,
+double,
+double,
+double> compute_loc_inverse_derivates_optimized_unitary(
+    double lon_norm,
+    double lat_norm,
+    double alt_norm,
+    array<double, 20> num_col,
+    array<double, 20> den_col,
+    array<double, 20> num_lin,
+    array<double, 20> den_lin,
+    double scale_col,
+    double scale_lon,
+    double scale_lin,
+    double scale_lat
 );
 
 /**Analytically compute the partials derivatives of inverse localization*/

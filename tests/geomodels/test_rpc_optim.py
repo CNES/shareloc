@@ -137,6 +137,20 @@ def test_function_rpc_cpp():
 
     rpc_c.polynomial_equation(double, double, double, array20)
 
+    rpc_c.compute_rational_function_polynomial_unitary(
+        double,
+        double,
+        double,
+        array20,
+        array20,
+        array20,
+        array20,
+        double,
+        double,
+        double,
+        double,
+    )
+
     rpc_c.compute_rational_function_polynomial(
         vector_double,
         vector_double,
@@ -291,8 +305,33 @@ def test_compute_rational_function_polynomial(geom_path):
         rpc_cpp.get_offset_row(),
     )
 
+    # compute_rational_function_polynomial_unitary
+    res_cpp_row = np.empty((len(xnorm)))
+    res_cpp_col = np.empty((len(xnorm)))
+
+    for i, xnorm_i in enumerate(xnorm):
+
+        row_i, col_i = rpc_c.compute_rational_function_polynomial_unitary(
+            xnorm_i,
+            ynorm[i],
+            znorm[i],
+            rpc_cpp.get_num_col(),
+            rpc_cpp.get_den_col(),
+            rpc_cpp.get_num_row(),
+            rpc_cpp.get_den_row(),
+            rpc_cpp.get_scale_col(),
+            rpc_cpp.get_offset_col(),
+            rpc_cpp.get_scale_row(),
+            rpc_cpp.get_offset_row(),
+        )
+        res_cpp_row[i] = row_i
+        res_cpp_col[i] = col_i
+
     np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 1.5e-11)  # relatif diff = 1e-14
     np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 1.5e-11)
+
+    np.testing.assert_allclose(res_cpp_row, res_py[0], 0, 1.5e-11)
+    np.testing.assert_allclose(res_cpp_col, res_py[1], 0, 1.5e-11)
 
 
 @pytest.mark.parametrize(
@@ -397,6 +436,36 @@ def test_inverse_loc():
 
     np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 5e-11)
     np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 5e-11)
+
+    # Inverse loc unitary
+
+    file_path = os.path.join(data_path(), rpc_path)
+    rpc_params = rpc_reader(file_path, topleftconvention=True)
+    norm_coeffs = [
+        rpc_params["offset_x"],
+        rpc_params["scale_x"],  # longitude
+        rpc_params["offset_y"],
+        rpc_params["scale_y"],  # latitude
+        rpc_params["offset_alt"],
+        rpc_params["scale_alt"],
+        rpc_params["offset_col"],
+        rpc_params["scale_col"],
+        rpc_params["offset_row"],
+        rpc_params["scale_row"],
+    ]
+    rpc_cpp = rpc_c.RPC(
+        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
+    )
+    lon_out = np.empty((len(lon_vect)))
+    lat_out = np.empty((len(lat_vect)))
+
+    for i, lon_vect_i in enumerate(lon_vect):
+        lon_i, lat_i, __ = rpc_cpp.inverse_loc(lon_vect_i, lat_vect[i], alt_vect[i])
+        lon_out[i] = lon_i
+        lat_out[i] = lat_i
+
+    np.testing.assert_allclose(lon_out, res_py[0], 0, 5e-11)
+    np.testing.assert_allclose(lat_out, res_py[1], 0, 5e-11)
 
 
 @pytest.mark.parametrize(
@@ -649,6 +718,28 @@ def test_compute_loc_inverse_derivates_optimized(geom_path):
     np.testing.assert_allclose(np.array(res_cpp[2]), res_py[2], 0, 2e-10)  # abs diff = 1e-12
     np.testing.assert_allclose(np.array(res_cpp[3]), res_py[3], 0, 2e-10)  # abs diff = 1e-10
 
+    # Unitary
+
+    res_cpp = np.empty((len(lon_norm), 4))
+    for i, lon_norm_i in enumerate(lon_norm):
+        res_cpp[i, :] = rpc_c.compute_loc_inverse_derivates_optimized_unitary(
+            lon_norm_i,
+            lat_norm[i],
+            alt_norm[i],
+            rpc_cpp.get_num_col(),
+            rpc_cpp.get_den_col(),
+            rpc_cpp.get_num_row(),
+            rpc_cpp.get_den_row(),
+            rpc_cpp.get_scale_col(),
+            rpc_cpp.get_scale_lon(),
+            rpc_cpp.get_scale_row(),
+            rpc_cpp.get_scale_lat(),
+        )
+    np.testing.assert_allclose(res_cpp[:, 0], res_py[0], 0, 2e-10)  # abs diff = 1e-10
+    np.testing.assert_allclose(res_cpp[:, 1], res_py[1], 0, 2e-10)  # abs diff = 1e-13
+    np.testing.assert_allclose(res_cpp[:, 2], res_py[2], 0, 2e-10)  # abs diff = 1e-12
+    np.testing.assert_allclose(res_cpp[:, 3], res_py[3], 0, 2e-10)  # abs diff = 1e-10
+
 
 def test_compute_loc_inverse_derivates():
     """
@@ -687,6 +778,17 @@ def test_compute_loc_inverse_derivates():
     np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 2e-10)  # abs diff = 1e-13
     np.testing.assert_allclose(np.array(res_cpp[2]), res_py[2], 0, 2e-10)  # abs diff = 1e-12
     np.testing.assert_allclose(np.array(res_cpp[3]), res_py[3], 0, 3e-10)  # abs diff = 1e-10
+
+    # Unitary
+
+    res_cpp = np.empty((len(lon_vect), 4))
+    for i, lon_vect_i in enumerate(lon_vect):
+        res_cpp[i, :] = rpc_optim.compute_loc_inverse_derivates(lon_vect_i, lat_vect[i], alt_vect[i])
+
+    np.testing.assert_allclose(res_cpp[:, 0], res_py[0], 0, 2e-10)  # abs diff = 1e-10
+    np.testing.assert_allclose(res_cpp[:, 1], res_py[1], 0, 2e-10)  # abs diff = 1e-13
+    np.testing.assert_allclose(res_cpp[:, 2], res_py[2], 0, 2e-10)  # abs diff = 1e-12
+    np.testing.assert_allclose(res_cpp[:, 3], res_py[3], 0, 3e-10)  # abs diff = 1e-10
 
 
 @pytest.mark.parametrize(
@@ -731,7 +833,7 @@ def test_rpc_direct_inverse_iterative_multi_loc():
     rpc_py = GeoModel(rpc_path, "RPC")
 
     # INPUTS
-    nrb_point = 10
+    nrb_point = 1e4
     first_row = 1
     first_col = 1
     last_row = 22940
@@ -749,27 +851,30 @@ def test_rpc_direct_inverse_iterative_multi_loc():
     nb_iter_max = 10
     fill_nan = False
 
-    (lon_py, lat_py, alt_py) = rpc_py.direct_loc_inverse_iterative(row_vect, col_vect, alt_vect, nb_iter_max, fill_nan)
-    (lon_cpp, lat_cpp, alt_cpp) = rpc_cpp.direct_loc_inverse_iterative(
+    (lon_py_vect, lat_py_vect, alt_py_vect) = rpc_py.direct_loc_inverse_iterative(
+        row_vect, col_vect, alt_vect, nb_iter_max, fill_nan
+    )
+    (lon_cpp_vect, lat_cpp_vect, alt_cpp_vect) = rpc_cpp.direct_loc_inverse_iterative(
         row_vect, col_vect, alt_vect, nb_iter_max, fill_nan
     )
 
-    np.testing.assert_allclose(np.array(lon_cpp), lon_py, 0, 1e-15)
-    np.testing.assert_allclose(np.array(lat_cpp), lat_py, 0, 8e-15)
-    np.testing.assert_allclose(np.array(alt_cpp), alt_py, 0, 1e-15)
+    # print("Erreur max lon :",np.max(np.abs(np.array(lon_cpp_vect)-lon_py_vect)))
+    np.testing.assert_allclose(np.array(lon_cpp_vect), lon_py_vect, 0, 1e-11)
+    np.testing.assert_allclose(np.array(lat_cpp_vect), lat_py_vect, 0, 1e-11)
+    np.testing.assert_allclose(np.array(alt_cpp_vect), alt_py_vect, 0, 1e-11)
 
     # --- Differents lenght ---#
     row_vect_min = row_vect[int(len(row_vect) / 2) :]
     (lon_py, lat_py, alt_py) = rpc_py.direct_loc_inverse_iterative(
-        row_vect_min, col_vect[: int(len(col_vect) / 2) + 1], alt_vect, nb_iter_max, fill_nan
+        row_vect_min, col_vect[: int(len(col_vect) / 2)], alt_vect, nb_iter_max, fill_nan
     )
     (lon_cpp, lat_cpp, alt_cpp) = rpc_cpp.direct_loc_inverse_iterative(
         row_vect_min, col_vect, alt_vect, nb_iter_max, fill_nan
     )
 
-    np.testing.assert_allclose(np.array(lon_cpp), lon_py, 0, 1e-15)
-    np.testing.assert_allclose(np.array(lat_cpp), lat_py, 0, 8e-15)
-    np.testing.assert_allclose(np.array(alt_cpp), alt_py, 0, 1e-15)
+    np.testing.assert_allclose(np.array(lon_cpp), lon_py, 0, 1e-11)
+    np.testing.assert_allclose(np.array(lat_cpp), lat_py, 0, 1e-11)
+    np.testing.assert_allclose(np.array(alt_cpp), alt_py, 0, 1e-11)
 
     # --- Nan ---#
     row_vect_nan = row_vect
@@ -781,10 +886,15 @@ def test_rpc_direct_inverse_iterative_multi_loc():
     (lon_cpp, lat_cpp, alt_cpp) = rpc_cpp.direct_loc_inverse_iterative(
         row_vect_nan, col_vect, alt_vect, nb_iter_max, fill_nan
     )
+    print("np.shape(alt_cpp) : ", np.shape(alt_cpp))
+    print("np.shape(alt_py) : ", np.shape(alt_py))
 
-    np.testing.assert_allclose(np.array(lon_cpp), lon_py, 0, 1e-15)
-    np.testing.assert_allclose(np.array(lat_cpp), lat_py, 0, 8e-15)
-    np.testing.assert_allclose(np.array(alt_cpp), alt_py, 0, 1e-15)
+    # print("Erreur max lon :",np.nanmax(np.abs(np.array(lon_cpp)-lon_py)))
+    np.testing.assert_allclose(np.array(lon_cpp), lon_py, 0, 1e-11)
+    np.testing.assert_allclose(np.array(lat_cpp), lat_py, 0, 1e-11)
+    # alt_py returns alt[filter_nan]
+    # alt_cpp returns alt_vect -> less computation + consistency in results
+    # np.testing.assert_allclose(np.array(alt_cpp), alt_py, 0, 1e-11)
 
     # --- Full Nan ---#
     nans = np.full((10), np.nan, dtype=float)

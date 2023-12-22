@@ -35,11 +35,14 @@ import rasterio
 
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
+from shareloc.geofunctions.localization import coloc
 from shareloc.geofunctions.rectification import (  # write_epipolar_grid,
     compute_epipolar_angle,
     compute_stereorectification_epipolar_grids,
+    compute_strip_of_epipolar_grid,
     get_epipolar_extent,
     moving_along_axis,
+    positions_to_displacement_grid,
     prepare_rectification,
 )
 from shareloc.geofunctions.rectification_grid import RectificationGrid
@@ -93,8 +96,8 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc():
 
     # Check mean_baseline_ratio
     # ground truth mean baseline ratio from OTB
-    referecne_mean_br = 0.704004705
-    assert mean_br == pytest.approx(referecne_mean_br, abs=1e-5)
+    reference_mean_br = 0.704004705
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-5)
 
 
 @pytest.mark.unit_tests
@@ -505,7 +508,7 @@ def test_rectification_moving_along_lines():
         default_elev,
         epi_step,
         alphas,
-        0,
+        1,
     )
 
     np.testing.assert_array_equal(reference_next_cords, next_cords)
@@ -537,7 +540,7 @@ def test_rectification_moving_to_next_line():
         default_elev,
         epi_step,
         alphas,
-        1,
+        0,
     )
 
     np.testing.assert_array_equal(reference_next_cords, next_cords)
@@ -677,3 +680,336 @@ def test_rectification_grid_pos_inside_prepare_footprint_bounding_box():
     # Test that grid_footprint is in epipolar footprint
     assert np.all(np.logical_and(min_row < grid_footprint[:, 0], grid_footprint[:, 0] < max_row))
     assert np.all(np.logical_and(min_col < grid_footprint[:, 1], grid_footprint[:, 1] < max_col))
+
+
+# temporary function
+# pylint: disable=duplicate-code
+def prepare_compute_strip_grid(left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset):
+    """
+    This function is an helper to test compute_strip_of_epipolar_lines
+    :param left_im: left image
+    :type left_im: shareloc.image object
+    :param geom_model_left: geometric model of the left image
+    :type geom_model_left: shareloc.grid or  shareloc.rpc
+    :param geom_model_right: geometric model of the right image
+    :type geom_model_right: shareloc.grid or  shareloc.rpc
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float
+    :param epi_step: epipolar step
+    :type epi_step: int
+    :param elevation_offset: elevation difference used to estimate the local tangent
+    :type elevation_offset: float
+
+    returns the grid shape and first position
+    """
+
+    __, grid_size, __, footprint = prepare_rectification(
+        left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset
+    )
+    # Starting points are the upper-left origin of the left epipolar image, and it's correspondent in the right image
+    start_left = np.array(np.copy(footprint[0]))
+    start_left = np.reshape(start_left, (1, -1))
+
+    start_right = np.zeros(3, dtype=start_left.dtype)
+    start_right = np.reshape(start_right, (1, -1))
+    init_row, init_col, init_alt = coloc(
+        geom_model_left, geom_model_right, start_left[:, 0], start_left[:, 1], elevation
+    )
+    # Convert ndarray coloc output into float 64 (Bug python3.9 et 3.10 not allowed anymore)
+    # TODO: clean epipolar grids generation conversion globally with refacto/optimization
+    start_right[:, 0] = init_row[0]
+    start_right[:, 1] = init_col[0]
+    start_right[:, 2] = init_alt[0]
+
+    current_left_point = np.array(np.copy(footprint[0]))
+    current_right_point = np.copy(np.squeeze(start_right))
+
+    current_left_point = current_left_point[np.newaxis, np.newaxis, :]
+    current_right_point = current_right_point[np.newaxis, np.newaxis, :]
+    return grid_size, current_left_point, current_right_point
+
+
+@pytest.mark.unit_tests
+def test_compute_strip_of_epipolar_grid_columns_lines_rectangular():
+    """
+    Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
+    test with non squared grid
+
+    Input Geomodels: RPC
+    Earth elevation: default to 0.0
+    """
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
+
+    epi_step = 30
+    elevation_offset = 50
+    default_elev = 0.0
+
+    # Use the mean spacing as before
+    spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
+    grid_size, left_position_point, right_position_point = prepare_compute_strip_grid(
+        left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
+    )
+
+    # Change size to make the grid rectangular
+    grid_size[0] = 21
+
+    left_grid, right_grid, alphas, mean_br_col = compute_strip_of_epipolar_grid(
+        geom_model_left,
+        geom_model_right,
+        left_position_point,
+        right_position_point,
+        spacing,
+        axis=0,
+        strip_size=grid_size[0],
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+    )
+
+    left_grid, right_grid, alphas, mean_br = compute_strip_of_epipolar_grid(
+        geom_model_left,
+        geom_model_right,
+        left_grid,
+        right_grid,
+        spacing,
+        axis=1,
+        strip_size=grid_size[1],
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+        epipolar_angles=alphas,
+    )
+    mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
+        grid_size[1] * grid_size[0]
+    )
+
+    # OTB reference
+    reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_positions_grid_left.tif")).read()
+    reference_right_grid = rasterio.open(
+        os.path.join(data_path(), "rectification", "gt_positions_grid_right.tif")
+    ).read()
+
+    # Check epipolar grids
+    np.testing.assert_allclose(reference_left_grid[0][:21, :], left_grid[:, :, 1], rtol=0, atol=2e-9)
+    np.testing.assert_allclose(reference_left_grid[1][:21, :], left_grid[:, :, 0], rtol=0, atol=2e-9)
+
+    np.testing.assert_allclose(reference_right_grid[0][:21, :], right_grid[:, :, 1], rtol=0, atol=2e-9)
+    np.testing.assert_allclose(reference_right_grid[1][:21, :], right_grid[:, :, 0], rtol=0, atol=2e-9)
+
+    # Check mean_baseline_ratio
+    reference_mean_br = 0.7024809
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-5)
+
+
+@pytest.mark.unit_tests
+def test_compute_strip_of_epipolar_grid_columns_lines():
+    """
+    Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
+
+    Input Geomodels: RPC
+    Earth elevation: default to 0.0
+    """
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
+
+    epi_step = 30
+    elevation_offset = 50
+    default_elev = 0.0
+
+    # Use the mean spacing as before
+    spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
+
+    grid_size, left_position_point, right_position_point = prepare_compute_strip_grid(
+        left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
+    )
+
+    left_grid, right_grid, alphas, mean_br_col = compute_strip_of_epipolar_grid(
+        geom_model_left,
+        geom_model_right,
+        left_position_point,
+        right_position_point,
+        spacing,
+        axis=0,
+        strip_size=grid_size[0],
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+    )
+
+    left_grid, right_grid, alphas, mean_br = compute_strip_of_epipolar_grid(
+        geom_model_left,
+        geom_model_right,
+        left_grid,
+        right_grid,
+        spacing,
+        axis=1,
+        strip_size=grid_size[1],
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+        epipolar_angles=alphas,
+    )
+    mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
+        grid_size[1] * grid_size[0]
+    )
+
+    # shareloc reference
+    reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_positions_grid_left.tif")).read()
+    reference_right_grid = rasterio.open(
+        os.path.join(data_path(), "rectification", "gt_positions_grid_right.tif")
+    ).read()
+
+    # Check epipolar grids
+    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], rtol=0, atol=2e-9)
+    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], rtol=0, atol=2e-9)
+
+    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], rtol=0, atol=2e-9)
+    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], rtol=0, atol=2e-9)
+
+    # Check mean_baseline_ratio
+    # ground truth mean baseline ratio
+    reference_mean_br = 0.7040047235162911
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-6)
+
+
+@pytest.mark.unit_tests
+def test_compute_strip_of_epipolar_grid_lines_columns():
+    """
+    Test epipolar grids generation : check epipolar grids, epipolar image size, mean_baseline_ratio
+
+    Input Geomodels: RPC
+    Earth elevation: default to 0.0
+    """
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
+
+    epi_step = 30
+    elevation_offset = 50
+    default_elev = 0.0
+
+    # Use the mean spacing as before
+    spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
+
+    grid_size, left_position_point, right_position_point = prepare_compute_strip_grid(
+        left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
+    )
+
+    left_grid, right_grid, alphas, mean_br_line = compute_strip_of_epipolar_grid(
+        geom_model_left,
+        geom_model_right,
+        left_position_point,
+        right_position_point,
+        spacing,
+        axis=1,
+        strip_size=grid_size[1],
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+    )
+
+    left_grid, right_grid, _, mean_br = compute_strip_of_epipolar_grid(
+        geom_model_left,
+        geom_model_right,
+        left_grid,
+        right_grid,
+        spacing,
+        axis=0,
+        strip_size=grid_size[0],
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+        epipolar_angles=alphas,
+    )
+    mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_line * grid_size[0]) / (
+        grid_size[1] * grid_size[0]
+    )
+
+    # OTB reference
+    reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_positions_grid_left.tif")).read()
+    reference_right_grid = rasterio.open(
+        os.path.join(data_path(), "rectification", "gt_positions_grid_right.tif")
+    ).read()
+
+    # Check epipolar grids
+    assert reference_left_grid[1] == pytest.approx(left_grid[:, :, 0], abs=1e-2)
+    assert reference_left_grid[0] == pytest.approx(left_grid[:, :, 1], abs=1e-2)
+
+    assert reference_right_grid[1] == pytest.approx(right_grid[:, :, 0], abs=1e-2)
+    assert reference_right_grid[0] == pytest.approx(right_grid[:, :, 1], abs=1e-2)
+
+    # Check mean_baseline_ratio
+    # ground truth mean baseline ratio
+    reference_mean_br = 0.7040047235162911
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-5)
+
+
+@pytest.mark.unit_tests
+def test_positions_to_displacement_grid():
+    """
+    Test displacement grids generation : check epipolar grids
+
+    Input Geomodels: RPC
+    Earth elevation: default to 0.0
+    """
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+
+    geom_model_left = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_right = GeoModel(os.path.join(data_path(), "rectification", "right_image.geom"))
+
+    epi_step = 30
+    elevation_offset = 50
+    default_elev = 0.0
+
+    # Use the mean spacing as before
+    spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
+
+    grid_size, left_position_point, right_position_point = prepare_compute_strip_grid(
+        left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
+    )
+
+    left_grid, right_grid, alphas, _ = compute_strip_of_epipolar_grid(
+        geom_model_left,
+        geom_model_right,
+        left_position_point,
+        right_position_point,
+        spacing,
+        axis=0,
+        strip_size=grid_size[0],
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+    )
+
+    left_grid, right_grid, _, _ = compute_strip_of_epipolar_grid(
+        geom_model_left,
+        geom_model_right,
+        left_grid,
+        right_grid,
+        spacing,
+        axis=1,
+        strip_size=grid_size[1],
+        epi_step=epi_step,
+        elevation=default_elev,
+        elevation_offset=elevation_offset,
+        epipolar_angles=alphas,
+    )
+
+    left_grid, right_grid = positions_to_displacement_grid(left_grid, right_grid, epi_step)
+
+    # OTB reference
+    reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid.tif")).read()
+    reference_right_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_right_grid.tif")).read()
+
+    # Check epipolar grids
+    assert reference_left_grid[1] == pytest.approx(left_grid[:, :, 0], abs=1e-2)
+    assert reference_left_grid[0] == pytest.approx(left_grid[:, :, 1], abs=1e-2)
+
+    assert reference_right_grid[1] == pytest.approx(right_grid[:, :, 0], abs=1e-2)
+    assert reference_right_grid[0] == pytest.approx(right_grid[:, :, 1], abs=1e-2)

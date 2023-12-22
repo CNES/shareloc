@@ -39,7 +39,11 @@ from shareloc.geomodels import GeoModel
 # Shareloc imports
 from shareloc.geomodels.grid import coloc
 from shareloc.image import Image
-from shareloc.proj_utils import coordinates_conversion
+from shareloc.proj_utils import (
+    coordinates_conversion,
+    transform_index_to_physical_point,
+    transform_physical_point_to_index,
+)
 
 # Shareloc test imports
 from ..helpers import data_path
@@ -352,11 +356,11 @@ def test_image_metadata(image_name, row, col, origin_row, origin_col, pixel_size
     assert my_image.pixel_size_row == pixel_size_row
     assert my_image.pixel_size_col == pixel_size_col
 
-    [phys_row, phys_col] = my_image.transform_index_to_physical_point(row, col)
+    [phys_row, phys_col] = transform_index_to_physical_point(my_image.transform, row, col)
     assert phys_row == origin_row + (row + 0.5) * pixel_size_row
     assert phys_col == origin_col + (col + 0.5) * pixel_size_col
 
-    row_index, col_index = my_image.transform_physical_point_to_index(phys_row, phys_col)
+    row_index, col_index = transform_physical_point_to_index(my_image.trans_inv, phys_row, phys_col)
     assert row == row_index
     assert col == col_index
 

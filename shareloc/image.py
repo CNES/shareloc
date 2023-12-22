@@ -32,8 +32,12 @@ import numpy as np
 import rasterio
 from affine import Affine
 
+# Project import
+from shareloc.proj_utils import transform_physical_point_to_index
+
 
 # pylint: disable=too-many-instance-attributes
+# pylint: disable=too-few-public-methods
 class Image:
     """
     class Image to handle image data
@@ -71,8 +75,8 @@ class Image:
             if roi is not None:
                 # User have set ROI in physical space or not
                 if roi_is_in_physical_space:
-                    row_off, col_off = self.transform_physical_point_to_index(roi[0], roi[1])
-                    row_max, col_max = self.transform_physical_point_to_index(roi[2], roi[3])
+                    row_off, col_off = transform_physical_point_to_index(self.trans_inv, roi[0], roi[1])
+                    row_max, col_max = transform_physical_point_to_index(self.trans_inv, roi[2], roi[3])
                     # index is relative to pixel center, here the roi is defined with corners
                     row_off += 0.5
                     col_off += 0.5
@@ -163,33 +167,3 @@ class Image:
         self.pixel_size_col = transform[0]
 
         self.data = np.zeros((nb_band, nb_row, nb_col), dtype=datatype)
-
-    def transform_index_to_physical_point(self, row, col):
-        """
-        Transform index to physical point
-
-        :param row: row index
-        :type row: float or 1D np.array
-        :param col: col index
-        :type col: float or 1D np.array
-        :return: Georeferenced coordinates (row, col)
-        :rtype: Tuple(georeference row float or 1D np.array, georeference col float or 1D np.array)
-        """
-
-        trans = self.transform
-        col_geo, row_geo = trans * (col + 0.5, row + 0.5)
-        return row_geo, col_geo
-
-    def transform_physical_point_to_index(self, row_geo, col_geo):
-        """
-        Transform physical point to index
-
-        :param row_geo: physical point row
-        :type row_geo: float or 1D np.array
-        :param col_geo: physical point col
-        :type col_geo: float or 1D np.array
-        :return: index coordinates (row, col)
-        :rtype: Tuple(row float or 1D np.array, col float or 1D np.array)
-        """
-        col, row = self.trans_inv * (col_geo, row_geo)
-        return row - 0.5, col - 0.5

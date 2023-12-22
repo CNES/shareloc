@@ -508,7 +508,7 @@ def test_rectification_moving_along_lines():
         default_elev,
         epi_step,
         alphas,
-        0,
+        1,
     )
 
     np.testing.assert_array_equal(reference_next_cords, next_cords)
@@ -540,7 +540,7 @@ def test_rectification_moving_to_next_line():
         default_elev,
         epi_step,
         alphas,
-        1,
+        0,
     )
 
     np.testing.assert_array_equal(reference_next_cords, next_cords)
@@ -724,9 +724,9 @@ def prepare_compute_strip_grid(left_im, geom_model_left, geom_model_right, eleva
     current_left_point = np.array(np.copy(footprint[0]))
     current_right_point = np.copy(np.squeeze(start_right))
 
-    position_point = np.vstack((current_left_point, current_right_point))
-    position_point = position_point[:, np.newaxis, np.newaxis, :]
-    return grid_size, position_point
+    current_left_point = current_left_point[np.newaxis, np.newaxis, :]
+    current_right_point = current_right_point[np.newaxis, np.newaxis, :]
+    return grid_size, current_left_point, current_right_point
 
 
 @pytest.mark.unit_tests
@@ -749,32 +749,34 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular():
 
     # Use the mean spacing as before
     spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
-    grid_size, position_point = prepare_compute_strip_grid(
+    grid_size, left_position_point, right_position_point = prepare_compute_strip_grid(
         left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
     # Change size to make the grid rectangular
     grid_size[0] = 21
 
-    grids, alphas, mean_br_col = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br_col = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        grid_size[0],
-        position_point,
+        left_position_point,
+        right_position_point,
         spacing,
-        axis=1,
+        axis=0,
+        strip_size=grid_size[0],
         epi_step=epi_step,
         elevation=default_elev,
         elevation_offset=elevation_offset,
     )
 
-    complete_grids, alphas, mean_br = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        grid_size[1],
-        grids,
+        left_grid,
+        right_grid,
         spacing,
-        axis=0,
+        axis=1,
+        strip_size=grid_size[1],
         epi_step=epi_step,
         elevation=default_elev,
         elevation_offset=elevation_offset,
@@ -783,8 +785,6 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular():
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
         grid_size[1] * grid_size[0]
     )
-    left_grid = complete_grids[0, :, :, :]
-    right_grid = complete_grids[1, :, :, :]
 
     # OTB reference
     reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_positions_grid_left.tif")).read()
@@ -824,29 +824,31 @@ def test_compute_strip_of_epipolar_grid_columns_lines():
     # Use the mean spacing as before
     spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
-    grid_size, position_point = prepare_compute_strip_grid(
+    grid_size, left_position_point, right_position_point = prepare_compute_strip_grid(
         left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
-    grids, alphas, mean_br_col = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br_col = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        grid_size[0],
-        position_point,
+        left_position_point,
+        right_position_point,
         spacing,
-        axis=1,
+        axis=0,
+        strip_size=grid_size[0],
         epi_step=epi_step,
         elevation=default_elev,
         elevation_offset=elevation_offset,
     )
 
-    complete_grids, alphas, mean_br = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        grid_size[1],
-        grids,
+        left_grid,
+        right_grid,
         spacing,
-        axis=0,
+        axis=1,
+        strip_size=grid_size[1],
         epi_step=epi_step,
         elevation=default_elev,
         elevation_offset=elevation_offset,
@@ -855,8 +857,6 @@ def test_compute_strip_of_epipolar_grid_columns_lines():
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
         grid_size[1] * grid_size[0]
     )
-    left_grid = complete_grids[0, :, :, :]
-    right_grid = complete_grids[1, :, :, :]
 
     # shareloc reference
     reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_positions_grid_left.tif")).read()
@@ -897,29 +897,31 @@ def test_compute_strip_of_epipolar_grid_lines_columns():
     # Use the mean spacing as before
     spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
-    grid_size, position_point = prepare_compute_strip_grid(
+    grid_size, left_position_point, right_position_point = prepare_compute_strip_grid(
         left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
-    grids, alphas, mean_br_line = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br_line = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        grid_size[1],
-        position_point,
+        left_position_point,
+        right_position_point,
         spacing,
-        axis=0,
+        axis=1,
+        strip_size=grid_size[1],
         epi_step=epi_step,
         elevation=default_elev,
         elevation_offset=elevation_offset,
     )
 
-    complete_grids, _, mean_br = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, _, mean_br = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        grid_size[0],
-        grids,
+        left_grid,
+        right_grid,
         spacing,
-        axis=1,
+        axis=0,
+        strip_size=grid_size[0],
         epi_step=epi_step,
         elevation=default_elev,
         elevation_offset=elevation_offset,
@@ -928,9 +930,6 @@ def test_compute_strip_of_epipolar_grid_lines_columns():
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_line * grid_size[0]) / (
         grid_size[1] * grid_size[0]
     )
-
-    left_grid = complete_grids[0, :, :, :]
-    right_grid = complete_grids[1, :, :, :]
 
     # OTB reference
     reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_positions_grid_left.tif")).read()
@@ -971,36 +970,38 @@ def test_positions_to_displacement_grid():
     # Use the mean spacing as before
     spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
-    grid_size, position_point = prepare_compute_strip_grid(
+    grid_size, left_position_point, right_position_point = prepare_compute_strip_grid(
         left_im, geom_model_left, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
-    grids, alphas, _ = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, _ = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        grid_size[1],
-        position_point,
+        left_position_point,
+        right_position_point,
         spacing,
-        axis=1,
+        axis=0,
+        strip_size=grid_size[0],
         epi_step=epi_step,
         elevation=default_elev,
         elevation_offset=elevation_offset,
     )
 
-    complete_grids, _, _ = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, _, _ = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        grid_size[0],
-        grids,
+        left_grid,
+        right_grid,
         spacing,
-        axis=0,
+        axis=1,
+        strip_size=grid_size[1],
         epi_step=epi_step,
         elevation=default_elev,
         elevation_offset=elevation_offset,
         epipolar_angles=alphas,
     )
 
-    left_grid, right_grid = positions_to_displacement_grid(complete_grids, epi_step)
+    left_grid, right_grid = positions_to_displacement_grid(left_grid, right_grid, epi_step)
 
     # OTB reference
     reference_left_grid = rasterio.open(os.path.join(data_path(), "rectification", "gt_left_grid.tif")).read()

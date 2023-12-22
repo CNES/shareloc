@@ -334,28 +334,35 @@ def initialize_grids(epi_step, nb_row, nb_col):
 
 
 def moving_along_axis(
-    geom_model_left, geom_model_right, current_coords, spacing, elevation, epi_step, epi_angles, axis
-):
+    geom_model_left: GeoModelTemplate,
+    geom_model_right: GeoModelTemplate,
+    current_coords: np.ndarray,
+    spacing: float,
+    elevation: Union[float, DTMIntersection],
+    epi_step: int,
+    epi_angles: np.ndarray,
+    axis: int,
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Moving to the next line in epipolar geometry
 
     :param geom_model_left: geometric model of the left image
-    :type geom_model_left: GeomodelTemplate
+    :type geom_model_left: GeoModelTemplate
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: GeoModelTemplate
     :param current_coords: current line in the left epipolar geometry
         or current georeferenced coordinates in left epipolar line
     :type current_coords: 1D np.array [row, col, altitude]
         or 2D numpy array (number rows in epipolar geometry, [row, col, altitude])
-    :param spacing: spacing of epipolar grids
-    :type spacing: int
+    :param spacing: image spacing along axis dimension (in general mean image spacing)
+    :type spacing: float
     :param elevation: elevation
     :type elevation: shareloc.dtm or float
     :param epi_step: epipolar step
     :type epi_step: int
     :param epi_angles: epipolar angle
     :type epi_angles: np.ndarray
-    :param axis: displacement direction ( 0 = along lines, 1 = along columns)
+    :param axis: displacement direction (0 = along columns, 1 = along lines)
     :type axis: int
     :return: left and right positions in epipolar grid
     :rtype: Tuple([row, col, altitude], [row, col, altitude])
@@ -366,7 +373,7 @@ def moving_along_axis(
     if axis not in [0, 1]:
         raise ValueError(f"axis value {axis} is not available")
 
-    epi_angles = epi_angles + axis * np.pi / 2
+    epi_angles = epi_angles + (1 - axis) * np.pi / 2
 
     unit_vector_along_epi_x = epi_step * spacing * np.cos(epi_angles)
     unit_vector_along_epi_y = epi_step * spacing * np.sin(epi_angles)
@@ -465,7 +472,7 @@ def compute_stereorectification_epipolar_grids(
             elevation,
             epi_step,
             alpha,
-            1,
+            0,
         )
 
         # Save the starting points, useful to be able to move along the lines in the next loop
@@ -507,7 +514,7 @@ def compute_stereorectification_epipolar_grids(
 
         # Move to the next pixels in the epipolar line (moving along lines)
         left_epi_coords, right_epi_coords = moving_along_axis(
-            geom_model_left, geom_model_right, left_epi_coords, mean_spacing, elevation, epi_step, alphas, 0
+            geom_model_left, geom_model_right, left_epi_coords, mean_spacing, elevation, epi_step, alphas, 1
         )
 
     # Compute the mean baseline ratio
@@ -520,46 +527,49 @@ def compute_stereorectification_epipolar_grids(
 def compute_strip_of_epipolar_grid(
     geom_model_left: GeoModelTemplate,
     geom_model_right: GeoModelTemplate,
-    strip_size: int,
-    positions_point: np.ndarray,
+    left_positions_point: np.ndarray,
+    right_positions_point: np.ndarray,
     spacing: float,
     axis: int,
+    strip_size: int,
     epi_step: int = 1,
     elevation: Union[float, DTMIntersection] = 0.0,
     elevation_offset: float = 50.0,
     epipolar_angles: np.ndarray = None,
-) -> Tuple[np.ndarray, np.ndarray, float]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
     """
     Compute stereo-rectification epipolar grids by strip. We start with a starting positions_point,
     and optional already computed epipolar_angles at these points, and we move strip_size times along axis direction
-    (0 = along lines, 1 = along columns) to compute a strip of epipolar grid. positions_points is a (2,rows,cols,3)
-    array containing at first dim : left and right (rows,cols) 3D coordinates (row,col,alt).  If axis==0 (resp. 1)
+    (0 = along columns, 1 = along lines) to compute a strip of epipolar grid. positions_points is a (rows,cols,3)
+    array containing (rows,cols) 3D coordinates (row,col,alt).  If axis==0 (resp. 1)
     rows (resp. cols) dimension must be 1.
 
     :param geom_model_left: geometric model of the left image
     :type geom_model_left: GeomodelTemplate
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: GeomodelTemplate
-    :param strip_size: desired size of grid along one axis for strip generation
-    :type strip_size: int
-    :param positions_point: array of size (2,rows,cols,3) containing first positions for left/right points
-    :type positions_point: np.ndarray
+    :param left_positions_point: array of size (rows,cols,3) containing positions for left points
+    :type left_positions_point: np.ndarray
+    :param right_positions_point: array of size (rows,cols,3) containing positions for left points
+    :type right_positions_point: np.ndarray
     :param spacing: image spacing along axis dimension (in general mean image spacing)
     :type spacing: float
-    :param axis: displacement direction ( 0 = along lines, 1 = along columns)
+    :param axis: displacement direction (0 = along columns, 1 = along lines)
     :type axis: int
-    :param elevation: elevation
-    :type elevation: shareloc.dtm or float
+    :param strip_size: desired size of grid along one axis for strip generation
+    :type strip_size: int
     :param epi_step: epipolar grid sampling step
     :type epi_step: int
+    :param elevation: elevation
+    :type elevation: shareloc.dtm or float
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
     :param epipolar_angles: 2D array (rows,cols) containing epipolar angles at each grid node (angle in between epipolar
-        coordinate system and left image coordinate system), size must be coherent with positions_point 2nd,3rd dim
+        coordinate system and left image coordinate system), size must be coherent with positions_point 1st,2nd dim
     :type epipolar_angles: np.ndarray
     :return:
-        - left/right epipolar positions grid in shape (2,rows,cols,3) with first dim is (left/right) and rows
-            (resp. cols) is strip_size if axis = 0 (resp. 1)
+        - left  epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
+        - right epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
         - array of epipolar angles (rows,cols)
         - mean baseline ratio of the strip computed on rows x cols elements minus provided epipolar angles shape.
             We consider that if epipolar angles are provided, then baseline ratio for these elements have been
@@ -571,12 +581,14 @@ def compute_strip_of_epipolar_grid(
     mean_baseline_ratio = 0
 
     # compute the output size depending on axis
-    size_shape = (strip_size, positions_point.shape[2], 3) if axis == 1 else (positions_point.shape[1], strip_size, 3)
+    size_shape = (
+        (strip_size, left_positions_point.shape[1], 3) if axis == 0 else (left_positions_point.shape[0], strip_size, 3)
+    )
     epi_angles_out = np.zeros((size_shape[0], size_shape[1]))
 
-    # split left and right
-    current_left_point = positions_point[0, :, :, :]
-    current_right_point = positions_point[1, :, :, :]
+    # rename
+    current_left_point = left_positions_point
+    current_right_point = right_positions_point
 
     # copy first elements in output grids
     left_grid, right_grid = np.zeros(size_shape), np.zeros(size_shape)
@@ -608,7 +620,7 @@ def compute_strip_of_epipolar_grid(
         already_computed_ratio = epipolar_angles.shape[0] * epipolar_angles.shape[1]
     epipolar_angles = np.squeeze(epipolar_angles)
 
-    if axis == 1:
+    if axis == 0:
         epi_angles_out[0, :] = epipolar_angles
     else:
         epi_angles_out[:, 0] = epipolar_angles
@@ -631,7 +643,7 @@ def compute_strip_of_epipolar_grid(
         epipolar_angles = compute_epipolar_angle(local_epi_end, local_epi_start)
 
         # Stock values in good shape
-        if axis == 1:
+        if axis == 0:
             epi_angles_out[point, :] = epipolar_angles
             left_grid[point, :, :] = current_left_point
             right_grid[point, :, :] = current_right_point
@@ -646,16 +658,19 @@ def compute_strip_of_epipolar_grid(
         ) / (2 * elevation_offset)
         mean_baseline_ratio += np.sum(local_baseline_ratio)
 
-    grids = np.stack([left_grid, right_grid])
     # Compute the mean baseline ratio
     mean_baseline_ratio /= left_grid.shape[0] * left_grid.shape[1] - already_computed_ratio
-    return grids, epi_angles_out, mean_baseline_ratio
+    return left_grid, right_grid, epi_angles_out, mean_baseline_ratio
 
 
-def positions_to_displacement_grid(grids, epi_step):
+def positions_to_displacement_grid(
+    left_grid: np.ndarray, right_grid: np.ndarray, epi_step: float
+) -> Tuple[np.ndarray, np.ndarray]:
     """
-    :param grids: epipolar positions grids [left, right]
-    :type grids: np.ndarray
+    :param left_grid: left epipolar positions grids
+    :type left_grid: np.ndarray
+    :param right_grid: right epipolar positions grids
+    :type right_grid: np.ndarray
     :param epi_step: epipolar step
     :type epi_step: float
     :return:
@@ -663,9 +678,6 @@ def positions_to_displacement_grid(grids, epi_step):
         - right epipolar displacement grid, np.ndarray
     :rtype: Tuple(np.ndarray, np.ndarray)
     """
-    left_grid = grids[0]
-    right_grid = grids[1]
-
     rows = np.arange(left_grid.shape[0], dtype=float)
     cols = np.arange(left_grid.shape[1], dtype=float)
 

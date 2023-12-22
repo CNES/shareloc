@@ -216,7 +216,7 @@ double polynomial_equation(
     double xnorm,
     double ynorm,
     double znorm,
-    array<double, 20> coeff);
+    const array<double, 20>* coeff);
 
 /** compute_rational_function_polynomial unitary*/
 tuple<double,double> compute_rational_function_polynomial_unitary(

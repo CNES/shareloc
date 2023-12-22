@@ -539,29 +539,29 @@ double polynomial_equation(
     double xnorm,
     double ynorm,
     double znorm,
-    array<double, 20> coeff){//const array<double, 20>& coeff
+    const array<double, 20>* coeff){//const array<double, 20>& coeff
     
     return
-    coeff[0]
-    + coeff[1] * xnorm
-    + coeff[2] * ynorm
-    + coeff[3] * znorm
-    + coeff[4] * xnorm * ynorm
-    + coeff[5] * xnorm * znorm
-    + coeff[6] * ynorm * znorm
-    + coeff[7] * xnorm*xnorm
-    + coeff[8] * ynorm*ynorm
-    + coeff[9] * znorm*znorm
-    + coeff[10] * xnorm * ynorm * znorm
-    + coeff[11] * xnorm*xnorm*xnorm
-    + coeff[12] * xnorm * ynorm*ynorm
-    + coeff[13] * xnorm * znorm*znorm
-    + coeff[14] * xnorm*xnorm * ynorm
-    + coeff[15] * ynorm*ynorm*ynorm
-    + coeff[16] * ynorm * znorm*znorm
-    + coeff[17] * xnorm*xnorm * znorm
-    + coeff[18] * ynorm*ynorm * znorm
-    + coeff[19] * znorm*znorm*znorm;
+    (*coeff)[0]
+    + (*coeff)[1] * xnorm
+    + (*coeff)[2] * ynorm
+    + (*coeff)[3] * znorm
+    + (*coeff)[4] * xnorm * ynorm
+    + (*coeff)[5] * xnorm * znorm
+    + (*coeff)[6] * ynorm * znorm
+    + (*coeff)[7] * xnorm*xnorm
+    + (*coeff)[8] * ynorm*ynorm
+    + (*coeff)[9] * znorm*znorm
+    + (*coeff)[10] * xnorm * ynorm * znorm
+    + (*coeff)[11] * xnorm*xnorm*xnorm
+    + (*coeff)[12] * xnorm * ynorm*ynorm
+    + (*coeff)[13] * xnorm * znorm*znorm
+    + (*coeff)[14] * xnorm*xnorm * ynorm
+    + (*coeff)[15] * ynorm*ynorm*ynorm
+    + (*coeff)[16] * ynorm * znorm*znorm
+    + (*coeff)[17] * xnorm*xnorm * znorm
+    + (*coeff)[18] * ynorm*ynorm * znorm
+    + (*coeff)[19] * znorm*znorm*znorm;
 }
 
 tuple<double,double> compute_rational_function_polynomial_unitary(
@@ -578,10 +578,10 @@ tuple<double,double> compute_rational_function_polynomial_unitary(
     double offset_lin
 ){
 
-    double poly_num_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, num_col);
-    double poly_den_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, den_col);
-    double poly_num_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, num_lin);
-    double poly_den_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, den_lin);
+    double poly_num_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &num_col);
+    double poly_den_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &den_col);
+    double poly_num_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &num_lin);
+    double poly_den_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &den_lin);
     double col_lat_out = poly_num_col / poly_den_col * scale_col + offset_col;
     double row_lon_out = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
 
@@ -614,10 +614,10 @@ tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
     double poly_num_lin;
     double poly_den_lin;
     for(int i = 0;i<(int)lon_col_norm.size();++i){
-        poly_num_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], num_col);
-        poly_den_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], den_col);
-        poly_num_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], num_lin);
-        poly_den_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], den_lin);
+        poly_num_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], &num_col);
+        poly_den_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], &den_col);
+        poly_num_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], &num_lin);
+        poly_den_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], &den_lin);
         col_lat_out[i] = poly_num_col / poly_den_col * scale_col + offset_col;
         row_lon_out[i] = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
     }
@@ -680,10 +680,10 @@ double> compute_loc_inverse_derivates_optimized_unitary(
     double scale_lat
 ){
 
-    double num_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, num_col);
-    double den_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, den_col);
-    double num_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, num_lin);
-    double den_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, den_lin);
+    double num_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, &num_col);
+    double den_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, &den_col);
+    double num_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, &num_lin);
+    double den_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, &den_lin);
 
     double num_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, num_col);
     double den_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, den_col);
@@ -744,10 +744,10 @@ vector<double>> compute_loc_inverse_derivates_optimized(
 
     for (int i = 0; i < int(nbr_points); ++i){
 
-        num_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], num_col);
-        den_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], den_col);
-        num_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], num_lin);
-        den_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], den_lin);
+        num_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], &num_col);
+        den_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], &den_col);
+        num_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], &num_lin);
+        den_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], &den_lin);
 
         num_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], num_col);
         den_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], den_col);

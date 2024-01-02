@@ -102,4 +102,4 @@ PYBIND11_MODULE(rpc_c, m) {
 }
 
 //c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes)
-//bind.cpp -o pbrpc$(python3-config --extension-suffix)
+//bind.cpp -o rpc_c$(python3-config --extension-suffix)

@@ -17,6 +17,8 @@ Quick install
     
 * Install Shareloc from Pypi
 
+Note that shareloc uses C++ bindings (Pybind11) that are compiled during the installation. If you encounter any problems, make sure to have a C++ compiler compatible with pybind11 or refer to the pybind11 documentation (https://pybind11.readthedocs.io/en/stable/installing.html). 
+
 .. code-block:: console
 
     $ pip install shareloc

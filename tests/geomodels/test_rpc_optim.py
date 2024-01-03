@@ -508,9 +508,6 @@ def test_filter_coordinates(first_coord, second_coord, fill_nan, direction):
     res_cpp = rpc_cpp.filter_coordinates(first_coord, second_coord, fill_nan, direction)
     res_py = rpc_py.filter_coordinates(first_coord, second_coord, fill_nan, direction)
 
-    print("res_cpp : ", res_cpp)
-    print("res_py : ", res_py)
-
     if fill_nan:
         np.testing.assert_array_equal(np.array(res_cpp[0]), res_py[0])
         np.testing.assert_array_equal(np.array(res_cpp[1]), res_py[1])

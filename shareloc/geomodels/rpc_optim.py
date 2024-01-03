@@ -61,14 +61,55 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
             rpc_params["scale_row"],
         ]
 
-        rpc_c.RPC.__init__(
-            self,
-            rpc_params["num_col"],
-            rpc_params["den_col"],
-            rpc_params["num_row"],
-            rpc_params["den_row"],
-            norm_coeffs,
-        )
+        empty = [0 for i in range(20)]
+
+        if rpc_params["num_col"] and rpc_params["num_x"]:  # direct and inverse coef
+            rpc_c.RPC.__init__(
+                self,
+                True,
+                True,
+                rpc_params["num_col"],
+                rpc_params["den_col"],
+                rpc_params["num_row"],
+                rpc_params["den_row"],
+                rpc_params["num_x"],
+                rpc_params["den_x"],
+                rpc_params["num_y"],
+                rpc_params["den_y"],
+                norm_coeffs,
+            )
+        elif rpc_params["num_col"]:  # only inverse coef
+            rpc_c.RPC.__init__(
+                self,
+                True,
+                False,
+                rpc_params["num_col"],
+                rpc_params["den_col"],
+                rpc_params["num_row"],
+                rpc_params["den_row"],
+                empty,
+                empty,
+                empty,
+                empty,
+                norm_coeffs,
+            )
+        elif rpc_params["num_x"]:  # only direct coef
+            rpc_c.RPC.__init__(
+                self,
+                False,
+                True,
+                empty,
+                empty,
+                empty,
+                empty,
+                rpc_params["num_x"],
+                rpc_params["den_x"],
+                rpc_params["num_y"],
+                rpc_params["den_y"],
+                norm_coeffs,
+            )
+        else:
+            raise ValueError("RpcOptim : No RPC coefficients readable")
 
     @classmethod
     def load(cls, geomodel_path):

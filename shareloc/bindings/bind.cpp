@@ -41,7 +41,13 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("inverse_loc", &GeoModelTemplate::inverse_loc);
 
     py::class_<RPC,GeoModelTemplate>(m, "RPC")
-        .def(py::init<array<double, 20>,
+        .def(py::init<bool,
+        bool,
+        array<double, 20>,
+        array<double, 20>,
+        array<double, 20>,
+        array<double, 20>,
+        array<double, 20>,
         array<double, 20>,
         array<double, 20>,
         array<double, 20>,

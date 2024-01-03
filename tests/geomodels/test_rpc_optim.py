@@ -36,10 +36,9 @@ import rpc_c
 # Shareloc imports
 from shareloc.geomodels import GeoModel
 from shareloc.geomodels.rpc import compute_rational_function_polynomial, polynomial_equation
-from shareloc.geomodels.rpc_readers import rpc_reader
 
 # Shareloc test imports
-from ..helpers import data_path
+from ..helpers import data_path, rpc_c_constructor
 
 
 # pylint: disable=duplicate-code
@@ -61,23 +60,7 @@ def test_construtor(geom_path):
     file_path = os.path.join(data_path(), geom_path)
 
     rpc_py = GeoModel(file_path, "RPC")
-
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
 
     assert rpc_py.offset_x == rpc_cpp.get_offset_lon()
     assert rpc_py.scale_x == rpc_cpp.get_scale_lon()
@@ -180,22 +163,7 @@ def test_polynomial_equation(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test)
     xnorm = -0.95821893  # lon_norm
@@ -235,22 +203,7 @@ def test_compute_rational_function_polynomial(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test) + last different one
     xnorm = [-0.95821893, 0.0, -0.96038983, -0.95821891, -0.95821893, 0.354]  # lon_norm

@@ -80,17 +80,23 @@ public:
     using GeoModelTemplate::GeoModelTemplate;
 
     /**Constructor*/
-    RPC(array<double, 20> num_col,
+    RPC(bool inverse_coefficient,
+        bool direct_coefficient,
+        array<double, 20> num_col,
         array<double, 20> den_col,
         array<double, 20> num_row,
         array<double, 20> den_row,
+        array<double, 20> num_lon,
+        array<double, 20> den_lon,
+        array<double, 20> num_lat,
+        array<double, 20> den_lat,
         array<double, 10> norm_coeffs);
 
     /**direct_loc_h*/
     vector<vector<double>> direct_loc_h(
         vector<double> row,
         vector<double> col,
-        double alt,
+        vector<double> alt,
         bool fill_nan=false);//override
 
     /**direct_loc_grid_h*/

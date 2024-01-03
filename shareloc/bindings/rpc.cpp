@@ -24,16 +24,34 @@ Cpp copy of rpc.py
 
 //---- RPC methodes ----//
 
-RPC::RPC(array<double, 20> num_col_input,
+RPC::RPC(bool inverse_coefficient_input,
+        bool direct_coefficient_input,
+        array<double, 20> num_col_input,
         array<double, 20> den_col_input,
         array<double, 20> num_row_input,
         array<double, 20> den_row_input,
+        array<double, 20> num_lon_input,
+        array<double, 20> den_lon_input,
+        array<double, 20> num_lat_input,
+        array<double, 20> den_lat_input,
         array<double, 10> norm_coeffs):GeoModelTemplate(){
+
+    if(!inverse_coefficient && !direct_coefficient){
+        cerr<<"C++: RPC: constructor: no RPC coeff"<<endl;
+    }
+
+    inverse_coefficient_input = inverse_coefficient;
+    direct_coefficient_input = direct_coefficient;
 
     std::copy(num_col_input.begin(), num_col_input.end(), num_col.begin());
     std::copy(den_col_input.begin(), den_col_input.end(), den_col.begin());
     std::copy(num_row_input.begin(), num_row_input.end(), num_row.begin());
     std::copy(den_row_input.begin(), den_row_input.end(), den_row.begin());
+
+    std::copy(num_lon_input.begin(), num_lon_input.end(), num_lon.begin());
+    std::copy(den_lon_input.begin(), den_lon_input.end(), den_lon.begin());
+    std::copy(num_lat_input.begin(), num_lat_input.end(), num_lat.begin());
+    std::copy(den_lat_input.begin(), den_lat_input.end(), den_lat.begin());
 
     offset_lon = norm_coeffs[0];//offset_x
     scale_lon = norm_coeffs[1];
@@ -52,8 +70,57 @@ RPC::RPC(array<double, 20> num_col_input,
 vector<vector<double>> RPC::direct_loc_h(
     vector<double> row,
     vector<double> col,
-    double alt,
+    vector<double> alt,
     bool fill_nan){
+
+
+    vector<double> row_norm;
+    vector<double> col_norm;
+    vector<double> alt_norm;
+    
+    //-- Check row and col sizes -> row_norm and col_norm
+    if(col.size()<row.size()){
+        cout<<"Warning : direct_loc_h :";
+        cout<<" col.size()!=row.size() -> truncate row"<<endl;
+        copy(row.begin(), row.begin()+col.size(), back_inserter(row_norm));
+        col_norm = col;
+    }else if (col.size()>row.size()){
+        cout<<"Warning : direct_loc_h :";
+        cout<<" col.size()!=row.size() -> truncate col "<<endl;
+        row_norm = row;
+        copy(col.begin(), col.begin()+row.size(), back_inserter(col_norm));
+    }else{
+        row_norm = row;
+        col_norm = col;
+    };
+
+    //check altitude size -> col_norm
+    if (alt.size()!=row_norm.size()){
+        cout<<"Warning : direct_loc_h :";
+        cout<<" alt.size()!=row_norm.size() -> alt vect = alt[0]"<<endl;
+        alt_norm.resize(row_norm.size(),alt[0]);
+    }else{
+        alt_norm =alt;
+    }
+
+    //if (direct_coefficient){}
+
+    // vector<vector<double>> points(row_norm.size(), vector<double>(3, 0.0));
+
+    // vector<bool> filter_nan (row_norm.size());
+    // vector<double> point_col0 (row_norm.size());
+    // vector<double> point_col1 (row_norm.size());
+    // tie(filter_nan,point_col0,point_col1) filter_coordinates(row, col, fill_nan, direction);
+
+
+
+
+
+
+
+
+
+
     vector<vector<double>> vect;
     return vect;
 }
@@ -123,12 +190,12 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
     
     //-- Check longitudes and latitudes sizes -> lon_norm and lat_norm
     if(lat.size()<lon.size()){
-        cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
+        cout<<"Warning : Inverse loc :";
         cout<<" lat.size()!=lon.size() -> truncate lon"<<endl;
         copy(lon.begin(), lon.begin()+lat.size(), back_inserter(lon_norm));
         lat_norm = lat;
     }else if (lat.size()>lon.size()){
-        cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
+        cout<<"Warning : Inverse loc :";
         cout<<" lat.size()!=lon.size() -> truncate lat "<<endl;
         lon_norm = lon;
         copy(lat.begin(), lat.begin()+lon.size(), back_inserter(lat_norm));
@@ -139,7 +206,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
 
     //check altitude size -> lat_norm
     if (alt.size()!=lon_norm.size()){
-        cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
+        cout<<"Warning : Inverse loc :";
         cout<<" alt.size()!=lon_norm.size() -> alt vect = alt[0]"<<endl;
         alt_norm.resize(lon_norm.size(),alt[0]);
     }else{

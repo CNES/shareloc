@@ -22,9 +22,16 @@
 Helpers shared testing generic module:
 contains global shared generic functions for tests/*.py
 """
+# pylint: disable=R0801
 
 # Standard imports
 import os
+
+# Shareloc bindings
+import rpc_c
+
+# Shareloc imports
+from shareloc.geomodels.rpc_readers import rpc_reader
 
 
 def data_path(alti="", scene_id=""):
@@ -40,3 +47,77 @@ def data_path(alti="", scene_id=""):
     data_root_folder = os.path.join(os.path.dirname(__file__), "data")
     sub_folder = os.path.join(alti, scene_id)
     return os.path.join(data_root_folder, sub_folder)
+
+
+def rpc_c_constructor(file_path: str):
+    """
+    Create rpc c++ object from rpc file path
+
+    :param file_path: path to rpc file
+    :type file_path: str
+    :return: RPC c++ object
+    :retype: rpc_c.RPC
+    """
+
+    rpc_params = rpc_reader(file_path, topleftconvention=True)
+    norm_coeffs = [
+        rpc_params["offset_x"],
+        rpc_params["scale_x"],  # longitude
+        rpc_params["offset_y"],
+        rpc_params["scale_y"],  # latitude
+        rpc_params["offset_alt"],
+        rpc_params["scale_alt"],
+        rpc_params["offset_col"],
+        rpc_params["scale_col"],
+        rpc_params["offset_row"],
+        rpc_params["scale_row"],
+    ]
+
+    empty = [0 for i in range(20)]
+
+    if rpc_params["num_col"] and rpc_params["num_x"]:  # direct and inverse coef
+        rpc_cpp = rpc_c.RPC(
+            True,
+            True,
+            rpc_params["num_col"],
+            rpc_params["den_col"],
+            rpc_params["num_row"],
+            rpc_params["den_row"],
+            rpc_params["num_x"],
+            rpc_params["den_x"],
+            rpc_params["num_y"],
+            rpc_params["den_y"],
+            norm_coeffs,
+        )
+    elif rpc_params["num_col"]:  # only inverse coef
+        rpc_cpp = rpc_c.RPC(
+            True,
+            False,
+            rpc_params["num_col"],
+            rpc_params["den_col"],
+            rpc_params["num_row"],
+            rpc_params["den_row"],
+            empty,
+            empty,
+            empty,
+            empty,
+            norm_coeffs,
+        )
+    elif rpc_params["num_x"]:  # only direct coef
+        rpc_cpp = rpc_c.RPC(
+            False,
+            True,
+            empty,
+            empty,
+            empty,
+            empty,
+            rpc_params["num_x"],
+            rpc_params["den_x"],
+            rpc_params["num_y"],
+            rpc_params["den_y"],
+            norm_coeffs,
+        )
+    else:
+        raise ValueError("RpcOptim : No RPC coefficients readable")
+
+    return rpc_cpp

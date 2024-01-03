@@ -310,7 +310,6 @@ def test_compute_rational_function_polynomial(geom_path):
     res_cpp_col = np.empty((len(xnorm)))
 
     for i, xnorm_i in enumerate(xnorm):
-
         row_i, col_i = rpc_c.compute_rational_function_polynomial_unitary(
             xnorm_i,
             ynorm[i],
@@ -886,15 +885,11 @@ def test_rpc_direct_inverse_iterative_multi_loc():
     (lon_cpp, lat_cpp, alt_cpp) = rpc_cpp.direct_loc_inverse_iterative(
         row_vect_nan, col_vect, alt_vect, nb_iter_max, fill_nan
     )
-    print("np.shape(alt_cpp) : ", np.shape(alt_cpp))
-    print("np.shape(alt_py) : ", np.shape(alt_py))
 
     # print("Erreur max lon :",np.nanmax(np.abs(np.array(lon_cpp)-lon_py)))
     np.testing.assert_allclose(np.array(lon_cpp), lon_py, 0, 1e-11)
     np.testing.assert_allclose(np.array(lat_cpp), lat_py, 0, 1e-11)
-    # alt_py returns alt[filter_nan]
-    # alt_cpp returns alt_vect -> less computation + consistency in results
-    # np.testing.assert_allclose(np.array(alt_cpp), alt_py, 0, 1e-11)
+    np.testing.assert_allclose(np.array(alt_cpp), alt_py, 0, 1e-11)
 
     # --- Full Nan ---#
     nans = np.full((10), np.nan, dtype=float)

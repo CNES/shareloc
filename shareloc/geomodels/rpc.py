@@ -491,12 +491,12 @@ class RPC(GeoModelTemplate):
 
             row = row[filter_nan]
             col = col[filter_nan]
-            alt = alt[filter_nan]
+            alt_filtered = alt[filter_nan]
 
             # inverse localization starting from the center of the scene
             lon = np.array([self.offset_x])
             lat = np.array([self.offset_y])
-            (row_start, col_start, __) = self.inverse_loc(lon, lat, alt)
+            (row_start, col_start, __) = self.inverse_loc(lon, lat, alt_filtered)
 
             # desired precision in pixels
             eps = 1e-6
@@ -512,13 +512,12 @@ class RPC(GeoModelTemplate):
 
             # while the required precision is not achieved
             while (np.max(abs(delta_col)) > eps or np.max(abs(delta_row)) > eps) and iteration < nb_iter_max:
-
                 # list of points that require another iteration
                 iter_ = np.where((abs(delta_col) > eps) | (abs(delta_row) > eps))[0]
 
                 # partial derivatives
                 (dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = self.compute_loc_inverse_derivates(
-                    lon[iter_], lat[iter_], alt[iter_]
+                    lon[iter_], lat[iter_], alt_filtered[iter_]
                 )
 
                 det = dcol_dlon * drow_dlat - drow_dlon * dcol_dlat
@@ -531,7 +530,7 @@ class RPC(GeoModelTemplate):
                 lat[iter_] += delta_lat
 
                 # inverse localization
-                (row_estim, col_estim, __) = self.inverse_loc(lon[iter_], lat[iter_], alt[iter_])
+                (row_estim, col_estim, __) = self.inverse_loc(lon[iter_], lat[iter_], alt_filtered[iter_])
 
                 # updating the residue between the sensor positions and those estimated by the inverse localization
                 delta_col[iter_] = col[iter_] - col_estim

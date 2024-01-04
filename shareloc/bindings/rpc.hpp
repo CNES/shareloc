@@ -70,10 +70,10 @@ private:
     double scale_col;
     double offset_alt;
     double scale_alt;
-    double offset_lon;
-    double scale_lon;
-    double offset_lat;
-    double scale_lat;
+    double offset_lon;//py: lon=x
+    double scale_lon;//py: lon=x
+    double offset_lat;//py: lat=y
+    double scale_lat;//py: lat=y
 
 
 public:
@@ -109,6 +109,12 @@ public:
         double col,
         string dtm);//override + dtm is a python class not a string
 
+    /**inverse_loc unitary*/
+    tuple<double,double,double> inverse_loc(
+        double lon,
+        double lat,
+        double alt);
+
     /**inverse_loc*/
     tuple<vector<double>,vector<double>,vector<double>> inverse_loc(
         vector<double> lon,
@@ -116,7 +122,7 @@ public:
         vector<double> alt) override;
 
     /**filter_coordinates*/
-    vector<vector<double>> filter_coordinates(
+    tuple<vector<bool>,vector<double>,vector<double>> filter_coordinates(
         vector<double> first_coord,
         vector<double> second_coord,
         bool fill_nan=false,
@@ -131,11 +137,20 @@ public:
         vector<double> lat,
         vector<double> alt);
 
+    /**compute_loc_inverse_derivates unitary*/
+    tuple<double,
+    double,
+    double,
+    double> compute_loc_inverse_derivates(
+        double lon,
+        double lat,
+        double alt);
+
     /**direct_loc_inverse_iterative*/
-    vector<vector<double>> direct_loc_inverse_iterative(
+    tuple<vector<double>,vector<double>,vector<double>> direct_loc_inverse_iterative(
         vector<double> row,
         vector<double> col,
-        double alt,
+        vector<double> alt,
         int nb_iter_max=10,
         bool fill_nan=false);
 
@@ -201,7 +216,23 @@ double polynomial_equation(
     double xnorm,
     double ynorm,
     double znorm,
-    array<double, 20> coeff);
+    const array<double, 20>* coeff);
+
+/** compute_rational_function_polynomial unitary*/
+tuple<double,double> compute_rational_function_polynomial_unitary(
+    double lon_col_norm,
+    double lat_row_norm,
+    double alt_norm,
+    array<double, 20> num_col,
+    array<double, 20> den_col,
+    array<double, 20> num_lin,
+    array<double, 20> den_lin,
+    double scale_col,
+    double offset_col,
+    double scale_lin,
+    double offset_lin
+);
+
 
 /**Compute rational function polynomial. Useful to compute direct and inverse localization
         "using direct or inverse RPC."*/
@@ -219,4 +250,51 @@ tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
     double offset_lin
 );
 
+/**Analytically compute the partials derivatives of inverse localization for only one point*/
+tuple<double,
+double,
+double,
+double> compute_loc_inverse_derivates_optimized_unitary(
+    double lon_norm,
+    double lat_norm,
+    double alt_norm,
+    array<double, 20> num_col,
+    array<double, 20> den_col,
+    array<double, 20> num_lin,
+    array<double, 20> den_lin,
+    double scale_col,
+    double scale_lon,
+    double scale_lin,
+    double scale_lat
+);
 
+/**Analytically compute the partials derivatives of inverse localization*/
+tuple<vector<double>,
+vector<double>,
+vector<double>,
+vector<double>> compute_loc_inverse_derivates_optimized(
+    vector<double> lon_norm,
+    vector<double> lat_norm,
+    vector<double> alt_norm,
+    array<double, 20> num_col,
+    array<double, 20> den_col,
+    array<double, 20> num_lin,
+    array<double, 20> den_lin,
+    double scale_col,
+    double scale_lon,
+    double scale_lin,
+    double scale_lat
+);
+
+/**func to translate np.man(np.abs(vec))*/
+double max_abs(vector<double> vec){
+    transform(vec.begin(), vec.end(), vec.begin(), [](double x) { return fabs(x); });
+    auto maxElement = max_element(vec.begin(), vec.end());
+
+    if (maxElement != vec.end()) {//if not empty
+        return *maxElement;
+    } else {
+        cout<<"max_abs function FAILED return -1.0"<<endl;
+        return -1.0;
+    }
+};

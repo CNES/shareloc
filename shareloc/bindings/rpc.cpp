@@ -96,12 +96,6 @@ tuple<double,double,double> RPC::inverse_loc(
     */
     //for further info check inverse loc vectorized
 {
-    // Normalisation
-
-    double lon_norm = (lon - offset_lon)/scale_lon;
-    double lat_norm = (lat - offset_lat)/scale_lat;
-    double alt_norm = (alt - offset_alt)/scale_alt;
-
     // if(abs(lon_norm[i])>lim_extrapol || 
     //     abs(lat_norm[i])>lim_extrapol ||
     //     abs(alt_norm[i])>lim_extrapol){
@@ -110,20 +104,27 @@ tuple<double,double,double> RPC::inverse_loc(
     
     double row_out;
     double col_out;
-    tie(row_out, col_out) = compute_rational_function_polynomial_unitary(
-        lon_norm,
-        lat_norm,
-        alt_norm,
+    double alt_out;
+    tie(row_out, col_out, alt_out) = compute_rational_function_polynomial_unitary(
+        lon,
+        lat,
+        alt,
         num_col,
         den_col,
         num_row,
         den_row,
+        scale_lon,
+        offset_lon,
+        scale_lat,
+        offset_lat,
+        scale_alt,
+        offset_alt,
         scale_col,
         offset_col,
         scale_row,
         offset_row
     );
-    return make_tuple(row_out, col_out, alt);
+    return make_tuple(row_out, col_out, alt_out);
 }
 
 tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
@@ -165,60 +166,30 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
     //     }
     //     };
 
-    vector<double> lon_norm;
-    vector<double> lat_norm;
-    vector<double> alt_norm;
-    
-    //-- Check longitudes and latitudes sizes -> lon_norm and lat_norm
-    if(lat.size()<lon.size()){
-        cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
-        cout<<" lat.size()!=lon.size() -> truncate lon"<<endl;
-        copy(lon.begin(), lon.begin()+lat.size(), back_inserter(lon_norm));
-        lat_norm = lat;
-    }else if (lat.size()>lon.size()){
-        cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
-        cout<<" lat.size()!=lon.size() -> truncate lat "<<endl;
-        lon_norm = lon;
-        copy(lat.begin(), lat.begin()+lon.size(), back_inserter(lat_norm));
-    }else{
-        lon_norm = lon;
-        lat_norm = lat;
-    };
 
-    //check altitude size -> lat_norm
-    if (alt.size()!=lon_norm.size()){
-        cout<<"Warning : Inverse loc : compute_rational_function_polynomial :";
-        cout<<" alt.size()!=lon_norm.size() -> alt vect = alt[0]"<<endl;
-        alt_norm.resize(lon_norm.size(),alt[0]);
-    }else{
-        alt_norm =alt;
-    }
-
-    vector<double> alt_res = alt_norm;//save not normalised alt
-
-    //Normalisation
-    for (int i =0;i<int(lon_norm.size());++i){
-        lon_norm[i] = (lon_norm[i] - offset_lon)/scale_lon;
-        lat_norm[i] = (lat_norm[i] - offset_lat)/scale_lat;
-        alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
-
-        // if(abs(lon_norm[i])>lim_extrapol || 
-        //     abs(lat_norm[i])>lim_extrapol ||
-        //     abs(alt_norm[i])>lim_extrapol){
-        //     //cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
-        // }
-    }
-
-    vector<double> row_out(lon_norm.size());
-    vector<double> col_out(lon_norm.size());
-    tie(row_out, col_out) = compute_rational_function_polynomial(
-        lon_norm,
-        lat_norm,
-        alt_norm,
+    // if(abs(lon_norm[i])>lim_extrapol || 
+    //     abs(lat_norm[i])>lim_extrapol ||
+    //     abs(alt_norm[i])>lim_extrapol){
+    //     //cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
+    // }
+  
+    vector<double> row_out;
+    vector<double> col_out;
+    vector<double> alt_res;
+    tie(row_out, col_out, alt_res) = compute_rational_function_polynomial(
+        lon,
+        lat,
+        alt,
         num_col,
         den_col,
         num_row,
         den_row,
+        scale_lon,
+        offset_lon,
+        scale_lat,
+        offset_lat,
+        scale_alt,
+        offset_alt,
         scale_col,
         offset_col,
         scale_row,
@@ -228,7 +199,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
 }
 
 
-tuple<vector<bool>,vector<double>,vector<double>> RPC::filter_coordinates(
+tuple<vector<bool>,vector<double>,vector<double>> RPC::filter_coordinates(// May be useless
     vector<double> first_coord,
     vector<double> second_coord,
     bool fill_nan,
@@ -303,57 +274,7 @@ double> RPC::compute_loc_inverse_derivates(
     return make_tuple(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat);
     }
 
-tuple<vector<double>,
-vector<double>,
-vector<double>,
-vector<double>> RPC::compute_loc_inverse_derivates(
-    vector<double> lon,
-    vector<double> lat,
-    vector<double> alt){
 
-    vector<double> lon_norm(lon.size());
-    vector<double> lat_norm(lat.size());
-    vector<double> alt_norm(lon.size());
-
-    //Python:Check if alt is an array. -> Useless in cpp
-
-    //check altitude size -> alt_norm
-    if (alt.size()!=lon.size()){
-        cout<<"Warning : Direct loc : compute_loc_inverse_derivates :";
-        cout<<" alt.size()!=lon.size() -> alt vect = alt[0]"<<endl;
-        alt_norm.assign(lon.size(),alt[0]);
-    }else{
-        alt_norm =alt;
-    }
-
-    //Normalisation
-    for (int i =0;i<int(lon_norm.size());++i){
-        lon_norm[i] = (lon[i] - offset_lon)/scale_lon;
-        lat_norm[i] = (lat[i] - offset_lat)/scale_lat;
-        alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
-
-    }
-
-    vector<double> dcol_dlon(lon_norm.size());
-    vector<double> dcol_dlat(lon_norm.size());
-    vector<double> drow_dlon(lon_norm.size());
-    vector<double> drow_dlat(lon_norm.size());
-
-    tie(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat) = compute_loc_inverse_derivates_optimized(
-        lon_norm,
-        lat_norm,
-        alt_norm,
-        num_col,
-        den_col,
-        num_row,
-        den_row,
-        scale_col,
-        scale_lon,
-        scale_row,
-        scale_lat);
-
-    return make_tuple(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat);
-}
 
 tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iterative(
     vector<double> row,
@@ -364,33 +285,9 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iter
 
     vector<double> col_norm;
     vector<double> row_norm;
+    vector<double> alt_norm;
 
-    //-- Check columns and rows sizes -> col_norm and row_norm (same size)
-    if(row.size()<col.size()){
-        cout<<"Warning : Direct loc : direct_loc_inverse_iterative :";
-        cout<<" row.size()<col.size() -> truncate col"<<endl;
-        copy(col.begin(), col.begin()+row.size(), back_inserter(col_norm));
-        row_norm = row;
-    }else if (row.size()>col.size()){
-        cout<<"Warning : Direct loc : direct_loc_inverse_iterative :";
-        cout<<" row.size()>col.size() -> truncate row "<<endl;
-        col_norm = col;
-        copy(row.begin(), row.begin()+col.size(), back_inserter(row_norm));
-    }else{
-        col_norm = col;
-        row_norm = row;
-    };
-
-    vector<double> alt_norm(col_norm.size());
-
-    //check altitude size -> alt_norm (same size as the others)
-    if (alt.size()!=col_norm.size()){
-        cout<<"Warning : Direct loc : direct_loc_inverse_iterative :";
-        cout<<" alt.size()!=col_norm.size() -> alt vect = alt[0]"<<endl;
-        alt_norm.assign(col_norm.size(),alt[0]);
-    }else{
-        alt_norm = alt;
-    }
+    tie(col_norm,row_norm,alt_norm) = check_sizes(col,row,alt);
 
     // ** no suffix => _norm ** (same size) //
 
@@ -529,7 +426,21 @@ double RPC::get_offset_lat(){return offset_lat;}
 double RPC::get_scale_lat(){return scale_lat;}
 
 
+
+//
+//
+//
+//
+//
 //---- Functions ----//
+//
+//
+//
+//
+//
+
+
+
 
 double polynomial_equation(
     double xnorm,
@@ -560,65 +471,120 @@ double polynomial_equation(
     + (*coeff)[19] * znorm*znorm*znorm;
 }
 
-tuple<double,double> compute_rational_function_polynomial_unitary(
-    double lon_col_norm,
-    double lat_row_norm,
-    double alt_norm,
+tuple<double,double,double> compute_rational_function_polynomial_unitary(
+    double lon_col,
+    double lat_row,
+    double alt,
     array<double, 20> num_col,
     array<double, 20> den_col,
     array<double, 20> num_lin,
     array<double, 20> den_lin,
+
+    //input
+    double scale_lon_col,
+    double offset_lon_col,
+    double scale_lat_row,
+    double offset_lat_row,
+    double scale_alt,
+    double offset_alt,
+
+    //output
     double scale_col,
     double offset_col,
     double scale_lin,
     double offset_lin
 ){
+    double row_lon_out;
+    double col_lat_out;
+    double alt_out;
+    if(isnan(lon_col) || isnan(lat_row)){
+        col_lat_out = numeric_limits<double>::quiet_NaN();
+        row_lon_out = numeric_limits<double>::quiet_NaN();
+        alt_out = numeric_limits<double>::quiet_NaN();
+    }else{
+        alt_out = alt;
 
-    double poly_num_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &num_col);
-    double poly_den_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &den_col);
-    double poly_num_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &num_lin);
-    double poly_den_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &den_lin);
-    double col_lat_out = poly_num_col / poly_den_col * scale_col + offset_col;
-    double row_lon_out = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
+        double lon_col_norm = (lon_col - offset_lon_col)/scale_lon_col;
+        double lat_row_norm = (lat_row - offset_lat_row)/scale_lat_row;
+        double alt_norm = (alt - offset_alt)/scale_alt;
 
-    return make_tuple(row_lon_out, col_lat_out);
+        double poly_num_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &num_col);
+        double poly_den_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &den_col);
+        double poly_num_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &num_lin);
+        double poly_den_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, &den_lin);
+        col_lat_out = poly_num_col / poly_den_col * scale_col + offset_col;
+        row_lon_out = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
+    };
+    return make_tuple(row_lon_out, col_lat_out, alt_out);
 }
 
-tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
-    vector<double> lon_col_norm,
-    vector<double> lat_row_norm,
-    vector<double> alt_norm,
+tuple<vector<double>,vector<double>,vector<double>> compute_rational_function_polynomial(
+    vector<double> lon_col,
+    vector<double> lat_row,
+    vector<double> alt,
     array<double, 20> num_col,
     array<double, 20> den_col,
     array<double, 20> num_lin,
     array<double, 20> den_lin,
+
+    //input
+    double scale_lon_col,
+    double offset_lon_col,
+    double scale_lat_row,
+    double offset_lat_row,
+    double scale_alt,
+    double offset_alt,
+
+    //output
     double scale_col,
     double offset_col,
     double scale_lin,
     double offset_lin
 ){
-    if (lon_col_norm.size() != alt_norm.size()){
-        cerr<<"Error : not same number of altitudes and longitudes"<<endl;
-        exit(EXIT_FAILURE);
-    }
+
+    vector<double> lon_col_norm;
+    vector<double> lat_row_norm;
+    vector<double> alt_norm;
+
+    tie(lon_col_norm,lat_row_norm,alt_norm) = check_sizes(lon_col,lat_row,alt);
+
 
     vector<double> col_lat_out(lon_col_norm.size());
     vector<double> row_lon_out(lon_col_norm.size());
+    vector<double> alt_out(lon_col_norm.size());
 
     double poly_num_col;
     double poly_den_col;
     double poly_num_lin;
     double poly_den_lin;
     for(int i = 0;i<(int)lon_col_norm.size();++i){
+
+        //--- Nan filtering
+        if(isnan(lon_col_norm[i]) || isnan(lat_row_norm[i])){
+            col_lat_out[i] = numeric_limits<double>::quiet_NaN();
+            row_lon_out[i] = numeric_limits<double>::quiet_NaN();
+            alt_out[i] = numeric_limits<double>::quiet_NaN();
+            continue;
+        }
+
+        alt_out[i] = alt_norm[i];
+
+        //--- Normalisation
+        lon_col_norm[i] = (lon_col_norm[i] - offset_lon_col)/scale_lon_col;
+        lat_row_norm[i] = (lat_row_norm[i] - offset_lat_row)/scale_lat_row;
+        alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
+
+        //-- Computation
         poly_num_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], &num_col);
         poly_den_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], &den_col);
         poly_num_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], &num_lin);
         poly_den_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i], alt_norm[i], &den_lin);
         col_lat_out[i] = poly_num_col / poly_den_col * scale_col + offset_col;
         row_lon_out[i] = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
+
     }
 
-    tuple<vector<double>,vector<double>> res = make_tuple(row_lon_out, col_lat_out);
+    tuple<vector<double>,vector<double>,vector<double>> res = make_tuple(row_lon_out, col_lat_out,alt_out);
     return res;
 }
 
@@ -701,66 +667,37 @@ double> compute_loc_inverse_derivates_optimized_unitary(
     return make_tuple(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat);
 }
 
+
+
 tuple<vector<double>,
-vector<double>,
-vector<double>,
-vector<double>> compute_loc_inverse_derivates_optimized(
-    vector<double> lon_norm,
-    vector<double> lat_norm,
-    vector<double> alt_norm,
-    array<double, 20> num_col,
-    array<double, 20> den_col,
-    array<double, 20> num_lin,
-    array<double, 20> den_lin,
-    double scale_col,
-    double scale_lon,
-    double scale_lin,
-    double scale_lat
-){
-    size_t nbr_points = lon_norm.size();
-    vector<double> dcol_dlon (nbr_points);
-    vector<double> dcol_dlat (nbr_points);
-    vector<double> drow_dlon (nbr_points);
-    vector<double> drow_dlat (nbr_points);
+    vector<double>,
+    vector<double>> check_sizes(vector<double> lon_col,
+    vector<double> lat_row,
+    vector<double>alt){
 
-    double num_dcol;
-    double den_dcol;
-    double num_drow;
-    double den_drow;
+    vector<double> lon_col_norm;
+    vector<double> lat_row_norm;
+    vector<double> alt_norm;
 
-    double num_dcol_dlon;
-    double den_dcol_dlon;
-    double num_drow_dlon;
-    double den_drow_dlon;
+    if(lat_row.size()<lon_col.size()){
+        cout<<" lat_row.size()!=lon_col.size() -> truncate lon_col"<<endl;
+        copy(lon_col.begin(), lon_col.begin()+lat_row.size(), back_inserter(lon_col_norm));
+        lat_row_norm = lat_row;
+    }else if (lat_row.size()>lon_col.size()){
+        cout<<" lat_row.size()!=lon_col.size() -> truncate lat_row "<<endl;
+        lon_col_norm = lon_col;
+        copy(lat_row.begin(), lat_row.begin()+lon_col.size(), back_inserter(lat_row_norm));
+    }else{
+        lon_col_norm = lon_col;
+        lat_row_norm = lat_row;
+    };
 
-    double num_dcol_dlat;
-    double den_dcol_dlat;
-    double num_drow_dlat;
-    double den_drow_dlat;
+    if (alt.size()!=lon_col_norm.size()){
+        cout<<" alt.size()!=lon_col_norm.size() -> alt vect = alt[0]"<<endl;
+        alt_norm.resize(lon_col_norm.size(),alt[0]);
+    }else{
+        alt_norm =alt;
+    };
 
-    for (int i = 0; i < int(nbr_points); ++i){
-
-        num_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], &num_col);
-        den_dcol = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], &den_col);
-        num_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], &num_lin);
-        den_drow = polynomial_equation(lon_norm[i], lat_norm[i], alt_norm[i], &den_lin);
-
-        num_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], &num_col);
-        den_dcol_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], &den_col);
-        num_drow_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], &num_lin);
-        den_drow_dlon = derivative_polynomial_longitude(lon_norm[i], lat_norm[i], alt_norm[i], &den_lin);
-
-        num_dcol_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], &num_col);
-        den_dcol_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], &den_col);
-        num_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], &num_lin);
-        den_drow_dlat = derivative_polynomial_latitude(lon_norm[i], lat_norm[i], alt_norm[i], &den_lin);
-
-        dcol_dlon[i] = scale_col / scale_lon * (num_dcol_dlon * den_dcol - den_dcol_dlon * num_dcol) / (den_dcol*den_dcol);
-        dcol_dlat[i] = scale_col / scale_lat * (num_dcol_dlat * den_dcol - den_dcol_dlat * num_dcol) / (den_dcol*den_dcol);
-        drow_dlon[i] = scale_lin / scale_lon * (num_drow_dlon * den_drow - den_drow_dlon * num_drow) / (den_drow*den_drow);
-        drow_dlat[i] = scale_lin / scale_lat * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / (den_drow*den_drow);
-
-    }
-
-    return make_tuple(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat);
+    return make_tuple(lon_col_norm, lat_row_norm, alt_norm);
 }

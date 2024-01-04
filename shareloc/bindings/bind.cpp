@@ -55,9 +55,6 @@ PYBIND11_MODULE(rpc_c, m) {
         (double,double,double)) &RPC::inverse_loc)
 
         .def("filter_coordinates", &RPC::filter_coordinates)
-        .def("compute_loc_inverse_derivates",\
-        (tuple<vector<double>,vector<double>,vector<double>,vector<double>> (RPC::*)\
-        (vector<double>,vector<double>,vector<double>)) &RPC::compute_loc_inverse_derivates)
 
         .def("compute_loc_inverse_derivates",\
         (tuple<double,double,double,double> (RPC::*)\
@@ -87,22 +84,24 @@ PYBIND11_MODULE(rpc_c, m) {
 
     //m.doc() = "Pybind hello world"; // optional module docstring
     m.def("polynomial_equation", &polynomial_equation, "Compute polynomial equation");
+
     m.def("compute_rational_function_polynomial_unitary", \
         &compute_rational_function_polynomial_unitary,
         "Compute rational function polynomial for only one point");
+
     m.def("compute_rational_function_polynomial", &compute_rational_function_polynomial,
         "Compute rational function polynomial. Useful to compute direct and inverse localization"
         "using direct or inverse RPC.");
+
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude,
     "Compute latitude derivative polynomial equation");
+
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude,
     "Compute longitude derivative polynomial equation");
+    
     m.def("compute_loc_inverse_derivates_optimized_unitary",
     &compute_loc_inverse_derivates_optimized_unitary,
     "Analytically compute the partials derivatives of inverse localization for only one point");
-    m.def("compute_loc_inverse_derivates_optimized",
-    &compute_loc_inverse_derivates_optimized,
-    "Analytically compute the partials derivatives of inverse localization");
 }
 
 //c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes)

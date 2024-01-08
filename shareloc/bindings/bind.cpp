@@ -98,10 +98,7 @@ PYBIND11_MODULE(rpc_c, m) {
 
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude,
     "Compute longitude derivative polynomial equation");
-    
-    m.def("compute_loc_inverse_derivates_optimized_unitary",
-    &compute_loc_inverse_derivates_optimized_unitary,
-    "Analytically compute the partials derivatives of inverse localization for only one point");
+
 }
 
 //c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes)

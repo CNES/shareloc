@@ -262,28 +262,23 @@ tuple<vector<double>,vector<double>,vector<double>> compute_rational_function_po
     double offset_lin
 );
 
-/**Analytically compute the partials derivatives of inverse localization for only one point*/
-tuple<double,
-double,
-double,
-double> compute_loc_inverse_derivates_optimized_unitary(
-    double lon_norm,
-    double lat_norm,
-    double alt_norm,
-    array<double, 20> num_col,
-    array<double, 20> den_col,
-    array<double, 20> num_lin,
-    array<double, 20> den_lin,
-    double scale_col,
-    double scale_lon,
-    double scale_lin,
-    double scale_lat
-);
-
-
 /**Check if arrays have the same size and cut it if needed*/
 tuple<vector<double>,
     vector<double>,
     vector<double>> check_sizes(vector<double> lon_col,
     vector<double> lat_row,
     vector<double>alt);
+
+/** Compute derivative_polynomial_latitude*/
+double derivative_polynomial_latitude(
+    double lon_norm,
+    double lat_norm,
+    double alt_norm,
+    const array<double, 20>* coeff);
+
+/**Compute derivative_polynomial_longitude*/
+double derivative_polynomial_longitude(
+    double lon_norm,
+    double lat_norm,
+    double alt_norm,
+    const array<double, 20>* coeff);

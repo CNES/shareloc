@@ -253,23 +253,26 @@ double> RPC::compute_loc_inverse_derivates(
     double lat_norm = (lat - offset_lat)/scale_lat;
     double alt_norm = (alt - offset_alt)/scale_alt;
 
-    double dcol_dlon;
-    double dcol_dlat;
-    double drow_dlon;
-    double drow_dlat;
+    double num_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, &num_col);
+    double den_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, &den_col);
+    double num_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, &num_row);
+    double den_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, &den_row);
 
-    tie(dcol_dlon,dcol_dlat,drow_dlon,drow_dlat)=compute_loc_inverse_derivates_optimized_unitary(
-        lon_norm,
-        lat_norm,
-        alt_norm,
-        num_col,
-        den_col,
-        num_row,
-        den_row,
-        scale_col,
-        scale_lon,
-        scale_row,
-        scale_lat);
+    double num_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, &num_col);
+    double den_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, &den_col);
+    double num_drow_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, &num_row);
+    double den_drow_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, &den_row);
+
+    double num_dcol_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, &num_col);
+    double den_dcol_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, &den_col);
+    double num_drow_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, &num_row);
+    double den_drow_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, &den_row);
+
+    double dcol_dlon = scale_col / scale_lon * (num_dcol_dlon * den_dcol - den_dcol_dlon * num_dcol) / (den_dcol*den_dcol);
+    double dcol_dlat = scale_col / scale_lat * (num_dcol_dlat * den_dcol - den_dcol_dlat * num_dcol) / (den_dcol*den_dcol);
+    double drow_dlon = scale_row / scale_lon * (num_drow_dlon * den_drow - den_drow_dlon * num_drow) / (den_drow*den_drow);
+    double drow_dlat = scale_row / scale_lat * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / (den_drow*den_drow);
+
 
     return make_tuple(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat);
     }
@@ -624,49 +627,6 @@ double derivative_polynomial_longitude(
         + 2 * (*coeff)[14] * lat_norm * lon_norm
         + 2 * (*coeff)[17] * lon_norm * alt_norm;
 }
-
-tuple<double,
-double,
-double,
-double> compute_loc_inverse_derivates_optimized_unitary(
-    double lon_norm,
-    double lat_norm,
-    double alt_norm,
-    array<double, 20> num_col,
-    array<double, 20> den_col,
-    array<double, 20> num_lin,
-    array<double, 20> den_lin,
-    double scale_col,
-    double scale_lon,
-    double scale_lin,
-    double scale_lat
-){
-
-    double num_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, &num_col);
-    double den_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, &den_col);
-    double num_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, &num_lin);
-    double den_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, &den_lin);
-
-    double num_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, &num_col);
-    double den_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, &den_col);
-    double num_drow_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, &num_lin);
-    double den_drow_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, &den_lin);
-
-    double num_dcol_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, &num_col);
-    double den_dcol_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, &den_col);
-    double num_drow_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, &num_lin);
-    double den_drow_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, &den_lin);
-
-    double dcol_dlon = scale_col / scale_lon * (num_dcol_dlon * den_dcol - den_dcol_dlon * num_dcol) / (den_dcol*den_dcol);
-    double dcol_dlat = scale_col / scale_lat * (num_dcol_dlat * den_dcol - den_dcol_dlat * num_dcol) / (den_dcol*den_dcol);
-    double drow_dlon = scale_lin / scale_lon * (num_drow_dlon * den_drow - den_drow_dlon * num_drow) / (den_drow*den_drow);
-    double drow_dlat = scale_lin / scale_lat * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / (den_drow*den_drow);
-
-
-
-    return make_tuple(dcol_dlon, dcol_dlat, drow_dlon, drow_dlat);
-}
-
 
 
 tuple<vector<double>,

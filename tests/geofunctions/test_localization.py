@@ -22,7 +22,7 @@
 Test module for localisation class shareloc/geofunctions/localisation.py
 """
 # TODO: refactor to disable no-member in Grid class
-# pylint: disable=no-member
+# pylint: disable=no-member, duplicate-code
 
 # Standard imports
 import os
@@ -31,6 +31,7 @@ import os
 import numpy as np
 import pytest
 
+from shareloc.dtm_reader import dtm_reader
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.geofunctions.localization import Localization
 from shareloc.geofunctions.localization import coloc as coloc_rpc
@@ -71,7 +72,22 @@ def test_localize_direct_rpc():
     # read the SRTM tile and Geoid
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
 
     # Localization class is then used using WGS84 output
     loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
@@ -108,7 +124,22 @@ def test_localize_direct_grid():
     # read the SRTM tile and Geoid
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file, fill_nodata="min")
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata="min",
+        fill_value=0.0,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
 
     # Localization class is then used using WGS84 output
     loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
@@ -137,7 +168,22 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     grid_name = f"GRID_{id_scene}.tif"
     fic = os.path.join(data_folder, mnt_name)
     # load mnt
-    dtm = DTMIntersection(fic)
+    dtm_image = dtm_reader(
+        fic,
+        geoid_filename=None,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=False,
+        fill_nodata="rio_fillnodata",
+        fill_value=None,
+    )
+    dtm = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
     # load grid model
     gld = os.path.join(data_folder, grid_name)
     gri = GeoModel(gld, "grid")
@@ -256,7 +302,22 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_filename=geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=False,
+        fill_nodata="rio_fillnodata",
+        fill_value=None,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
     assert valid_coord[0] == pytest.approx(lonlatalt[0, 0], abs=3.0 * 1e-5)
@@ -277,7 +338,22 @@ def test_sensor_loc_dir_dtm_geoid_utm(col, row, valid_coord):
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_resampled_UTM31", "N44E005_UTM.tif")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_filename=geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=False,
+        fill_nodata="rio_fillnodata",
+        fill_value=None,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left, epsg=4326)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
     assert valid_coord[0] == pytest.approx(lonlatalt[0, 0], abs=3.0 * 1e-5)
@@ -641,7 +717,22 @@ def test_sensor_loc_dir_dtm_multi_points():
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_filename=geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=False,
+        fill_nodata="rio_fillnodata",
+        fill_value=None,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
 
     loc = Localization(geom_model, image=left_im, elevation=dtm_ventoux)
 

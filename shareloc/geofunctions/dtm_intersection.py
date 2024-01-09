@@ -27,50 +27,15 @@ import logging
 
 # Third party imports
 import numpy as np
-from scipy import interpolate
+from affine import Affine
 
 # Shareloc imports
-from shareloc.dtm_image import DTMImage
-from shareloc.image import Image
 from shareloc.math_utils import interpol_bilin
 from shareloc.proj_utils import (
     coordinates_conversion,
     transform_index_to_physical_point,
     transform_physical_point_to_index,
 )
-
-
-def interpolate_geoid_height(geoid_filename, positions, interpolation_method="linear"):
-    """
-    terrain to index conversion
-    retrieve geoid height above ellispoid
-
-    :param geoid_filename: geoid_filename
-    :type geoid_filename: str
-    :param positions: geodetic coordinates
-    :type positions: 2D numpy array: (number of points, [long coord, lat coord])
-    :param interpolation_method: default is 'linear' (interpn interpolation method)
-    :type interpolation_method: str
-    :return: geoid height
-    :rtype: 1 numpy array (number of points)
-    """
-
-    geoid_image = Image(geoid_filename, read_data=True)
-
-    # Prepare grid for interpolation
-    row_indexes = np.arange(0, geoid_image.nb_rows, 1)
-    col_indexes = np.arange(0, geoid_image.nb_columns, 1)
-    points = (row_indexes, col_indexes)
-
-    # add modulo lon/lat
-    min_lon = geoid_image.origin_col
-    max_lon = min_lon + geoid_image.nb_columns * geoid_image.pixel_size_col
-    positions[:, 0] += (positions[:, 0] + min_lon < 0) * 360.0
-    positions[:, 0] -= (positions[:, 0] - max_lon > 0) * 360.0
-    if np.any(np.abs(positions[:, 1]) > 90.0):
-        raise RuntimeError("Geoid cannot handle latitudes greater than 90 deg.")
-    indexes_geoid = transform_physical_point_to_index(geoid_image.trans_inv, positions[:, 1], positions[:, 0])
-    return interpolate.interpn(points, geoid_image.data[:, :], indexes_geoid, method=interpolation_method)
 
 
 class DTMIntersection:
@@ -84,31 +49,34 @@ class DTMIntersection:
     # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
-        dtm_filename,
-        geoid_filename=None,
-        roi=None,
-        roi_is_in_physical_space=True,
-        fill_nodata=None,
-        fill_value=0.0,
+        dtm_image_epsg,
+        dtm_image_alt_data,
+        dtm_image_nb_rows,
+        dtm_image_nb_columns,
+        dtm_image_transform,
     ):
         """
-        Constructor
-        :param dtm_filename: dtm filename
-        :type dtm_filename: string
-        :param geoid_filename: geoid filename, if None datum is ellispoid
-        :type geoid_filename: string
-        :param roi: region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
-             roi_is_in_physical_space activated
-        :type roi: list
-        :param roi_is_in_physical_space: roi value in physical space
-        :type roi_is_in_physical_space: bool
-        :param fill_nodata:  fill_nodata strategy in None/'constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/
-        :type fill_nodata: str
-        :param fill_value:  fill value for constant strategy. fill value is used for 'roi_fillnodata' residuals nodata,
-            if None 'min' is used
-        :type fill_value: float
+        Constructor, designed to have a C++ twin.
+        Since we are not sure to be able to get alt_data size in C++, we set up
+        this piece of information in the DTMIntersection constructor.
+
+        :param dtm_image_epsg: dtm_reader epsg attribut
+        :type dtm_image_epsg: int
+        :param dtm_image_alt_data: dtm_reader alt_data attribut
+        :type dtm_image_alt_data: np.ndarray
+        :param dtm_image_nb_rows: dtm_reader nb_rows attribut
+        :type dtm_image_nb_rows: int
+        :param dtm_image_nb_columns: dtm_reader nb_columns attribut
+        :type dtm_image_nb_columns: int
+        :param dtm_image_transform: dtm_reader transform attribut
+                                    same coefficient order as GDAL's SetGeoTransform()
+        :type dtm_image_transform: tuple(c, a, b, f, d, e) from affine module
+        :param dtm_image_trans_inv: dtm_reader trans_inv attribut
+                                    same coefficient order as GDAL's SetGeoTransform()
+        :type dtm_image_trans_inv: tuple(c, a, b, f, d, e) from affine module
+
         """
-        self.dtm_file = dtm_filename
+
         self.alt_data = None
         self.alt_min = None
         self.alt_max = None
@@ -124,60 +92,34 @@ class DTMIntersection:
         self.alt_max_cell = None
         self.tol_z = 0.0001
 
-        # DTM reading
-        datum = "ellipsoid"
-        if geoid_filename is not None:
-            datum = "geoid"
-
-        self.dtm_image = DTMImage(
-            self.dtm_file,
-            read_data=True,
-            roi=roi,
-            roi_is_in_physical_space=roi_is_in_physical_space,
-            datum=datum,
-            fill_nodata=fill_nodata,
-            fill_value=fill_value,
-        )
-        self.epsg = self.dtm_image.epsg
-        self.alt_data = self.dtm_image.data[:, :].astype("float64")
-        if self.dtm_image.datum == "geoid":
-            logging.debug("remove geoid height")
-            if geoid_filename is not None:
-                self.grid_row, self.grid_col = np.mgrid[
-                    0 : self.dtm_image.nb_rows : 1, 0 : self.dtm_image.nb_columns : 1
-                ]
-                lat, lon = transform_index_to_physical_point(self.dtm_image.transform, self.grid_row, self.grid_col)
-                positions = np.vstack([lon.flatten(), lat.flatten()]).transpose()
-                if self.epsg != 4326:
-                    positions = coordinates_conversion(positions, self.epsg, 4326)
-                geoid_height = interpolate_geoid_height(geoid_filename, positions)
-                self.alt_data += geoid_height.reshape(lon.shape)
-            else:
-                logging.warning("DTM datum is geoid but no geoid file is given")
-        else:
-            logging.debug("no geoid file is given dtm is assumed to be w.r.t ellipsoid")
+        self.epsg = dtm_image_epsg
+        self.alt_data = dtm_image_alt_data
 
         self.init_min_max()
         self.alt_max = self.alt_data.max()
         self.alt_min = self.alt_data.min()
-
         self.plane_coef_a = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 0.0])
         self.plane_coef_b = np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
         self.plane_coef_c = np.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0])
         self.plane_coef_d = np.array(
-            [0.0, self.dtm_image.nb_rows - 1.0, 0.0, self.dtm_image.nb_columns - 1.0, self.alt_min, self.alt_max]
+            [0.0, dtm_image_nb_rows - 1.0, 0.0, dtm_image_nb_columns - 1.0, self.alt_min, self.alt_max]
         )
 
         self.plans = np.array(
             [
                 [1.0, 0.0, 0.0, 0.0],
-                [1.0, 0.0, 0.0, self.dtm_image.nb_rows - 1.0],
+                [1.0, 0.0, 0.0, dtm_image_nb_rows - 1.0],
                 [0.0, 1.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0, self.dtm_image.nb_columns - 1.0],
+                [0.0, 1.0, 0.0, dtm_image_nb_columns - 1.0],
                 [0.0, 0.0, 1.0, self.alt_min],
                 [0.0, 0.0, 1.0, self.alt_max],
             ]
         )
+
+        self.trans_inv = ~Affine.from_gdal(*dtm_image_transform)
+        self.transform = Affine.from_gdal(*dtm_image_transform)
+        self.nb_rows = dtm_image_nb_rows
+        self.nb_columns = dtm_image_nb_columns
 
     def eq_plan(self, i, position):
         """
@@ -207,9 +149,7 @@ class DTMIntersection:
         :rtype: array (1x2 or 1x3)
         """
         vect_dtm = vect_ter.copy()
-        (vect_dtm[0], vect_dtm[1]) = transform_physical_point_to_index(
-            self.dtm_image.trans_inv, vect_ter[1], vect_ter[0]
-        )
+        (vect_dtm[0], vect_dtm[1]) = transform_physical_point_to_index(self.trans_inv, vect_ter[1], vect_ter[0])
         return vect_dtm
 
     def ters_to_indexs(self, vect_ters):
@@ -236,9 +176,7 @@ class DTMIntersection:
         :rtype: array (1x2 or 1x3)
         """
         vect_ter = vect_dtm.copy()
-        (vect_ter[1], vect_ter[0]) = transform_index_to_physical_point(
-            self.dtm_image.transform, vect_dtm[0], vect_dtm[1]
-        )
+        (vect_ter[1], vect_ter[0]) = transform_index_to_physical_point(self.transform, vect_dtm[0], vect_dtm[1])
         return vect_ter
 
     def get_alt_offset(self, epsg):
@@ -253,14 +191,12 @@ class DTMIntersection:
         if epsg != self.epsg:
             alti_moy = (self.alt_min + self.alt_max) / 2.0
             corners = np.zeros([4, 2])
-            corners[:, 0] = [0.0, 0.0, self.dtm_image.nb_rows, self.dtm_image.nb_rows]
-            corners[:, 1] = [0.0, self.dtm_image.nb_columns, self.dtm_image.nb_columns, 0.0]
+            corners[:, 0] = [0.0, 0.0, self.nb_rows, self.nb_rows]
+            corners[:, 1] = [0.0, self.nb_columns, self.nb_columns, 0.0]
             corners -= 0.5  # index to corner
             ground_corners = np.zeros([3, 4])
             ground_corners[2, :] = alti_moy
-            ground_corners[1::-1, :] = transform_index_to_physical_point(
-                self.dtm_image.transform, corners[:, 0], corners[:, 1]
-            )
+            ground_corners[1::-1, :] = transform_index_to_physical_point(self.transform, corners[:, 0], corners[:, 1])
             converted_corners = coordinates_conversion(ground_corners.transpose(), self.epsg, epsg)
             return [np.min(converted_corners[:, 2]) - alti_moy, np.max(converted_corners[:, 2]) - alti_moy]
         return [0.0, 0.0]
@@ -277,7 +213,7 @@ class DTMIntersection:
         :return: interpolated altitude
         :rtype: float
         """
-        alt = interpol_bilin(self.alt_data, self.dtm_image.nb_rows, self.dtm_image.nb_columns, pos_row, pos_col)
+        alt = interpol_bilin(self.alt_data, self.nb_rows, self.nb_columns, pos_row, pos_col)
         return alt
 
     def init_min_max(self):
@@ -510,8 +446,8 @@ class DTMIntersection:
 
         h_intersect_p1 = h_intersect
 
-        n_row = self.dtm_image.nb_rows
-        n_col = self.dtm_image.nb_columns
+        n_row = self.nb_rows
+        n_col = self.nb_columns
 
         # 1 - Init and preliminary tests
         #   1.1 - Test if the vertex is above the DTM

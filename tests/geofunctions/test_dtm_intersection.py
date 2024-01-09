@@ -21,7 +21,7 @@
 """
 Test module for localisation class shareloc/geofunctions/dtm_intersection.py
 """
-
+# pylint: disable=duplicate-code
 # Standard imports
 import os
 
@@ -30,8 +30,10 @@ import numpy as np
 # Third party imports
 import pytest
 
+from shareloc.dtm_reader import dtm_reader, interpolate_geoid_height
+
 # Shareloc imports
-from shareloc.geofunctions.dtm_intersection import DTMIntersection, interpolate_geoid_height
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
 
 # Shareloc test imports
 from ..helpers import data_path
@@ -66,7 +68,22 @@ def test_interp_dtm(index_col, index_row, valid_alt):
     data_folder = data_path("geoide", "P1BP--2017030824934340CP")
     # load MNT
     fic = os.path.join(data_folder, "MNT_P1BP--2017030824934340CP.tif")
-    dtm = DTMIntersection(fic)
+    dtm_image = dtm_reader(
+        fic,
+        None,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    )
+    dtm = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
     vect_index = [index_row, index_col]
     coords = dtm.index_to_ter(vect_index)
     lon_ref = 57.2083333333
@@ -91,7 +108,22 @@ def test_interp_dtm_geoid(index_lon, index_lat, valid_alt):
     """
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
     coords = [index_lon, index_lat]
     index = dtm_ventoux.ter_to_index(coords)
     alti = dtm_ventoux.interpolate(index[0], index[1])
@@ -105,7 +137,22 @@ def test_dtm_alt_min_max():
     """
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file, roi=[256, 256, 512, 512], roi_is_in_physical_space=False)
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=[256, 256, 512, 512],
+        roi_is_in_physical_space=False,
+        fill_nodata=None,
+        fill_value=0.0,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
     alt_min = dtm_ventoux.alt_min_cell
     alt_max = dtm_ventoux.alt_max_cell
     alt_valid_min = os.path.join(data_path(), "srtm_ventoux_alt_min.npy")

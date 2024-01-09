@@ -33,6 +33,8 @@ import numpy as np
 import pytest
 import rasterio
 
+from shareloc.dtm_reader import dtm_reader
+
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.geomodels import GeoModel
@@ -380,7 +382,14 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
     data_folder_mnt = data_path("ellipsoide", id_scene)
 
     fic = os.path.join(data_folder_mnt, f"MNT_{id_scene}.tif")
-    dtm = DTMIntersection(fic)
+    dtm_image = dtm_reader(fic, read_data=True)
+    dtm = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
     [lon, lat] = dtm.index_to_ter(vect_index)
     alt = dtm.interpolate(index_x, index_y)
 

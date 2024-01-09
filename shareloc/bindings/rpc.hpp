@@ -93,7 +93,7 @@ public:
         array<double, 10> norm_coeffs);
 
     /**direct_loc_h*/
-    vector<vector<double>> direct_loc_h(
+    tuple<vector<double>,vector<double>,vector<double>> direct_loc_h(
         vector<double> row,
         vector<double> col,
         vector<double> alt,

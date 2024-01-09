@@ -36,7 +36,6 @@ import rpc_c
 # Shareloc imports
 from shareloc.geomodels import GeoModel
 from shareloc.geomodels.rpc import (
-    compute_loc_inverse_derivates_numba,
     compute_rational_function_polynomial,
     derivative_polynomial_latitude,
     derivative_polynomial_longitude,
@@ -120,7 +119,6 @@ def test_method_rpc_cpp():
     rpc.direct_loc_dtm(double, double, string)
     rpc.inverse_loc(vector_double, vector_double, vector_double)
     rpc.filter_coordinates(vector_double, vector_double, False, string)
-    rpc.compute_loc_inverse_derivates(vector_double, vector_double, vector_double)
     rpc.direct_loc_inverse_iterative(vector_double, vector_double, vector_double, integer, False)
     rpc.get_alt_min_max()
     rpc.los_extrema(double, double, double, double, False, integer)
@@ -149,6 +147,12 @@ def test_function_rpc_cpp():
         double,
         double,
         double,
+        double,
+        double,
+        double,
+        double,
+        double,
+        double,
     )
 
     rpc_c.compute_rational_function_polynomial(
@@ -163,25 +167,17 @@ def test_function_rpc_cpp():
         double,
         double,
         double,
+        double,
+        double,
+        double,
+        double,
+        double,
+        double,
     )
 
     rpc_c.derivative_polynomial_latitude(double, double, double, array20)
 
     rpc_c.derivative_polynomial_longitude(double, double, double, array20)
-
-    rpc_c.compute_loc_inverse_derivates_optimized(
-        vector_double,
-        vector_double,
-        vector_double,
-        array20,
-        array20,
-        array20,
-        array20,
-        double,
-        double,
-        double,
-        double,
-    )
 
 
 @pytest.mark.parametrize(
@@ -273,9 +269,9 @@ def test_compute_rational_function_polynomial(geom_path):
     )
 
     # arbitrary values (extract from a rpc.py test) + last different one
-    xnorm = [-0.95821893, 0.0, -0.96038983, -0.95821891, -0.95821893, 0.354]  # lon_norm
-    ynorm = [0.97766941, 0.0, 0.98172072, 0.97766945, 0.97766941, -0.654]  # lat_norm
-    znorm = [-5.29411765, -5.29411765, -5.29411765, -5.29411765, -5.29411765, 5.1]  # alt_norm
+    xnorm = [-0.95821893, 0.0, -0.96038983, -0.95821891, -0.95821893, 0.354, np.nan, 15, 15]  # lon_norm len+1
+    ynorm = [0.97766941, 0.0, 0.98172072, 0.97766945, 0.97766941, -0.654, 15, np.nan]  # lat_norm
+    znorm = [-5.29411765, -5.29411765, -5.29411765, -5.29411765, -5.29411765, 5.1, 15, 15]  # alt_norm
 
     res_cpp = rpc_c.compute_rational_function_polynomial(
         xnorm,
@@ -285,16 +281,53 @@ def test_compute_rational_function_polynomial(geom_path):
         rpc_cpp.get_den_col(),
         rpc_cpp.get_num_row(),
         rpc_cpp.get_den_row(),
+        rpc_cpp.get_scale_lon(),
+        rpc_cpp.get_offset_lon(),
+        rpc_cpp.get_scale_lat(),
+        rpc_cpp.get_offset_lat(),
+        rpc_cpp.get_scale_alt(),
+        rpc_cpp.get_offset_alt(),
         rpc_cpp.get_scale_col(),
         rpc_cpp.get_offset_col(),
         rpc_cpp.get_scale_row(),
         rpc_cpp.get_offset_row(),
     )
+    # compute_rational_function_polynomial_unitary
+    res_cpp_row = np.empty((len(znorm)))
+    res_cpp_col = np.empty((len(znorm)))
+
+    for i, znorm_i in enumerate(znorm):
+        row_i, col_i, _ = rpc_c.compute_rational_function_polynomial_unitary(
+            xnorm[i],
+            ynorm[i],
+            znorm_i,
+            rpc_cpp.get_num_col(),
+            rpc_cpp.get_den_col(),
+            rpc_cpp.get_num_row(),
+            rpc_cpp.get_den_row(),
+            rpc_cpp.get_scale_lon(),
+            rpc_cpp.get_offset_lon(),
+            rpc_cpp.get_scale_lat(),
+            rpc_cpp.get_offset_lat(),
+            rpc_cpp.get_scale_alt(),
+            rpc_cpp.get_offset_alt(),
+            rpc_cpp.get_scale_col(),
+            rpc_cpp.get_offset_col(),
+            rpc_cpp.get_scale_row(),
+            rpc_cpp.get_offset_row(),
+        )
+        res_cpp_row[i] = row_i
+        res_cpp_col[i] = col_i
+
+    # Ref python
+    xnorm = (np.array(xnorm[:-3]) - rpc_cpp.get_offset_lon()) / rpc_cpp.get_scale_lon()
+    ynorm = (np.array(ynorm[:-2]) - rpc_cpp.get_offset_lat()) / rpc_cpp.get_scale_lat()
+    znorm = (np.array(znorm[:-2]) - rpc_cpp.get_offset_alt()) / rpc_cpp.get_scale_alt()
 
     res_py = compute_rational_function_polynomial(
-        np.array(xnorm, dtype=np.float64),
-        np.array(ynorm, dtype=np.float64),
-        np.array(znorm, dtype=np.float64),
+        xnorm,
+        ynorm,
+        znorm,
         np.array(rpc_cpp.get_num_col(), dtype=np.float64),
         np.array(rpc_cpp.get_den_col(), dtype=np.float64),
         np.array(rpc_cpp.get_num_row(), dtype=np.float64),
@@ -305,32 +338,14 @@ def test_compute_rational_function_polynomial(geom_path):
         rpc_cpp.get_offset_row(),
     )
 
-    # compute_rational_function_polynomial_unitary
-    res_cpp_row = np.empty((len(xnorm)))
-    res_cpp_col = np.empty((len(xnorm)))
+    res_py_0 = np.append(res_py[0], [np.nan, np.nan])
+    res_py_1 = np.append(res_py[1], [np.nan, np.nan])
 
-    for i, xnorm_i in enumerate(xnorm):
-        row_i, col_i = rpc_c.compute_rational_function_polynomial_unitary(
-            xnorm_i,
-            ynorm[i],
-            znorm[i],
-            rpc_cpp.get_num_col(),
-            rpc_cpp.get_den_col(),
-            rpc_cpp.get_num_row(),
-            rpc_cpp.get_den_row(),
-            rpc_cpp.get_scale_col(),
-            rpc_cpp.get_offset_col(),
-            rpc_cpp.get_scale_row(),
-            rpc_cpp.get_offset_row(),
-        )
-        res_cpp_row[i] = row_i
-        res_cpp_col[i] = col_i
+    np.testing.assert_allclose(np.array(res_cpp[0]), res_py_0, 0, 3e-9)
+    np.testing.assert_allclose(np.array(res_cpp[1]), res_py_1, 0, 2e-9)
 
-    np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 1.5e-11)  # relatif diff = 1e-14
-    np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 1.5e-11)
-
-    np.testing.assert_allclose(res_cpp_row, res_py[0], 0, 1.5e-11)
-    np.testing.assert_allclose(res_cpp_col, res_py[1], 0, 1.5e-11)
+    np.testing.assert_allclose(res_cpp_row, res_py_0, 0, 3e-9)
+    np.testing.assert_allclose(res_cpp_col, res_py_1, 0, 2e-9)
 
 
 @pytest.mark.parametrize(
@@ -644,99 +659,6 @@ def test_derivative_polynomial_longitude(geom_path):
     assert res_c_num_row == pytest.approx(res_py_num_row, abs=1e-15)
 
 
-@pytest.mark.parametrize(
-    "geom_path",
-    [
-        "rpc/PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.geom",
-        "rpc/PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif",
-        "rpc/PHRDIMAP_P1BP--2017030824934340CP.XML",
-        "rpc/RPC_P1BP--2017092838284574CP.XML",
-        "rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML",
-    ],
-)
-def test_compute_loc_inverse_derivates_optimized(geom_path):
-    """
-    test compute_loc_inverse_derivates_optimized function
-    """
-
-    file_path = os.path.join(data_path(), geom_path)
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
-
-    lon_norm = [-0.95821893, 0.0, -0.96038983, -0.95821891, -0.95821893, 0.354]
-    lat_norm = [0.97766941, 0.0, 0.98172072, 0.97766945, 0.97766941, -0.654]
-    alt_norm = [-5.29411765, -5.29411765, -5.29411765, -5.29411765, -5.29411765, 5.1]
-
-    res_cpp = rpc_c.compute_loc_inverse_derivates_optimized(
-        lon_norm,
-        lat_norm,
-        alt_norm,
-        rpc_cpp.get_num_col(),
-        rpc_cpp.get_den_col(),
-        rpc_cpp.get_num_row(),
-        rpc_cpp.get_den_row(),
-        rpc_cpp.get_scale_col(),
-        rpc_cpp.get_scale_lon(),
-        rpc_cpp.get_scale_row(),
-        rpc_cpp.get_scale_lat(),
-    )
-
-    res_py = compute_loc_inverse_derivates_numba(
-        np.array(lon_norm, dtype=np.float64),
-        np.array(lat_norm, dtype=np.float64),
-        np.array(alt_norm, dtype=np.float64),
-        np.array(rpc_cpp.get_num_col(), dtype=np.float64),
-        np.array(rpc_cpp.get_den_col(), dtype=np.float64),
-        np.array(rpc_cpp.get_num_row(), dtype=np.float64),
-        np.array(rpc_cpp.get_den_row(), dtype=np.float64),
-        rpc_cpp.get_scale_col(),
-        rpc_cpp.get_scale_lon(),
-        rpc_cpp.get_scale_row(),
-        rpc_cpp.get_scale_lat(),
-    )
-
-    np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 2e-10)  # abs diff = 1e-10
-    np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 2e-10)  # abs diff = 1e-13
-    np.testing.assert_allclose(np.array(res_cpp[2]), res_py[2], 0, 2e-10)  # abs diff = 1e-12
-    np.testing.assert_allclose(np.array(res_cpp[3]), res_py[3], 0, 2e-10)  # abs diff = 1e-10
-
-    # Unitary
-
-    res_cpp = np.empty((len(lon_norm), 4))
-    for i, lon_norm_i in enumerate(lon_norm):
-        res_cpp[i, :] = rpc_c.compute_loc_inverse_derivates_optimized_unitary(
-            lon_norm_i,
-            lat_norm[i],
-            alt_norm[i],
-            rpc_cpp.get_num_col(),
-            rpc_cpp.get_den_col(),
-            rpc_cpp.get_num_row(),
-            rpc_cpp.get_den_row(),
-            rpc_cpp.get_scale_col(),
-            rpc_cpp.get_scale_lon(),
-            rpc_cpp.get_scale_row(),
-            rpc_cpp.get_scale_lat(),
-        )
-    np.testing.assert_allclose(res_cpp[:, 0], res_py[0], 0, 2e-10)  # abs diff = 1e-10
-    np.testing.assert_allclose(res_cpp[:, 1], res_py[1], 0, 2e-10)  # abs diff = 1e-13
-    np.testing.assert_allclose(res_cpp[:, 2], res_py[2], 0, 2e-10)  # abs diff = 1e-12
-    np.testing.assert_allclose(res_cpp[:, 3], res_py[3], 0, 2e-10)  # abs diff = 1e-10
-
-
 def test_compute_loc_inverse_derivates():
     """
     test on the compute_loc_inverse_derivates methode
@@ -766,25 +688,15 @@ def test_compute_loc_inverse_derivates():
     lat_vect = np.ndarray.flatten(lat_vect)
     alt_vect = np.ndarray.flatten(alt_vect)
 
-    # COMPUTATION
-    res_cpp = rpc_optim.compute_loc_inverse_derivates(lon_vect, lat_vect, alt_vect)
     res_py = rpc_py.compute_loc_inverse_derivates(lon_vect, lat_vect, alt_vect)
-
-    np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 2e-10)  # abs diff = 1e-10
-    np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 2e-10)  # abs diff = 1e-13
-    np.testing.assert_allclose(np.array(res_cpp[2]), res_py[2], 0, 2e-10)  # abs diff = 1e-12
-    np.testing.assert_allclose(np.array(res_cpp[3]), res_py[3], 0, 3e-10)  # abs diff = 1e-10
-
-    # Unitary
-
     res_cpp = np.empty((len(lon_vect), 4))
     for i, lon_vect_i in enumerate(lon_vect):
         res_cpp[i, :] = rpc_optim.compute_loc_inverse_derivates(lon_vect_i, lat_vect[i], alt_vect[i])
 
-    np.testing.assert_allclose(res_cpp[:, 0], res_py[0], 0, 2e-10)  # abs diff = 1e-10
-    np.testing.assert_allclose(res_cpp[:, 1], res_py[1], 0, 2e-10)  # abs diff = 1e-13
-    np.testing.assert_allclose(res_cpp[:, 2], res_py[2], 0, 2e-10)  # abs diff = 1e-12
-    np.testing.assert_allclose(res_cpp[:, 3], res_py[3], 0, 3e-10)  # abs diff = 1e-10
+    np.testing.assert_allclose(res_cpp[:, 0], res_py[0], 0, 2e-10)
+    np.testing.assert_allclose(res_cpp[:, 1], res_py[1], 0, 2e-10)
+    np.testing.assert_allclose(res_cpp[:, 2], res_py[2], 0, 2e-10)
+    np.testing.assert_allclose(res_cpp[:, 3], res_py[3], 0, 3e-10)
 
 
 @pytest.mark.parametrize(

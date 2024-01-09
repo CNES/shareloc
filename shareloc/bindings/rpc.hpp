@@ -37,7 +37,7 @@ private:
     string type;
     int epsg;
     string datum;
-    map<string, double> rpc_params;//map<string, double> is a simple dict -> maybe inappropiate here
+    map<string, double> rpc_params;//map<string, double> is a simple dict -> maybe inappropiate
     double lim_extrapol;
 
     vector<vector<double>> monomes;// to convert to array
@@ -128,14 +128,6 @@ public:
         bool fill_nan=false,
         string direction="direct");
 
-    /**compute_loc_inverse_derivates*/
-    tuple<vector<double>,
-    vector<double>,
-    vector<double>,
-    vector<double>> compute_loc_inverse_derivates(
-        vector<double> lon,
-        vector<double> lat,
-        vector<double> alt);
 
     /**compute_loc_inverse_derivates unitary*/
     tuple<double,
@@ -219,7 +211,7 @@ double polynomial_equation(
     const array<double, 20>* coeff);
 
 /** compute_rational_function_polynomial unitary*/
-tuple<double,double> compute_rational_function_polynomial_unitary(
+tuple<double,double,double> compute_rational_function_polynomial_unitary(
     double lon_col_norm,
     double lat_row_norm,
     double alt_norm,
@@ -227,6 +219,16 @@ tuple<double,double> compute_rational_function_polynomial_unitary(
     array<double, 20> den_col,
     array<double, 20> num_lin,
     array<double, 20> den_lin,
+
+    //input
+    double scale_lon_col,
+    double offset_lon_col,
+    double scale_lat_row,
+    double offset_lat_row,
+    double scale_alt,
+    double offset_alt,
+
+    //output
     double scale_col,
     double offset_col,
     double scale_lin,
@@ -236,7 +238,7 @@ tuple<double,double> compute_rational_function_polynomial_unitary(
 
 /**Compute rational function polynomial. Useful to compute direct and inverse localization
         "using direct or inverse RPC."*/
-tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
+tuple<vector<double>,vector<double>,vector<double>> compute_rational_function_polynomial(
     vector<double> lon_col_norm,
     vector<double> lat_row_norm,
     vector<double> alt_norm,
@@ -244,57 +246,39 @@ tuple<vector<double>,vector<double>> compute_rational_function_polynomial(
     array<double, 20> den_col,
     array<double, 20> num_lin,
     array<double, 20> den_lin,
+
+    //input
+    double scale_lon_col,
+    double offset_lon_col,
+    double scale_lat_row,
+    double offset_lat_row,
+    double scale_alt,
+    double offset_alt,
+
+    //output
     double scale_col,
     double offset_col,
     double scale_lin,
     double offset_lin
 );
 
-/**Analytically compute the partials derivatives of inverse localization for only one point*/
-tuple<double,
-double,
-double,
-double> compute_loc_inverse_derivates_optimized_unitary(
+/**Check if arrays have the same size and cut it if needed*/
+tuple<vector<double>,
+    vector<double>,
+    vector<double>> check_sizes(vector<double> lon_col,
+    vector<double> lat_row,
+    vector<double>alt);
+
+/** Compute derivative_polynomial_latitude*/
+double derivative_polynomial_latitude(
     double lon_norm,
     double lat_norm,
     double alt_norm,
-    array<double, 20> num_col,
-    array<double, 20> den_col,
-    array<double, 20> num_lin,
-    array<double, 20> den_lin,
-    double scale_col,
-    double scale_lon,
-    double scale_lin,
-    double scale_lat
-);
+    const array<double, 20>* coeff);
 
-/**Analytically compute the partials derivatives of inverse localization*/
-tuple<vector<double>,
-vector<double>,
-vector<double>,
-vector<double>> compute_loc_inverse_derivates_optimized(
-    vector<double> lon_norm,
-    vector<double> lat_norm,
-    vector<double> alt_norm,
-    array<double, 20> num_col,
-    array<double, 20> den_col,
-    array<double, 20> num_lin,
-    array<double, 20> den_lin,
-    double scale_col,
-    double scale_lon,
-    double scale_lin,
-    double scale_lat
-);
-
-/**func to translate np.man(np.abs(vec))*/
-double max_abs(vector<double> vec){
-    transform(vec.begin(), vec.end(), vec.begin(), [](double x) { return fabs(x); });
-    auto maxElement = max_element(vec.begin(), vec.end());
-
-    if (maxElement != vec.end()) {//if not empty
-        return *maxElement;
-    } else {
-        cout<<"max_abs function FAILED return -1.0"<<endl;
-        return -1.0;
-    }
-};
+/**Compute derivative_polynomial_longitude*/
+double derivative_polynomial_longitude(
+    double lon_norm,
+    double lat_norm,
+    double alt_norm,
+    const array<double, 20>* coeff);

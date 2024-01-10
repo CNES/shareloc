@@ -48,11 +48,13 @@ def rpc_reader(geomodel_path: str, topleftconvention: bool = True) -> Dict:
     :param geomodel_path geomodel filename
     :return rpc dict filled with parameters
     """
+    # Faire un truc plus propre
     # pylint: disable=W0707
     try:
         rpc_params = rpc_reader_via_rasterio(geomodel_path, topleftconvention)
         return rpc_params
     except:  # noqa : B001,B904,E722
+
         # If ends with XML --> DIMAP
         if basename(geomodel_path.upper()).endswith("XML"):
             dimap_version = identify_dimap(geomodel_path)

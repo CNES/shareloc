@@ -351,6 +351,7 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
     # instantiate outputs
     left_grid, right_grid = np.zeros((grid_size[0], grid_size[1], 2)), np.zeros((grid_size[0], grid_size[1], 2))
 
+    # loop on the strip
     for idx, left_strip in enumerate(left_strips):
         strip_left_grid, strip_right_grid, _, mbr = compute_strip_of_epipolar_grid(
             geom_model_left,

@@ -446,7 +446,7 @@ def compute_strip_of_epipolar_grid(
         current_left_point = current_left_point[np.newaxis, :]
 
     # if epipolar angles is not given as input we first compute the epipolar direction, otherwise
-    # we consider that baseline ration has been already computed thus already_computed_ratio index is updated
+    # we consider that baseline ratio has been already computed thus already_computed_ratio index is updated
     if epipolar_angles is None:
         already_computed_ratio = 0.0
         local_epi_start, local_epi_end = compute_local_epipolar_line(
@@ -643,14 +643,15 @@ def compute_stereorectification_epipolar_grids(
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
     :return:
-        Returns a Tuple containing :
-            - left epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3):
-                [nb rows, nb cols, [row displacement, col displacement, alt]]
-            - right epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3) :
-                [nb rows, nb cols, [row displacement, col displacement, alt]]
-            - size of epipolar image, [nb_rows,nb_cols]
-            - mean value of the baseline to sensor altitude ratio, float
-            - epipolar grid geotransform, Affine
+        Returns left and right epipolar displacement grid, epipolar image size, mean of base to height ratio
+        and geotransfrom of the grid in a tuple containing :
+        - left epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3):
+        [nb rows, nb cols, [row displacement, col displacement, alt]]
+        - right epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3) :
+        [nb rows, nb cols, [row displacement, col displacement, alt]]
+        - size of epipolar image, [nb_rows,nb_cols]
+        - mean value of the baseline to sensor altitude ratio, float
+        - epipolar grid geotransform, Affine
     :rtype: Tuple(np.ndarray, np.ndarray, List[int], float, Affine)
     """
 

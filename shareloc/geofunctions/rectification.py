@@ -610,6 +610,8 @@ def positions_to_displacement_grid(
     return left_grid, right_grid, transform
 
 
+# following code structure is also used in tests
+# pylint: disable=duplicate-code
 def compute_stereorectification_epipolar_grids(
     left_im: Image,
     geom_model_left: GeoModelTemplate,

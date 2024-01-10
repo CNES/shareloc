@@ -48,22 +48,26 @@ def rpc_reader(geomodel_path: str, topleftconvention: bool = True) -> Dict:
     :param geomodel_path geomodel filename
     :return rpc dict filled with parameters
     """
-
-    # If ends with XML --> DIMAP
-    if basename(geomodel_path.upper()).endswith("XML"):
-        dimap_version = identify_dimap(geomodel_path)
-        if dimap_version is not None:
-            if float(dimap_version) < 2.0:
-                return rpc_reader_dimap_v1(geomodel_path, topleftconvention)
-            if float(dimap_version) >= 2.0:
-                return rpc_reader_dimap_v23(geomodel_path, topleftconvention)
-    ossim_model = identify_ossim_kwl(geomodel_path)
-    if ossim_model is not None:
-        return rpc_reader_ossim_kwl(geomodel_path, topleftconvention)
-    geotiff_rpc_dict = identify_geotiff_rpc(geomodel_path)
-    if geotiff_rpc_dict is not None:
-        return rpc_reader_geotiff(geomodel_path, topleftconvention)
-    raise ValueError("can not read rpc file")
+    # pylint: disable=W0707
+    try:
+        rpc_params = rpc_reader_via_rasterio(geomodel_path, topleftconvention)
+        return rpc_params
+    except:  # noqa : B001,B904,E722
+        # If ends with XML --> DIMAP
+        if basename(geomodel_path.upper()).endswith("XML"):
+            dimap_version = identify_dimap(geomodel_path)
+            if dimap_version is not None:
+                if float(dimap_version) < 2.0:
+                    return rpc_reader_dimap_v1(geomodel_path, topleftconvention)
+                if float(dimap_version) >= 2.0:
+                    return rpc_reader_dimap_v23(geomodel_path, topleftconvention)
+        ossim_model = identify_ossim_kwl(geomodel_path)
+        if ossim_model is not None:
+            return rpc_reader_ossim_kwl(geomodel_path, topleftconvention)
+        geotiff_rpc_dict = identify_geotiff_rpc(geomodel_path)
+        if geotiff_rpc_dict is not None:
+            return rpc_reader_geotiff(geomodel_path, topleftconvention)
+        raise ValueError("can not read rpc file")  # noqa: B904
 
 
 def rpc_reader_dimap_v23(geomodel_path: str, topleftconvention: bool = True) -> Dict:

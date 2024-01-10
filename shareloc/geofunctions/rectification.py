@@ -535,13 +535,12 @@ def init_inputs_rectification(
     :type epi_step: float
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
-    :return:
-        Returns a Tuple containing :
-            - left sarting point , np.ndarray of size (1,1,3)
-            - right starting point np.ndarray of size (1,1,3)
-            - epipolar spacing, float
-            - grid size, list [nb_row,nb_cols]
-            - rectified image size, list [nb_row,nb_cols]
+    :return: returns a Tuple containing:
+    - left starting point, np.ndarray of size (1,1,3)
+    - right starting point, np.ndarray of size (1,1,3)
+    - epipolar spacing, float
+    - grid size, list [nb_row,nb_cols]
+    - rectified image size, list [nb_row,nb_cols]
     :rtype: Tuple
     """
 
@@ -565,11 +564,11 @@ def init_inputs_rectification(
     start_right[:, 1] = init_col[0]
     start_right[:, 2] = init_alt[0]
 
-    init_left_point = np.array(np.copy(footprint[0]))
-    init_right_point = np.copy(np.squeeze(start_right))
-
+    init_left_point = np.array(footprint[0])
     init_left_point = init_left_point[np.newaxis, np.newaxis, :]
-    init_right_point = init_right_point[np.newaxis, np.newaxis, :]
+
+    init_right_point = np.copy(start_right)
+    init_right_point = init_right_point[np.newaxis, :]
 
     return (
         init_left_point,
@@ -584,6 +583,7 @@ def positions_to_displacement_grid(
     left_grid: np.ndarray, right_grid: np.ndarray, epi_step: float
 ) -> Tuple[np.ndarray, np.ndarray, Affine]:
     """
+    Transform position grids to displacement grid
     :param left_grid: left epipolar positions grids
     :type left_grid: np.ndarray
     :param right_grid: right epipolar positions grids
@@ -591,9 +591,9 @@ def positions_to_displacement_grid(
     :param epi_step: epipolar step
     :type epi_step: float
     :return:
-        - left epipolar displacement grid, np.ndarray
-        - right epipolar displacement grid, np.ndarray
-        - transform, Affine
+    - left epipolar displacement grid, np.ndarray
+    - right epipolar displacement grid, np.ndarray
+    - transform, Affine
     :rtype: Tuple(np.ndarray, np.ndarray, Affine)
     """
     rows = np.arange(left_grid.shape[0], dtype=float)
@@ -649,7 +649,7 @@ def compute_stereorectification_epipolar_grids(
             - size of epipolar image, [nb_rows,nb_cols]
             - mean value of the baseline to sensor altitude ratio, float
             - epipolar grid geotransform, Affine
-    :rtype: Tuple
+    :rtype: Tuple(np.ndarray, np.ndarray, List[int], float, Affine)
     """
 
     # Initialize rectification with sensor image starting position and epipolar image and grid information.

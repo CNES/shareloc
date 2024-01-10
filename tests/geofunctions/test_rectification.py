@@ -65,7 +65,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc(init_rpc_geom_m
     epi_step = 30
     elevation_offset = 50
     default_elev = 0.0
-    left_grid, right_grid, img_size_row, img_size_col, mean_br, _ = compute_stereorectification_epipolar_grids(
+    left_grid, right_grid, [img_size_row, img_size_col], mean_br, _ = compute_stereorectification_epipolar_grids(
         left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
@@ -128,7 +128,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_alti(init_rpc_g
     epi_step = 30
     elevation_offset = 50
     default_elev = 100.0
-    left_grid, right_grid, img_size_row, img_size_col, mean_br, _ = compute_stereorectification_epipolar_grids(
+    left_grid, right_grid, [img_size_row, img_size_col], mean_br, _ = compute_stereorectification_epipolar_grids(
         left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
@@ -177,7 +177,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid(init_
     # compute rectification grid sampled at 30 pixels
     epi_step = 30
     elevation_offset = 50
-    left_grid, right_grid, img_size_row, img_size_col, mean_br, _ = compute_stereorectification_epipolar_grids(
+    left_grid, right_grid, [img_size_row, img_size_col], mean_br, _ = compute_stereorectification_epipolar_grids(
         left_im, geom_model_left, right_im, geom_model_right, dtm_ventoux, epi_step, elevation_offset
     )
 
@@ -227,7 +227,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid_roi(i
 
     epi_step = 30
     elevation_offset = 50
-    left_grid, right_grid, img_size_row, img_size_col, mean_br, _ = compute_stereorectification_epipolar_grids(
+    left_grid, right_grid, [img_size_row, img_size_col], mean_br, _ = compute_stereorectification_epipolar_grids(
         left_im, geom_model_left, right_im, geom_model_right, dtm_ventoux, epi_step, elevation_offset
     )
 
@@ -283,7 +283,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_grid():
     # compute rectification grid sampled at 30 pixels
     epi_step = 30
     elevation_offset = 50
-    left_grid, right_grid, img_size_row, img_size_col, mean_br, _ = compute_stereorectification_epipolar_grids(
+    left_grid, right_grid, [img_size_row, img_size_col], mean_br, _ = compute_stereorectification_epipolar_grids(
         left_im, geom_model_left, right_im, geom_model_right, default_elev, epi_step, elevation_offset
     )
 
@@ -342,7 +342,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_grid_dtm_geoid():
     # compute rectification grid sampled at 30 pixels
     epi_step = 30
     elevation_offset = 50
-    left_grid, right_grid, img_size_row, img_size_col, mean_br, _ = compute_stereorectification_epipolar_grids(
+    left_grid, right_grid, [img_size_row, img_size_col], mean_br, _ = compute_stereorectification_epipolar_grids(
         left_im, geom_model_left, right_im, geom_model_right, dtm_ventoux, epi_step, elevation_offset
     )
 

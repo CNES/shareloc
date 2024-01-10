@@ -50,7 +50,6 @@ def init_rpc_geom_model():
     return geom_model_left, geom_model_right
 
 
-# pylint : ignore=duplicate-code
 @pytest.fixture()
 def init_inputs_rectification_fixture(init_rpc_geom_model):
     """

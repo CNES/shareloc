@@ -29,7 +29,7 @@ Following information are needed for localization functions:
 ``shareloc.geofunctions.localization.Localization`` class collect these data to set up the localization functions.
 It is possible to use geometric model directly using ``shareloc.grid.Grid`` and ``shareloc.rpc.rpc.RPC`` for advanced used.
 
-.. code-block:: console
+.. code-block:: Python
 
     class Localization:
     """base class for localization function.
@@ -59,7 +59,7 @@ Direct localization returns ground coordinates  :math:`(\lambda,\phi,h)` for ima
 
 :math:`(\lambda,\phi)` can be geographic (lat,lon) or cartographic depending on the chosen :term:`CRS`
 
-.. code-block:: bash
+.. code-block:: python
 
     def direct(self, row, col, h=None, using_geotransform=False):
         """
@@ -81,7 +81,7 @@ Inverse Localization
 
 inverse localization returns image position (row,column) for ground coordinates :math:`(\lambda,\phi,h)`  :math:`(row,col) = inverse\_localization(\lambda,\phi,h)`.
 
-.. code-block:: bash
+.. code-block:: python
 
     def inverse(self, lon, lat, h=None, using_geotransform=False):
         """
@@ -101,7 +101,7 @@ Colocalization
 
 colocalization returns image positions (row2,col2) in image 2 from (row1,col1) position in image 1
 
-.. code-block:: bash
+.. code-block:: python
 
     def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, using_geotransform=False):
         """
@@ -139,7 +139,7 @@ Triangulation is calculated according to the following formula:
 
 where :math:`v_i` is the orientation of the :term:`LOS` i and :math:`s_i` the hat of the :term:`LOS` i
 
-.. code-block:: bash
+.. code-block:: python
 
     def sensor_triangulation(
         matches,
@@ -196,34 +196,48 @@ Shareloc rectification grids respects OTB convention for displacement grids.
 To generate the images in epipolar geometry from the grids computed by shareloc and the original images, one can refer to the Orfeo Toolbox documentation `here <https://www.orfeo-toolbox.org/CookBook/recipes/stereo.html#resample-images-in-epipolar-geometry>`_ .
 Algorithm details can be found in reference below.
 
-.. code-block:: bash
+.. code-block:: python
 
     def compute_stereorectification_epipolar_grids(
-        left_im, geom_model_left, right_im, geom_model_right, elevation=0.0, epi_step=1, elevation_offset=50.0
-    ):
+        left_im: Image,
+        geom_model_left: GeoModelTemplate,
+        right_im: Image,
+        geom_model_right: GeoModelTemplate,
+        elevation: Union[float, DTMIntersection] = 0.0,
+        epi_step: float = 1.0,
+        elevation_offset: float = 50.0,
+    ) -> Tuple[np.ndarray, np.ndarray, int, int, float, Affine]:
         """
-        Compute stereo-rectification epipolar grids
+        Compute stereo-rectification epipolar grids. Rectification scheme is composed of :
+        - rectification grid initialisation
+        - compute first grid row (one vertical strip by moving along rows)
+        - compute all columns (one horizontal strip along columns)
+        - transform position to displacement grid
 
         :param left_im: left image
-        :type left_im: shareloc.image object
+        :type left_im: shareloc Image object
         :param geom_model_left: geometric model of the left image
-        :type geom_model_left: GeomodelTemplate
+        :type geom_model_left: GeoModelTemplate
         :param right_im: right image
-        :type right_im: shareloc.image object
+        :type right_im: shareloc Image object
         :param geom_model_right: geometric model of the right image
-        :type geom_model_right: GeomodelTemplate
+        :type geom_model_right: GeoModelTemplate
         :param elevation: elevation
-        :type elevation: shareloc.dtm or float
+        :type elevation: DTMIntersection or float
         :param epi_step: epipolar step
-        :type epi_step: int
+        :type epi_step: float
         :param elevation_offset: elevation difference used to estimate the local tangent
         :type elevation_offset: float
-        :return: return :
-            - left epipolar grid, shareloc.image object convention [[row displacement, col displacement], nb rows, nb cols]
-            - right epipolar grid, shareloc.image object convention [[row displacement, col displacement], nb rows, nb cols]
-            - number of rows of the epipolar image, int
-            - number of columns of the epipolar image, int
-            - mean value of the baseline to sensor altitude ratio, float
+        :return:
+            Returns a Tuple containing :
+                - left epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3):
+                    [nb rows, nb cols, [row displacement, col displacement, alt]]
+                - right epipolar grid, np.ndarray object convention (nb_rows,nb_cols,3)
+                    [nb rows, nb cols, [row displacement, col displacement, alt]]
+                - number of rows of the epipolar image, int
+                - number of columns of the epipolar image, int
+                - mean value of the baseline to sensor altitude ratio, float
+                - epipolar grid geotransform, Affine
         :rtype: Tuple
         """
 

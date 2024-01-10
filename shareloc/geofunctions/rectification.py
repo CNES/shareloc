@@ -515,13 +515,36 @@ def init_inputs_rectification(
     right_im: Image,
     geom_model_right: GeoModelTemplate,
     elevation: Union[float, DTMIntersection] = 0.0,
-    epi_step: int = 1,
+    epi_step: float = 1.0,
     elevation_offset: float = 50.0,
 ) -> Tuple[np.ndarray, np.ndarray, float, List[int], List[int]]:
     """
     Inputs rectification with its starting point, spacing, grid size, rectified_image size.
     spacing is defined as mean pixel size of input image.
+    :param left_im: left image
+    :type left_im: shareloc Image object
+    :param geom_model_left: geometric model of the left image
+    :type geom_model_left: GeoModelTemplate
+    :param right_im: right image (not used, be still here for API symmetry)
+    :type right_im: shareloc Image object
+    :param geom_model_right: geometric model of the right image
+    :type geom_model_right: GeoModelTemplate
+    :param elevation: elevation
+    :type elevation: DTMIntersection or float
+    :param epi_step: epipolar step
+    :type epi_step: float
+    :param elevation_offset: elevation difference used to estimate the local tangent
+    :type elevation_offset: float
+    :return:
+        Returns a Tuple containing :
+            - left sarting point , np.ndarray of size (1,1,3)
+            - right starting point np.ndarray of size (1,1,3)
+            - epipolar spacing, float
+            - grid size, list [nb_row,nb_cols]
+            - rectified image size, list [nb_row,nb_cols]
+    :rtype: Tuple
     """
+
     # Use the mean spacing as before
     spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
     __, grid_size, rectified_image_size, footprint = prepare_rectification(
@@ -587,9 +610,6 @@ def positions_to_displacement_grid(
     return left_grid, right_grid, transform
 
 
-# disable for api symmetry between left and right data
-# pylint: disable=unused-argument
-# pylint: disable=R0801
 def compute_stereorectification_epipolar_grids(
     left_im: Image,
     geom_model_left: GeoModelTemplate,
@@ -598,7 +618,7 @@ def compute_stereorectification_epipolar_grids(
     elevation: Union[float, DTMIntersection] = 0.0,
     epi_step: float = 1.0,
     elevation_offset: float = 50.0,
-) -> Tuple[np.ndarray, np.ndarray, int, int, float, Affine]:
+) -> Tuple[np.ndarray, np.ndarray, List[int], float, Affine]:
     """
     Compute stereo-rectification epipolar grids. Rectification scheme is composed of :
     - rectification grid initialisation
@@ -621,19 +641,21 @@ def compute_stereorectification_epipolar_grids(
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
     :return:
-        - left epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3):
-            [nb rows, nb cols, [row displacement, col displacement, alt]]
-        - right epipolar grid, np.ndarray object convention (nb_rows,nb_cols,3)
-            [nb rows, nb cols, [row displacement, col displacement, alt]]
-        - number of rows of the epipolar image, int
-        - number of columns of the epipolar image, int
-        - mean value of the baseline to sensor altitude ratio, float
-        - grid geotransform, Affine
+        Returns a Tuple containing :
+            - left epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3):
+                [nb rows, nb cols, [row displacement, col displacement, alt]]
+            - right epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3) :
+                [nb rows, nb cols, [row displacement, col displacement, alt]]
+            - size of epipolar image, [nb_rows,nb_cols]
+            - mean value of the baseline to sensor altitude ratio, float
+            - epipolar grid geotransform, Affine
     :rtype: Tuple
     """
+
+    # Initialize rectification with sensor image starting position and epipolar image and grid information.
     (
-        left_position_point,
-        right_position_point,
+        left_starting_point,
+        right_starting_point,
         spacing,
         grid_size,
         rectified_image_size,
@@ -641,11 +663,13 @@ def compute_stereorectification_epipolar_grids(
         left_im, geom_model_left, right_im, geom_model_right, elevation, epi_step, elevation_offset
     )
 
+    # Create the first row by moving along columns (axis = 0) with number of rows of the grids.
+    # It returns (grid_size[0],1,3) shaped grids, epipolar angles, and mean baseline ratio for the first columns.
     left_grid, right_grid, alphas, mean_br_col = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
-        left_position_point,
-        right_position_point,
+        left_starting_point,
+        right_starting_point,
         spacing,
         axis=0,
         strip_size=grid_size[0],
@@ -654,6 +678,10 @@ def compute_stereorectification_epipolar_grids(
         elevation_offset=elevation_offset,
     )
 
+    # Moving along row (axis = 1) using previous results
+    # It returns (grid_size[0],grid_size[1],3) shaped grids, epipolar angles, and mean baseline ratio
+    # for the (grid_size[0] -1 ,grid_size[1],3) positions, already computed epipolar angles
+    # are not included in mean baseline ratio.
     left_grid, right_grid, alphas, mean_br = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
@@ -667,10 +695,13 @@ def compute_stereorectification_epipolar_grids(
         elevation_offset=elevation_offset,
         epipolar_angles=alphas,
     )
+
+    # Compute global mean baseline ratio using the two strip
     mean_baseline_ratio = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
         grid_size[1] * grid_size[0]
     )
 
+    # Convert position to displacement grids
     left_grid, right_grid, transform = positions_to_displacement_grid(left_grid, right_grid, epi_step)
 
-    return left_grid, right_grid, rectified_image_size[0], rectified_image_size[1], mean_baseline_ratio, transform
+    return left_grid, right_grid, rectified_image_size, mean_baseline_ratio, transform

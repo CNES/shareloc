@@ -297,7 +297,8 @@ def test_positions_to_displacement_grid():
 # pylint: disable=too-many-locals
 def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixture):
     """
-    Test epipolar creation grid by strip
+    Test epipolar creation grid by strip. This test presents how to use computation by strips.
+    It is useful for describing parralelisation opportunity
     """
     geom_model_left, geom_model_right = init_rpc_geom_model
     (
@@ -344,7 +345,7 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
         right_strips.append(right_strip)
         alphas_strip.append(alphas)
 
-    # instanciate second axis
+    # instantiate second axis
     axis = 1
 
     # instantiate outputs

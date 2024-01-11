@@ -24,6 +24,8 @@ RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotif
 """
 
 
+import numpy as np
+
 # Third party imports
 from numba import config
 
@@ -61,14 +63,71 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
             rpc_params["scale_row"],
         ]
 
-        rpc_c.RPC.__init__(
-            self,
-            rpc_params["num_col"],
-            rpc_params["den_col"],
-            rpc_params["num_row"],
-            rpc_params["den_row"],
-            norm_coeffs,
-        )
+        empty = [0 for i in range(20)]
+
+        if rpc_params["num_col"] and rpc_params["num_x"]:
+            if not all(i == 0 for i in rpc_params["num_col"]) and not all(
+                i == 0 for i in rpc_params["num_x"]
+            ):  # direct and inverse coef
+
+                rpc_c.RPC.__init__(
+                    self,
+                    True,
+                    True,
+                    rpc_params["num_col"],
+                    rpc_params["den_col"],
+                    rpc_params["num_row"],
+                    rpc_params["den_row"],
+                    rpc_params["num_x"],
+                    rpc_params["den_x"],
+                    rpc_params["num_y"],
+                    rpc_params["den_y"],
+                    norm_coeffs,
+                )
+            else:
+                raise ValueError("RpcOptim : RPC coefficients are all 0")
+
+        elif rpc_params["num_col"]:
+            if not all(i == 0 for i in rpc_params["num_col"]):  # only inverse coef
+
+                rpc_c.RPC.__init__(
+                    self,
+                    True,
+                    False,
+                    rpc_params["num_col"],
+                    rpc_params["den_col"],
+                    rpc_params["num_row"],
+                    rpc_params["den_row"],
+                    empty,
+                    empty,
+                    empty,
+                    empty,
+                    norm_coeffs,
+                )
+            else:
+                raise ValueError("RpcOptim : RPC coefficients are all 0")
+
+        elif rpc_params["num_x"]:
+            if not all(i == 0 for i in rpc_params["num_x"]):  # only direct coef
+
+                rpc_c.RPC.__init__(
+                    self,
+                    False,
+                    True,
+                    empty,
+                    empty,
+                    empty,
+                    empty,
+                    rpc_params["num_x"],
+                    rpc_params["den_x"],
+                    rpc_params["num_y"],
+                    rpc_params["den_y"],
+                    norm_coeffs,
+                )
+            else:
+                raise ValueError("RpcOptim : RPC coefficients are all 0")
+        else:
+            raise ValueError("RpcOptim : No RPC coefficients readable")
 
     @classmethod
     def load(cls, geomodel_path):
@@ -101,6 +160,9 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
         :return: ground position (lon,lat,h)
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
+        res_optim = super().direct_loc_h(row, col, alt, fill_nan)
+        res_optim = np.array([res_optim[0], res_optim[1], res_optim[2]]).T
+        return res_optim
 
     def direct_loc_dtm(self, row, col, dtm):
         """

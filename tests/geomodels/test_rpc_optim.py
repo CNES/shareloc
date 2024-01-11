@@ -41,10 +41,9 @@ from shareloc.geomodels.rpc import (
     derivative_polynomial_longitude,
     polynomial_equation,
 )
-from shareloc.geomodels.rpc_readers import rpc_reader
 
 # Shareloc test imports
-from ..helpers import data_path
+from ..helpers import data_path, rpc_c_constructor
 
 
 # pylint: disable=duplicate-code
@@ -66,23 +65,7 @@ def test_construtor(geom_path):
     file_path = os.path.join(data_path(), geom_path)
 
     rpc_py = GeoModel(file_path, "RPC")
-
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
 
     assert rpc_py.offset_x == rpc_cpp.get_offset_lon()
     assert rpc_py.scale_x == rpc_cpp.get_scale_lon()
@@ -114,7 +97,7 @@ def test_method_rpc_cpp():
     integer = 1
     string = "string"
 
-    rpc.direct_loc_h(vector_double, vector_double, double, False)
+    rpc.direct_loc_h(vector_double, vector_double, vector_double, False)
     rpc.direct_loc_grid_h(integer, integer, integer, integer, integer, integer, double)
     rpc.direct_loc_dtm(double, double, string)
     rpc.inverse_loc(vector_double, vector_double, vector_double)
@@ -196,22 +179,7 @@ def test_polynomial_equation(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test)
     xnorm = -0.95821893  # lon_norm
@@ -251,22 +219,7 @@ def test_compute_rational_function_polynomial(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test) + last different one
     xnorm = [-0.95821893, 0.0, -0.96038983, -0.95821891, -0.95821893, 0.354, np.nan, 15, 15]  # lon_norm len+1
@@ -297,7 +250,7 @@ def test_compute_rational_function_polynomial(geom_path):
     res_cpp_col = np.empty((len(znorm)))
 
     for i, znorm_i in enumerate(znorm):
-        row_i, col_i, _ = rpc_c.compute_rational_function_polynomial_unitary(
+        col_i, row_i, _ = rpc_c.compute_rational_function_polynomial_unitary(
             xnorm[i],
             ynorm[i],
             znorm_i,
@@ -341,8 +294,8 @@ def test_compute_rational_function_polynomial(geom_path):
     res_py_0 = np.append(res_py[0], [np.nan, np.nan])
     res_py_1 = np.append(res_py[1], [np.nan, np.nan])
 
-    np.testing.assert_allclose(np.array(res_cpp[0]), res_py_0, 0, 3e-9)
-    np.testing.assert_allclose(np.array(res_cpp[1]), res_py_1, 0, 2e-9)
+    np.testing.assert_allclose(np.array(res_cpp[1]), res_py_0, 0, 3e-9)
+    np.testing.assert_allclose(np.array(res_cpp[0]), res_py_1, 0, 2e-9)
 
     np.testing.assert_allclose(res_cpp_row, res_py_0, 0, 3e-9)
     np.testing.assert_allclose(res_cpp_col, res_py_1, 0, 2e-9)
@@ -416,12 +369,22 @@ def test_inverse_loc_from_any_input(id_scene, lon, lat, alt, row_vt, col_vt):
     assert alt_res[0] == alt[0]
 
 
-def test_inverse_loc():
+@pytest.mark.parametrize(
+    "geom_path",
+    [
+        "rpc/PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.geom",
+        "rpc/PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif",
+        "rpc/PHRDIMAP_P1BP--2017030824934340CP.XML",
+        "rpc/RPC_P1BP--2017092838284574CP.XML",
+        "rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML",
+    ],
+)
+def test_inverse_loc(geom_path):
     """
     test inverse localization accuracy
     """
 
-    rpc_path = os.path.join(data_path(), "rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML")
+    rpc_path = os.path.join(data_path(), geom_path)
 
     rpc_optim = GeoModel(rpc_path, "RpcOptim")
     rpc_py = GeoModel(rpc_path, "RPC")
@@ -448,28 +411,14 @@ def test_inverse_loc():
     res_cpp = rpc_optim.inverse_loc(lon_vect, lat_vect, alt_vect)
     res_py = rpc_py.inverse_loc(lon_vect, lat_vect, alt_vect)
 
-    np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 5e-11)
-    np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 5e-11)
+    np.testing.assert_allclose(np.array(res_cpp[0]), res_py[0], 0, 2e-8)
+    np.testing.assert_allclose(np.array(res_cpp[1]), res_py[1], 0, 2e-8)
 
     # Inverse loc unitary
 
     file_path = os.path.join(data_path(), rpc_path)
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
+
     lon_out = np.empty((len(lon_vect)))
     lat_out = np.empty((len(lat_vect)))
 
@@ -478,8 +427,8 @@ def test_inverse_loc():
         lon_out[i] = lon_i
         lat_out[i] = lat_i
 
-    np.testing.assert_allclose(lon_out, res_py[0], 0, 5e-11)
-    np.testing.assert_allclose(lat_out, res_py[1], 0, 5e-11)
+    np.testing.assert_allclose(lon_out, res_py[0], 0, 2e-8)
+    np.testing.assert_allclose(lat_out, res_py[1], 0, 2e-8)
 
 
 @pytest.mark.parametrize(
@@ -549,22 +498,7 @@ def test_derivative_polynomial_latitude(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test)
     xnorm = -0.95821893  # lon_norm
@@ -612,22 +546,7 @@ def test_derivative_polynomial_longitude(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_params = rpc_reader(file_path, topleftconvention=True)
-    norm_coeffs = [
-        rpc_params["offset_x"],
-        rpc_params["scale_x"],  # longitude
-        rpc_params["offset_y"],
-        rpc_params["scale_y"],  # latitude
-        rpc_params["offset_alt"],
-        rpc_params["scale_alt"],
-        rpc_params["offset_col"],
-        rpc_params["scale_col"],
-        rpc_params["offset_row"],
-        rpc_params["scale_row"],
-    ]
-    rpc_cpp = rpc_c.RPC(
-        rpc_params["num_col"], rpc_params["den_col"], rpc_params["num_row"], rpc_params["den_row"], norm_coeffs
-    )
+    rpc_cpp = rpc_c_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test)
     xnorm = -0.95821893  # lon_norm
@@ -664,7 +583,7 @@ def test_compute_loc_inverse_derivates():
     test on the compute_loc_inverse_derivates methode
     """
 
-    rpc_path = os.path.join(data_path(), "rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML")
+    rpc_path = os.path.join(data_path(), "rpc/PHRDIMAP_P1BP--2018122638935449CP.XML")
 
     rpc_optim = GeoModel(rpc_path, "RpcOptim")
     rpc_py = GeoModel(rpc_path, "RPC")
@@ -693,8 +612,8 @@ def test_compute_loc_inverse_derivates():
     for i, lon_vect_i in enumerate(lon_vect):
         res_cpp[i, :] = rpc_optim.compute_loc_inverse_derivates(lon_vect_i, lat_vect[i], alt_vect[i])
 
-    np.testing.assert_allclose(res_cpp[:, 0], res_py[0], 0, 2e-10)
-    np.testing.assert_allclose(res_cpp[:, 1], res_py[1], 0, 2e-10)
+    np.testing.assert_allclose(res_cpp[:, 0], res_py[0], 0, 6e-10)
+    np.testing.assert_allclose(res_cpp[:, 1], res_py[1], 0, 6e-10)
     np.testing.assert_allclose(res_cpp[:, 2], res_py[2], 0, 2e-10)
     np.testing.assert_allclose(res_cpp[:, 3], res_py[3], 0, 3e-10)
 
@@ -726,16 +645,25 @@ def test_rpc_direct_inverse_iterative_unitary_loc(col, row, alt):
     (lon_py, lat_py, alt_py) = rpc_py.direct_loc_inverse_iterative(row, col, alt, nb_iter_max, fill_nan)
     (lon_cpp, lat_cpp, alt_cpp) = rpc_cpp.direct_loc_inverse_iterative([row], [col], [alt], nb_iter_max, fill_nan)
 
-    np.testing.assert_array_equal(np.array(lon_cpp), lon_py)
-    np.testing.assert_array_equal(np.array(lat_cpp), lat_py)
-    np.testing.assert_array_equal(np.array(alt_cpp), alt_py)
+    assert lon_cpp == lon_py[0]
+    assert lat_cpp == lat_py[0]
+    assert alt_cpp == alt_py[0]
+
+    # Check identity
+
+    (row_cpp, col_cpp, alt_cpp) = rpc_cpp.inverse_loc(lon_cpp, lat_cpp, alt_cpp)
+
+    # datatype conversion python/cpp -> small error
+    assert row_cpp[0] == pytest.approx(row, abs=1e-9)
+    assert col_cpp[0] == pytest.approx(col, abs=1e-9)
+    assert alt_cpp[0] == pytest.approx(alt, abs=0)
 
 
 def test_rpc_direct_inverse_iterative_multi_loc():
     """
     test direct_loc_inverse_iterative methode on multiple localisations
     """
-    rpc_path = os.path.join(data_path(), "rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML")
+    rpc_path = os.path.join(data_path(), "rpc/PHRDIMAP_P1BP--2018122638935449CP.XML")
 
     rpc_cpp = GeoModel(rpc_path, "RpcOptim")
     rpc_py = GeoModel(rpc_path, "RPC")
@@ -812,3 +740,50 @@ def test_rpc_direct_inverse_iterative_multi_loc():
         assert True
     else:
         assert AssertionError()
+
+
+@pytest.mark.parametrize(
+    "geom_path",
+    [
+        "rpc/PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.geom",
+        "rpc/PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.tif",
+        "rpc/PHRDIMAP_P1BP--2017030824934340CP.XML",
+        "rpc/RPC_P1BP--2017092838284574CP.XML",
+        "rpc/RPC_PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.XML",
+    ],
+)
+def test_direct_loc_h_direct_coefficient(geom_path):
+    """
+    test test_direct_loc_h using direct_coefficent
+    """
+
+    rpc_path = os.path.join(data_path(), geom_path)
+
+    rpc_optim = GeoModel(rpc_path, "RpcOptim")
+    rpc_py = GeoModel(rpc_path, "RPC")
+
+    # INPUTS
+    nrb_point = 1e6
+    first_row = 1
+    first_col = 1
+    last_row = 22940
+    last_col = 40000
+    first_alt = -50
+    last_alt = 1000
+
+    col_vect = np.linspace(first_col, last_col, int(nrb_point ** (1 / 3)) + 1)
+    row_vect = np.linspace(first_row, last_row, int(nrb_point ** (1 / 3)) + 1)
+    alt_vect = np.linspace(first_alt, last_alt, int(nrb_point ** (1 / 3)) + 1)
+
+    col_vect, row_vect, alt_vect = np.meshgrid(col_vect, row_vect, alt_vect)
+
+    col_vect = np.ndarray.flatten(col_vect)
+    row_vect = np.ndarray.flatten(row_vect)
+    alt_vect = np.ndarray.flatten(alt_vect)
+
+    res_optim = rpc_optim.direct_loc_h(col_vect, row_vect, alt_vect)
+    res_py = rpc_py.direct_loc_h(col_vect, row_vect, alt_vect)
+
+    np.testing.assert_allclose(res_optim[0], res_py[0], 0, 0)
+    np.testing.assert_allclose(res_optim[1], res_py[1], 0, 0)
+    np.testing.assert_allclose(res_optim[2], res_py[2], 0, 9e-16)

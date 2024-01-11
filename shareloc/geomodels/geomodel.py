@@ -54,7 +54,7 @@ class GeoModel:
 
         :param geomodel_path: Path of geomodel file
         :type geomodel_path: string
-        :param geomodel_type: Type of the geomodel, default "rpc", used as key for specific geomodel subclass instance
+        :param geomodel_type: Type of the geomodel, default "RPC", used as key for specific geomodel subclass instance
         :type geomodel_type: string
         """
         return cls.create_geomodel(geomodel_path, geomodel_type)
@@ -68,12 +68,9 @@ class GeoModel:
 
         :param geomodel_path: Path of geomodel file
         :type geomodel_path: string
-        :param geomodel_type: Type of the geomodel, default "rpc", used as key for specific geomodel subclass instance
+        :param geomodel_type: Type of the geomodel, default "RPC", used as key for specific geomodel subclass instance
         :type geomodel_type: string
         """
-
-        # If no type is given, the default is "RPC"
-
         # Create geomodel object with geomodel_path parameter from geomodel_type if exists
         try:
             geomodel_class = cls.available_geomodels[geomodel_type]

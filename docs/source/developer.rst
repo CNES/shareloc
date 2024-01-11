@@ -1,3 +1,5 @@
+.. _developer:
+
 ================
 Developer Manual
 ================
@@ -215,7 +217,7 @@ You can compile the bindings without going through the shareloc installation by 
 
     $ c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) bind.cpp -o rpc_c$(python3-config --extension-suffix)
     
-This is very usefull when debuging.
+This is very useful when debuging.
 
 
 RpcOptim Class

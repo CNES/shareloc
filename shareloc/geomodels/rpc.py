@@ -25,6 +25,8 @@ RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotif
 
 # Standard imports
 import logging
+import os
+from ast import literal_eval
 
 # Third party imports
 import numpy as np
@@ -660,7 +662,7 @@ def polynomial_equation(xnorm, ynorm, znorm, coeff):
 # pylint: disable=too-many-arguments
 @njit(
     "Tuple((f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)",
-    parallel=True,
+    parallel=literal_eval(os.environ.get("SHARELOC_NUMBA_PARALLEL", "True")),
     cache=True,
     fastmath=True,
 )
@@ -790,7 +792,7 @@ def derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, coeff):
 # pylint: disable=too-many-arguments
 @njit(
     "Tuple((f8[:], f8[:], f8[:], f8[:]))(f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8[:], f8, f8, f8, f8)",
-    parallel=True,
+    parallel=literal_eval(os.environ.get("SHARELOC_NUMBA_PARALLEL", "True")),
     cache=True,
     fastmath=True,
 )

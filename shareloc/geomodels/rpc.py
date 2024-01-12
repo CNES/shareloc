@@ -306,13 +306,9 @@ class RPC(GeoModelTemplate):
         :return: ground position (lon,lat,h) in dtm coordinates system
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
-        if isinstance(col, (list, np.ndarray)):
-            points_nb = len(col)
-        else:
-            points_nb = 1
+        if not isinstance(col, (list, np.ndarray)):
             row = np.array([row])
             col = np.array([col])
-        direct_dtm = np.zeros((points_nb, 3))
 
         diff_alti_min, diff_alti_max = dtm.get_alt_offset(self.epsg)
         # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
@@ -322,15 +318,15 @@ class RPC(GeoModelTemplate):
         if max_dtm > self.offset_alt + self.scale_alt:
             logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
         los = self.los_extrema(row, col, min_dtm, max_dtm, epsg=dtm.epsg)
-        for i in range(points_nb):
-            los_i = los[2 * i : 2 * i + 2, :]
-            (__, __, position_cube, alti, los_index) = dtm.intersect_dtm_cube(los_i)
-            if position_cube is not None:
-                (__, __, position) = dtm.intersection(los_index, position_cube, alti)
-                direct_dtm[i, :] = position
-            else:
-                position = np.full(3, fill_value=np.nan)
-            direct_dtm[i, :] = position
+
+        # los -> (nb_point,nb_alt,3)
+        los = los.T
+        los = np.expand_dims(los, axis=0)
+        los = np.moveaxis(los, 1, -1)
+        los = los.reshape((len(col), 2, 3))
+
+        direct_dtm = dtm.intersection_n_los_dtm(los)
+
         return direct_dtm
 
     def inverse_loc(self, lon, lat, alt):
@@ -585,7 +581,6 @@ class RPC(GeoModelTemplate):
             extrapolate = True
             [los_alt_min, los_alt_max] = self.get_alt_min_max()
 
-        #
         if isinstance(row, (np.ndarray)):
             los_nb = row.shape[0]
             row_array = np.full([los_nb * 2], fill_value=0.0)

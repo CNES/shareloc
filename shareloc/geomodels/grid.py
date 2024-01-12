@@ -287,16 +287,16 @@ class Grid(GeoModelTemplate):
         points_nb = len(row)
         points_dtm = np.zeros((points_nb, 3))
 
-        all_los = np.empty((self.nbalt * points_nb, 3))
+        all_los = np.empty((points_nb, self.nbalt, 3))
 
         for point_index in np.arange(points_nb):
             row_i = row[point_index]
             col_i = col[point_index]
             los = self.compute_los(row_i, col_i, dtm.epsg)
 
-            all_los[point_index * self.nbalt : point_index * self.nbalt + self.nbalt, :] = los
+            all_los[point_index, :, :] = los
 
-        points_dtm = dtm.intersection_n_los_dtm(all_los, nb_alt=self.nbalt)
+        points_dtm = dtm.intersection_n_los_dtm(all_los)
 
         return points_dtm
 

@@ -925,22 +925,20 @@ class DTMIntersection:
         b_trouve = False
         return True, b_trouve, point_r
 
-    def intersection_n_los_dtm(self, los, nb_alt=2):
+    def intersection_n_los_dtm(self, los):
         """
         Compute intersection of los on dtm
 
         :param los: los extrema of los to intersect with dtm
-        :type los: numpy.ndarray 2D dimension with (nb_alt*points_nb,3) shape
-        :param nb_alt: number of altitude for los intersection computation
-        :type nb_alt: int
+        :type los: numpy.ndarray 3D dimension with (points_nb,nb_alt,3) shape
         :return: ground position (lon,lat,h) in dtm coordinates system
         :rtype: numpy.ndarray 2D dimension with (points_nb,3) shape
         """
 
-        points_nb = int(np.shape(los)[0] / nb_alt)
+        points_nb = np.shape(los)[0]
         direct_dtm = np.zeros((points_nb, 3))
         for i in range(points_nb):
-            los_i = los[nb_alt * i : nb_alt * i + nb_alt, :]
+            los_i = los[i, :, :]
             (__, __, position_cube, alti, los_index) = self.intersect_dtm_cube(los_i)
             if position_cube is not None:
                 (__, __, position) = self.intersection(los_index, position_cube, alti)

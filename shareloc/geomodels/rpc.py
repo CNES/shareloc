@@ -317,6 +317,12 @@ class RPC(GeoModelTemplate):
             logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
         los = self.los_extrema(row, col, min_dtm, max_dtm, epsg=dtm.epsg)
 
+        # los -> (nb_point,nb_alt,3)
+        los = los.T
+        los = np.expand_dims(los, axis=0)
+        los = np.moveaxis(los, 1, -1)
+        los = los.reshape((len(col), 2, 3))
+
         direct_dtm = dtm.intersection_n_los_dtm(los)
 
         return direct_dtm

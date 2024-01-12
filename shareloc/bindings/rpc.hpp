@@ -153,10 +153,10 @@ public:
         bool fill_nan=false);
 
     /**get_alt_min_max*/
-    vector<double> get_alt_min_max();
+    array<double, 2> get_alt_min_max();
 
     /**los_extrema*/
-    vector<vector<double>> los_extrema(
+    tuple<vector<double>,vector<double>,vector<double>> los_extrema(
         double row,
         double col,
         double alt_min,

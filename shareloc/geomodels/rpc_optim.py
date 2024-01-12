@@ -193,3 +193,26 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
         """
         (row, col, alt) = super().inverse_loc(lon, lat, alt)
         return row, col, alt
+
+    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False, epsg=4326):
+        """
+        compute los extrema
+
+        :param row:  line sensor position
+        :type row: float
+        :param col:  column sensor position
+        :type col: float
+        :param alt_min: los alt min
+        :type alt_min: float
+        :param alt_max: los alt max
+        :type alt_max: float
+        :param epsg: epsg code of the dtm
+        :type epsg: int
+        :return: los extrema
+        :rtype: numpy.array (2x3)
+        """
+
+        res_cpp = super().los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+        res_cpp = np.array(res_cpp).T
+
+        return res_cpp

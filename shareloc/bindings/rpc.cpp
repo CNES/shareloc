@@ -69,6 +69,8 @@ RPC::RPC(bool inverse_coefficient_input,
     scale_row = norm_coeffs[9];
 
     lim_extrapol = 1.0001;
+
+    alt_minmax = {offset_alt - scale_alt, offset_alt + scale_alt};
 }
 
 tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
@@ -447,20 +449,73 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iter
     return make_tuple(lon_out, lat_out, alt_norm);
 }
 
-vector<double> RPC::get_alt_min_max(){
-    vector<double> vect;
-    return vect;
+array<double, 2> RPC::get_alt_min_max(){
+    array<double, 2> res = {offset_alt - scale_alt / 2.0, offset_alt + scale_alt / 2.0};
+    return res;
 }
 
-vector<vector<double>> RPC::los_extrema(
+tuple<vector<double>,vector<double>,vector<double>> RPC::los_extrema(
     double row,
     double col,
     double alt_min,
     double alt_max,
     bool fill_nan,
     int epsg){
-    vector<vector<double>> vect;
-    return vect;
+
+    if(epsg!=4326){
+         throw runtime_error("C++ : los_extrema : epsg!=4326 -> Exiting");
+    }
+
+    bool extrapolate = false;
+    array<double, 2> los_alt_min_max;
+    double los_alt_min = alt_min;
+    double los_alt_max = alt_max;
+
+    if (isnan(alt_min) || isnan(alt_max)){
+        los_alt_min_max = get_alt_min_max();
+        los_alt_min = los_alt_min_max[0];
+        los_alt_max = los_alt_min_max[1];
+    }else if(alt_min >= alt_minmax[0] && alt_max <= alt_minmax[1]){
+        los_alt_min = alt_min;
+        los_alt_max = alt_max;
+    }else{
+        extrapolate = true;
+        los_alt_min_max = get_alt_min_max();
+        los_alt_min = los_alt_min_max[0];
+        los_alt_max = los_alt_min_max[1];
+    }
+    
+    vector<double> row_array = {row,row};
+    vector<double> col_array = {col,col};
+    vector<double> alt_array = {los_alt_max,los_alt_min};
+
+
+    vector<double> lon;
+    vector<double> lat;
+    vector<double> alt;
+
+    tie(lon,lat,alt) = direct_loc_h(row_array, col_array, alt_array, fill_nan);
+
+
+    if(extrapolate){
+        double diff_lon = lon[0] - lon[1];
+        double diff_lat = lat[0] - lat[1];
+        double diff_alt = alt[0] - alt[1];
+
+        double coeff_alt_max = (alt_max - alt[1]) / diff_alt;
+        double coeff_alt_min = (alt_min - alt[1]) / diff_alt;
+
+        lon[0] = lon[1] + diff_lon * coeff_alt_max;
+        lat[0] = lat[1] + diff_lat * coeff_alt_max;
+        alt[0] = alt[1] + diff_alt * coeff_alt_max;
+
+        lon[1] = lon[1] + diff_lon * coeff_alt_min;
+        lat[1] = lat[1] + diff_lat * coeff_alt_min;
+        alt[1] = alt[1] + diff_alt * coeff_alt_min;
+
+    }
+
+    return make_tuple(lon, lat, alt);
 }
 
 array<double, 20> RPC::get_num_col(){return num_col;}

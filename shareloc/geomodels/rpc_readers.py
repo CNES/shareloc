@@ -32,6 +32,7 @@ from xml.dom import minidom
 # Third party imports
 import numpy as np
 import rasterio as rio
+from rasterio.errors import RasterioIOError
 
 
 def rpc_reader(geomodel_path: str, topleftconvention: bool = True) -> Dict:
@@ -48,28 +49,26 @@ def rpc_reader(geomodel_path: str, topleftconvention: bool = True) -> Dict:
     :param geomodel_path geomodel filename
     :return rpc dict filled with parameters
     """
-    # Faire un truc plus propre
-    # pylint: disable=W0707
-    try:
-        rpc_params = rpc_reader_via_rasterio(geomodel_path, topleftconvention)
-        return rpc_params
-    except:  # noqa : B001,B904,E722
 
-        # If ends with XML --> DIMAP
-        if basename(geomodel_path.upper()).endswith("XML"):
-            dimap_version = identify_dimap(geomodel_path)
-            if dimap_version is not None:
-                if float(dimap_version) < 2.0:
-                    return rpc_reader_dimap_v1(geomodel_path, topleftconvention)
-                if float(dimap_version) >= 2.0:
-                    return rpc_reader_dimap_v23(geomodel_path, topleftconvention)
-        ossim_model = identify_ossim_kwl(geomodel_path)
-        if ossim_model is not None:
-            return rpc_reader_ossim_kwl(geomodel_path, topleftconvention)
-        geotiff_rpc_dict = identify_geotiff_rpc(geomodel_path)
-        if geotiff_rpc_dict is not None:
-            return rpc_reader_geotiff(geomodel_path, topleftconvention)
-        raise ValueError("can not read rpc file")  # noqa: B904
+    rpc_params = rpc_reader_via_rasterio(geomodel_path, topleftconvention)
+    if rpc_params is not None:
+        return rpc_params
+
+    # If ends with XML --> DIMAP
+    if basename(geomodel_path.upper()).endswith("XML"):
+        dimap_version = identify_dimap(geomodel_path)
+        if dimap_version is not None:
+            if float(dimap_version) < 2.0:
+                return rpc_reader_dimap_v1(geomodel_path, topleftconvention)
+            if float(dimap_version) >= 2.0:
+                return rpc_reader_dimap_v23(geomodel_path, topleftconvention)
+    ossim_model = identify_ossim_kwl(geomodel_path)
+    if ossim_model is not None:
+        return rpc_reader_ossim_kwl(geomodel_path, topleftconvention)
+    geotiff_rpc_dict = identify_geotiff_rpc(geomodel_path)
+    if geotiff_rpc_dict is not None:
+        return rpc_reader_geotiff(geomodel_path, topleftconvention)
+    raise ValueError("can not read rpc file")  # noqa: B904
 
 
 def rpc_reader_dimap_v23(geomodel_path: str, topleftconvention: bool = True) -> Dict:
@@ -432,16 +431,20 @@ def rpc_reader_via_rasterio(geomodel_path, topleftconvention=True) -> Dict:
         If False : [0,0] is at the center of the Top Left pixel
         If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
     """
-    with rio.open(geomodel_path, "r") as src:
-        rpcs = src.rpcs  # pas de coef direct
+    try:
+        with rio.open(geomodel_path, "r") as src:
+            rpcs = src.rpcs  # pas de coef direct
+    except RasterioIOError as rio_error:
+        logging.error("%s can not be read by rasterio", geomodel_path)
+        logging.error("     Erreur Rasterio : %s", rio_error)
+        return None
 
     if not rpcs:
-        logging.error("%s does not contains RPCs ", geomodel_path)
-        raise ValueError
+        logging.debug("%s does not contains RPCs readable by rasterio ", geomodel_path)
+        return None
 
     rpcs = rpcs.to_dict()
-    # del rpcs["err_bias"]
-    # del rpcs["err_rand"]
+
     rpc_params = {}
     rpc_params["offset_alt"] = rpcs["height_off"]
     rpc_params["scale_alt"] = rpcs["height_scale"]

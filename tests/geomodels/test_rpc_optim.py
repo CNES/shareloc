@@ -104,7 +104,7 @@ def test_method_rpc_cpp():
     rpc.filter_coordinates(vector_double, vector_double, False, string)
     rpc.direct_loc_inverse_iterative(vector_double, vector_double, vector_double, integer, False)
     rpc.get_alt_min_max()
-    rpc.los_extrema(double, double, double, double, False, integer)
+    rpc.los_extrema(double, double, double, double, False, 4326)
 
 
 def test_function_rpc_cpp():
@@ -787,3 +787,82 @@ def test_direct_loc_h_direct_coefficient(geom_path):
     np.testing.assert_allclose(res_optim[0], res_py[0], 0, 0)
     np.testing.assert_allclose(res_optim[1], res_py[1], 0, 0)
     np.testing.assert_allclose(res_optim[2], res_py[2], 0, 9e-16)
+
+
+def test_get_alt_min_max():
+    """ "
+    test get_alt_min_max method
+    """
+
+    rpc_path = os.path.join(data_path(), "rpc/PHRDIMAP_P1BP--2018122638935449CP.XML")
+
+    rpc_cpp = rpc_c_constructor(rpc_path)
+    rpc_py = GeoModel(rpc_path, "RPC")
+
+    assert rpc_py.get_alt_min_max() == rpc_cpp.get_alt_min_max()
+
+
+def test_los_extrema():
+    """
+    test los_extrema method
+    """
+
+    rpc_path = os.path.join(data_path(), "rpc/PHRDIMAP_P1BP--2018122638935449CP.XML")
+
+    rpc_cpp = rpc_c_constructor(rpc_path)
+    rpc_py = GeoModel(rpc_path, "RPC")
+    rpc_optim = GeoModel(rpc_path, "RpcOptim")
+
+    row = 100.5
+    col = 200.5
+    alt_min = -10
+    alt_max = 2000
+    fill_nan = False
+    epsg = 4326
+
+    # --Normal case
+    res_py = rpc_py.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+    res_optim = rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+
+    res_cpp = np.array(res_cpp).T
+
+    np.testing.assert_allclose(res_py, res_cpp, 0, 0)
+    np.testing.assert_allclose(res_py, res_optim, 0, 0)
+
+    # --Case alt_max=None/nan for c++
+    res_py = rpc_py.los_extrema(row, col, alt_min, None, fill_nan, epsg)
+    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, np.nan, fill_nan, epsg)
+    res_optim = rpc_optim.los_extrema(row, col, alt_min, np.nan, fill_nan, epsg)
+
+    res_cpp = np.array(res_cpp).T
+
+    np.testing.assert_allclose(res_py, res_cpp, 0, 0)
+    np.testing.assert_allclose(res_py, res_optim, 0, 0)
+
+    # --Case alt_min >= alt_minmax[0] && alt_max <= alt_minmax[1]
+    alt_min = 15000
+    alt_max = -15000
+    res_py = rpc_py.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+    res_optim = rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+
+    res_cpp = np.array(res_cpp).T
+
+    np.testing.assert_allclose(res_py, res_cpp, 0, 0)
+    np.testing.assert_allclose(res_py, res_optim, 0, 0)
+
+    # --Case espg!=4326
+
+    epsg = 1234
+    try:
+        rpc_cpp.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+        raise AssertionError()
+    except RuntimeError:
+        assert True
+
+    try:
+        rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+        raise AssertionError()
+    except RuntimeError:
+        assert True

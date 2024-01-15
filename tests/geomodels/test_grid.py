@@ -41,7 +41,7 @@ def fixture_get_geotiff_grid():
     get grid and associated path
     """
     geotiff_grid_path = data_path("ellipsoide", "loc_direct_grid_PHR_2013072139303958CP.tif")
-    gri_geotiff = GeoModel(geotiff_grid_path, "grid")
+    gri_geotiff = GeoModel(geotiff_grid_path, "GRID")
     grid_image = Image(geotiff_grid_path, read_data=True)
 
     return gri_geotiff, grid_image

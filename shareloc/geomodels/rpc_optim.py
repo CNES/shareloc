@@ -40,8 +40,8 @@ from shareloc.geomodels.rpc_readers import rpc_reader
 config.THREADING_LAYER = "omp"
 
 
-@GeoModel.register("RpcOptim")
-class RpcOptim(rpc_c.RPC, GeoModelTemplate):
+@GeoModel.register("RPCoptim")
+class RPCoptim(rpc_c.RPC, GeoModelTemplate):
     """
     RPC optimized with cpp bindings class including direct and inverse localization instance methods
     """
@@ -69,7 +69,6 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
             if not all(i == 0 for i in rpc_params["num_col"]) and not all(
                 i == 0 for i in rpc_params["num_x"]
             ):  # direct and inverse coef
-
                 rpc_c.RPC.__init__(
                     self,
                     True,
@@ -85,11 +84,10 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
                     norm_coeffs,
                 )
             else:
-                raise ValueError("RpcOptim : RPC coefficients are all 0")
+                raise ValueError("RPCoptim : RPC coefficients are all 0")
 
         elif rpc_params["num_col"]:
             if not all(i == 0 for i in rpc_params["num_col"]):  # only inverse coef
-
                 rpc_c.RPC.__init__(
                     self,
                     True,
@@ -105,11 +103,10 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
                     norm_coeffs,
                 )
             else:
-                raise ValueError("RpcOptim : RPC coefficients are all 0")
+                raise ValueError("RPCoptim : RPC coefficients are all 0")
 
         elif rpc_params["num_x"]:
             if not all(i == 0 for i in rpc_params["num_x"]):  # only direct coef
-
                 rpc_c.RPC.__init__(
                     self,
                     False,
@@ -125,9 +122,9 @@ class RpcOptim(rpc_c.RPC, GeoModelTemplate):
                     norm_coeffs,
                 )
             else:
-                raise ValueError("RpcOptim : RPC coefficients are all 0")
+                raise ValueError("RPCoptim : RPC coefficients are all 0")
         else:
-            raise ValueError("RpcOptim : No RPC coefficients readable")
+            raise ValueError("RPCoptim : No RPC coefficients readable")
 
     @classmethod
     def load(cls, geomodel_path):

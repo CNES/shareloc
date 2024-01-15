@@ -38,7 +38,7 @@ from shareloc.proj_utils import coordinates_conversion
 
 # gitlab issue #58
 # pylint: disable=too-many-instance-attributes
-@GeoModel.register("grid")
+@GeoModel.register("GRID")
 class Grid(GeoModelTemplate):
     """
     multi H direct localization grid handling class.

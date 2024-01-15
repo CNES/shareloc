@@ -118,6 +118,6 @@ def rpc_c_constructor(file_path: str):
             norm_coeffs,
         )
     else:
-        raise ValueError("RpcOptim : No RPC coefficients readable")
+        raise ValueError("RPCoptim : No RPC coefficients readable")
 
     return rpc_cpp

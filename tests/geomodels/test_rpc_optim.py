@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 """
-Module to test RpcOptim class
+Module to test RPCoptim class
 """
 
 
@@ -59,7 +59,7 @@ from ..helpers import data_path, rpc_c_constructor
 )
 def test_construtor(geom_path):
     """
-    Test RpcOptim constructor
+    Test RPCoptim constructor
     """
 
     file_path = os.path.join(data_path(), geom_path)
@@ -90,7 +90,7 @@ def test_method_rpc_cpp():
     """
 
     file_path = os.path.join(data_path(), "rpc/PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.geom")
-    rpc = GeoModel(file_path, "RpcOptim")
+    rpc = GeoModel(file_path, "RPCoptim")
 
     vector_double = [1.0, 1.0, 1.0]
     double = 1.0
@@ -337,7 +337,7 @@ def test_inverse_loc_from_any_input(id_scene, lon, lat, alt, row_vt, col_vt):
     data_folder = data_path()
     rpc_file = os.path.join(data_folder, "rpc", id_scene)
 
-    rpc_optim = GeoModel(rpc_file, "RpcOptim")
+    rpc_optim = GeoModel(rpc_file, "RPCoptim")
 
     (row, col, alt_res) = rpc_optim.inverse_loc(lon, lat, alt)
 
@@ -386,7 +386,7 @@ def test_inverse_loc(geom_path):
 
     rpc_path = os.path.join(data_path(), geom_path)
 
-    rpc_optim = GeoModel(rpc_path, "RpcOptim")
+    rpc_optim = GeoModel(rpc_path, "RPCoptim")
     rpc_py = GeoModel(rpc_path, "RPC")
 
     # INPUTS
@@ -466,7 +466,7 @@ def test_filter_coordinates(first_coord, second_coord, fill_nan, direction):
     """
 
     file_path = os.path.join(data_path(), "rpc/PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.geom")
-    rpc_cpp = GeoModel(file_path, "RpcOptim")
+    rpc_cpp = GeoModel(file_path, "RPCoptim")
     rpc_py = GeoModel(file_path, "RPC")
 
     res_cpp = rpc_cpp.filter_coordinates(first_coord, second_coord, fill_nan, direction)
@@ -585,7 +585,7 @@ def test_compute_loc_inverse_derivates():
 
     rpc_path = os.path.join(data_path(), "rpc/PHRDIMAP_P1BP--2018122638935449CP.XML")
 
-    rpc_optim = GeoModel(rpc_path, "RpcOptim")
+    rpc_optim = GeoModel(rpc_path, "RPCoptim")
     rpc_py = GeoModel(rpc_path, "RPC")
 
     # INPUTS
@@ -636,7 +636,7 @@ def test_rpc_direct_inverse_iterative_unitary_loc(col, row, alt):
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
-    rpc_cpp = GeoModel(file_dimap, "RpcOptim")
+    rpc_cpp = GeoModel(file_dimap, "RPCoptim")
     rpc_py = GeoModel(file_dimap, "RPC")
 
     nb_iter_max = 10
@@ -665,7 +665,7 @@ def test_rpc_direct_inverse_iterative_multi_loc():
     """
     rpc_path = os.path.join(data_path(), "rpc/PHRDIMAP_P1BP--2018122638935449CP.XML")
 
-    rpc_cpp = GeoModel(rpc_path, "RpcOptim")
+    rpc_cpp = GeoModel(rpc_path, "RPCoptim")
     rpc_py = GeoModel(rpc_path, "RPC")
 
     # INPUTS
@@ -759,7 +759,7 @@ def test_direct_loc_h_direct_coefficient(geom_path):
 
     rpc_path = os.path.join(data_path(), geom_path)
 
-    rpc_optim = GeoModel(rpc_path, "RpcOptim")
+    rpc_optim = GeoModel(rpc_path, "RPCoptim")
     rpc_py = GeoModel(rpc_path, "RPC")
 
     # INPUTS
@@ -811,7 +811,7 @@ def test_los_extrema():
 
     rpc_cpp = rpc_c_constructor(rpc_path)
     rpc_py = GeoModel(rpc_path, "RPC")
-    rpc_optim = GeoModel(rpc_path, "RpcOptim")
+    rpc_optim = GeoModel(rpc_path, "RPCoptim")
 
     row = 100.5
     col = 200.5

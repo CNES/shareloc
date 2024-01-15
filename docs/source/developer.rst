@@ -194,7 +194,7 @@ C++ bindings with Pybind11
 
 This paragraph describes the use of C++ codes inside the project.
 
-To improve execution time when creating epipolar grids, we use C++ bindings from the python code.To do this, we use the RpcOptim class, which is a copy of the RPC class but whose methods call up C++ code via bindings. As a result, the methods of RpcOptim have a shorter execution time than the methods of the Rpc class. (This is not always true, as python methods use numba to speed up the execution of python code. So, in some cases python methods have a slightly shorter execution time than C++ methods).
+To improve execution time when creating epipolar grids, we use C++ bindings from the python code.To do this, we use the RPCoptim class, which is a copy of the RPC class but whose methods call up C++ code via bindings. As a result, the methods of RPCoptim have a shorter execution time than the methods of the RPC class. (This is not always true, as python methods use numba to speed up the execution of python code. So, in some cases python methods have a slightly shorter execution time than C++ methods).
 
 As the C++ code is compiled during the installation of shareloc, the installation files (setup.py, setup.cfg, etc.) have been slightly modified. You are therefore strongly advised to run the 'pip install .' command before committing to check that the installation is working correctly. You should incorporate this command into your test routine to avoid any problems.
 
@@ -220,9 +220,9 @@ You can compile the bindings without going through the shareloc installation by 
 This is very useful when debuging.
 
 
-RpcOptim Class
+RPCoptim Class
 --------------
 
-As explained above, RpcOptim is a copy of the Rpc class. As a result, it has exactly the same usage and its methods have the same I/O. It can be seen as a python overlay of the C++ RPC class, which acts as an interface between the python code and the C++ code.
+As explained above, RPCoptim is a copy of the Rpc class. As a result, it has exactly the same usage and its methods have the same I/O. It can be seen as a python overlay of the C++ RPC class, which acts as an interface between the python code and the C++ code.
 
-RpcOptim inherits from RPC(C++) and GeoModelTemplate. Most of its methods consist of calling the corresponding method of the parent class in C++ and returning the output.
+RPCoptim inherits from RPC(C++) and GeoModelTemplate. Most of its methods consist of calling the corresponding method of the parent class in C++ and returning the output.

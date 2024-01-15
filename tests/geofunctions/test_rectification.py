@@ -23,6 +23,7 @@ Test module for rectification grid interpolation class shareloc/geofunctions/rec
 Ground truth references (otb_{left/right}_grid*.tif) have been generated using OTB StereoRectificationGridGenerator
 application.
 """
+# pylint: disable=duplicate-code
 # Standard imports
 import math
 import os
@@ -31,6 +32,8 @@ import os
 import numpy as np
 import pytest
 import rasterio
+
+from shareloc.dtm_reader import dtm_reader
 
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
@@ -172,7 +175,14 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid(init_
     # we use DTM and Geoid: a DTMIntersection class has to be used
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file)
+    dtm_image = dtm_reader(dtm_file, geoid_file, read_data=True)
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
 
     # compute rectification grid sampled at 30 pixels
     epi_step = 30
@@ -223,7 +233,22 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid_roi(i
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
     extent = get_epipolar_extent(left_im, geom_model_left, geom_model_right, margin=0.0016667)
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file, roi=extent)
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=extent,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
 
     epi_step = 30
     elevation_offset = 50
@@ -337,7 +362,22 @@ def test_compute_stereorectification_epipolar_grids_geomodel_grid_dtm_geoid():
     # we use DTM and Geoid a DTMIntersection class has to be used
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_ventoux = DTMIntersection(dtm_file, geoid_file, fill_nodata="mean")
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata="mean",
+        fill_value=0.0,
+    )
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
 
     # compute rectification grid sampled at 30 pixels
     epi_step = 30

@@ -31,6 +31,7 @@ Abstract class GeoModelTemplate.
 #include <array>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 using namespace std;
 

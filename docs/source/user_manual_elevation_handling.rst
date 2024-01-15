@@ -33,16 +33,17 @@ Shareloc provides egm96_15 in its  `data <https://raw.githubusercontent.com/CNES
 
 .. code-block:: bash
 
-    class DTM:
+    class DTMdtm_reader(Image):
 
         def __init__(
-            self,
-            dtm_filename,
-            geoid_filename=None,
-            roi=None,
-            roi_is_in_physical_space=True,
-            fill_nodata=None,
-            fill_value=0.0,
+        	self,
+        	dtm_filename,
+        	geoid_filename=None,
+        	read_data=False,
+        	roi=None,
+        	roi_is_in_physical_space=False,
+        	fill_nodata="rio_fillnodata",
+        	fill_value=None,
         ):
 
 For example, the `SRTM <https://www2.jpl.nasa.gov/srtm/>`_ data corresponding to the zone to process can be used through the `otbcli_DownloadSRTMTiles <https://www.orfeo-toolbox.org/CookBook/Applications/app_DownloadSRTMTiles.html>`_ OTB command.

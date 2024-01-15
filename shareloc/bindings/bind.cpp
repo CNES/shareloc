@@ -28,11 +28,23 @@ which is callable in a python code as a python module.
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "rpc.cpp"
+#include "dtm_intersection.cpp"
 
 namespace py = pybind11;
 
 
 PYBIND11_MODULE(rpc_c, m) {
+
+    py::class_<DTMIntersection>(m, "DTMIntersection")
+        .def(py::init<array<double, 20>>())
+        .def("eq_plan", &DTMIntersection::eq_plan)
+        .def("ter_to_index", &DTMIntersection::ter_to_index)
+        .def("ter_to_indexs", &DTMIntersection::ter_to_indexs)
+        .def("index_to_ter", &DTMIntersection::index_to_ter)
+        .def("get_alt_offset", &DTMIntersection::get_alt_offset)
+        .def("interpolate", &DTMIntersection::interpolate)
+        .def("intersect_dtm_cube", &DTMIntersection::intersect_dtm_cube)
+        .def("intersection", &DTMIntersection::intersection);
 
     py::class_<GeoModelTemplate>(m, "GeoModelTemplate")
         .def(py::init<>())

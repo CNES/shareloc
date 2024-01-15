@@ -52,8 +52,10 @@ RPC class API Example
     $ python3
     >>> from shareloc.geomodels import GeoModel
     >>> file_dimap = "RPC_PHR1B_P_201709281038393_SEN_PRG_FC_178609-001.XML")
-    >>> rpc_dimap = GeoModel(file_dimap, "rpc")
+    >>> rpc_dimap = GeoModel(file_dimap,  geomodel_type = "RPC")
 
+Note : there is a C++ version of RPC geometric model (see :ref:`developer`.), which can be used by setting ``geomodel_type = "RPCoptim"``.
+this geometric model is under development in current *Shareloc* version |version|.
 
 Direct location grids
 =====================
@@ -142,7 +144,7 @@ Grid API Example
     $ python3
     >>> from shareloc.geomodels import GeoModel
     >>> geotiff_grid_path = "loc_direct_grid_PHR_2013072139303958CP.tif"
-    >>> geotiff_grid = GeoModel(geotiff_grid_path, "grid")
+    >>> geotiff_grid = GeoModel(geotiff_grid_path, "GRID")
 
 References
 __________

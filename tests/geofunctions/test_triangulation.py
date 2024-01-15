@@ -85,7 +85,7 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     data_folder = data_path(alti, id_scene)
     # load grid
     gld = os.path.join(data_folder, f"GRID_{id_scene}.tif")
-    gri = GeoModel(gld, "grid")
+    gri = GeoModel(gld, "GRID")
 
     return gri
 

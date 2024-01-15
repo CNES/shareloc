@@ -464,7 +464,7 @@ def rpc_reader_via_rasterio(geomodel_path, topleftconvention=True) -> Dict:
     rpc_params["den_x"] = None
     rpc_params["num_y"] = None
     rpc_params["den_y"] = None
-    rpc_params["driver_type"] = "ossim_kwl"
+    rpc_params["driver_type"] = "rio_ossim_kwl"
 
     if topleftconvention:
         rpc_params["offset_col"] += 0.5

@@ -435,8 +435,8 @@ def rpc_reader_via_rasterio(geomodel_path, topleftconvention=True) -> Dict:
         with rio.open(geomodel_path, "r") as src:
             rpcs = src.rpcs  # pas de coef direct
     except RasterioIOError as rio_error:
-        logging.error("%s can not be read by rasterio", geomodel_path)
-        logging.error("     Erreur Rasterio : %s", rio_error)
+        logging.debug("%s can not be read by rasterio", geomodel_path)
+        logging.debug("     Erreur Rasterio : %s", rio_error)
         return None
 
     if not rpcs:
@@ -464,7 +464,7 @@ def rpc_reader_via_rasterio(geomodel_path, topleftconvention=True) -> Dict:
     rpc_params["den_x"] = None
     rpc_params["num_y"] = None
     rpc_params["den_y"] = None
-    rpc_params["driver_type"] = "rio_ossim_kwl"
+    rpc_params["driver_type"] = "rasterio_rpc"
 
     if topleftconvention:
         rpc_params["offset_col"] += 0.5

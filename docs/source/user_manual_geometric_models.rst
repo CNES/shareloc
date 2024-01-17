@@ -42,6 +42,7 @@ Supported RPC formats
 * DIMAP format (V1/V2/V3)
 * OSSIM keywordlist
 * Geotiff RPC
+* All gdal supported format (https://gdal.org/drivers/raster/index.html)
 
 RPC class API Example
 ----------------------

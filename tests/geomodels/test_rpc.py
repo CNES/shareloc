@@ -17,15 +17,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# NITF_IMAGE_COMMENTS=The imagery and metadata data on this media is the property of
-# DigitalGlobe and is licensed for use only. All use must be in accordance with the terms
-# of the license that accompanies the media.If the license is purchased under contract
-# NMA 301 99 D003, use is in accordance with the license therein. This data supported the IARPA
-# Multi-View Stereo 3D Mapping Challenge and is now made publicly available with no
-# restrictions to support continued research. JHU/APL does not plan to maintain an online
-# benchmark leaderboard, but we welcome your feedback and would love to hear about what
-# you’re doing with the data and include your published results on this page.
 
 """
 Module to test functions that use rpc

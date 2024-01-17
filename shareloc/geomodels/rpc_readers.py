@@ -65,9 +65,7 @@ def rpc_reader(geomodel_path: str, topleftconvention: bool = True) -> Dict:
     ossim_model = identify_ossim_kwl(geomodel_path)
     if ossim_model is not None:
         return rpc_reader_ossim_kwl(geomodel_path, topleftconvention)
-    geotiff_rpc_dict = identify_geotiff_rpc(geomodel_path)
-    if geotiff_rpc_dict is not None:
-        return rpc_reader_geotiff(geomodel_path, topleftconvention)
+
     raise ValueError("can not read rpc file")  # noqa: B904
 
 
@@ -241,49 +239,6 @@ def rpc_reader_dimap_v1(geomodel_path: str, topleftconvention: bool = True) -> D
     return rpc_params
 
 
-def rpc_reader_geotiff(geomodel_path, topleftconvention=True) -> Dict:
-    """
-    Load from a geotiff image file
-
-    :param geomodel_path: path to geomodel
-    :param topleftconvention: [0,0] position
-    :type topleftconvention: boolean
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
-    """
-    dataset = rio.open(geomodel_path)
-    rpc_dict = dataset.tags(ns="RPC")
-    if not rpc_dict:
-        logging.error("%s does not contains RPCs ", geomodel_path)
-        raise ValueError
-    rpc_params = {
-        "den_row": parse_coeff_line(rpc_dict["LINE_DEN_COEFF"]),
-        "num_row": parse_coeff_line(rpc_dict["LINE_NUM_COEFF"]),
-        "num_col": parse_coeff_line(rpc_dict["SAMP_NUM_COEFF"]),
-        "den_col": parse_coeff_line(rpc_dict["SAMP_DEN_COEFF"]),
-        "offset_col": float(rpc_dict["SAMP_OFF"]),
-        "scale_col": float(rpc_dict["SAMP_SCALE"]),
-        "offset_row": float(rpc_dict["LINE_OFF"]),
-        "scale_row": float(rpc_dict["LINE_SCALE"]),
-        "offset_alt": float(rpc_dict["HEIGHT_OFF"]),
-        "scale_alt": float(rpc_dict["HEIGHT_SCALE"]),
-        "offset_x": float(rpc_dict["LONG_OFF"]),
-        "scale_x": float(rpc_dict["LONG_SCALE"]),
-        "offset_y": float(rpc_dict["LAT_OFF"]),
-        "scale_y": float(rpc_dict["LAT_SCALE"]),
-        "num_x": None,
-        "den_x": None,
-        "num_y": None,
-        "den_y": None,
-    }
-    # inverse coeff are not defined
-    # If top left convention, 0.5 pixel shift added on col/row offsets
-    if topleftconvention:
-        rpc_params["offset_col"] += 0.5
-        rpc_params["offset_row"] += 0.5
-    return rpc_params
-
-
 def rpc_reader_ossim_kwl(geomodel_path: str, topleftconvention: bool = True) -> Dict:
     """
     Load from a geom file
@@ -378,23 +333,6 @@ def parse_coeff_line(coeff_str):
     :rtype: list()
     """
     return [float(el) for el in coeff_str.split()]
-
-
-def identify_geotiff_rpc(image_filename):
-    """
-    read image file to identify if it is a geotiff which contains RPCs
-
-    :param image_filename: image_filename
-    :type image_filename: str
-    :return: rpc info, rpc dict or None  if not a geotiff with rpc
-    :rtype: str
-    """
-    try:
-        dataset = rio.open(image_filename)
-        rpc_dict = dataset.tags(ns="RPC")
-        return rpc_dict
-    except Exception:  # pylint: disable=broad-except
-        return None
 
 
 def identify_ossim_kwl(ossim_kwl_file):

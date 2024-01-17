@@ -80,30 +80,6 @@ vector<double>> DTMIntersection::intersection(
 }
 
 
-//-- getter --//
 
-string DTMIntersection::get_dtm_file(){return dtm_file;}
-vector<double> DTMIntersection::get_alt_data(){return alt_data;}
-double DTMIntersection::get_alt_min(){return alt_min;}
-double DTMIntersection::get_alt_max(){return alt_max;}
-double DTMIntersection::get_origin_x(){return origin_x;}
-double DTMIntersection::get_origin_y(){return origin_y;}
-double DTMIntersection::get_pixel_size_x(){return pixel_size_x;}
-double DTMIntersection::get_pixel_size_y(){return pixel_size_y;}
-vector<double> DTMIntersection::get_plane_coef_a(){return plane_coef_a;}
-vector<double> DTMIntersection::get_plane_coef_b(){return plane_coef_b;}
-vector<double> DTMIntersection::get_plane_coef_c(){return plane_coef_c;}
-vector<double> DTMIntersection::get_plane_coef_d(){return plane_coef_d;}
-double DTMIntersection::get_alt_min_cell(){return alt_min_cell;}
-double DTMIntersection::get_alt_max_cell(){return alt_max_cell;}
-double DTMIntersection::get_tol_z(){return tol_z;}// = 0.0001
-int DTMIntersection::get_epsg(){return epsg;}
-vector<double> DTMIntersection::get_grid_row(){return grid_row;}
-vector<double> DTMIntersection::get_grid_col(){return grid_col;}
-vector<double> DTMIntersection::get_plans(){return plans;}
-vector<double> DTMIntersection::get_trans_inv(){return trans_inv;} //affine.affine en python
-vector<double> DTMIntersection::get_transform(){return transform;}
-int DTMIntersection::get_nb_rows(){return nb_rows;}
-int DTMIntersection::get_nb_columns(){return nb_columns;}
 
 int main(){return 0;}// to delete

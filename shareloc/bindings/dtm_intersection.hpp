@@ -21,16 +21,9 @@ limitations under the License.
 Cpp copy of dtm_intersection.py
 */
 
-#include <string>
-#include <iostream>
-#include <vector>
-#include <tuple>
-#include <map>
-#include <array>
-#include <algorithm>
-#include <cmath>
+#ifndef DTM_INTERSECTION_H  
+#define DTM_INTERSECTION_H
 
-using namespace std;
 
 /**
 Class DTMIntersection
@@ -38,38 +31,6 @@ Framework of the DTMIntersection python class.
 */
 
 class DTMIntersection {
-
-private:
-
-        string dtm_file;
-        vector<double> alt_data;
-        double alt_min;
-        double alt_max;
-        double origin_x;
-        double origin_y;
-        double pixel_size_x;
-        double pixel_size_y;
-        vector<double> plane_coef_a;
-        vector<double> plane_coef_b;
-        vector<double> plane_coef_c;
-        vector<double> plane_coef_d;
-        double alt_min_cell;
-        double alt_max_cell;
-        double tol_z;// = 0.0001
-
-        int epsg;
-
-        vector<double> grid_row;
-        vector<double> grid_col;
-
-        vector<double> plans;
-
-        vector<double> trans_inv; //affine.affine en python
-        vector<double> transform;
-        int nb_rows;
-        int nb_columns;
-
-
 
 public:
 
@@ -108,49 +69,82 @@ public:
 
 
     /**get_dtm_file*/
-    string get_dtm_file();
+    string const& get_dtm_file() const noexcept {return m_dtm_file;};
     /**get_alt_data*/
-    vector<double> get_alt_data();
+    vector<double>  const&  get_alt_data() const noexcept {return m_alt_data;};
     /**get_alt_min*/
-    double get_alt_min();
+    double get_alt_min() const noexcept {return m_alt_min;};
     /**get_alt_max*/
-    double get_alt_max();
+    double get_alt_max() const noexcept {return m_alt_max;};
     /**get_origin_x*/
-    double get_origin_x();
+    double get_origin_x() const noexcept {return m_origin_x;};
     /**get_origin_y*/
-    double get_origin_y();
+    double get_origin_y() const noexcept {return m_origin_y;};
     /**get_pixel_size_x*/
-    double get_pixel_size_x();
+    double get_pixel_size_x() const noexcept {return m_pixel_size_x;};
     /**get_pixel_size_y*/
-    double get_pixel_size_y();
+    double get_pixel_size_y() const noexcept {return m_pixel_size_y;};
     /**get_plane_coef_a*/
-    vector<double> get_plane_coef_a();
+    vector<double> const& get_plane_coef_a() const noexcept {return m_plane_coef_a;};
     /**get_plane_coef_b*/
-    vector<double> get_plane_coef_b();
+    vector<double> const& get_plane_coef_b() const noexcept {return m_plane_coef_b;};
     /**get_plane_coef_c*/
-    vector<double> get_plane_coef_c();
+    vector<double> const& get_plane_coef_c() const noexcept {return m_plane_coef_c;};
     /**get_plane_coef_d*/
-    vector<double> get_plane_coef_d();
+    vector<double> const& get_plane_coef_d() const noexcept {return m_plane_coef_d;};
     /**get_alt_min_cell*/
-    double get_alt_min_cell();
+    double get_alt_min_cell() const noexcept {return m_alt_min_cell;};
     /**get_alt_max_cell*/
-    double get_alt_max_cell();
+    double get_alt_max_cell() const noexcept {return m_alt_max_cell;};
     /**get_tol_z*/
-    double get_tol_z();// = 0.0001
+    double get_tol_z() const noexcept {return m_tol_z;};// = 0.0001
     /**get_epsg*/
-    int get_epsg();
+    int get_epsg() const noexcept {return m_epsg;};
     /**get_grid_row*/
-    vector<double> get_grid_row();
+    vector<double> const& get_grid_row() const noexcept {return m_grid_row;};
     /**get_grid_col*/
-    vector<double> get_grid_col();
+    vector<double> const& get_grid_col() const noexcept {return m_grid_col;};
     /**get_plans*/
-    vector<double> get_plans();
+    vector<double> const& get_plans() const noexcept {return m_plans;};
     /**get_trans_inv*/
-    vector<double> get_trans_inv(); //affine.affine en python
+    vector<double> const& get_trans_inv() const noexcept {return m_trans_inv;}; //affine.affine en python
     /**get_transform*/
-    vector<double> get_transform();
+    vector<double> const& get_transform() const noexcept {return m_transform;};
     /**get_nb_rows*/
-    int get_nb_rows();
+    int get_nb_rows() const noexcept {return m_nb_rows;};
     /**get_nb_columns*/
-    int get_nb_columns();
+    int get_nb_columns() const noexcept {return m_nb_columns;};
+
+private:
+
+        string m_dtm_file;
+        vector<double> m_alt_data;
+        double m_alt_min;
+        double m_alt_max;
+        double m_origin_x;
+        double m_origin_y;
+        double m_pixel_size_x;
+        double m_pixel_size_y;
+        vector<double> m_plane_coef_a;
+        vector<double> m_plane_coef_b;
+        vector<double> m_plane_coef_c;
+        vector<double> m_plane_coef_d;
+        double m_alt_min_cell;
+        double m_alt_max_cell;
+        double m_tol_z;// = 0.0001
+
+        int m_epsg;
+
+        vector<double> m_grid_row;
+        vector<double> m_grid_col;
+
+        vector<double> m_plans;
+
+        vector<double> m_trans_inv; //affine.affine en python
+        vector<double> m_transform;
+        int m_nb_rows;
+        int m_nb_columns;
 };
+
+
+#endif

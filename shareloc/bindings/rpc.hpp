@@ -21,210 +21,233 @@ limitations under the License.
 Cpp copy of rpc.py
 */
 
+#ifndef RPC_H
+#define RPC_H
 
-#include "GeoModelTemplate.hpp"
-#include "GeoModelTemplate.cpp"
+
+#include <string>
+#include <iostream>
+#include <vector>
+#include <tuple>
+#include <map>
+#include <array>
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <numeric>
+
+#include <iomanip>
+
 
 /**
 Class RPC
 Framework of the RPC python class.
 */
 
-class RPC : public GeoModelTemplate{
-
-private:
-
-    string type;
-    int epsg;
-    string datum;
-    map<string, double> rpc_params;//map<string, double> is a simple dict -> maybe inappropiate
-    double lim_extrapol;
-
-    vector<vector<double>> monomes;// to convert to array
-    vector<vector<double>> monomes_deriv_1;
-    vector<vector<double>> monomes_deriv_2;
-
-    bool inverse_coefficient;
-    bool direct_coefficient;
-
-    array<double, 20> num_col;
-    array<double, 20> den_col;
-    array<double, 20> num_row;
-    array<double, 20> den_row;
-
-    array<double, 20> num_lon;
-    array<double, 20> den_lon;
-    array<double, 20> num_lat;
-    array<double, 20> den_lat;
-
-    array<double, 2> alt_minmax;
-
-    double col0;
-    double colmax;
-    double row0;
-    double rowmax;
-
-    double offset_row;
-    double scale_row;
-    double offset_col;
-    double scale_col;
-    double offset_alt;
-    double scale_alt;
-    double offset_lon;//py: lon=x
-    double scale_lon;//py: lon=x
-    double offset_lat;//py: lat=y
-    double scale_lat;//py: lat=y
-
+class RPC{
 
 public:
-    using GeoModelTemplate::GeoModelTemplate;
 
     /**Constructor*/
     RPC(bool inverse_coefficient,
         bool direct_coefficient,
-        array<double, 20> num_col,
-        array<double, 20> den_col,
-        array<double, 20> num_row,
-        array<double, 20> den_row,
-        array<double, 20> num_lon,
-        array<double, 20> den_lon,
-        array<double, 20> num_lat,
-        array<double, 20> den_lat,
-        array<double, 10> norm_coeffs);
+        std::array<double, 20> const& num_col,
+        std::array<double, 20> const& den_col,
+        std::array<double, 20> const& num_row,
+        std::array<double, 20> const& den_row,
+        std::array<double, 20> const& num_lon,
+        std::array<double, 20> const& den_lon,
+        std::array<double, 20> const& num_lat,
+        std::array<double, 20> const& den_lat,
+        std::array<double, 10> const& norm_coeffs);
 
     /**direct_loc_h*/
-    tuple<vector<double>,vector<double>,vector<double>> direct_loc_h(
-        vector<double> row,
-        vector<double> col,
-        vector<double> alt,
-        bool fill_nan=false);//override
+    std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> direct_loc_h(
+        std::vector<double> const& row,
+        std::vector<double> const& col,
+        std::vector<double> const& alt,
+        bool fill_nan=false) const;
 
     /**direct_loc_grid_h*/
-    tuple<vector<vector<double>>,vector<vector<double>>> direct_loc_grid_h(
+    std::tuple<std::vector<std::vector<double>>,std::vector<std::vector<double>>> direct_loc_grid_h(
         int row0,
         int col0,
         int steprow,
         int stepcol,
         int nbrow,
         int nbcol,
-        double alt);
+        double alt) const;
 
     /**direct_loc_dtm*/
-    vector<vector<double>> direct_loc_dtm(
+    std::vector<std::vector<double>> direct_loc_dtm(
         double row,
         double col,
-        string dtm);//override + dtm is a python class not a string
+        std::string dtm) const;//override + dtm is a python class not a std::string
 
     /**inverse_loc unitary*/
-    tuple<double,double,double> inverse_loc(
+    std::tuple<double,double,double> inverse_loc(
         double lon,
         double lat,
-        double alt);
+        double alt)const;
 
     /**inverse_loc*/
-    tuple<vector<double>,vector<double>,vector<double>> inverse_loc(
-        vector<double> lon,
-        vector<double> lat,
-        vector<double> alt) override;
+    std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> inverse_loc(
+        std::vector<double> const& lon,
+        std::vector<double> const& lat,
+        std::vector<double> const& alt)const;// override;
 
     /**filter_coordinates*/
-    tuple<vector<bool>,vector<double>,vector<double>> filter_coordinates(
-        vector<double> first_coord,
-        vector<double> second_coord,
+    std::tuple<std::vector<bool>,std::vector<double>,std::vector<double>> filter_coordinates(
+        std::vector<double> const& first_coord,
+        std::vector<double> const& second_coord,
         bool fill_nan=false,
-        string direction="direct");
+        std::string direction="direct")const;
 
 
     /**compute_loc_inverse_derivates unitary*/
-    tuple<double,
+    std::tuple<double,
     double,
     double,
     double> compute_loc_inverse_derivates(
         double lon,
         double lat,
-        double alt);
+        double alt) const;
 
     /**direct_loc_inverse_iterative*/
-    tuple<vector<double>,vector<double>,vector<double>> direct_loc_inverse_iterative(
-        vector<double> row,
-        vector<double> col,
-        vector<double> alt,
+    std::tuple<std::vector<double>,
+    std::vector<double>,
+    std::vector<double>> direct_loc_inverse_iterative(
+        std::vector<double> const& row,
+        std::vector<double> const& col,
+        std::vector<double> const& alt,
         int nb_iter_max=10,
-        bool fill_nan=false);
+        bool fill_nan=false)const;
 
     /**get_alt_min_max*/
-    array<double, 2> get_alt_min_max();
+    std::array<double, 2> get_alt_min_max()const;
 
     /**los_extrema*/
-    tuple<vector<double>,vector<double>,vector<double>> los_extrema(
+    std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> los_extrema(
         double row,
         double col,
         double alt_min,
         double alt_max,
         bool fill_nan=false,
-        int epsg=4326);
+        int epsg=4326) const;
     
 
     //-- getter --//
 
+
+
+
     /**get_num_col*/
-    array<double, 20> get_num_col();
+    std::array<double, 20> const& get_num_col() const noexcept {return m_num_col;};
     /**get_den_col*/
-    array<double, 20> get_den_col();
+    std::array<double, 20> const& get_den_col() const noexcept {return m_den_col;};
     /**get_num_row*/
-    array<double, 20> get_num_row();
+    std::array<double, 20> const& get_num_row() const noexcept {return m_num_row;};
     /**get_den_row*/
-    array<double, 20> get_den_row();
+    std::array<double, 20> const& get_den_row() const noexcept {return m_den_row;};
 
     /**get_num_lon*/
-    array<double, 20> get_num_lon();
+    std::array<double, 20> const& get_num_lon() const noexcept {return m_num_lon;};
     /**get_den_lon*/
-    array<double, 20> get_den_lon();
+    std::array<double, 20> const& get_den_lon() const noexcept {return m_den_lon;};
     /**get_num_lat*/
-    array<double, 20> get_num_lat();
+    std::array<double, 20> const& get_num_lat() const noexcept {return m_num_lat;};
     /**get_den_lat*/
-    array<double, 20> get_den_lat();
+    std::array<double, 20> const& get_den_lat() const noexcept {return m_den_lat;};
 
     /**get_offset_row*/
-    double get_offset_row();
+    double get_offset_row() const noexcept {return m_offset_row;};
     /**get_scale_row*/
-    double get_scale_row();
+    double get_scale_row() const noexcept {return m_scale_row;};
     /**get_offset_col*/
-    double get_offset_col();
+    double get_offset_col() const noexcept {return m_offset_col;};
     /**get_scale_col*/
-    double get_scale_col();
+    double get_scale_col() const noexcept {return m_scale_col;};
     /**get_offset_alt*/
-    double get_offset_alt();
+    double get_offset_alt() const noexcept {return m_offset_alt;};
     /**get_scale_alt*/
-    double get_scale_alt();
+    double get_scale_alt() const noexcept {return m_scale_alt;};
     /**get_offset_lon*/
-    double get_offset_lon();
+    double get_offset_lon() const noexcept {return m_offset_lon;};
     /**get_scale_lon*/
-    double get_scale_lon();
+    double get_scale_lon() const noexcept {return m_scale_lon;};
     /**get_offset_lat*/
-    double get_offset_lat();
+    double get_offset_lat() const noexcept {return m_offset_lat;};
     /**get_scale_lat*/
-    double get_scale_lat();
+    double get_scale_lat() const noexcept {return m_scale_lat;};
+
+private:
+
+    std::string m_datum;
+    std::map<std::string, double> m_rpc_params;//it's a simple dict -> maybe inappropiate
+    double m_lim_extrapol;
+
+    std::vector<std::vector<double>> m_monomes;// to convert to array
+    std::vector<std::vector<double>> m_monomes_deriv_1;
+    std::vector<std::vector<double>> m_monomes_deriv_2;
+
+    bool m_inverse_coefficient;
+    bool m_direct_coefficient;
+
+    alignas(64) std::array<double, 20> m_num_col;
+    alignas(64) std::array<double, 20> m_den_col;
+    alignas(64) std::array<double, 20> m_num_row;
+    alignas(64) std::array<double, 20> m_den_row;
+
+    alignas(64) std::array<double, 20> m_num_lon;
+    alignas(64) std::array<double, 20> m_den_lon;
+    alignas(64) std::array<double, 20> m_num_lat;
+    alignas(64) std::array<double, 20> m_den_lat;
+
+    std::array<double, 2> m_alt_minmax;
+
+    double m_col0;
+    double m_colmax;
+    double m_row0;
+    double m_rowmax;
+
+    double m_offset_row;
+    double m_scale_row;
+    double m_offset_col;
+    double m_scale_col;
+    double m_offset_alt;
+    double m_scale_alt;
+    double m_offset_lon;//py: lon=x
+    double m_scale_lon;//py: lon=x
+    double m_offset_lat;//py: lat=y
+    double m_scale_lat;//py: lat=y
+
 };
 
 // function 
+
 
 /**Compute polynomial equation"*/
 double polynomial_equation(
     double xnorm,
     double ynorm,
     double znorm,
-    const array<double, 20>* coeff);
+    const std::array<double, 20>& coeff);
+
+
+
+
+
+
 
 /** compute_rational_function_polynomial unitary*/
-tuple<double,double,double> compute_rational_function_polynomial_unitary(
+std::tuple<double,double,double> compute_rational_function_polynomial_unitary(
     double lon_col_norm,
     double lat_row_norm,
     double alt_norm,
-    array<double, 20> num_col,
-    array<double, 20> den_col,
-    array<double, 20> num_lin,
-    array<double, 20> den_lin,
+    std::array<double, 20> const& num_col,
+    std::array<double, 20> const& den_col,
+    std::array<double, 20> const& num_lin,
+    std::array<double, 20> const& den_lin,
 
     //input
     double scale_lon_col,
@@ -244,14 +267,16 @@ tuple<double,double,double> compute_rational_function_polynomial_unitary(
 
 /**Compute rational function polynomial. Useful to compute direct and inverse localization
         "using direct or inverse RPC."*/
-tuple<vector<double>,vector<double>,vector<double>> compute_rational_function_polynomial(
-    vector<double> lon_col_norm,
-    vector<double> lat_row_norm,
-    vector<double> alt_norm,
-    array<double, 20> num_col,
-    array<double, 20> den_col,
-    array<double, 20> num_lin,
-    array<double, 20> den_lin,
+std::tuple<std::vector<double>,
+std::vector<double>,
+std::vector<double>> compute_rational_function_polynomial(
+    std::vector<double> const& lon_col_norm,
+    std::vector<double> const& lat_row_norm,
+    std::vector<double> const& alt_norm,
+    std::array<double, 20> const& num_col,
+    std::array<double, 20> const& den_col,
+    std::array<double, 20> const& num_lin,
+    std::array<double, 20> const& den_lin,
 
     //input
     double scale_lon_col,
@@ -268,23 +293,43 @@ tuple<vector<double>,vector<double>,vector<double>> compute_rational_function_po
     double offset_lin
 );
 
-/**Check if arrays have the same size and cut it if needed*/
-tuple<vector<double>,
-    vector<double>,
-    vector<double>> check_sizes(vector<double> lon_col,
-    vector<double> lat_row,
-    vector<double>alt);
+
+
+
+
 
 /** Compute derivative_polynomial_latitude*/
 double derivative_polynomial_latitude(
-    double lon_norm,
-    double lat_norm,
-    double alt_norm,
-    const array<double, 20>* coeff);
+    double xnorm,
+    double ynorm,
+    double znorm,
+    std::array<double, 20> const& coeff);
+
 
 /**Compute derivative_polynomial_longitude*/
 double derivative_polynomial_longitude(
-    double lon_norm,
-    double lat_norm,
-    double alt_norm,
-    const array<double, 20>* coeff);
+    double xnorm,
+    double ynorm,
+    double znorm,
+    std::array<double, 20> const& coeff);
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**Check if arrays have the same size and cut it if needed*/
+std::tuple<std::vector<double>,
+    std::vector<double>,
+    std::vector<double>> check_sizes(std::vector<double> const& lon_col,
+    std::vector<double> const& lat_row,
+    std::vector<double> const& alt);
+
+#endif

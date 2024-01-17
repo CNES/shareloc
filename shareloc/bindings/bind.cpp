@@ -27,8 +27,11 @@ which is callable in a python code as a python module.
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+// #include "GeoModelTemplate.cpp"
 #include "rpc.cpp"
 #include "dtm_intersection.cpp"
+
 
 namespace py = pybind11;
 
@@ -46,13 +49,7 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("intersect_dtm_cube", &DTMIntersection::intersect_dtm_cube)
         .def("intersection", &DTMIntersection::intersection);
 
-    py::class_<GeoModelTemplate>(m, "GeoModelTemplate")
-        .def(py::init<>())
-        .def("direct_loc_h", &GeoModelTemplate::direct_loc_h)
-        .def("direct_loc_dtm", &GeoModelTemplate::direct_loc_dtm)
-        .def("inverse_loc", &GeoModelTemplate::inverse_loc);
-
-    py::class_<RPC,GeoModelTemplate>(m, "RPC")
+    py::class_<RPC>(m, "RPC")
         .def(py::init<bool,
         bool,
         array<double, 20>,
@@ -64,13 +61,11 @@ PYBIND11_MODULE(rpc_c, m) {
         array<double, 20>,
         array<double, 20>,
         array<double, 10>>())
-        .def("direct_loc_h", &RPC::direct_loc_h)
+        .def("direct_loc_h", &RPC::direct_loc_h)//spécifier le type le type d'entrée
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
         .def("direct_loc_dtm", &RPC::direct_loc_dtm)
-        .def("inverse_loc", &GeoModelTemplate::inverse_loc)
-        .def("inverse_loc",\
-        (tuple<double,double,double> (RPC::*)\
-        (double,double,double)) &RPC::inverse_loc)
+        .def("inverse_loc",py::overload_cast<double, double, double>(&RPC::inverse_loc, py::const_) )
+        .def("inverse_loc",py::overload_cast<std::vector<double> const&, std::vector<double> const&, std::vector<double> const&>(&RPC::inverse_loc, py::const_) )
 
         .def("filter_coordinates", &RPC::filter_coordinates)
 
@@ -119,5 +114,8 @@ PYBIND11_MODULE(rpc_c, m) {
 
 }
 
-//c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes)
+//c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)
 //bind.cpp -o rpc_c$(python3-config --extension-suffix)
+
+// c++ -w -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC 
+//$(python3 -m pybind11 --includes) bind.cpp -o rpc_c$(python3-config --extension-suffix)

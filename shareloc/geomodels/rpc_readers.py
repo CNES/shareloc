@@ -32,6 +32,7 @@ from xml.dom import minidom
 # Third party imports
 import numpy as np
 import rasterio as rio
+from rasterio.errors import RasterioIOError
 
 
 def rpc_reader(geomodel_path: str, topleftconvention: bool = True) -> Dict:
@@ -49,6 +50,10 @@ def rpc_reader(geomodel_path: str, topleftconvention: bool = True) -> Dict:
     :return rpc dict filled with parameters
     """
 
+    rpc_params = rpc_reader_via_rasterio(geomodel_path, topleftconvention)
+    if rpc_params is not None:
+        return rpc_params
+
     # If ends with XML --> DIMAP
     if basename(geomodel_path.upper()).endswith("XML"):
         dimap_version = identify_dimap(geomodel_path)
@@ -60,10 +65,8 @@ def rpc_reader(geomodel_path: str, topleftconvention: bool = True) -> Dict:
     ossim_model = identify_ossim_kwl(geomodel_path)
     if ossim_model is not None:
         return rpc_reader_ossim_kwl(geomodel_path, topleftconvention)
-    geotiff_rpc_dict = identify_geotiff_rpc(geomodel_path)
-    if geotiff_rpc_dict is not None:
-        return rpc_reader_geotiff(geomodel_path, topleftconvention)
-    raise ValueError("can not read rpc file")
+
+    raise ValueError("can not read rpc file")  # noqa: B904
 
 
 def rpc_reader_dimap_v23(geomodel_path: str, topleftconvention: bool = True) -> Dict:
@@ -236,49 +239,6 @@ def rpc_reader_dimap_v1(geomodel_path: str, topleftconvention: bool = True) -> D
     return rpc_params
 
 
-def rpc_reader_geotiff(geomodel_path, topleftconvention=True) -> Dict:
-    """
-    Load from a geotiff image file
-
-    :param geomodel_path: path to geomodel
-    :param topleftconvention: [0,0] position
-    :type topleftconvention: boolean
-        If False : [0,0] is at the center of the Top Left pixel
-        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
-    """
-    dataset = rio.open(geomodel_path)
-    rpc_dict = dataset.tags(ns="RPC")
-    if not rpc_dict:
-        logging.error("%s does not contains RPCs ", geomodel_path)
-        raise ValueError
-    rpc_params = {
-        "den_row": parse_coeff_line(rpc_dict["LINE_DEN_COEFF"]),
-        "num_row": parse_coeff_line(rpc_dict["LINE_NUM_COEFF"]),
-        "num_col": parse_coeff_line(rpc_dict["SAMP_NUM_COEFF"]),
-        "den_col": parse_coeff_line(rpc_dict["SAMP_DEN_COEFF"]),
-        "offset_col": float(rpc_dict["SAMP_OFF"]),
-        "scale_col": float(rpc_dict["SAMP_SCALE"]),
-        "offset_row": float(rpc_dict["LINE_OFF"]),
-        "scale_row": float(rpc_dict["LINE_SCALE"]),
-        "offset_alt": float(rpc_dict["HEIGHT_OFF"]),
-        "scale_alt": float(rpc_dict["HEIGHT_SCALE"]),
-        "offset_x": float(rpc_dict["LONG_OFF"]),
-        "scale_x": float(rpc_dict["LONG_SCALE"]),
-        "offset_y": float(rpc_dict["LAT_OFF"]),
-        "scale_y": float(rpc_dict["LAT_SCALE"]),
-        "num_x": None,
-        "den_x": None,
-        "num_y": None,
-        "den_y": None,
-    }
-    # inverse coeff are not defined
-    # If top left convention, 0.5 pixel shift added on col/row offsets
-    if topleftconvention:
-        rpc_params["offset_col"] += 0.5
-        rpc_params["offset_row"] += 0.5
-    return rpc_params
-
-
 def rpc_reader_ossim_kwl(geomodel_path: str, topleftconvention: bool = True) -> Dict:
     """
     Load from a geom file
@@ -375,23 +335,6 @@ def parse_coeff_line(coeff_str):
     return [float(el) for el in coeff_str.split()]
 
 
-def identify_geotiff_rpc(image_filename):
-    """
-    read image file to identify if it is a geotiff which contains RPCs
-
-    :param image_filename: image_filename
-    :type image_filename: str
-    :return: rpc info, rpc dict or None  if not a geotiff with rpc
-    :rtype: str
-    """
-    try:
-        dataset = rio.open(image_filename)
-        rpc_dict = dataset.tags(ns="RPC")
-        return rpc_dict
-    except Exception:  # pylint: disable=broad-except
-        return None
-
-
 def identify_ossim_kwl(ossim_kwl_file):
     """
     parse geom file to identify if it is an ossim model
@@ -414,3 +357,55 @@ def identify_ossim_kwl(ossim_kwl_file):
         return None
     except Exception:  # pylint: disable=broad-except
         return None
+
+
+def rpc_reader_via_rasterio(geomodel_path, topleftconvention=True) -> Dict:
+    """
+    Load via rasterio RPC object
+
+    :param geomodel_path: path to geomodel
+    :param topleftconvention: [0,0] position
+    :type topleftconvention: boolean
+        If False : [0,0] is at the center of the Top Left pixel
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+    """
+    try:
+        with rio.open(geomodel_path, "r") as src:
+            rpcs = src.rpcs  # pas de coef direct
+    except RasterioIOError as rio_error:
+        logging.debug("%s can not be read by rasterio", geomodel_path)
+        logging.debug("     Erreur Rasterio : %s", rio_error)
+        return None
+
+    if not rpcs:
+        logging.debug("%s does not contains RPCs readable by rasterio ", geomodel_path)
+        return None
+
+    rpcs = rpcs.to_dict()
+
+    rpc_params = {}
+    rpc_params["offset_alt"] = rpcs["height_off"]
+    rpc_params["scale_alt"] = rpcs["height_scale"]
+    rpc_params["offset_y"] = rpcs["lat_off"]
+    rpc_params["scale_y"] = rpcs["lat_scale"]
+    rpc_params["den_row"] = rpcs["line_den_coeff"]
+    rpc_params["num_row"] = rpcs["line_num_coeff"]
+    rpc_params["offset_row"] = rpcs["line_off"]
+    rpc_params["scale_row"] = rpcs["line_scale"]
+    rpc_params["offset_x"] = rpcs["long_off"]
+    rpc_params["scale_x"] = rpcs["long_scale"]
+    rpc_params["den_col"] = rpcs["samp_den_coeff"]
+    rpc_params["num_col"] = rpcs["samp_num_coeff"]
+    rpc_params["offset_col"] = rpcs["samp_off"]
+    rpc_params["scale_col"] = rpcs["samp_scale"]
+    rpc_params["num_x"] = None
+    rpc_params["den_x"] = None
+    rpc_params["num_y"] = None
+    rpc_params["den_y"] = None
+    rpc_params["driver_type"] = "rasterio_rpc"
+
+    if topleftconvention:
+        rpc_params["offset_col"] += 0.5
+        rpc_params["offset_row"] += 0.5
+
+    return rpc_params

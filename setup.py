@@ -24,6 +24,6 @@ Main part is in setup.cfg file.
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
 
-extensions = [Pybind11Extension("rpc_c", ["shareloc/bindings/bind.cpp"])]
+extensions = [Pybind11Extension("rpc_c", ["shareloc/bindings/bind.cpp", "shareloc/bindings/dtm_intersection.cpp", "shareloc/bindings/rpc.cpp"])]
 
 setup(use_scm_version=True, cmdclass={"build_ext": build_ext}, ext_modules=extensions)

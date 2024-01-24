@@ -28,10 +28,8 @@ which is callable in a python code as a python module.
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-// #include "GeoModelTemplate.cpp"
-#include "rpc.cpp"
-#include "dtm_intersection.cpp"
-
+#include "rpc.hpp"
+#include "dtm_intersection.hpp"
 
 namespace py = pybind11;
 
@@ -39,28 +37,28 @@ namespace py = pybind11;
 PYBIND11_MODULE(rpc_c, m) {
 
     py::class_<DTMIntersection>(m, "DTMIntersection")
-        .def(py::init<array<double, 20>>())
-        .def("eq_plan", &DTMIntersection::eq_plan)
-        .def("ter_to_index", &DTMIntersection::ter_to_index)
-        .def("ter_to_indexs", &DTMIntersection::ter_to_indexs)
-        .def("index_to_ter", &DTMIntersection::index_to_ter)
-        .def("get_alt_offset", &DTMIntersection::get_alt_offset)
-        .def("interpolate", &DTMIntersection::interpolate)
+        .def(py::init<std::array<double, 20>>())
+        .def("eq_plan",            &DTMIntersection::eq_plan)
+        .def("ter_to_index",       &DTMIntersection::ter_to_index)
+        .def("ter_to_indexs",      &DTMIntersection::ter_to_indexs)
+        .def("index_to_ter",       &DTMIntersection::index_to_ter)
+        .def("get_alt_offset",     &DTMIntersection::get_alt_offset)
+        .def("interpolate",        &DTMIntersection::interpolate)
         .def("intersect_dtm_cube", &DTMIntersection::intersect_dtm_cube)
-        .def("intersection", &DTMIntersection::intersection);
+        .def("intersection",       &DTMIntersection::intersection);
 
     py::class_<RPC>(m, "RPC")
         .def(py::init<bool,
         bool,
-        array<double, 20>,
-        array<double, 20>,
-        array<double, 20>,
-        array<double, 20>,
-        array<double, 20>,
-        array<double, 20>,
-        array<double, 20>,
-        array<double, 20>,
-        array<double, 10>>())
+        std::array<double, 20>,
+        std::array<double, 20>,
+        std::array<double, 20>,
+        std::array<double, 20>,
+        std::array<double, 20>,
+        std::array<double, 20>,
+        std::array<double, 20>,
+        std::array<double, 20>,
+        std::array<double, 10>>())
         .def("direct_loc_h", &RPC::direct_loc_h)//spécifier le type le type d'entrée
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
         .def("direct_loc_dtm", &RPC::direct_loc_dtm)
@@ -70,7 +68,7 @@ PYBIND11_MODULE(rpc_c, m) {
         .def("filter_coordinates", &RPC::filter_coordinates)
 
         .def("compute_loc_inverse_derivates",\
-        (tuple<double,double,double,double> (RPC::*)\
+        (std::tuple<double,double,double,double> (RPC::*)\
         (double,double,double)) &RPC::compute_loc_inverse_derivates)
 
         .def("direct_loc_inverse_iterative", &RPC::direct_loc_inverse_iterative)
@@ -117,5 +115,5 @@ PYBIND11_MODULE(rpc_c, m) {
 //c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)
 //bind.cpp -o rpc_c$(python3-config --extension-suffix)
 
-// c++ -w -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC 
+// c++ -w -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC
 //$(python3 -m pybind11 --includes) bind.cpp -o rpc_c$(python3-config --extension-suffix)

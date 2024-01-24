@@ -18,53 +18,56 @@ limitations under the License.
 */
 
 /**
-Cpp copy of dtm_intersection.py
-*/
+  Cpp copy of dtm_intersection.py
+ */
 #include "dtm_intersection.hpp"
+#include <iostream>
+
+using namespace std;
 
 //---- DTMIntersection methodes ----//
 
 
-DTMIntersection::DTMIntersection(array<double, 20> dtm_image){//determiner comment passer les arg
+DTMIntersection::DTMIntersection(array<double, 20> const& dtm_image){//determiner comment passer les arg
     cout<<"Constructor DTMIntersection"<<endl;
 }
 
 
-double DTMIntersection::eq_plan(int i, array<double, 3> position){
+double DTMIntersection::eq_plan(int i, array<double, 3> position) const{
     double res;
     return res;
 }
 
-array<double, 3> DTMIntersection::ter_to_index(array<double, 3> vect_ter){
+array<double, 3> DTMIntersection::ter_to_index(array<double, 3> vect_ter) const{
     array<double, 3> res;
     return res;
 }
 
-vector<double> DTMIntersection::ter_to_indexs(vector<double> vect_ter){
+vector<double> DTMIntersection::ter_to_indexs(vector<double> const& vect_ter) const{
     vector<double> res;
     return res;
 }
 
-array<double, 3> DTMIntersection::index_to_ter(array<double, 3> vect_ter){
+array<double, 3> DTMIntersection::index_to_ter(array<double, 3> vect_ter) const{
     array<double, 3> res;
     return res;
 }
 
-array<double, 2> DTMIntersection::get_alt_offset(int epsg){//maybe unecessary
+array<double, 2> DTMIntersection::get_alt_offset(int epsg) const{//maybe unecessary
     array<double, 2> res;
     return res;
 }
 
-double DTMIntersection::interpolate(double pos_row, double pos_col){
+double DTMIntersection::interpolate(double pos_row, double pos_col) const{
     double res;
     return res;
 }
 
-tuple<bool, 
+tuple<bool,
 bool,
 vector<double>,
 bool,
-vector<double>> DTMIntersection::intersect_dtm_cube(vector<double> los){
+vector<double>> DTMIntersection::intersect_dtm_cube(vector<double> const& los) const{
     tuple<bool,bool,vector<double>,bool,vector<double>> res;
     return res;
 }
@@ -72,14 +75,11 @@ vector<double>> DTMIntersection::intersect_dtm_cube(vector<double> los){
 tuple<bool,
 bool,
 vector<double>> DTMIntersection::intersection(
-    vector<double> los_index,
-    vector<double> point_b, 
-    double h_intersect){
+    vector<double> const& los_index,
+    vector<double> const& point_b,
+    double h_intersect) const
+{
     tuple<bool,bool,vector<double>> res;
     return res;
 }
 
-
-
-
-int main(){return 0;}// to delete

@@ -49,16 +49,16 @@ PYBIND11_MODULE(rpc_c, m) {
 
     py::class_<RPC>(m, "RPC")
         .def(py::init<bool,
-        bool,
-        std::array<double, 20>,
-        std::array<double, 20>,
-        std::array<double, 20>,
-        std::array<double, 20>,
-        std::array<double, 20>,
-        std::array<double, 20>,
-        std::array<double, 20>,
-        std::array<double, 20>,
-        std::array<double, 10>>())
+                bool,
+                std::array<double, 20>,
+                std::array<double, 20>,
+                std::array<double, 20>,
+                std::array<double, 20>,
+                std::array<double, 20>,
+                std::array<double, 20>,
+                std::array<double, 20>,
+                std::array<double, 20>,
+                std::array<double, 10>>())
         .def("direct_loc_h", &RPC::direct_loc_h)//spécifier le type le type d'entrée
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
         .def("direct_loc_dtm", &RPC::direct_loc_dtm)
@@ -67,9 +67,9 @@ PYBIND11_MODULE(rpc_c, m) {
 
         .def("filter_coordinates", &RPC::filter_coordinates)
 
-        .def("compute_loc_inverse_derivates",\
-        (std::tuple<double,double,double,double> (RPC::*)\
-        (double,double,double)) &RPC::compute_loc_inverse_derivates)
+        .def("compute_loc_inverse_derivates",
+                (std::tuple<double,double,double,double> (RPC::*)
+                 (double,double,double)) &RPC::compute_loc_inverse_derivates)
 
         .def("direct_loc_inverse_iterative", &RPC::direct_loc_inverse_iterative)
         .def("get_alt_min_max", &RPC::get_alt_min_max)
@@ -96,20 +96,19 @@ PYBIND11_MODULE(rpc_c, m) {
     //m.doc() = "Pybind hello world"; // optional module docstring
     m.def("polynomial_equation", &polynomial_equation, "Compute polynomial equation");
 
-    m.def("compute_rational_function_polynomial_unitary", \
-        &compute_rational_function_polynomial_unitary,
-        "Compute rational function polynomial for only one point");
+    m.def("compute_rational_function_polynomial_unitary",
+            &compute_rational_function_polynomial_unitary,
+            "Compute rational function polynomial for only one point");
 
     m.def("compute_rational_function_polynomial", &compute_rational_function_polynomial,
-        "Compute rational function polynomial. Useful to compute direct and inverse localization"
-        "using direct or inverse RPC.");
+            "Compute rational function polynomial. Useful to compute direct and inverse localization"
+            "using direct or inverse RPC.");
 
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude,
-    "Compute latitude derivative polynomial equation");
+            "Compute latitude derivative polynomial equation");
 
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude,
-    "Compute longitude derivative polynomial equation");
-
+            "Compute longitude derivative polynomial equation");
 }
 
 //c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)

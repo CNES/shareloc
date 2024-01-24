@@ -40,7 +40,6 @@ limitations under the License.
 
 class RPC
 {
-
 public:
 
     /**Constructor*/

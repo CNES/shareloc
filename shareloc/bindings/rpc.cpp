@@ -26,6 +26,65 @@ limitations under the License.
 #include <iostream>
 #include <cmath>
 
+namespace 
+{ // Anonymous namespace
+std::array<double, 20> pre_polynomial_equation(
+        double xnorm,
+        double ynorm,
+        double znorm)
+{
+    return {
+        1.0,
+        xnorm,
+        ynorm,
+        znorm,
+        xnorm * ynorm,
+        xnorm * znorm,
+        ynorm * znorm,
+        xnorm * xnorm,
+        ynorm * ynorm,
+        znorm * znorm,
+        xnorm * ynorm * znorm,
+        xnorm * xnorm * xnorm,
+        xnorm * ynorm * ynorm,
+        xnorm * znorm * znorm,
+        xnorm * xnorm * ynorm,
+        ynorm * ynorm * ynorm,
+        ynorm * znorm * znorm,
+        xnorm * xnorm * znorm,
+        ynorm * ynorm * znorm,
+        znorm * znorm * znorm,
+    };
+}
+
+double polynomial_equation(
+        std::array<double, 20> const& norms,
+        std::array<double, 20> const& coeffs)
+{
+    return
+           norms[0]  * coeffs[0]
+        +  norms[1]  * coeffs[1]
+        +  norms[2]  * coeffs[2]
+        +  norms[3]  * coeffs[3]
+        +  norms[4]  * coeffs[4]
+        +  norms[5]  * coeffs[5]
+        +  norms[6]  * coeffs[6]
+        +  norms[7]  * coeffs[7]
+        +  norms[8]  * coeffs[8]
+        +  norms[9]  * coeffs[9]
+        +  norms[10] * coeffs[10]
+        +  norms[11] * coeffs[11]
+        +  norms[12] * coeffs[12]
+        +  norms[13] * coeffs[13]
+        +  norms[14] * coeffs[14]
+        +  norms[15] * coeffs[15]
+        +  norms[16] * coeffs[16]
+        +  norms[17] * coeffs[17]
+        +  norms[18] * coeffs[18]
+        +  norms[19] * coeffs[19];
+}
+} // Anonymous namespace
+
 using namespace std;
 
 //---- RPC methodes ----//
@@ -85,9 +144,9 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
     vector<double> const& alt,
     bool fill_nan) const
 {
-    vector<double> lon_out;
-    vector<double> lat_out;
-    vector<double> alt_out;
+    // vector<double> lon_out;
+    // vector<double> lat_out;
+    // vector<double> alt_out;
     if (m_direct_coefficient){
         // if(abs(col_norm[i])>lim_extrapol ||
         //     abs(row_norm[i])>lim_extrapol ||
@@ -279,16 +338,26 @@ RPC::compute_loc_inverse_derivates(
     double lat_norm = (lat - m_offset_lat)/m_scale_lat;
     double alt_norm = (alt - m_offset_alt)/m_scale_alt;
 
+#if defined(SHARELOCS_PRECOMPUTE)
+    alignas(64) std::array<double, 20> norms = pre_polynomial_equation(lon_norm, lat_norm, alt_norm);
+
+    double num_dcol = polynomial_equation(norms, m_num_col);
+    double den_dcol = polynomial_equation(norms, m_den_col);
+    double num_drow = polynomial_equation(norms, m_num_row);
+    double den_drow = polynomial_equation(norms, m_den_row);
+#else
     double num_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, m_num_col);
     double den_dcol = polynomial_equation(lon_norm, lat_norm, alt_norm, m_den_col);
     double num_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, m_num_row);
     double den_drow = polynomial_equation(lon_norm, lat_norm, alt_norm, m_den_row);
+#endif
 
+    // TODO: The same w/ derivative_polynomial_latitude & longitude
     double num_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, m_num_col);
     double den_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, m_den_col);
     double num_drow_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, m_num_row);
     double den_drow_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, m_den_row);
-
+                                         
     double num_dcol_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, m_num_col);
     double den_dcol_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, m_den_col);
     double num_drow_dlat = derivative_polynomial_latitude(lon_norm, lat_norm, alt_norm, m_num_row);
@@ -465,35 +534,36 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::los_extrema(
 
 
 double polynomial_equation(
-    double xnorm,
-    double ynorm,
-    double znorm,
-    const std::array<double, 20>& coeff){
-
+        double xnorm,
+        double ynorm,
+        double znorm,
+        const std::array<double, 20>& coeff)
+{
     return
-    coeff[0]
-    +  xnorm * coeff[1]
-    +  ynorm * coeff[2]
-    +  znorm * coeff[3]
-    +  xnorm * ynorm * coeff[4]
-    +  xnorm * znorm * coeff[5]
-    +  ynorm * znorm * coeff[6]
-    +  xnorm * xnorm * coeff[7]
-    +  ynorm * ynorm * coeff[8]
-    +  znorm * znorm * coeff[9]
-    +  xnorm * ynorm * znorm * coeff[10]
-    +  xnorm * xnorm * xnorm * coeff[11]
-    +  xnorm * ynorm * ynorm * coeff[12]
-    +  xnorm * znorm * znorm * coeff[13]
-    +  xnorm * xnorm * ynorm * coeff[14]
-    +  ynorm * ynorm * ynorm * coeff[15]
-    +  ynorm * znorm * znorm * coeff[16]
-    +  xnorm * xnorm * znorm * coeff[17]
-    +  ynorm * ynorm * znorm * coeff[18]
-    +  znorm * znorm * znorm * coeff[19];
+        coeff[0]
+        +  xnorm * coeff[1]
+        +  ynorm * coeff[2]
+        +  znorm * coeff[3]
+        +  xnorm * ynorm * coeff[4]
+        +  xnorm * znorm * coeff[5]
+        +  ynorm * znorm * coeff[6]
+        +  xnorm * xnorm * coeff[7]
+        +  ynorm * ynorm * coeff[8]
+        +  znorm * znorm * coeff[9]
+        +  xnorm * ynorm * znorm * coeff[10]
+        +  xnorm * xnorm * xnorm * coeff[11]
+        +  xnorm * ynorm * ynorm * coeff[12]
+        +  xnorm * znorm * znorm * coeff[13]
+        +  xnorm * xnorm * ynorm * coeff[14]
+        +  ynorm * ynorm * ynorm * coeff[15]
+        +  ynorm * znorm * znorm * coeff[16]
+        +  xnorm * xnorm * znorm * coeff[17]
+        +  ynorm * ynorm * znorm * coeff[18]
+        +  znorm * znorm * znorm * coeff[19];
 }
 
-tuple<double,double,double> compute_rational_function_polynomial_unitary(
+tuple<double,double,double>
+compute_rational_function_polynomial_unitary(
     double lon_col,
     double lat_row,
     double alt,
@@ -531,10 +601,20 @@ tuple<double,double,double> compute_rational_function_polynomial_unitary(
         double lat_row_norm = (lat_row - offset_lat_row)/scale_lat_row;
         double alt_norm = (alt - offset_alt)/scale_alt;
 
+#if defined(SHARELOCS_PRECOMPUTE)
+        // Testé par LHS: sans dégradation de précision
+        alignas(64) std::array<double, 20> norms = pre_polynomial_equation(lon_col_norm, lat_row_norm, alt_norm);
+        double poly_num_col = polynomial_equation(norms, num_col);
+        double poly_den_col = polynomial_equation(norms, den_col);
+        double poly_num_lin = polynomial_equation(norms, num_lin);
+        double poly_den_lin = polynomial_equation(norms, den_lin);
+#else
         double poly_num_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, num_col);
         double poly_den_col = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, den_col);
         double poly_num_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, num_lin);
         double poly_den_lin = polynomial_equation(lon_col_norm, lat_row_norm, alt_norm, den_lin);
+#endif
+
         col_lon_out = poly_num_col / poly_den_col * scale_col + offset_col;
         row_lat_out = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
     };
@@ -586,14 +666,23 @@ tuple<vector<double>,vector<double>,vector<double>> compute_rational_function_po
         //--- Normalisation
         lon_col_norm[i] = (lon_col_norm[i] - offset_lon_col)/scale_lon_col;
         lat_row_norm[i] = (lat_row_norm[i] - offset_lat_row)/scale_lat_row;
-        alt_norm[i] = (alt_norm[i] - offset_alt)/scale_alt;
+        alt_norm[i]     = (alt_norm[i] - offset_alt)/scale_alt;
 
         //-- Computation
 
+#if defined(SHARELOCS_PRECOMPUTE)
+        alignas(64) std::array<double, 20> norms = pre_polynomial_equation(lon_col_norm[i], lat_row_norm[i],alt_norm[i]);
+        double poly_num_col = polynomial_equation(norms, num_col);
+        double poly_den_col = polynomial_equation(norms, den_col);
+        double poly_num_lin = polynomial_equation(norms, num_lin);
+        double poly_den_lin = polynomial_equation(norms, den_lin);
+
+#else
         double poly_num_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i],alt_norm[i], num_col);
         double poly_den_col = polynomial_equation(lon_col_norm[i], lat_row_norm[i],alt_norm[i], den_col);
         double poly_num_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i],alt_norm[i], num_lin);
         double poly_den_lin = polynomial_equation(lon_col_norm[i], lat_row_norm[i],alt_norm[i], den_lin);
+#endif
 
         if (poly_den_col!=0 and poly_den_lin!=0){
             col_lon_out[i] = poly_num_col / poly_den_col * scale_col + offset_col;
@@ -613,19 +702,18 @@ double derivative_polynomial_latitude(
     double lat_norm,
     double alt_norm,
     const std::array<double, 20>& coeff)
-{//array<double, 20> coeff){
-
+{
     return
         coeff[2]
         + lon_norm * coeff[4]
         + alt_norm * coeff[6]
-        + lat_norm * 2.0 * coeff[8]
+        + 2.0 * lat_norm * coeff[8]
         + lon_norm * alt_norm * coeff[10]
-        + lon_norm * lat_norm * 2.0 * coeff[12]
+        + 2.0 * lat_norm * lon_norm * coeff[12]
         + lon_norm * lon_norm * coeff[14]
         + lat_norm * lat_norm * 3.0 * coeff[15]
         + alt_norm * alt_norm * coeff[16]
-        + lat_norm * alt_norm * 2.0 * coeff[18];
+        + 2.0 * lat_norm * alt_norm * coeff[18];
 }
 
 double derivative_polynomial_longitude(
@@ -633,18 +721,18 @@ double derivative_polynomial_longitude(
     double lat_norm,
     double alt_norm,
     const std::array<double, 20>& coeff)
-{//array<double, 20> coeff){
+{
     return
         coeff[1]
         + lat_norm * coeff[4]
         + alt_norm * coeff[5]
-        + lon_norm * 2.0 * coeff[7]
+        + 2.0 * lon_norm * coeff[7]
         + lat_norm * alt_norm * coeff[10]
         + lon_norm * lon_norm * 3.0 * coeff[11]
         + lat_norm * lat_norm * coeff[12]
         + alt_norm * alt_norm * coeff[13]
-        + lat_norm * lon_norm * 2.0 * coeff[14]
-        + lon_norm * alt_norm * 2.0 * coeff[17];
+        + 2.0 * lon_norm * lat_norm * coeff[14]
+        + 2.0 * lon_norm * alt_norm * coeff[17];
 }
 
 

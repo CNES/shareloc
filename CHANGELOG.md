@@ -35,6 +35,7 @@ A new section Unreleased is opened then for next dev phase.
 
 - fix build read the docs CI [#252]
 - fix rpc geomodel_type typo in doc [#262]
+- fix xarray pyarrow dependency [#291]
 
 ## 0.1.6 Minor bugs, dimap v3 experimental (October 2023)
 

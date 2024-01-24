@@ -24,6 +24,15 @@ Main part is in setup.cfg file.
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
 
-extensions = [Pybind11Extension("rpc_c", ["shareloc/bindings/bind.cpp", "shareloc/bindings/dtm_intersection.cpp", "shareloc/bindings/rpc.cpp"])]
+# For instance, to change compilation options:
+# $> CC=gcc-11 CXX=g++-11 CFLAGS="-DSHARELOCS_PRECOMPUTE -march=native" pip install -e .[dev]
+extensions = [Pybind11Extension(
+    "rpc_c",
+    ["shareloc/bindings/bind.cpp", "shareloc/bindings/dtm_intersection.cpp", "shareloc/bindings/rpc.cpp"],
+    language="c++",
+    # cxx_std=20, # Uncomment to expect C++20
+    extra_compile_args=["-O3"],
+    # extra_compile_args=["-O3", "-DSHARELOCS_PRECOMPUTE"],
+)]
 
 setup(use_scm_version=True, cmdclass={"build_ext": build_ext}, ext_modules=extensions)

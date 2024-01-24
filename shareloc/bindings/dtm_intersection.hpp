@@ -81,7 +81,7 @@ public:
     );//determiner comment passer les arg
 
     /**eq_plan*/
-    double eq_plan(int i, array<double, 3> position);
+    double eq_plan(int i, array<double, 3> const& position);
 
     /**ter_to_index*/
     array<double, 3> ter_to_index(array<double, 3> vect_ter);

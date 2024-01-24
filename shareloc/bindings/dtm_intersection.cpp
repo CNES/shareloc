@@ -87,9 +87,13 @@ DTMIntersection::DTMIntersection(
 }
 
 
-double DTMIntersection::eq_plan(int i, array<double, 3> position){
-    double res;
-    return res;
+double DTMIntersection::eq_plan(int i, array<double, 3> const& position){
+
+return plane_coef_a[i] * position[0]
+    + plane_coef_b[i] * position[1]
+    + plane_coef_c[i] * position[2]
+    - plane_coef_d[i];
+
 }
 
 array<double, 3> DTMIntersection::ter_to_index(array<double, 3> vect_ter){

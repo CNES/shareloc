@@ -12,6 +12,30 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.0a1 GeoModel factory, RPC C++ class (WIP), by strip rectification, code optimisations (January 2024)
+
+### Added
+
+- Line of sight ending point [#240]
+- Compute rectification grid by strips  [#236, #237, #238]
+- GeoModel factory to instantiate geomodels [#221]
+- Drive numba parallel by env SHARELOC_NUMBA_PARALLEL [#267]
+- RPCoptim C++ geomodel class with direct loc h and inverse loc [#263, #225, #253, #276, #244, #254, #274, #273]
+- Use rasterio rpc class to read image RPC [#23]
+
+### Changed
+
+- Code vectorization in DTMIntersection [#211]
+- Use inverse geotransform as class argument to improve performances [#198]
+- Remove useless new_axis [#226]
+- Removed useless transforms in DTMIntersection [#215]
+- RPC direct_loc_dtm refactoring [#275]
+
+### Fixed
+
+- fix build read the docs CI [#252]
+- fix rpc geomodel_type typo in doc [#262]
+
 ## 0.1.6 Minor bugs, dimap v3 experimental (October 2023)
 
 ### Added

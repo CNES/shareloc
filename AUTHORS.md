@@ -23,6 +23,10 @@ This file keeps track of authors contributions.
 * Véronique Defonte <veronique.defonte@csgroup.eu>
 * Loïc Dumas <loic.dumas@csgroup.eu>
 * Romain DOMAGALA <romain.domagala@csgroup.eu>
+* Alice De Bardonneche Richard <alice.de-bardonneche-richard@csgroup.eu>
+* Augustin L'Hirondel <augustin.devaux@csgroup.eu>
+* Jasmin Siefert <jasmin.siefert@csgroup.eu>
+* Yoann Steux <yoann.steux@csgroup.eu>
 
 Update here with new contributors.
 

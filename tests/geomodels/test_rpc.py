@@ -17,7 +17,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 """
 Module to test functions that use rpc
 """
@@ -38,7 +38,7 @@ from shareloc.dtm_reader import dtm_reader
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.geomodels import GeoModel
-from shareloc.geomodels.rpc_readers import identify_dimap, identify_ossim_kwl
+from shareloc.geomodels.rpc_readers import identify_dimap, identify_ossim_kwl, rpc_reader_via_rasterio
 
 # Shareloc test imports
 from ..helpers import data_path
@@ -431,3 +431,137 @@ def test_rpc_minmax():
     (h_min, h_max) = fctrat.get_alt_min_max()
     assert h_min == 532.5
     assert h_max == 617.5
+
+
+def test_read_via_rasterio():
+    """
+    Test rpc read via rasterio
+    """
+
+    # -- Assert RPC constructor
+    data_folder = data_path()
+    rpc_path = os.path.join(data_folder, "rpc/wv3_20.NTF")
+
+    rpc = GeoModel(rpc_path)
+
+    assert rpc.driver_type == "rasterio_rpc"
+
+    # -- Assert dict values
+    rpc_params_ref = {}
+    rpc_params_ref["offset_alt"] = 31
+    rpc_params_ref["scale_alt"] = 501
+    rpc_params_ref["offset_y"] = -34.5043
+    rpc_params_ref["scale_y"] = 0.0531
+    rpc_params_ref["den_row"] = [
+        1,
+        6.918796e-05,
+        0.0004416544,
+        1.091165e-05,
+        -4.703357e-07,
+        1.180023e-06,
+        -2.818314e-07,
+        4.24824e-05,
+        -0.0001854623,
+        5.946361e-05,
+        -1.263282e-08,
+        2.805569e-08,
+        1.145311e-05,
+        0,
+        2.289254e-06,
+        -0.001310256,
+        1.146713e-07,
+        0,
+        4.505145e-06,
+        0,
+    ]
+    rpc_params_ref["num_row"] = [
+        0.002401507,
+        -0.002429637,
+        1.002863,
+        -0.0007633858,
+        -6.513516e-05,
+        9.272476e-08,
+        -1.018064e-05,
+        -0.000491502,
+        -0.002590553,
+        1.890887e-07,
+        1.184859e-06,
+        -5.752598e-08,
+        1.426182e-06,
+        -1.451179e-07,
+        4.540262e-05,
+        0.0002559039,
+        5.966063e-05,
+        -2.931054e-08,
+        1.022565e-06,
+        -4.526981e-08,
+    ]
+    rpc_params_ref["offset_row"] = 17495
+    rpc_params_ref["scale_row"] = 17996
+    rpc_params_ref["offset_x"] = -58.6024
+    rpc_params_ref["scale_x"] = 0.0803
+    rpc_params_ref["den_col"] = [
+        1,
+        0.0007669113,
+        0.0003657245,
+        -0.0004263618,
+        -8.254525e-06,
+        -1.611481e-06,
+        5.995759e-07,
+        4.906291e-06,
+        1.828526e-06,
+        -1.831867e-06,
+        -1.851723e-08,
+        0,
+        1.280374e-07,
+        0,
+        -1.671405e-07,
+        3.795708e-07,
+        0,
+        -1.725435e-08,
+        0,
+        0,
+    ]
+    rpc_params_ref["num_col"] = [
+        0.005014126,
+        -1.021695,
+        -0.0002265161,
+        0.02071451,
+        0.0003603364,
+        -0.0003155448,
+        0.0001644524,
+        -0.004269895,
+        -0.0004006558,
+        6.408265e-06,
+        1.348922e-06,
+        -1.285029e-05,
+        2.041723e-06,
+        1.659585e-06,
+        -1.835126e-05,
+        -6.090936e-05,
+        4.43883e-08,
+        -2.871058e-06,
+        -1.479638e-07,
+        -3.507909e-08,
+    ]
+    rpc_params_ref["offset_col"] = 20749
+    rpc_params_ref["scale_col"] = 21250
+    rpc_params_ref["num_x"] = None
+    rpc_params_ref["den_x"] = None
+    rpc_params_ref["num_y"] = None
+    rpc_params_ref["den_y"] = None
+    rpc_params_ref["driver_type"] = "rasterio_rpc"
+
+    rpc_params = rpc_reader_via_rasterio(rpc_path, topleftconvention=False)
+
+    assert rpc_params_ref == rpc_params
+
+    # -- Identity
+    row = 501
+    col = 501
+    alt = 10
+    lonlatalt = rpc.direct_loc_h(row, col, alt)
+    (row_calc, col_calc, alt) = rpc.inverse_loc(lonlatalt[:, 0], lonlatalt[:, 1], lonlatalt[:, 2])
+
+    assert row_calc[0] == pytest.approx(row, abs=1e-9)
+    assert col_calc[0] == pytest.approx(col, abs=1e-9)

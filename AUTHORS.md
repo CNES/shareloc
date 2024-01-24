@@ -22,7 +22,7 @@ This file keeps track of authors contributions.
 * David Youssefi <david.youssefi@cnes.fr>
 * Véronique Defonte <veronique.defonte@csgroup.eu>
 * Loïc Dumas <loic.dumas@csgroup.eu>
-* Romain DOMAGALA <romain.domagala@csgroup.eu>
+* Romain Domagala <romain.domagala@csgroup.eu>
 * Alice De Bardonneche Richard <alice.de-bardonneche-richard@csgroup.eu>
 * Augustin L'Hirondel <augustin.devaux@csgroup.eu>
 * Jasmin Siefert <jasmin.siefert@csgroup.eu>

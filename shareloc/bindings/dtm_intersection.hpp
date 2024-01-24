@@ -49,23 +49,20 @@ private:
         double origin_y;
         double pixel_size_x;
         double pixel_size_y;
-        vector<double> plane_coef_a;
-        vector<double> plane_coef_b;
-        vector<double> plane_coef_c;
-        vector<double> plane_coef_d;
-        double alt_min_cell;
-        double alt_max_cell;
+        array<double,6> plane_coef_a;
+        array<double,6> plane_coef_b;
+        array<double,6> plane_coef_c;
+        array<double,6> plane_coef_d;
+        vector<double> alt_min_cell;
+        vector<double> alt_max_cell;
         double tol_z;// = 0.0001
 
         int epsg;
 
-        vector<double> grid_row;
-        vector<double> grid_col;
-
         vector<double> plans;
 
-        vector<double> trans_inv; //affine.affine en python
-        vector<double> transform;
+        array<double,6> trans_inv; //affine.affine en python
+        array<double,6> transform;
         int nb_rows;
         int nb_columns;
 
@@ -75,7 +72,13 @@ public:
 
 
     /**Constructor*/
-    DTMIntersection(array<double, 20> dtm_image);//determiner comment passer les arg
+    DTMIntersection(
+        int dtm_image_epsg,
+        vector<double> dtm_image_alt_data,
+        int dtm_image_nb_rows,
+        int dtm_image_nb_columns,
+        tuple<double,double,double,double,double,double> dtm_image_transform
+    );//determiner comment passer les arg
 
     /**eq_plan*/
     double eq_plan(int i, array<double, 3> position);
@@ -106,7 +109,6 @@ public:
 
     //-- getter --//
 
-
     /**get_dtm_file*/
     string get_dtm_file();
     /**get_alt_data*/
@@ -115,42 +117,37 @@ public:
     double get_alt_min();
     /**get_alt_max*/
     double get_alt_max();
-    /**get_origin_x*/
-    double get_origin_x();
-    /**get_origin_y*/
-    double get_origin_y();
-    /**get_pixel_size_x*/
-    double get_pixel_size_x();
-    /**get_pixel_size_y*/
-    double get_pixel_size_y();
     /**get_plane_coef_a*/
-    vector<double> get_plane_coef_a();
+    array<double,6> get_plane_coef_a();
     /**get_plane_coef_b*/
-    vector<double> get_plane_coef_b();
+    array<double,6> get_plane_coef_b();
     /**get_plane_coef_c*/
-    vector<double> get_plane_coef_c();
+    array<double,6> get_plane_coef_c();
     /**get_plane_coef_d*/
-    vector<double> get_plane_coef_d();
+    array<double,6> get_plane_coef_d();
     /**get_alt_min_cell*/
-    double get_alt_min_cell();
+    vector<double> get_alt_min_cell();
     /**get_alt_max_cell*/
-    double get_alt_max_cell();
+    vector<double> get_alt_max_cell();
     /**get_tol_z*/
     double get_tol_z();// = 0.0001
     /**get_epsg*/
     int get_epsg();
-    /**get_grid_row*/
-    vector<double> get_grid_row();
-    /**get_grid_col*/
-    vector<double> get_grid_col();
     /**get_plans*/
     vector<double> get_plans();
     /**get_trans_inv*/
-    vector<double> get_trans_inv(); //affine.affine en python
+    array<double,6> get_trans_inv(); //affine.affine en python
     /**get_transform*/
-    vector<double> get_transform();
+    array<double,6> get_transform();
     /**get_nb_rows*/
     int get_nb_rows();
     /**get_nb_columns*/
     int get_nb_columns();
 };
+
+
+
+//-- Function --//
+
+tuple<vector<double>,
+vector<double>> init_min_max(vector<double> const& alt_data,int nb_rows,int nb_columns);

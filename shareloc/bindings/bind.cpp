@@ -36,15 +36,30 @@ namespace py = pybind11;
 PYBIND11_MODULE(rpc_c, m) {
 
     py::class_<DTMIntersection>(m, "DTMIntersection")
-        .def(py::init<array<double, 20>>())
+        .def(py::init<int,vector<double>,int,int,tuple<double,double,double,double,double,double>>())//determiner comment passer les arg
         .def("eq_plan", &DTMIntersection::eq_plan)
         .def("ter_to_index", &DTMIntersection::ter_to_index)
         .def("ter_to_indexs", &DTMIntersection::ter_to_indexs)
         .def("index_to_ter", &DTMIntersection::index_to_ter)
-        .def("get_alt_offset", &DTMIntersection::get_alt_offset)
         .def("interpolate", &DTMIntersection::interpolate)
         .def("intersect_dtm_cube", &DTMIntersection::intersect_dtm_cube)
-        .def("intersection", &DTMIntersection::intersection);
+        .def("intersection", &DTMIntersection::intersection)
+        .def("get_alt_data", &DTMIntersection::get_alt_data)
+        .def("get_alt_min", &DTMIntersection::get_alt_min)
+        .def("get_alt_max", &DTMIntersection::get_alt_max)
+        .def("get_plane_coef_a", &DTMIntersection::get_plane_coef_a)
+        .def("get_plane_coef_b", &DTMIntersection::get_plane_coef_b)
+        .def("get_plane_coef_c", &DTMIntersection::get_plane_coef_c)
+        .def("get_plane_coef_d", &DTMIntersection::get_plane_coef_d)
+        .def("get_alt_min_cell", &DTMIntersection::get_alt_min_cell)
+        .def("get_alt_max_cell", &DTMIntersection::get_alt_max_cell)
+        .def("get_tol_z", &DTMIntersection::get_tol_z)
+        .def("get_epsg", &DTMIntersection::get_epsg)
+        .def("get_plans", &DTMIntersection::get_plans)
+        .def("get_trans_inv", &DTMIntersection::get_trans_inv)
+        .def("get_transform", &DTMIntersection::get_transform)
+        .def("get_nb_rows", &DTMIntersection::get_nb_rows)
+        .def("get_nb_columns", &DTMIntersection::get_nb_columns);
 
     py::class_<GeoModelTemplate>(m, "GeoModelTemplate")
         .def(py::init<>())

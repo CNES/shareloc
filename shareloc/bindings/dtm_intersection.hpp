@@ -149,5 +149,7 @@ public:
 
 //-- Function --//
 
-tuple<vector<double>,
-vector<double>> init_min_max(vector<double> const& alt_data,int nb_rows,int nb_columns);
+/**init_min_max*/
+tuple<vector<double>,vector<double>> init_min_max(vector<double> const& alt_data,
+                                                    int nb_rows,
+                                                    int nb_columns);

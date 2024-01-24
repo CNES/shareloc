@@ -40,7 +40,9 @@ DTMIntersection::DTMIntersection(
     nb_columns = dtm_image_nb_columns;
 
     alt_data = dtm_image_alt_data;
-    tie(alt_min_cell,alt_max_cell) = init_min_max(dtm_image_alt_data, dtm_image_nb_rows, dtm_image_nb_columns);
+    tie(alt_min_cell,alt_max_cell) = init_min_max(dtm_image_alt_data,
+                                                    dtm_image_nb_rows,
+                                                    dtm_image_nb_columns);
 
     alt_min = *min_element(dtm_image_alt_data.begin(), dtm_image_alt_data.end());
     alt_max = *max_element(dtm_image_alt_data.begin(), dtm_image_alt_data.end());
@@ -48,7 +50,11 @@ DTMIntersection::DTMIntersection(
     plane_coef_a = {1.0, 1.0, 0.0, 0.0, 0.0, 0.0};
     plane_coef_b = {0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
     plane_coef_c = {0.0, 0.0, 0.0, 0.0, 1.0, 1.0};
-    plane_coef_d = {0.0, dtm_image_nb_rows - 1.0, 0.0, dtm_image_nb_columns - 1.0, alt_min, alt_max};
+    plane_coef_d = {0.0,
+                    dtm_image_nb_rows - 1.0,
+                    0.0,
+                    dtm_image_nb_columns - 1.0,
+                    alt_min,alt_max};
 
 
     plans = {1.0, 0.0, 0.0, 0.0,
@@ -174,8 +180,15 @@ for(int i = 0; i < nb_rows-1; ++i){
         double subarray3_i = alt_data[nb_columns * i + (j+1)];
         double subarray4_i = alt_data[nb_columns * (i+1) + (j+1)];
 
-        alt_min_cell[(nb_columns-1)*i+j] = floor(min({subarray1_i,subarray2_i,subarray3_i,subarray4_i}));
-        alt_max_cell[(nb_columns-1)*i+j] = ceil(max({subarray1_i,subarray2_i,subarray3_i,subarray4_i}));
+        alt_min_cell[(nb_columns-1)*i+j] = floor(min({subarray1_i,
+                                                        subarray2_i,
+                                                        subarray3_i,
+                                                        subarray4_i}));
+
+        alt_max_cell[(nb_columns-1)*i+j] = ceil(max({subarray1_i,
+                                                        subarray2_i,
+                                                        subarray3_i,
+                                                        subarray4_i}));
         
     }
 }

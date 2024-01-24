@@ -36,7 +36,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(rpc_c, m) {
 
     py::class_<DTMIntersection>(m, "DTMIntersection")
-        .def(py::init<int,vector<double>,int,int,tuple<double,double,double,double,double,double>>())//determiner comment passer les arg
+        .def(py::init<int,vector<double>,int,int,tuple<double,double,double,double,double,double>>())
         .def("eq_plan", &DTMIntersection::eq_plan)
         .def("ter_to_index", &DTMIntersection::ter_to_index)
         .def("ter_to_indexs", &DTMIntersection::ter_to_indexs)

@@ -110,8 +110,6 @@ public:
     std::vector<double> const& get_grid_col() const noexcept {return m_grid_col;};
     /**get_plans*/
     std::vector<double> const& get_plans() const noexcept {return m_plans;};
-    /**get_trans_inv*/
-    std::vector<double> const& get_trans_inv() const noexcept {return m_trans_inv;}; //affine.affine en python
     /**get_transform*/
     std::vector<double> const& get_transform() const noexcept {return m_transform;};
     /**get_nb_rows*/
@@ -143,7 +141,6 @@ private:
 
     std::vector<double> m_plans;
 
-    std::vector<double> m_trans_inv; //affine.affine en python
     std::vector<double> m_transform;
     int m_nb_rows;
     int m_nb_columns;

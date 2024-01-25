@@ -213,13 +213,16 @@ private:
 
 // function
 
+/**Compute pre_polynomial_equation*/
+std::array<double, 20> pre_polynomial_equation(
+        double xnorm,
+        double ynorm,
+        double znorm);
 
 /**Compute polynomial equation"*/
 double polynomial_equation(
-    double xnorm,
-    double ynorm,
-    double znorm,
-    const std::array<double, 20>& coeff);
+        std::array<double, 20> const& norms,
+        std::array<double, 20> const& coeffs);
 
 /** compute_rational_function_polynomial unitary*/
 std::tuple<double,double,double> compute_rational_function_polynomial_unitary(

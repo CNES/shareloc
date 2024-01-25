@@ -116,7 +116,7 @@ def test_function_rpc_cpp():
     array20 = [1.0 for i in range(20)]
     double = 1.0
 
-    rpc_c.polynomial_equation(double, double, double, array20)
+    rpc_c.polynomial_equation(array20, array20)
 
     rpc_c.compute_rational_function_polynomial_unitary(
         double,
@@ -186,10 +186,33 @@ def test_polynomial_equation(geom_path):
     ynorm = 0.97766941  # lat_norm
     znorm = -5.29411765  # alt_norm
 
-    res_c_den_col = rpc_c.polynomial_equation(xnorm, ynorm, znorm, rpc_cpp.get_den_col())
-    res_c_den_row = rpc_c.polynomial_equation(xnorm, ynorm, znorm, rpc_cpp.get_den_row())
-    res_c_num_col = rpc_c.polynomial_equation(xnorm, ynorm, znorm, rpc_cpp.get_num_col())
-    res_c_num_row = rpc_c.polynomial_equation(xnorm, ynorm, znorm, rpc_cpp.get_num_row())
+    coord_array = [
+        1.00000000000000000,
+        -0.95821893000000002,
+        0.97766940999999996,
+        -5.29411764999999956,
+        -0.93682133594393124,
+        5.07292374987711447,
+        -5.17589687934608556,
+        0.91818351781034491,
+        0.95583747524974805,
+        28.02768169204151860,
+        4.95964236951734527,
+        -0.87982082797986472,
+        -0.91590156278771506,
+        -26.85665516132861441,
+        0.89767993812936431,
+        0.93449306048331071,
+        27.40180702352602893,
+        -4.86097156757883564,
+        -5.06031604825112868,
+        -148.38184433441884380,
+    ]
+
+    res_c_den_col = rpc_c.polynomial_equation(coord_array, rpc_cpp.get_den_col())
+    res_c_den_row = rpc_c.polynomial_equation(coord_array, rpc_cpp.get_den_row())
+    res_c_num_col = rpc_c.polynomial_equation(coord_array, rpc_cpp.get_num_col())
+    res_c_num_row = rpc_c.polynomial_equation(coord_array, rpc_cpp.get_num_row())
 
     # rpc.py polynomial_equation
     res_py_den_col = polynomial_equation(xnorm, ynorm, znorm, np.array(rpc_cpp.get_den_col(), dtype=np.float64))
@@ -197,7 +220,6 @@ def test_polynomial_equation(geom_path):
     res_py_num_col = polynomial_equation(xnorm, ynorm, znorm, np.array(rpc_cpp.get_num_col(), dtype=np.float64))
     res_py_num_row = polynomial_equation(xnorm, ynorm, znorm, np.array(rpc_cpp.get_num_row(), dtype=np.float64))
 
-    print("ERREUR : ", abs(res_c_den_col - res_py_den_col))
     assert res_c_den_col == pytest.approx(res_py_den_col, abs=1e-15)
     assert res_c_den_row == pytest.approx(res_py_den_row, abs=1e-15)
     assert res_c_num_col == pytest.approx(res_py_num_col, abs=1e-15)
@@ -428,7 +450,6 @@ def test_inverse_loc(geom_path):
         lon_out[i] = lon_i
         lat_out[i] = lat_i
 
-    print()
     np.testing.assert_allclose(lon_out, res_py[0], 0, 2e-8)
     np.testing.assert_allclose(lat_out, res_py[1], 0, 2e-8)
 

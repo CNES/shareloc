@@ -18,34 +18,28 @@ limitations under the License.
 */
 
 /**
-Cpp copy of rpc.py
-*/
+  Cpp copy of rpc.py
+ */
 
 #ifndef RPC_H
 #define RPC_H
 
 
 #include <string>
-#include <iostream>
 #include <vector>
 #include <tuple>
 #include <map>
 #include <array>
 #include <algorithm>
-#include <cmath>
-#include <limits>
 #include <numeric>
 
-#include <iomanip>
-
-
 /**
-Class RPC
-Framework of the RPC python class.
-*/
+  Class RPC
+  Framework of the RPC python class.
+ */
 
-class RPC{
-
+class RPC
+{
 public:
 
     /**Constructor*/
@@ -105,18 +99,14 @@ public:
 
 
     /**compute_loc_inverse_derivates unitary*/
-    std::tuple<double,
-    double,
-    double,
-    double> compute_loc_inverse_derivates(
+    std::tuple<double, double, double, double> compute_loc_inverse_derivates(
         double lon,
         double lat,
         double alt) const;
 
     /**direct_loc_inverse_iterative*/
-    std::tuple<std::vector<double>,
-    std::vector<double>,
-    std::vector<double>> direct_loc_inverse_iterative(
+    std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
+    direct_loc_inverse_iterative(
         std::vector<double> const& row,
         std::vector<double> const& col,
         std::vector<double> const& alt,
@@ -127,19 +117,17 @@ public:
     std::array<double, 2> get_alt_min_max()const;
 
     /**los_extrema*/
-    std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> los_extrema(
+    std::tuple<std::vector<double>,std::vector<double>,std::vector<double>>
+    los_extrema(
         double row,
         double col,
         double alt_min,
         double alt_max,
         bool fill_nan=false,
         int epsg=4326) const;
-    
+
 
     //-- getter --//
-
-
-
 
     /**get_num_col*/
     std::array<double, 20> const& get_num_col() const noexcept {return m_num_col;};
@@ -223,7 +211,7 @@ private:
 
 };
 
-// function 
+// function
 
 
 /**Compute polynomial equation"*/
@@ -232,12 +220,6 @@ double polynomial_equation(
     double ynorm,
     double znorm,
     const std::array<double, 20>& coeff);
-
-
-
-
-
-
 
 /** compute_rational_function_polynomial unitary*/
 std::tuple<double,double,double> compute_rational_function_polynomial_unitary(
@@ -267,9 +249,8 @@ std::tuple<double,double,double> compute_rational_function_polynomial_unitary(
 
 /**Compute rational function polynomial. Useful to compute direct and inverse localization
         "using direct or inverse RPC."*/
-std::tuple<std::vector<double>,
-std::vector<double>,
-std::vector<double>> compute_rational_function_polynomial(
+std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
+compute_rational_function_polynomial(
     std::vector<double> const& lon_col_norm,
     std::vector<double> const& lat_row_norm,
     std::vector<double> const& alt_norm,
@@ -294,10 +275,6 @@ std::vector<double>> compute_rational_function_polynomial(
 );
 
 
-
-
-
-
 /** Compute derivative_polynomial_latitude*/
 double derivative_polynomial_latitude(
     double xnorm,
@@ -314,22 +291,11 @@ double derivative_polynomial_longitude(
     std::array<double, 20> const& coeff);
 
 
-
-
-
-
-
-
-
-
-
-
-
 /**Check if arrays have the same size and cut it if needed*/
-std::tuple<std::vector<double>,
-    std::vector<double>,
-    std::vector<double>> check_sizes(std::vector<double> const& lon_col,
-    std::vector<double> const& lat_row,
-    std::vector<double> const& alt);
+std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
+check_sizes(
+        std::vector<double> const& lon_col,
+        std::vector<double> const& lat_row,
+        std::vector<double> const& alt);
 
 #endif

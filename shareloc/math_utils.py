@@ -91,10 +91,6 @@ def interpol_bilin(
     :return interpolated value on each layer
     :rtype: float
     """
-    print("-- Python --")
-    # print("delta_shift_col :",delta_shift_col)
-    # print("delta_shift_row :",delta_shift_row)
-
     if delta_shift_row < 0:
         lower_shift_row = 0
     elif delta_shift_row >= nb_rows - 1:

@@ -116,7 +116,59 @@ array<double, 2> DTMIntersection::get_alt_offset(int epsg){//maybe unecessary
     return res;
 }
 
-double DTMIntersection::interpolate(double pos_row, double pos_col){
+double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_col){
+
+    //-- Initialise rows
+    double lower_shift_row;
+    if (delta_shift_row < 0.0){
+        double lower_shift_row = 0.0;
+        }
+    else if (delta_shift_row >= nb_rows - 1.0){
+        double lower_shift_row = nb_rows - 2.0;
+        }     
+    else{
+        double lower_shift_row = int(floor(delta_shift_row));
+    }
+    double upper_shift_row = lower_shift_row + 1.0;
+
+    //- Initialise cols
+    double lower_shift_col;
+    if (delta_shift_col < 0.0){
+        double lower_shift_col = 0.0;
+        }
+    else if (delta_shift_col >= nb_columns - 1.0){
+        double lower_shift_col = nb_columns - 2.0;
+        }     
+    else{
+        double lower_shift_col = int(floor(delta_shift_col));
+    }
+    double upper_shift_col = lower_shift_col + 1.0;
+
+    // (col_shift, row_shift) are subpixel distance to interpolate along each axis
+    double col_shift = delta_shift_col - lower_shift_col;
+    double row_shift = delta_shift_row - lower_shift_row;
+
+    // Altitude
+    double mati = 
+        (1 - col_shift) * (1 - row_shift) * alt_data[lower_shift_row * nb_columns + lower_shift_col]
+        + col_shift * (1 - row_shift) * alt_data[lower_shift_row * nb_columns + upper_shift_col]
+        + (1 - col_shift) * row_shift * alt_data[upper_shift_row * nb_columns + lower_shift_col]
+        + col_shift * row_shift * alt_data[upper_shift_row * nb_columns + upper_shift_col];
+    return mati;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     double res;
     return res;
 }

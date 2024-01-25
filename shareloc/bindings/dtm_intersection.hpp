@@ -84,13 +84,13 @@ public:
     double eq_plan(int i, array<double, 3> const& position);
 
     /**ter_to_index*/
-    array<double, 3> ter_to_index(array<double, 3> vect_ter);
+    array<double, 3> ter_to_index(array<double, 3> const& vect_ter);
 
     /**ter_to_indexs*/
-    vector<double> ter_to_indexs(vector<double> vect_ter);
+    vector<double> ter_to_indexs(vector<double> const& vect_ter);
 
     /**index_to_ter*/
-    array<double, 3> index_to_ter(array<double, 3> vect_ter);
+    array<double, 3> index_to_ter(array<double, 3> const& vect_ter);
 
     /**get_alt_offset*/
     array<double, 2> get_alt_offset(int epsg);//maybe unecessary

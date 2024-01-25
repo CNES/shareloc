@@ -84,6 +84,13 @@ DTMIntersection::DTMIntersection(
     trans_inv[5] = re;
     trans_inv[3] = -transform[0] * rd - transform[3] * re;
 
+    // trans_inv[0] = ra;
+    // trans_inv[1] = rb;
+    // trans_inv[2] = -transform[0] * ra - transform[3] * rb;
+    // trans_inv[3] = rd;
+    // trans_inv[4] = re;
+    // trans_inv[5] = -transform[0] * rd - transform[3] * re;
+
 }
 
 
@@ -96,20 +103,40 @@ return plane_coef_a[i] * position[0]
 
 }
 
-array<double, 3> DTMIntersection::ter_to_index(array<double, 3> vect_ter){
-    array<double, 3> res;
-    return res;
+array<double, 3> DTMIntersection::ter_to_index(array<double, 3> const& vect_ter){
+
+    double vx= vect_ter[0];//row
+    double vy= vect_ter[1];//col
+
+    array<double, 3> ter;
+
+    ter[1] = (vx * trans_inv[1] + vy * trans_inv[2] + trans_inv[0])-0.5;
+    ter[0] = (vx * trans_inv[4] + vy * trans_inv[5] + trans_inv[3])-0.5;
+    ter[2] = vect_ter[2];
+
+    return ter;
 }
 
-vector<double> DTMIntersection::ter_to_indexs(vector<double> vect_ter){
+vector<double> DTMIntersection::ter_to_indexs(vector<double> const& vect_ter){
     vector<double> res;
     return res;
 }
 
-array<double, 3> DTMIntersection::index_to_ter(array<double, 3> vect_ter){
-    array<double, 3> res;
-    return res;
+array<double, 3> DTMIntersection::index_to_ter(array<double, 3> const& vect_ter){
+
+    
+    double vx= vect_ter[1]+0.5;//col
+    double vy= vect_ter[0]+0.5;//row
+
+    array<double, 3> ter;
+
+    ter[0] = vx * transform[1] + vy * transform[2] + transform[0];
+    ter[1] =  vx * transform[4] + vy * transform[5] + transform[3];
+    ter[2] = vect_ter[2];
+
+    return ter;
 }
+
 
 array<double, 2> DTMIntersection::get_alt_offset(int epsg){//maybe unecessary
     array<double, 2> res;
@@ -121,26 +148,28 @@ double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_c
     //-- Initialise rows
     double lower_shift_row;
     if (delta_shift_row < 0.0){
-        double lower_shift_row = 0.0;
+        cout<<"if"<<endl;
+        lower_shift_row = 0.0;
         }
     else if (delta_shift_row >= nb_rows - 1.0){
-        double lower_shift_row = nb_rows - 2.0;
+        cout<<"else if"<<endl;
+        lower_shift_row = nb_rows - 2.0;
         }     
     else{
-        double lower_shift_row = int(floor(delta_shift_row));
+        lower_shift_row = static_cast<int>(floor(delta_shift_row));
     }
     double upper_shift_row = lower_shift_row + 1.0;
 
     //- Initialise cols
     double lower_shift_col;
     if (delta_shift_col < 0.0){
-        double lower_shift_col = 0.0;
+        lower_shift_col = 0.0;
         }
     else if (delta_shift_col >= nb_columns - 1.0){
-        double lower_shift_col = nb_columns - 2.0;
+        lower_shift_col = nb_columns - 2.0;
         }     
     else{
-        double lower_shift_col = int(floor(delta_shift_col));
+        lower_shift_col = int(floor(delta_shift_col));
     }
     double upper_shift_col = lower_shift_col + 1.0;
 

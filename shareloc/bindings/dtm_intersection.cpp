@@ -22,16 +22,21 @@ Cpp copy of dtm_intersection.py
 */
 #include "dtm_intersection.hpp"
 
+namespace py = pybind11;
+
 //---- DTMIntersection methodes ----//
 
 
 DTMIntersection::DTMIntersection(
         int dtm_image_epsg,
-        vector<double> dtm_image_alt_data,
+        // vector<double> dtm_image_alt_data,
+        py::array_t<double, py::array::c_style | py::array::forcecast> dtm_image_alt_data,
         int dtm_image_nb_rows,
         int dtm_image_nb_columns,
         tuple<double,double,double,double,double,double> dtm_image_transform
     ){
+
+    
 
     epsg = dtm_image_epsg;
     tol_z = 0.0001;
@@ -39,13 +44,17 @@ DTMIntersection::DTMIntersection(
     nb_rows = dtm_image_nb_rows;
     nb_columns = dtm_image_nb_columns;
 
-    alt_data = dtm_image_alt_data;
-    tie(alt_min_cell,alt_max_cell) = init_min_max(dtm_image_alt_data,
+    py::buffer_info buf_info = dtm_image_alt_data.request();
+    double* ptr = static_cast<double*>(buf_info.ptr);
+    // alt_data(ptr, ptr + buf_info.size);
+    alt_data.insert(alt_data.end(), ptr, ptr + buf_info.size);
+
+    tie(alt_min_cell,alt_max_cell) = init_min_max(alt_data,
                                                     dtm_image_nb_rows,
                                                     dtm_image_nb_columns);
 
-    alt_min = *min_element(dtm_image_alt_data.begin(), dtm_image_alt_data.end());
-    alt_max = *max_element(dtm_image_alt_data.begin(), dtm_image_alt_data.end());
+    alt_min = *min_element(alt_data.begin(), alt_data.end());
+    alt_max = *max_element(alt_data.begin(), alt_data.end());
 
     plane_coef_a = {1.0, 1.0, 0.0, 0.0, 0.0, 0.0};
     plane_coef_b = {0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
@@ -83,13 +92,6 @@ DTMIntersection::DTMIntersection(
     trans_inv[4] = rd;
     trans_inv[5] = re;
     trans_inv[3] = -transform[0] * rd - transform[3] * re;
-
-    // trans_inv[0] = ra;
-    // trans_inv[1] = rb;
-    // trans_inv[2] = -transform[0] * ra - transform[3] * rb;
-    // trans_inv[3] = rd;
-    // trans_inv[4] = re;
-    // trans_inv[5] = -transform[0] * rd - transform[3] * re;
 
 }
 
@@ -184,22 +186,6 @@ double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_c
         + (1 - col_shift) * row_shift * alt_data[upper_shift_row * nb_columns + lower_shift_col]
         + col_shift * row_shift * alt_data[upper_shift_row * nb_columns + upper_shift_col];
     return mati;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    double res;
-    return res;
 }
 
 tuple<bool, 
@@ -278,8 +264,8 @@ for(int i = 0; i < nb_rows-1; ++i){
     }
 }
 
+
 return make_tuple(alt_min_cell,alt_max_cell);
 
-}
 
-int main(){return 0;}// to delete
+}

@@ -78,6 +78,7 @@ def test_constructor():  # TODO : add more constructor use cases  before merge
     np.testing.assert_array_equal(dtm_ventoux_py.alt_min_cell.flatten(), alt_min_cell_optim)
     np.testing.assert_array_equal(dtm_ventoux_py.alt_max_cell.flatten(), alt_max_cell_optim)
 
+    print("dtm_ventoux_optim.get_alt_data() : ", dtm_ventoux_optim.get_alt_data())
     np.testing.assert_array_equal(dtm_ventoux_py.alt_data.flatten(), np.array(dtm_ventoux_optim.get_alt_data()))
 
     np.testing.assert_array_equal(dtm_ventoux_py.plane_coef_a.flatten(), np.array(dtm_ventoux_optim.get_plane_coef_a()))

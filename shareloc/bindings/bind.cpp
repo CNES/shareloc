@@ -25,7 +25,6 @@ It gives to the compiler the instructions to compile the usefull cpp code into a
 which is callable in a python code as a python module.
 */
 
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "rpc.cpp"
 #include "dtm_intersection.cpp"
@@ -36,7 +35,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(rpc_c, m) {
 
     py::class_<DTMIntersection>(m, "DTMIntersection")
-        .def(py::init<int,vector<double>,int,int,tuple<double,double,double,double,double,double>>())
+        .def(py::init<int,py::array_t<double, py::array::c_style | py::array::forcecast> \
+                ,int,int,tuple<double,double,double,double,double,double>>())
         .def("eq_plan", &DTMIntersection::eq_plan)
         .def("ter_to_index", &DTMIntersection::ter_to_index)
         .def("ter_to_indexs", &DTMIntersection::ter_to_indexs)
@@ -131,6 +131,9 @@ PYBIND11_MODULE(rpc_c, m) {
 
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude,
     "Compute longitude derivative polynomial equation");
+
+    m.def("init_min_max", &init_min_max,
+    "init_min_max");
 
 }
 

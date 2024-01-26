@@ -30,6 +30,9 @@ Cpp copy of dtm_intersection.py
 #include <algorithm>
 #include <cmath>
 
+#include <pybind11/pybind11.h>
+#include "pybind11/numpy.h"
+
 using namespace std;
 
 /**
@@ -74,7 +77,8 @@ public:
     /**Constructor*/
     DTMIntersection(
         int dtm_image_epsg,
-        vector<double> dtm_image_alt_data,
+        pybind11::array_t<double, \
+                    pybind11::array::c_style | pybind11::array::forcecast> dtm_image_alt_data,
         int dtm_image_nb_rows,
         int dtm_image_nb_columns,
         tuple<double,double,double,double,double,double> dtm_image_transform

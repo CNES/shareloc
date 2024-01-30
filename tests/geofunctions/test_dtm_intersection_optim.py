@@ -41,7 +41,16 @@ from ..helpers import data_path
 
 
 @pytest.mark.unit_tests
-def test_constructor():  # TODO : add more constructor use cases  before merge
+@pytest.mark.parametrize(
+    "roi,roi_phys,fill_nodata,fill_value",  # add read_data arg once #293 finished
+    [
+        (None, False, None, 0.0),
+        ([256, 256, 512, 512], False, None, 0.0),
+        ([44.57333333333334, 5.426666666666667, 44.36, 5.64], True, None, 0.0),
+        (None, False, "mean", 12.0),
+    ],
+)
+def test_constructor(roi, roi_phys, fill_nodata, fill_value):  # TODO : add more constructor use cases  before merge
     """
     Test DTMIntersection cpp constructor
     """
@@ -51,10 +60,10 @@ def test_constructor():  # TODO : add more constructor use cases  before merge
         dtm_file,
         geoid_file,
         read_data=True,
-        roi=[256, 256, 512, 512],
-        roi_is_in_physical_space=False,
-        fill_nodata=None,
-        fill_value=0.0,
+        roi=roi,
+        roi_is_in_physical_space=roi_phys,
+        fill_nodata=fill_nodata,
+        fill_value=fill_value,
     )
     dtm_ventoux_py = DTMIntersection(
         dtm_image.epsg,
@@ -66,7 +75,7 @@ def test_constructor():  # TODO : add more constructor use cases  before merge
 
     dtm_ventoux_optim = rpc_c.DTMIntersection(
         dtm_image.epsg,
-        dtm_image.alt_data.flatten(),
+        dtm_image.alt_data,
         dtm_image.nb_rows,
         dtm_image.nb_columns,
         dtm_image.transform,
@@ -78,7 +87,6 @@ def test_constructor():  # TODO : add more constructor use cases  before merge
     np.testing.assert_array_equal(dtm_ventoux_py.alt_min_cell.flatten(), alt_min_cell_optim)
     np.testing.assert_array_equal(dtm_ventoux_py.alt_max_cell.flatten(), alt_max_cell_optim)
 
-    print("dtm_ventoux_optim.get_alt_data() : ", dtm_ventoux_optim.get_alt_data())
     np.testing.assert_array_equal(dtm_ventoux_py.alt_data.flatten(), np.array(dtm_ventoux_optim.get_alt_data()))
 
     np.testing.assert_array_equal(dtm_ventoux_py.plane_coef_a.flatten(), np.array(dtm_ventoux_optim.get_plane_coef_a()))
@@ -105,7 +113,6 @@ def test_constructor():  # TODO : add more constructor use cases  before merge
     )
 
 
-@pytest.mark.unit_tests
 @pytest.mark.unit_tests
 @pytest.mark.parametrize(  # Add pos_row=nb_rows
     "i,positon",
@@ -143,7 +150,7 @@ def test_eq_plan(i, positon):
 
     dtm_ventoux_optim = rpc_c.DTMIntersection(
         dtm_image.epsg,
-        dtm_image.alt_data.flatten(),
+        dtm_image.alt_data,
         dtm_image.nb_rows,
         dtm_image.nb_columns,
         dtm_image.transform,
@@ -189,7 +196,7 @@ def test_interpolate(pos_row, pos_col):
 
     dtm_ventoux_optim = rpc_c.DTMIntersection(
         dtm_image.epsg,
-        dtm_image.alt_data.flatten(),
+        dtm_image.alt_data,
         dtm_image.nb_rows,
         dtm_image.nb_columns,
         dtm_image.transform,
@@ -238,7 +245,7 @@ def test_index_ter_methodes(coords):
 
     dtm_ventoux_optim = rpc_c.DTMIntersection(
         dtm_image.epsg,
-        dtm_image.alt_data.flatten(),
+        dtm_image.alt_data,
         dtm_image.nb_rows,
         dtm_image.nb_columns,
         dtm_image.transform,

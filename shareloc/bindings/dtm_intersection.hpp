@@ -18,14 +18,13 @@ limitations under the License.
 */
 
 /**
-Cpp copy of dtm_intersection.py
-*/
+  Cpp copy of dtm_intersection.py
+ */
 
-#include <string>
-#include <iostream>
+#ifndef DTM_INTERSECTION_H
+#define DTM_INTERSECTION_H
+
 #include <vector>
-#include <tuple>
-#include <map>
 #include <array>
 #include <algorithm>
 #include <cmath>
@@ -33,46 +32,16 @@ Cpp copy of dtm_intersection.py
 #include <pybind11/pybind11.h>
 #include "pybind11/numpy.h"
 
-using namespace std;
 
 /**
 Class DTMIntersection
 Framework of the DTMIntersection python class.
 */
 
-class DTMIntersection {
-
-private:
-
-        string dtm_file;
-        vector<double> alt_data;
-        double alt_min;
-        double alt_max;
-        double origin_x;
-        double origin_y;
-        double pixel_size_x;
-        double pixel_size_y;
-        array<double,6> plane_coef_a;
-        array<double,6> plane_coef_b;
-        array<double,6> plane_coef_c;
-        array<double,6> plane_coef_d;
-        vector<double> alt_min_cell;
-        vector<double> alt_max_cell;
-        double tol_z;// = 0.0001
-
-        int epsg;
-
-        vector<double> plans;
-
-        array<double,6> trans_inv; //affine.affine en python
-        array<double,6> transform;
-        int nb_rows;
-        int nb_columns;
-
-
+class DTMIntersection
+{
 
 public:
-
 
     /**Constructor*/
     DTMIntersection(
@@ -81,72 +50,97 @@ public:
                     pybind11::array::c_style | pybind11::array::forcecast> dtm_image_alt_data,
         int dtm_image_nb_rows,
         int dtm_image_nb_columns,
-        tuple<double,double,double,double,double,double> dtm_image_transform
+        std::tuple<double,double,double,double,double,double> dtm_image_transform
     );//determiner comment passer les arg
 
     /**eq_plan*/
-    double eq_plan(int i, array<double, 3> const& position);
+    double eq_plan(int i, std::array<double, 3> const& position)const;
 
     /**ter_to_index*/
-    array<double, 3> ter_to_index(array<double, 3> const& vect_ter);
+    std::array<double, 3> ter_to_index(std::array<double, 3> const& vect_ter)const;
 
     /**ter_to_indexs*/
-    vector<double> ter_to_indexs(vector<double> const& vect_ter);
+    std::vector<double> ter_to_indexs(std::vector<double> const& vect_ter);//maybe unecessary
 
     /**index_to_ter*/
-    array<double, 3> index_to_ter(array<double, 3> const& vect_ter);
-
-    /**get_alt_offset*/
-    array<double, 2> get_alt_offset(int epsg);//maybe unecessary
+    std::array<double, 3> index_to_ter(std::array<double, 3> const& vect_ter)const;
 
     /**interpolate*/
-    double interpolate(double pos_row, double pos_col);
+    double interpolate(double delta_shift_row, double delta_shift_col) const;
 
     /**intersect_dtm_cube*/
-    tuple<bool,bool,vector<double>,bool,vector<double>> intersect_dtm_cube(vector<double> los);
+    std::tuple<bool,
+    bool,
+    std::vector<double>,
+    bool,
+    std::vector<double>> intersect_dtm_cube(std::vector<double> const& los) const;
 
     /**intersection*/
-    tuple<bool,bool,vector<double>> intersection(
-        vector<double> los_index,
-        vector<double> point_b, 
-        double h_intersect);
+    std::tuple<bool,bool,std::vector<double>> intersection(
+        std::vector<double> const& los_index,
+        std::vector<double> const& point_b,
+        double h_intersect) const;
 
     //-- getter --//
 
-    /**get_dtm_file*/
-    string get_dtm_file();
     /**get_alt_data*/
-    vector<double> get_alt_data();
+    std::vector<double>  const&  get_alt_data() const noexcept {return alt_data;};
     /**get_alt_min*/
-    double get_alt_min();
+    double get_alt_min() const noexcept {return alt_min;};
     /**get_alt_max*/
-    double get_alt_max();
+    double get_alt_max() const noexcept {return alt_max;};
     /**get_plane_coef_a*/
-    array<double,6> get_plane_coef_a();
+    std::array<double,6> const& get_plane_coef_a() const noexcept {return plane_coef_a;};
     /**get_plane_coef_b*/
-    array<double,6> get_plane_coef_b();
+    std::array<double,6> const& get_plane_coef_b() const noexcept {return plane_coef_b;};
     /**get_plane_coef_c*/
-    array<double,6> get_plane_coef_c();
+    std::array<double,6> const& get_plane_coef_c() const noexcept {return plane_coef_c;};
     /**get_plane_coef_d*/
-    array<double,6> get_plane_coef_d();
+    std::array<double,6> const& get_plane_coef_d() const noexcept {return plane_coef_d;};
     /**get_alt_min_cell*/
-    vector<double> get_alt_min_cell();
+    std::vector<double> get_alt_min_cell() const noexcept {return alt_min_cell;};
     /**get_alt_max_cell*/
-    vector<double> get_alt_max_cell();
+    std::vector<double> get_alt_max_cell() const noexcept {return alt_max_cell;};
     /**get_tol_z*/
-    double get_tol_z();// = 0.0001
+    double get_tol_z() const noexcept {return tol_z;};// = 0.0001
     /**get_epsg*/
-    int get_epsg();
+    int get_epsg() const noexcept {return epsg;};
     /**get_plans*/
-    vector<double> get_plans();
-    /**get_trans_inv*/
-    array<double,6> get_trans_inv(); //affine.affine en python
+    std::vector<double> const& get_plans() const noexcept {return plans;};
+    /**get trans_inv*/
+    std::array<double,6> const& get_trans_inv() const noexcept {return trans_inv;};
     /**get_transform*/
-    array<double,6> get_transform();
+    std::array<double,6> const& get_transform() const noexcept {return transform;};
     /**get_nb_rows*/
-    int get_nb_rows();
+    int get_nb_rows() const noexcept {return nb_rows;};
     /**get_nb_columns*/
-    int get_nb_columns();
+    int get_nb_columns() const noexcept {return nb_columns;};
+
+
+
+
+private:
+
+        std::vector<double> alt_data;
+        double alt_min;
+        double alt_max;
+        std::array<double,6> plane_coef_a;
+        std::array<double,6> plane_coef_b;
+        std::array<double,6> plane_coef_c;
+        std::array<double,6> plane_coef_d;
+        std::vector<double> alt_min_cell;
+        std::vector<double> alt_max_cell;
+        double tol_z;// = 0.0001
+
+        int epsg;
+
+        std::vector<double> plans;
+
+        std::array<double,6> trans_inv; //affine.affine en python
+        std::array<double,6> transform;
+        int nb_rows;
+        int nb_columns;
+
 };
 
 
@@ -154,6 +148,9 @@ public:
 //-- Function --//
 
 /**init_min_max*/
-tuple<vector<double>,vector<double>> init_min_max(vector<double> const& alt_data,
+std::tuple<std::vector<double>,
+std::vector<double>> init_min_max(std::vector<double> const& alt_data,
                                                     int nb_rows,
                                                     int nb_columns);
+
+#endif

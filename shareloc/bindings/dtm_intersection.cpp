@@ -18,25 +18,23 @@ limitations under the License.
 */
 
 /**
-Cpp copy of dtm_intersection.py
-*/
+  Cpp copy of dtm_intersection.py
+ */
 #include "dtm_intersection.hpp"
 
+using namespace std;
 namespace py = pybind11;
+
 
 //---- DTMIntersection methodes ----//
 
-
 DTMIntersection::DTMIntersection(
         int dtm_image_epsg,
-        // vector<double> dtm_image_alt_data,
         py::array_t<double, py::array::c_style | py::array::forcecast> dtm_image_alt_data,
         int dtm_image_nb_rows,
         int dtm_image_nb_columns,
         tuple<double,double,double,double,double,double> dtm_image_transform
     ){
-
-    
 
     epsg = dtm_image_epsg;
     tol_z = 0.0001;
@@ -46,7 +44,6 @@ DTMIntersection::DTMIntersection(
 
     py::buffer_info buf_info = dtm_image_alt_data.request();
     double* ptr = static_cast<double*>(buf_info.ptr);
-    // alt_data(ptr, ptr + buf_info.size);
     alt_data.insert(alt_data.end(), ptr, ptr + buf_info.size);
 
     tie(alt_min_cell,alt_max_cell) = init_min_max(alt_data,
@@ -76,7 +73,6 @@ DTMIntersection::DTMIntersection(
 
     apply([&](auto... args) { transform = {args...}; }, dtm_image_transform);
     
-    // invert transform=[c,a,b,f,d,e]
 
     //det = a*e-b*d
     double idet = 1.0/(transform[1]*transform[5]-transform[2]*transform[4]);
@@ -86,6 +82,7 @@ DTMIntersection::DTMIntersection(
     double rd = -transform[4] * idet;
     double re = transform[1] * idet;
 
+    // invert transform=[c,a,b,f,d,e]
     trans_inv[1] = ra;
     trans_inv[2] = rb;
     trans_inv[0] = -transform[0] * ra - transform[3] * rb;
@@ -96,7 +93,7 @@ DTMIntersection::DTMIntersection(
 }
 
 
-double DTMIntersection::eq_plan(int i, array<double, 3> const& position){
+double DTMIntersection::eq_plan(int i, array<double, 3> const& position)const{
 
 return plane_coef_a[i] * position[0]
     + plane_coef_b[i] * position[1]
@@ -105,7 +102,7 @@ return plane_coef_a[i] * position[0]
 
 }
 
-array<double, 3> DTMIntersection::ter_to_index(array<double, 3> const& vect_ter){
+array<double, 3> DTMIntersection::ter_to_index(array<double, 3> const& vect_ter)const{
 
     double vx= vect_ter[0];//row
     double vy= vect_ter[1];//col
@@ -119,12 +116,12 @@ array<double, 3> DTMIntersection::ter_to_index(array<double, 3> const& vect_ter)
     return ter;
 }
 
-vector<double> DTMIntersection::ter_to_indexs(vector<double> const& vect_ter){
+vector<double> DTMIntersection::ter_to_indexs(vector<double> const& vect_ter){//maybe unecessary
     vector<double> res;
     return res;
 }
 
-array<double, 3> DTMIntersection::index_to_ter(array<double, 3> const& vect_ter){
+array<double, 3> DTMIntersection::index_to_ter(array<double, 3> const& vect_ter)const{
 
     
     double vx= vect_ter[1]+0.5;//col
@@ -140,21 +137,14 @@ array<double, 3> DTMIntersection::index_to_ter(array<double, 3> const& vect_ter)
 }
 
 
-array<double, 2> DTMIntersection::get_alt_offset(int epsg){//maybe unecessary
-    array<double, 2> res;
-    return res;
-}
-
-double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_col){
+double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_col)const{
 
     //-- Initialise rows
     double lower_shift_row;
     if (delta_shift_row < 0.0){
-        cout<<"if"<<endl;
         lower_shift_row = 0.0;
         }
     else if (delta_shift_row >= nb_rows - 1.0){
-        cout<<"else if"<<endl;
         lower_shift_row = nb_rows - 2.0;
         }     
     else{
@@ -181,18 +171,18 @@ double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_c
 
     // Altitude
     double mati = 
-        (1 - col_shift) * (1 - row_shift) * alt_data[lower_shift_row * nb_columns + lower_shift_col]
+        (1 - col_shift)*(1 - row_shift) * alt_data[lower_shift_row * nb_columns + lower_shift_col]
         + col_shift * (1 - row_shift) * alt_data[lower_shift_row * nb_columns + upper_shift_col]
         + (1 - col_shift) * row_shift * alt_data[upper_shift_row * nb_columns + lower_shift_col]
         + col_shift * row_shift * alt_data[upper_shift_row * nb_columns + upper_shift_col];
     return mati;
 }
 
-tuple<bool, 
+tuple<bool,
 bool,
 vector<double>,
 bool,
-vector<double>> DTMIntersection::intersect_dtm_cube(vector<double> los){
+vector<double>> DTMIntersection::intersect_dtm_cube(vector<double> const& los) const{
     tuple<bool,bool,vector<double>,bool,vector<double>> res;
     return res;
 }
@@ -200,36 +190,13 @@ vector<double>> DTMIntersection::intersect_dtm_cube(vector<double> los){
 tuple<bool,
 bool,
 vector<double>> DTMIntersection::intersection(
-    vector<double> los_index,
-    vector<double> point_b, 
-    double h_intersect){
+    vector<double> const& los_index,
+    vector<double> const& point_b,
+    double h_intersect) const
+{
     tuple<bool,bool,vector<double>> res;
     return res;
 }
-
-
-//-- getter --//
-
-string DTMIntersection::get_dtm_file(){return dtm_file;}
-vector<double> DTMIntersection::get_alt_data(){return alt_data;}
-double DTMIntersection::get_alt_min(){return alt_min;}
-double DTMIntersection::get_alt_max(){return alt_max;}
-array<double,6> DTMIntersection::get_plane_coef_a(){return plane_coef_a;}
-array<double,6> DTMIntersection::get_plane_coef_b(){return plane_coef_b;}
-array<double,6> DTMIntersection::get_plane_coef_c(){return plane_coef_c;}
-array<double,6> DTMIntersection::get_plane_coef_d(){return plane_coef_d;}
-vector<double> DTMIntersection::get_alt_min_cell(){return alt_min_cell;}
-vector<double> DTMIntersection::get_alt_max_cell(){return alt_max_cell;}
-double DTMIntersection::get_tol_z(){return tol_z;}// = 0.0001
-int DTMIntersection::get_epsg(){return epsg;}
-vector<double> DTMIntersection::get_plans(){return plans;}
-array<double,6> DTMIntersection::get_trans_inv(){return trans_inv;} //affine.affine en python
-array<double,6> DTMIntersection::get_transform(){return transform;}
-int DTMIntersection::get_nb_rows(){return nb_rows;}
-int DTMIntersection::get_nb_columns(){return nb_columns;}
-
-
-
 
 
 
@@ -238,7 +205,6 @@ int DTMIntersection::get_nb_columns(){return nb_columns;}
 tuple<vector<double>,
 vector<double>> init_min_max(vector<double> const& alt_data,int nb_rows,int nb_columns)
 {
-
 
 vector<double> alt_min_cell ((nb_rows-1)*(nb_columns-1));
 vector<double> alt_max_cell ((nb_rows-1)*(nb_columns-1));
@@ -264,8 +230,5 @@ for(int i = 0; i < nb_rows-1; ++i){
     }
 }
 
-
 return make_tuple(alt_min_cell,alt_max_cell);
-
-
 }

@@ -84,62 +84,78 @@ public:
     //-- getter --//
 
     /**get_alt_data*/
-    std::vector<double>  const&  get_alt_data() const noexcept {return alt_data;};
+    std::vector<double>  const&  get_alt_data() const noexcept {return m_alt_data;};
     /**get_alt_min*/
-    double get_alt_min() const noexcept {return alt_min;};
+    double get_alt_min() const noexcept {return m_alt_min;};
     /**get_alt_max*/
-    double get_alt_max() const noexcept {return alt_max;};
+    double get_alt_max() const noexcept {return m_alt_max;};
     /**get_plane_coef_a*/
-    std::array<double,6> const& get_plane_coef_a() const noexcept {return plane_coef_a;};
+    std::array<double,6> const& get_plane_coef_a() const noexcept {return m_plane_coef_a;};
     /**get_plane_coef_b*/
-    std::array<double,6> const& get_plane_coef_b() const noexcept {return plane_coef_b;};
+    std::array<double,6> const& get_plane_coef_b() const noexcept {return m_plane_coef_b;};
     /**get_plane_coef_c*/
-    std::array<double,6> const& get_plane_coef_c() const noexcept {return plane_coef_c;};
+    std::array<double,6> const& get_plane_coef_c() const noexcept {return m_plane_coef_c;};
     /**get_plane_coef_d*/
-    std::array<double,6> const& get_plane_coef_d() const noexcept {return plane_coef_d;};
+    std::array<double,6> const& get_plane_coef_d() const noexcept {return m_plane_coef_d;};
     /**get_alt_min_cell*/
-    std::vector<double> get_alt_min_cell() const noexcept {return alt_min_cell;};
+    std::vector<double> get_alt_min_cell() const noexcept {return m_alt_min_cell;};
     /**get_alt_max_cell*/
-    std::vector<double> get_alt_max_cell() const noexcept {return alt_max_cell;};
+    std::vector<double> get_alt_max_cell() const noexcept {return m_alt_max_cell;};
     /**get_tol_z*/
-    double get_tol_z() const noexcept {return tol_z;};// = 0.0001
+    double get_tol_z() const noexcept {return m_tol_z;};// = 0.0001
     /**get_epsg*/
-    int get_epsg() const noexcept {return epsg;};
+    int get_epsg() const noexcept {return m_epsg;};
     /**get_plans*/
-    std::vector<double> const& get_plans() const noexcept {return plans;};
+    std::vector<double> const& get_plans() const noexcept {return m_plans;};
     /**get trans_inv*/
-    std::array<double,6> const& get_trans_inv() const noexcept {return trans_inv;};
+    std::array<double,6> const& get_trans_inv() const noexcept {return m_trans_inv;};
     /**get_transform*/
-    std::array<double,6> const& get_transform() const noexcept {return transform;};
+    std::array<double,6> const& get_transform() const noexcept {return m_transform;};
     /**get_nb_rows*/
-    int get_nb_rows() const noexcept {return nb_rows;};
+    int get_nb_rows() const noexcept {return m_nb_rows;};
     /**get_nb_columns*/
-    int get_nb_columns() const noexcept {return nb_columns;};
+    int get_nb_columns() const noexcept {return m_nb_columns;};
 
 
 
 
 private:
 
-        std::vector<double> alt_data;
-        double alt_min;
-        double alt_max;
-        std::array<double,6> plane_coef_a;
-        std::array<double,6> plane_coef_b;
-        std::array<double,6> plane_coef_c;
-        std::array<double,6> plane_coef_d;
-        std::vector<double> alt_min_cell;
-        std::vector<double> alt_max_cell;
-        double tol_z;// = 0.0001
+        /**alt_data attribut*/
+        std::vector<double> m_alt_data;
+        /**alt_min attribut*/
+        double m_alt_min;
+        /**alt_max attribut*/
+        double m_alt_max;
+        /**plane_coef_a attribut*/
+        std::array<double,6> m_plane_coef_a;
+        /**plane_coef_b attribut*/
+        std::array<double,6> m_plane_coef_b;
+        /**plane_coef_c attribut*/
+        std::array<double,6> m_plane_coef_c;
+        /**plane_coef_d attribut*/
+        std::array<double,6> m_plane_coef_d;
+        /**alt_min_cell attribut*/
+        std::vector<double> m_alt_min_cell;
+        /**alt_max_cell attribut*/
+        std::vector<double> m_alt_max_cell;
+        /**tol_z attribut*/
+        double m_tol_z;// = 0.0001
 
-        int epsg;
+        /**epsg attribut*/
+        int m_epsg;
 
-        std::vector<double> plans;
+        /**plans attribut*/
+        std::vector<double> m_plans;
 
-        std::array<double,6> trans_inv; //affine.affine en python
-        std::array<double,6> transform;
-        int nb_rows;
-        int nb_columns;
+        /**trans_inv attribut*/
+        std::array<double,6> m_trans_inv; //affine.affine en python
+        /**transform attribut*/
+        std::array<double,6> m_transform;
+        /**nb_rows attribut*/
+        int m_nb_rows;
+        /**nb_columns attribut*/
+        int m_nb_columns;
 
 };
 

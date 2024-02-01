@@ -28,7 +28,7 @@ from setuptools import setup
 # $> CC=gcc-11 CXX=g++-11 -march=native" pip install -e .[dev]
 extensions = [
     Pybind11Extension(
-        "rpc_c",
+        "bindings_cpp",
         ["shareloc/bindings/bind.cpp", "shareloc/bindings/dtm_intersection.cpp", "shareloc/bindings/rpc.cpp"],
         language="c++",
         # cxx_std=20, # Uncomment to expect C++20

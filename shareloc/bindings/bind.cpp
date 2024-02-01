@@ -33,7 +33,7 @@ which is callable in a python code as a python module.
 namespace py = pybind11;
 
 
-PYBIND11_MODULE(rpc_c, m) {
+PYBIND11_MODULE(bindings_cpp, m) {
 
     py::class_<DTMIntersection>(m, "DTMIntersection")
         .def(py::init<int,py::array_t<double, py::array::c_style | py::array::forcecast> \
@@ -131,7 +131,7 @@ PYBIND11_MODULE(rpc_c, m) {
 }
 
 //c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)
-//bind.cpp -o rpc_c$(python3-config --extension-suffix)
+//bind.cpp -o bindings_cpp$(python3-config --extension-suffix)
 
 // c++ -w -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC
-//$(python3 -m pybind11 --includes) bind.cpp -o rpc_c$(python3-config --extension-suffix)
+//$(python3 -m pybind11 --includes) bind.cpp -o bindings_cpp$(python3-config --extension-suffix)

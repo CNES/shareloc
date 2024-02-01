@@ -23,9 +23,9 @@ Shareloc geomodels module
 Imports are used to simplify calls to module API.
 """
 
-import rpc_c
+import bindings_cpp
 
 from . import grid, rpc, rpc_optim
 from .geomodel import GeoModel
 
-__all__ = ["rpc", "grid", "GeoModel", "rpc_c", "rpc_optim"]  # To avoid flake8 F401
+__all__ = ["rpc", "grid", "GeoModel", "bindings_cpp", "rpc_optim"]  # To avoid flake8 F401

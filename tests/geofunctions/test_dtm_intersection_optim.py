@@ -30,7 +30,7 @@ import numpy as np
 # Third party imports
 import pytest
 
-import rpc_c
+import bindings_cpp
 from shareloc.dtm_reader import dtm_reader
 
 # Shareloc imports
@@ -73,7 +73,7 @@ def test_constructor(roi, roi_phys, fill_nodata, fill_value):  # TODO : add more
         dtm_image.transform,
     )
 
-    dtm_ventoux_optim = rpc_c.DTMIntersection(
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,
         dtm_image.nb_rows,
@@ -148,7 +148,7 @@ def test_eq_plan(i, positon):
         dtm_image.transform,
     )
 
-    dtm_ventoux_optim = rpc_c.DTMIntersection(
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,
         dtm_image.nb_rows,
@@ -194,7 +194,7 @@ def test_interpolate(pos_row, pos_col):
         dtm_image.transform,
     )
 
-    dtm_ventoux_optim = rpc_c.DTMIntersection(
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,
         dtm_image.nb_rows,
@@ -243,7 +243,7 @@ def test_index_ter_methodes(coords):
         dtm_image.transform,
     )
 
-    dtm_ventoux_optim = rpc_c.DTMIntersection(
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,
         dtm_image.nb_rows,

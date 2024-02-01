@@ -28,7 +28,7 @@ contains global shared generic functions for tests/*.py
 import os
 
 # Shareloc bindings
-import rpc_c
+import bindings_cpp
 
 # Shareloc imports
 from shareloc.geomodels.rpc_readers import rpc_reader
@@ -49,14 +49,14 @@ def data_path(alti="", scene_id=""):
     return os.path.join(data_root_folder, sub_folder)
 
 
-def rpc_c_constructor(file_path: str):
+def bindings_cpp_constructor(file_path: str):
     """
     Create rpc c++ object from rpc file path
 
     :param file_path: path to rpc file
     :type file_path: str
     :return: RPC c++ object
-    :retype: rpc_c.RPC
+    :retype: bindings_cpp.RPC
     """
 
     rpc_params = rpc_reader(file_path, topleftconvention=True)
@@ -76,7 +76,7 @@ def rpc_c_constructor(file_path: str):
     empty = [0 for i in range(20)]
 
     if rpc_params["num_col"] and rpc_params["num_x"]:  # direct and inverse coef
-        rpc_cpp = rpc_c.RPC(
+        rpc_cpp = bindings_cpp.RPC(
             True,
             True,
             rpc_params["num_col"],
@@ -90,7 +90,7 @@ def rpc_c_constructor(file_path: str):
             norm_coeffs,
         )
     elif rpc_params["num_col"]:  # only inverse coef
-        rpc_cpp = rpc_c.RPC(
+        rpc_cpp = bindings_cpp.RPC(
             True,
             False,
             rpc_params["num_col"],
@@ -104,7 +104,7 @@ def rpc_c_constructor(file_path: str):
             norm_coeffs,
         )
     elif rpc_params["num_x"]:  # only direct coef
-        rpc_cpp = rpc_c.RPC(
+        rpc_cpp = bindings_cpp.RPC(
             False,
             True,
             empty,

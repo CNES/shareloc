@@ -201,13 +201,13 @@ As the C++ code is compiled during the installation of shareloc, the installatio
 How does C++ bindings work ?
 ----------------------------
 
-During installation, Pynbind11 compiles the C++ code into a ".so" file (rpc_c.cpython-310-x86_64-linux-gnu.so) located at the root of the project. This file can then be called in python code like any other module with the following syntax:
+During installation, Pynbind11 compiles the C++ code into a ".so" file (bindings_cpp.cpython-310-x86_64-linux-gnu.so) located at the root of the project. This file can then be called in python code like any other module with the following syntax:
 
 .. code-block:: bash
     
-    import rpc_c
+    import bindings_cpp
 
-    rpc_c.RPC.__init__(self,*args,**kwargs)#for example
+    bindings_cpp.RPC.__init__(self,*args,**kwargs)#for example
 
 For this to work, we need to write a C++ code (called bind.cpp here) that tells pybind11 how to compile the C++ code so that it can be used in python. In layman's terms, this file contains the architecture of the cpp code in the manner of a cpp project header file (.h). We should therefore remember to update it each time we modify the header file (.h). For more information, please refer to the Pybind11 documentation https://pybind11.readthedocs.io/en/stable/basics.html.
 
@@ -215,7 +215,7 @@ You can compile the bindings without going through the shareloc installation by 
 
 .. code-block:: console
 
-    $ c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) bind.cpp -o rpc_c$(python3-config --extension-suffix)
+    $ c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) bind.cpp -o bindings_cpp$(python3-config --extension-suffix)
     
 This is very useful when debuging.
 

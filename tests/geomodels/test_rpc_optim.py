@@ -31,7 +31,7 @@ import numpy as np
 import pytest
 
 # Shareloc bindings
-import rpc_c
+import bindings_cpp
 
 # Shareloc imports
 from shareloc.geomodels import GeoModel
@@ -43,7 +43,7 @@ from shareloc.geomodels.rpc import (
 )
 
 # Shareloc test imports
-from ..helpers import data_path, rpc_c_constructor
+from ..helpers import bindings_cpp_constructor, data_path
 
 
 # pylint: disable=duplicate-code
@@ -65,7 +65,7 @@ def test_construtor(geom_path):
     file_path = os.path.join(data_path(), geom_path)
 
     rpc_py = GeoModel(file_path, "RPC")
-    rpc_cpp = rpc_c_constructor(file_path)
+    rpc_cpp = bindings_cpp_constructor(file_path)
 
     assert rpc_py.offset_x == rpc_cpp.get_offset_lon()
     assert rpc_py.scale_x == rpc_cpp.get_scale_lon()
@@ -116,9 +116,9 @@ def test_function_rpc_cpp():
     array20 = [1.0 for i in range(20)]
     double = 1.0
 
-    rpc_c.polynomial_equation(array20, array20)
+    bindings_cpp.polynomial_equation(array20, array20)
 
-    rpc_c.compute_rational_function_polynomial_unitary(
+    bindings_cpp.compute_rational_function_polynomial_unitary(
         double,
         double,
         double,
@@ -138,7 +138,7 @@ def test_function_rpc_cpp():
         double,
     )
 
-    rpc_c.compute_rational_function_polynomial(
+    bindings_cpp.compute_rational_function_polynomial(
         vector_double,
         vector_double,
         vector_double,
@@ -158,9 +158,9 @@ def test_function_rpc_cpp():
         double,
     )
 
-    rpc_c.derivative_polynomial_latitude(double, double, double, array20)
+    bindings_cpp.derivative_polynomial_latitude(double, double, double, array20)
 
-    rpc_c.derivative_polynomial_longitude(double, double, double, array20)
+    bindings_cpp.derivative_polynomial_longitude(double, double, double, array20)
 
 
 @pytest.mark.parametrize(
@@ -179,7 +179,7 @@ def test_polynomial_equation(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_cpp = rpc_c_constructor(file_path)
+    rpc_cpp = bindings_cpp_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test)
     xnorm = -0.95821893  # lon_norm
@@ -209,10 +209,10 @@ def test_polynomial_equation(geom_path):
         -148.38184433441884380,
     ]
 
-    res_c_den_col = rpc_c.polynomial_equation(coord_array, rpc_cpp.get_den_col())
-    res_c_den_row = rpc_c.polynomial_equation(coord_array, rpc_cpp.get_den_row())
-    res_c_num_col = rpc_c.polynomial_equation(coord_array, rpc_cpp.get_num_col())
-    res_c_num_row = rpc_c.polynomial_equation(coord_array, rpc_cpp.get_num_row())
+    res_c_den_col = bindings_cpp.polynomial_equation(coord_array, rpc_cpp.get_den_col())
+    res_c_den_row = bindings_cpp.polynomial_equation(coord_array, rpc_cpp.get_den_row())
+    res_c_num_col = bindings_cpp.polynomial_equation(coord_array, rpc_cpp.get_num_col())
+    res_c_num_row = bindings_cpp.polynomial_equation(coord_array, rpc_cpp.get_num_row())
 
     # rpc.py polynomial_equation
     res_py_den_col = polynomial_equation(xnorm, ynorm, znorm, np.array(rpc_cpp.get_den_col(), dtype=np.float64))
@@ -242,14 +242,14 @@ def test_compute_rational_function_polynomial(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_cpp = rpc_c_constructor(file_path)
+    rpc_cpp = bindings_cpp_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test) + last different one
     xnorm = [-0.95821893, 0.0, -0.96038983, -0.95821891, -0.95821893, 0.354, np.nan, 15, 15]  # lon_norm len+1
     ynorm = [0.97766941, 0.0, 0.98172072, 0.97766945, 0.97766941, -0.654, 15, np.nan]  # lat_norm
     znorm = [-5.29411765, -5.29411765, -5.29411765, -5.29411765, -5.29411765, 5.1, 15, 15]  # alt_norm
 
-    res_cpp = rpc_c.compute_rational_function_polynomial(
+    res_cpp = bindings_cpp.compute_rational_function_polynomial(
         xnorm,
         ynorm,
         znorm,
@@ -273,7 +273,7 @@ def test_compute_rational_function_polynomial(geom_path):
     res_cpp_col = np.empty((len(znorm)))
 
     for i, znorm_i in enumerate(znorm):
-        col_i, row_i, _ = rpc_c.compute_rational_function_polynomial_unitary(
+        col_i, row_i, _ = bindings_cpp.compute_rational_function_polynomial_unitary(
             xnorm[i],
             ynorm[i],
             znorm_i,
@@ -440,7 +440,7 @@ def test_inverse_loc(geom_path):
     # Inverse loc unitary
 
     file_path = os.path.join(data_path(), rpc_path)
-    rpc_cpp = rpc_c_constructor(file_path)
+    rpc_cpp = bindings_cpp_constructor(file_path)
 
     lon_out = np.empty((len(lon_vect)))
     lat_out = np.empty((len(lat_vect)))
@@ -521,17 +521,17 @@ def test_derivative_polynomial_latitude(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_cpp = rpc_c_constructor(file_path)
+    rpc_cpp = bindings_cpp_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test)
     xnorm = -0.95821893  # lon_norm
     ynorm = 0.97766941  # lat_norm
     znorm = -5.29411765  # alt_norm
 
-    res_c_den_col = rpc_c.derivative_polynomial_latitude(xnorm, ynorm, znorm, rpc_cpp.get_den_col())
-    res_c_den_row = rpc_c.derivative_polynomial_latitude(xnorm, ynorm, znorm, rpc_cpp.get_den_row())
-    res_c_num_col = rpc_c.derivative_polynomial_latitude(xnorm, ynorm, znorm, rpc_cpp.get_num_col())
-    res_c_num_row = rpc_c.derivative_polynomial_latitude(xnorm, ynorm, znorm, rpc_cpp.get_num_row())
+    res_c_den_col = bindings_cpp.derivative_polynomial_latitude(xnorm, ynorm, znorm, rpc_cpp.get_den_col())
+    res_c_den_row = bindings_cpp.derivative_polynomial_latitude(xnorm, ynorm, znorm, rpc_cpp.get_den_row())
+    res_c_num_col = bindings_cpp.derivative_polynomial_latitude(xnorm, ynorm, znorm, rpc_cpp.get_num_col())
+    res_c_num_row = bindings_cpp.derivative_polynomial_latitude(xnorm, ynorm, znorm, rpc_cpp.get_num_row())
 
     # rpc.py derivative_polynomial_latitude
     res_py_den_col = derivative_polynomial_latitude(
@@ -569,17 +569,17 @@ def test_derivative_polynomial_longitude(geom_path):
     """
 
     file_path = os.path.join(data_path(), geom_path)
-    rpc_cpp = rpc_c_constructor(file_path)
+    rpc_cpp = bindings_cpp_constructor(file_path)
 
     # arbitrary values (extract from a rpc.py test)
     xnorm = -0.95821893  # lon_norm
     ynorm = 0.97766941  # lat_norm
     znorm = -5.29411765  # alt_norm
 
-    res_c_den_col = rpc_c.derivative_polynomial_longitude(xnorm, ynorm, znorm, rpc_cpp.get_den_col())
-    res_c_den_row = rpc_c.derivative_polynomial_longitude(xnorm, ynorm, znorm, rpc_cpp.get_den_row())
-    res_c_num_col = rpc_c.derivative_polynomial_longitude(xnorm, ynorm, znorm, rpc_cpp.get_num_col())
-    res_c_num_row = rpc_c.derivative_polynomial_longitude(xnorm, ynorm, znorm, rpc_cpp.get_num_row())
+    res_c_den_col = bindings_cpp.derivative_polynomial_longitude(xnorm, ynorm, znorm, rpc_cpp.get_den_col())
+    res_c_den_row = bindings_cpp.derivative_polynomial_longitude(xnorm, ynorm, znorm, rpc_cpp.get_den_row())
+    res_c_num_col = bindings_cpp.derivative_polynomial_longitude(xnorm, ynorm, znorm, rpc_cpp.get_num_col())
+    res_c_num_row = bindings_cpp.derivative_polynomial_longitude(xnorm, ynorm, znorm, rpc_cpp.get_num_row())
 
     # rpc.py derivative_polynomial_longitude
     res_py_den_col = derivative_polynomial_longitude(
@@ -819,7 +819,7 @@ def test_get_alt_min_max():
 
     rpc_path = os.path.join(data_path(), "rpc/PHRDIMAP_P1BP--2018122638935449CP.XML")
 
-    rpc_cpp = rpc_c_constructor(rpc_path)
+    rpc_cpp = bindings_cpp_constructor(rpc_path)
     rpc_py = GeoModel(rpc_path, "RPC")
 
     assert rpc_py.get_alt_min_max() == rpc_cpp.get_alt_min_max()
@@ -832,7 +832,7 @@ def test_los_extrema():
 
     rpc_path = os.path.join(data_path(), "rpc/PHRDIMAP_P1BP--2018122638935449CP.XML")
 
-    rpc_cpp = rpc_c_constructor(rpc_path)
+    rpc_cpp = bindings_cpp_constructor(rpc_path)
     rpc_py = GeoModel(rpc_path, "RPC")
     rpc_optim = GeoModel(rpc_path, "RPCoptim")
 

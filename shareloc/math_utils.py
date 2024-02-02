@@ -25,6 +25,38 @@ This module contains the mathematical functions for shareloc
 import numpy as np
 
 
+def inter(
+    mats: list, delta_shift_col: float, delta_shift_row: float, lower_shift_col: int, lower_shift_row: int
+) -> list:
+    """
+    Shared computation part for interpolation
+
+    :param mats: multi layer grid (: , nb_rows,nb_cols)
+    :param delta_shift_col: position (columns)
+    :param delta_shift_row: position (line)
+    :param lower_shift_col: lower integer position (columns)
+    :param lower_shift_row: lower integer position (line)
+    """
+
+    upper_shift_col = lower_shift_col + 1
+    upper_shift_row = lower_shift_row + 1
+
+    col_shift = delta_shift_col - lower_shift_col
+    row_shift = delta_shift_row - lower_shift_row
+
+    # Altitude
+    matis = []
+    for mat in mats:
+        mati = (
+            (1 - col_shift) * (1 - row_shift) * mat[:, lower_shift_row, lower_shift_col]
+            + col_shift * (1 - row_shift) * mat[:, lower_shift_row, upper_shift_col]
+            + (1 - col_shift) * row_shift * mat[:, upper_shift_row, lower_shift_col]
+            + col_shift * row_shift * mat[:, upper_shift_row, upper_shift_col]
+        )
+        matis.append(mati)
+    return matis
+
+
 def interpol_bilin_grid(mats: list, nb_rows: int, nb_cols: int, delta_shift_row: float, delta_shift_col: float) -> list:
     """
     bilinear interpolation on multi layer  matrix
@@ -47,7 +79,6 @@ def interpol_bilin_grid(mats: list, nb_rows: int, nb_cols: int, delta_shift_row:
         lower_shift_row = nb_rows - 2
     else:
         lower_shift_row = int(np.floor(delta_shift_row))
-    upper_shift_row = lower_shift_row + 1
 
     if delta_shift_col < 0:
         lower_shift_col = 0
@@ -55,21 +86,8 @@ def interpol_bilin_grid(mats: list, nb_rows: int, nb_cols: int, delta_shift_row:
         lower_shift_col = nb_cols - 2
     else:
         lower_shift_col = int(np.floor(delta_shift_col))
-    upper_shift_col = lower_shift_col + 1
-    # (col_shift, row_shift) are subpixel distance to interpolate along each axis
-    col_shift = delta_shift_col - lower_shift_col
-    row_shift = delta_shift_row - lower_shift_row
-    # Altitude
-    matis = []
-    for mat in mats:
-        mati = (
-            (1 - col_shift) * (1 - row_shift) * mat[:, lower_shift_row, lower_shift_col]
-            + col_shift * (1 - row_shift) * mat[:, lower_shift_row, upper_shift_col]
-            + (1 - col_shift) * row_shift * mat[:, upper_shift_row, lower_shift_col]
-            + col_shift * row_shift * mat[:, upper_shift_row, upper_shift_col]
-        )
-        matis.append(mati)
-    return matis
+
+    return inter(mats, delta_shift_col, delta_shift_row, lower_shift_col, lower_shift_row)
 
 
 def interpol_bilin(
@@ -121,7 +139,9 @@ def interpol_bilin(
     return interp_value
 
 
-def interpol_bilin_vectorized(mats, nb_rows: int, nb_cols: int, delta_shift_row: float, delta_shift_col: float) -> list:
+def interpol_bilin_vectorized(
+    mats: list, nb_rows: int, nb_cols: int, delta_shift_row: float, delta_shift_col: float
+) -> list:
     """
     bilinear interpolation on multi points and layer  matrix
     :param mats: multi layer grid (: , nb_rows,nb_cols)
@@ -140,26 +160,9 @@ def interpol_bilin_vectorized(mats, nb_rows: int, nb_cols: int, delta_shift_row:
     lower_shift_row = np.floor(delta_shift_row).astype(int)
     lower_shift_row[delta_shift_row < 0] = 0
     lower_shift_row[delta_shift_row >= (nb_rows - 1)] = nb_rows - 2
-    upper_shift_row = np.copy(lower_shift_row) + 1
 
     lower_shift_col = np.floor(delta_shift_col).astype(int)
     lower_shift_col[delta_shift_col < 0] = 0
     lower_shift_col[delta_shift_col >= (nb_cols - 1)] = nb_cols - 2
-    upper_shift_col = np.copy(lower_shift_col) + 1
 
-    # (col_shift,row_shift) are subpixel distance to interpolate along each axis
-    col_shift = delta_shift_col - lower_shift_col
-    row_shift = delta_shift_row - lower_shift_row
-
-    # Altitude
-    matis = []
-    for mat in mats:
-        mati = (
-            (1 - col_shift) * (1 - row_shift) * mat[:, lower_shift_row, lower_shift_col]
-            + col_shift * (1 - row_shift) * mat[:, lower_shift_row, upper_shift_col]
-            + (1 - col_shift) * row_shift * mat[:, upper_shift_row, lower_shift_col]
-            + col_shift * row_shift * mat[:, upper_shift_row, upper_shift_col]
-        )
-        matis.append(mati)
-
-    return matis
+    return inter(mats, delta_shift_col, delta_shift_row, lower_shift_col, lower_shift_row)

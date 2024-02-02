@@ -25,14 +25,18 @@ limitations under the License.
 #define DTM_INTERSECTION_H
 
 #include <vector>
-#include <string>
 #include <array>
-#include <tuple>
+#include <algorithm>
+#include <cmath>
+
+#include <pybind11/pybind11.h>
+#include "pybind11/numpy.h"
+
 
 /**
-  Class DTMIntersection
-  Framework of the DTMIntersection python class.
- */
+Class DTMIntersection
+Framework of the DTMIntersection python class.
+*/
 
 class DTMIntersection
 {
@@ -40,28 +44,36 @@ class DTMIntersection
 public:
 
     /**Constructor*/
-    DTMIntersection(std::array<double, 20> const& dtm_image);//determiner comment passer les arg
+    DTMIntersection(
+        int dtm_image_epsg,
+        pybind11::array_t<double, \
+                    pybind11::array::c_style | pybind11::array::forcecast> dtm_image_alt_data,
+        int dtm_image_nb_rows,
+        int dtm_image_nb_columns,
+        std::tuple<double,double,double,double,double,double> dtm_image_transform
+    );//determiner comment passer les arg
 
     /**eq_plan*/
-    double eq_plan(int i, std::array<double, 3> position) const;
+    double eq_plan(int i, std::array<double, 3> const& position)const;
 
     /**ter_to_index*/
-    std::array<double, 3> ter_to_index(std::array<double, 3> vect_ter) const;
+    std::array<double, 3> ter_to_index(std::array<double, 3> const& vect_ter)const;
 
     /**ter_to_indexs*/
-    std::vector<double> ter_to_indexs(std::vector<double> const& vect_ter) const;
+    std::vector<double> ter_to_indexs(std::vector<double> const& vect_ter);//maybe unecessary
 
     /**index_to_ter*/
-    std::array<double, 3> index_to_ter(std::array<double, 3> vect_ter) const;
-
-    /**get_alt_offset*/
-    std::array<double, 2> get_alt_offset(int epsg) const;//maybe unecessary
+    std::array<double, 3> index_to_ter(std::array<double, 3> const& vect_ter)const;
 
     /**interpolate*/
-    double interpolate(double pos_row, double pos_col) const;
+    double interpolate(double delta_shift_row, double delta_shift_col) const;
 
     /**intersect_dtm_cube*/
-    std::tuple<bool,bool,std::vector<double>,bool,std::vector<double>> intersect_dtm_cube(std::vector<double> const& los) const;
+    std::tuple<bool,
+    bool,
+    std::vector<double>,
+    bool,
+    std::vector<double>> intersect_dtm_cube(std::vector<double> const& los) const;
 
     /**intersection*/
     std::tuple<bool,bool,std::vector<double>> intersection(
@@ -71,80 +83,90 @@ public:
 
     //-- getter --//
 
-
-    /**get_dtm_file*/
-    std::string const& get_dtm_file() const noexcept {return m_dtm_file;};
     /**get_alt_data*/
     std::vector<double>  const&  get_alt_data() const noexcept {return m_alt_data;};
     /**get_alt_min*/
     double get_alt_min() const noexcept {return m_alt_min;};
     /**get_alt_max*/
     double get_alt_max() const noexcept {return m_alt_max;};
-    /**get_origin_x*/
-    double get_origin_x() const noexcept {return m_origin_x;};
-    /**get_origin_y*/
-    double get_origin_y() const noexcept {return m_origin_y;};
-    /**get_pixel_size_x*/
-    double get_pixel_size_x() const noexcept {return m_pixel_size_x;};
-    /**get_pixel_size_y*/
-    double get_pixel_size_y() const noexcept {return m_pixel_size_y;};
     /**get_plane_coef_a*/
-    std::vector<double> const& get_plane_coef_a() const noexcept {return m_plane_coef_a;};
+    std::array<double,6> const& get_plane_coef_a() const noexcept {return m_plane_coef_a;};
     /**get_plane_coef_b*/
-    std::vector<double> const& get_plane_coef_b() const noexcept {return m_plane_coef_b;};
+    std::array<double,6> const& get_plane_coef_b() const noexcept {return m_plane_coef_b;};
     /**get_plane_coef_c*/
-    std::vector<double> const& get_plane_coef_c() const noexcept {return m_plane_coef_c;};
+    std::array<double,6> const& get_plane_coef_c() const noexcept {return m_plane_coef_c;};
     /**get_plane_coef_d*/
-    std::vector<double> const& get_plane_coef_d() const noexcept {return m_plane_coef_d;};
+    std::array<double,6> const& get_plane_coef_d() const noexcept {return m_plane_coef_d;};
     /**get_alt_min_cell*/
-    double get_alt_min_cell() const noexcept {return m_alt_min_cell;};
+    std::vector<double> get_alt_min_cell() const noexcept {return m_alt_min_cell;};
     /**get_alt_max_cell*/
-    double get_alt_max_cell() const noexcept {return m_alt_max_cell;};
+    std::vector<double> get_alt_max_cell() const noexcept {return m_alt_max_cell;};
     /**get_tol_z*/
     double get_tol_z() const noexcept {return m_tol_z;};// = 0.0001
     /**get_epsg*/
     int get_epsg() const noexcept {return m_epsg;};
-    /**get_grid_row*/
-    std::vector<double> const& get_grid_row() const noexcept {return m_grid_row;};
-    /**get_grid_col*/
-    std::vector<double> const& get_grid_col() const noexcept {return m_grid_col;};
     /**get_plans*/
     std::vector<double> const& get_plans() const noexcept {return m_plans;};
+    /**get trans_inv*/
+    std::array<double,6> const& get_trans_inv() const noexcept {return m_trans_inv;};
     /**get_transform*/
-    std::vector<double> const& get_transform() const noexcept {return m_transform;};
+    std::array<double,6> const& get_transform() const noexcept {return m_transform;};
     /**get_nb_rows*/
     int get_nb_rows() const noexcept {return m_nb_rows;};
     /**get_nb_columns*/
     int get_nb_columns() const noexcept {return m_nb_columns;};
 
+
+
+
 private:
-    std::string m_dtm_file;
-    std::vector<double> m_alt_data;
-    double m_alt_min;
-    double m_alt_max;
-    double m_origin_x;
-    double m_origin_y;
-    double m_pixel_size_x;
-    double m_pixel_size_y;
-    std::vector<double> m_plane_coef_a;
-    std::vector<double> m_plane_coef_b;
-    std::vector<double> m_plane_coef_c;
-    std::vector<double> m_plane_coef_d;
-    double m_alt_min_cell;
-    double m_alt_max_cell;
-    double m_tol_z;// = 0.0001
 
-    int m_epsg;
+        /**alt_data attribut*/
+        std::vector<double> m_alt_data;
+        /**alt_min attribut*/
+        double m_alt_min;
+        /**alt_max attribut*/
+        double m_alt_max;
+        /**plane_coef_a attribut*/
+        std::array<double,6> m_plane_coef_a;
+        /**plane_coef_b attribut*/
+        std::array<double,6> m_plane_coef_b;
+        /**plane_coef_c attribut*/
+        std::array<double,6> m_plane_coef_c;
+        /**plane_coef_d attribut*/
+        std::array<double,6> m_plane_coef_d;
+        /**alt_min_cell attribut*/
+        std::vector<double> m_alt_min_cell;
+        /**alt_max_cell attribut*/
+        std::vector<double> m_alt_max_cell;
+        /**tol_z attribut*/
+        double m_tol_z;// = 0.0001
 
-    std::vector<double> m_grid_row;
-    std::vector<double> m_grid_col;
+        /**epsg attribut*/
+        int m_epsg;
 
-    std::vector<double> m_plans;
+        /**plans attribut*/
+        std::vector<double> m_plans;
 
-    std::vector<double> m_transform;
-    int m_nb_rows;
-    int m_nb_columns;
+        /**trans_inv attribut*/
+        std::array<double,6> m_trans_inv; //affine.affine en python
+        /**transform attribut*/
+        std::array<double,6> m_transform;
+        /**nb_rows attribut*/
+        int m_nb_rows;
+        /**nb_columns attribut*/
+        int m_nb_columns;
+
 };
 
+
+
+//-- Function --//
+
+/**init_min_max*/
+std::tuple<std::vector<double>,
+std::vector<double>> init_min_max(std::vector<double> const& alt_data,
+                                                    int nb_rows,
+                                                    int nb_columns);
 
 #endif

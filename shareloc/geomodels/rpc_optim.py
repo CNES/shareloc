@@ -29,7 +29,7 @@ import numpy as np
 # Third party imports
 from numba import config
 
-import rpc_c
+import bindings_cpp
 
 # Shareloc imports
 from shareloc.geomodels.geomodel import GeoModel
@@ -41,7 +41,7 @@ config.THREADING_LAYER = "omp"
 
 
 @GeoModel.register("RPCoptim")
-class RPCoptim(rpc_c.RPC, GeoModelTemplate):
+class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
     """
     RPC optimized with cpp bindings class including direct and inverse localization instance methods
     """
@@ -69,7 +69,7 @@ class RPCoptim(rpc_c.RPC, GeoModelTemplate):
             if not all(i == 0 for i in rpc_params["num_col"]) and not all(
                 i == 0 for i in rpc_params["num_x"]
             ):  # direct and inverse coef
-                rpc_c.RPC.__init__(
+                bindings_cpp.RPC.__init__(
                     self,
                     True,
                     True,
@@ -88,7 +88,7 @@ class RPCoptim(rpc_c.RPC, GeoModelTemplate):
 
         elif rpc_params["num_col"]:
             if not all(i == 0 for i in rpc_params["num_col"]):  # only inverse coef
-                rpc_c.RPC.__init__(
+                bindings_cpp.RPC.__init__(
                     self,
                     True,
                     False,
@@ -107,7 +107,7 @@ class RPCoptim(rpc_c.RPC, GeoModelTemplate):
 
         elif rpc_params["num_x"]:
             if not all(i == 0 for i in rpc_params["num_x"]):  # only direct coef
-                rpc_c.RPC.__init__(
+                bindings_cpp.RPC.__init__(
                     self,
                     False,
                     True,

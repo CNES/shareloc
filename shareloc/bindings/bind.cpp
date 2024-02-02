@@ -25,7 +25,6 @@ It gives to the compiler the instructions to compile the usefull cpp code into a
 which is callable in a python code as a python module.
 */
 
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 #include "rpc.hpp"
@@ -34,18 +33,34 @@ which is callable in a python code as a python module.
 namespace py = pybind11;
 
 
-PYBIND11_MODULE(rpc_c, m) {
+PYBIND11_MODULE(bindings_cpp, m) {
 
     py::class_<DTMIntersection>(m, "DTMIntersection")
-        .def(py::init<std::array<double, 20>>())
-        .def("eq_plan",            &DTMIntersection::eq_plan)
-        .def("ter_to_index",       &DTMIntersection::ter_to_index)
-        .def("ter_to_indexs",      &DTMIntersection::ter_to_indexs)
-        .def("index_to_ter",       &DTMIntersection::index_to_ter)
-        .def("get_alt_offset",     &DTMIntersection::get_alt_offset)
-        .def("interpolate",        &DTMIntersection::interpolate)
+        .def(py::init<int,py::array_t<double, py::array::c_style | py::array::forcecast> \
+                ,int,int,std::tuple<double,double,double,double,double,double>>())
+        .def("eq_plan", &DTMIntersection::eq_plan)
+        .def("ter_to_index", &DTMIntersection::ter_to_index)
+        .def("ter_to_indexs", &DTMIntersection::ter_to_indexs)
+        .def("index_to_ter", &DTMIntersection::index_to_ter)
+        .def("interpolate", &DTMIntersection::interpolate)
         .def("intersect_dtm_cube", &DTMIntersection::intersect_dtm_cube)
-        .def("intersection",       &DTMIntersection::intersection);
+        .def("intersection", &DTMIntersection::intersection)
+        .def("get_alt_data", &DTMIntersection::get_alt_data)
+        .def("get_alt_min", &DTMIntersection::get_alt_min)
+        .def("get_alt_max", &DTMIntersection::get_alt_max)
+        .def("get_plane_coef_a", &DTMIntersection::get_plane_coef_a)
+        .def("get_plane_coef_b", &DTMIntersection::get_plane_coef_b)
+        .def("get_plane_coef_c", &DTMIntersection::get_plane_coef_c)
+        .def("get_plane_coef_d", &DTMIntersection::get_plane_coef_d)
+        .def("get_alt_min_cell", &DTMIntersection::get_alt_min_cell)
+        .def("get_alt_max_cell", &DTMIntersection::get_alt_max_cell)
+        .def("get_tol_z", &DTMIntersection::get_tol_z)
+        .def("get_epsg", &DTMIntersection::get_epsg)
+        .def("get_plans", &DTMIntersection::get_plans)
+        .def("get_trans_inv", &DTMIntersection::get_trans_inv)
+        .def("get_transform", &DTMIntersection::get_transform)
+        .def("get_nb_rows", &DTMIntersection::get_nb_rows)
+        .def("get_nb_columns", &DTMIntersection::get_nb_columns);
 
     py::class_<RPC>(m, "RPC")
         .def(py::init<bool,
@@ -108,11 +123,15 @@ PYBIND11_MODULE(rpc_c, m) {
             "Compute latitude derivative polynomial equation");
 
     m.def("derivative_polynomial_longitude", &derivative_polynomial_longitude,
-            "Compute longitude derivative polynomial equation");
+    "Compute longitude derivative polynomial equation");
+
+    m.def("init_min_max", &init_min_max,
+    "init_min_max");
+
 }
 
 //c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)
-//bind.cpp -o rpc_c$(python3-config --extension-suffix)
+//bind.cpp -o bindings_cpp$(python3-config --extension-suffix)
 
 // c++ -w -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC
-//$(python3 -m pybind11 --includes) bind.cpp -o rpc_c$(python3-config --extension-suffix)
+//$(python3 -m pybind11 --includes) bind.cpp -o bindings_cpp$(python3-config --extension-suffix)

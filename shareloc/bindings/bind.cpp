@@ -29,6 +29,7 @@ which is callable in a python code as a python module.
 
 #include "rpc.hpp"
 #include "dtm_intersection.hpp"
+#include "rectification.cpp"
 
 namespace py = pybind11;
 
@@ -127,7 +128,9 @@ PYBIND11_MODULE(bindings_cpp, m) {
 
     m.def("init_min_max", &init_min_max,
     "init_min_max");
-
+    
+    m.def("compute_epipolar_angle", &compute_epipolar_angle,
+            "compute epipolar angle");
 }
 
 //c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)

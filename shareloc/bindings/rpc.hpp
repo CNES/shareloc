@@ -24,6 +24,7 @@ limitations under the License.
 #ifndef RPC_H
 #define RPC_H
 
+#include "dtm_intersection.hpp"
 
 #include <string>
 #include <vector>
@@ -73,10 +74,10 @@ public:
         double alt) const;
 
     /**direct_loc_dtm*/
-    std::vector<std::vector<double>> direct_loc_dtm(
-        double row,
-        double col,
-        std::string dtm) const;//override + dtm is a python class not a std::string
+    std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> direct_loc_dtm(
+        std::vector<double> const& row,
+        std::vector<double> const& col,
+        DTMIntersection dtm) const;//override + dtm is a python class not a std::string
 
     /**inverse_loc unitary*/
     std::tuple<double,double,double> inverse_loc(
@@ -123,8 +124,7 @@ public:
         double col,
         double alt_min,
         double alt_max,
-        bool fill_nan=false,
-        int epsg=4326) const;
+        bool fill_nan=false) const;
 
 
     //-- getter --//

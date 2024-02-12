@@ -132,13 +132,58 @@ tuple<vector<vector<double>>,vector<vector<double>>> RPC::direct_loc_grid_h(
     return res;
 }
 
-vector<vector<double>> RPC::direct_loc_dtm(
-    double row,
-    double col,
-    string dtm) const// dtm intersection model ->python class
+tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_dtm(
+    vector<double> const& row,
+    vector<double> const& col,
+    DTMIntersection dtm) const
 {
-    vector<vector<double>> vect;
-    return vect;
+    if(dtm.get_epsg() != 4326){
+        throw runtime_error("C++ : direct_loc_dtm : epsg!=4326 -> Exiting");
+    }
+
+    double min_dtm = dtm.get_alt_min() - 1.0;
+    double max_dtm = dtm.get_alt_max() + 1.0;
+    
+    size_t nb_points = row.size();
+
+    vector<double> lon (2);
+    vector<double> lat (2);
+    vector<double> alt (2);
+    bool var;//garbadge variable
+    bool solution;
+    array<double,3> position_cube;
+    double alti;
+    vector<double> los_index_x (2);
+    vector<double> los_index_y (2);
+    vector<double> los_index_z (2);
+    double position_x;
+    double position_y;
+    double position_z;
+    vector<double> res_lon (nb_points);
+    vector<double> res_lat (nb_points);
+    vector<double> res_alt (nb_points);
+
+    for(size_t i = 0;i<nb_points;++i){
+
+        tie(lon, lat, alt) = los_extrema(row[i], col[i], min_dtm, max_dtm);
+        tie(var, solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
+        dtm.intersect_dtm_cube(lon, lat, alt);
+        
+        if(solution){
+            tie(var, var, position_x, position_y, position_z) =\
+            dtm.intersection(los_index_x, los_index_y, los_index_z, position_cube, alti);
+        }
+        else{
+            position_x = numeric_limits<double>::quiet_NaN(); 
+            position_y = numeric_limits<double>::quiet_NaN(); 
+            position_z = numeric_limits<double>::quiet_NaN(); 
+        }
+        res_lon[i] = position_x;
+        res_lat[i] = position_y;
+        res_alt[i] = position_z;
+    }
+    
+    return {res_lon,res_lat,res_alt};
 }
 
 tuple<double,double,double> RPC::inverse_loc(
@@ -380,12 +425,8 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::los_extrema(
     double col,
     double alt_min,
     double alt_max,
-    bool fill_nan,
-    int epsg)const
+    bool fill_nan)const
 {
-    if(epsg!=4326){
-         throw runtime_error("C++ : los_extrema : epsg!=4326 -> Exiting");
-    }
 
     bool extrapolate = false;
     array<double, 2> los_alt_min_max;

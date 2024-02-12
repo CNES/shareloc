@@ -883,3 +883,12 @@ class DTMIntersection:
             direct_dtm[i, :] = position
 
         return direct_dtm
+
+    def get_alt_min(self):  # same api as cpp for direct_loc_dtm
+        return self.alt_min
+
+    def get_alt_max(self):  # same api as cpp for direct_loc_dtm
+        return self.alt_max
+
+    def get_epsg(self):  # same api as cpp for direct_loc_dtm
+        return self.epsg

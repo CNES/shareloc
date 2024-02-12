@@ -312,12 +312,12 @@ class RPC(GeoModelTemplate):
 
         diff_alti_min, diff_alti_max = dtm.get_alt_offset(self.epsg)
         # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
-        (min_dtm, max_dtm) = (dtm.alt_min - 1.0 + diff_alti_min, dtm.alt_max + 1.0 + diff_alti_max)
+        (min_dtm, max_dtm) = (dtm.get_alt_min() - 1.0 + diff_alti_min, dtm.get_alt_max() + 1.0 + diff_alti_max)
         if min_dtm < self.offset_alt - self.scale_alt:
             logging.debug("minimum dtm value is outside RPC validity domain, extrapolation will be done")
         if max_dtm > self.offset_alt + self.scale_alt:
             logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
-        los = self.los_extrema(row, col, min_dtm, max_dtm, epsg=dtm.epsg)
+        los = self.los_extrema(row, col, min_dtm, max_dtm, epsg=dtm.get_epsg())
 
         # los -> (nb_point,nb_alt,3)
         los = los.T

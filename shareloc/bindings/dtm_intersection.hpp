@@ -71,14 +71,24 @@ public:
     /**intersect_dtm_cube*/
     std::tuple<bool,
     bool,
+    std::array<double,3>,
+    double,
     std::vector<double>,
-    bool,
-    std::vector<double>> intersect_dtm_cube(std::vector<double> const& los) const;
+    std::vector<double>,
+    std::vector<double>> intersect_dtm_cube(std::vector<double> const& los_x,
+                                            std::vector<double> const& los_y,
+                                            std::vector<double> const& los_z)const;
 
     /**intersection*/
-    std::tuple<bool,bool,std::vector<double>> intersection(
-        std::vector<double> const& los_index,
-        std::vector<double> const& point_b,
+    std::tuple<bool,
+    bool,
+    double,
+    double,
+    double> intersection(
+        std::vector<double> const& los_x_index,
+        std::vector<double> const& los_y_index,
+        std::vector<double> const& los_z_index,
+        std::array<double, 3> const& point_b,
         double h_intersect) const;
 
     //-- getter --//

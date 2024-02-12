@@ -262,3 +262,192 @@ def test_index_ter_methodes(coords):
     # Identity
     np.testing.assert_allclose(np.array(coords), np.array(coords_cpp), 0, 7e-12)
     np.testing.assert_allclose(np.array(coords), np.array(coords_py), 0, 7e-12)
+
+
+def test_intersect_dtm_cube():
+    """
+    test intersect_dtm_cube methode
+    """
+
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    )
+
+    dtm_ventoux_py = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    # -- No solution --
+
+    # los from test_sensor_loc_dir_dtm -> not in adequation with the dtm
+    los = np.array(
+        [
+            [57.37765525, 22.13204304, 4900.0],
+            [57.37805121, 22.1312895, 3667.5],
+            [57.37844733, 22.13053566, 2435.0],
+            [57.37884359, 22.12978153, 1202.5],
+            [57.37924, 22.12902711, -30.0],
+        ]
+    )
+
+    (true_py, b_trouve_py, position_cube_py, alti_py, los_index_py) = dtm_ventoux_py.intersect_dtm_cube(los)
+
+    los_x = los[:, 0].tolist()
+    los_y = los[:, 1].tolist()
+    los_z = los[:, 2].tolist()
+
+    (true_cpp, b_trouve_cpp, position_cube_cpp, alti_cpp, los_index_x_cpp, los_index_y_cpp, los_index_z_cpp) = (
+        dtm_ventoux_optim.intersect_dtm_cube(los_x, los_y, los_z)
+    )
+
+    assert true_py == true_cpp
+    assert b_trouve_py == b_trouve_cpp
+
+    assert position_cube_py is None
+    assert position_cube_cpp == [0.0, 0.0, 0.0]
+
+    assert alti_py is None
+    assert alti_cpp == 0.0
+
+    np.testing.assert_array_equal(los_index_py[:, 0], los_index_x_cpp)
+    np.testing.assert_array_equal(los_index_py[:, 1], los_index_y_cpp)
+    np.testing.assert_array_equal(los_index_py[:, 2], los_index_z_cpp)
+
+    # -- SOLUTION --
+
+    los = np.array(
+        [
+            [
+                5.19490591e00,
+                4.42110907e01,
+                2.81029295e03,
+            ],
+            [5.17180698e00, 4.41643824e01, -3.27181677e04],
+        ]
+    )
+
+    (true_py, b_trouve_py, position_cube_py, alti_py, los_index_py) = dtm_ventoux_py.intersect_dtm_cube(los)
+
+    los_x = los[:, 0].tolist()
+    los_y = los[:, 1].tolist()
+    los_z = los[:, 2].tolist()
+
+    (true_cpp, b_trouve_cpp, position_cube_cpp, alti_cpp, los_index_x_cpp, los_index_y_cpp, los_index_z_cpp) = (
+        dtm_ventoux_optim.intersect_dtm_cube(los_x, los_y, los_z)
+    )
+
+    assert true_py == true_cpp
+    assert b_trouve_py == b_trouve_cpp
+
+    np.testing.assert_array_equal(position_cube_py, position_cube_cpp)
+
+    assert alti_py == alti_cpp
+
+    np.testing.assert_array_equal(los_index_py[:, 0], los_index_x_cpp)
+    np.testing.assert_array_equal(los_index_py[:, 1], los_index_y_cpp)
+    np.testing.assert_array_equal(los_index_py[:, 2], los_index_z_cpp)
+
+
+def test_init_min_max():
+    """
+    test init_min_max fonction
+    """
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    )
+
+    dtm_ventoux_py = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    alt_data = np.array(dtm_ventoux_py.alt_data).flatten()
+    res_cpp1, res_cpp2 = bindings_cpp.init_min_max(alt_data, dtm_image.nb_rows, dtm_image.nb_columns)
+
+    np.testing.assert_array_equal(res_cpp1, dtm_ventoux_py.alt_min_cell.flatten())
+    np.testing.assert_array_equal(res_cpp2, dtm_ventoux_py.alt_max_cell.flatten())
+
+
+def test_intersection():
+    """
+    test intersection methode
+    """
+
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=None,
+        roi_is_in_physical_space=True,
+        fill_nodata=None,
+        fill_value=0.0,
+    )
+
+    dtm_ventoux_py = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    point_b = [946.6927376111748, 233.88631181467858, 2809.292947565206]
+    h_intersect = 2.8146517369487256e-05
+    los_x_index = [946.6911600000021, 1002.7411199999988]
+    los_y_index = [233.88709199999994, 206.16837600000053]
+    los_z_index = [2810.29295, -32718.1677]
+
+    (bool_1_py, bool_2_py, point_r_py) = dtm_ventoux_py.intersection(
+        np.array([los_x_index, los_y_index, los_z_index]).T, np.array(point_b), h_intersect
+    )
+
+    (bool_1_cpp, bool_2_cpp, point_r_x_cpp, point_r_y_cpp, point_r_z_cpp) = dtm_ventoux_optim.intersection(
+        los_x_index, los_y_index, los_z_index, point_b, h_intersect
+    )
+
+    assert bool_1_py == bool_1_cpp
+    assert bool_2_py == bool_2_cpp
+    assert point_r_py[0] == point_r_x_cpp
+    assert point_r_py[1] == point_r_y_cpp
+    assert point_r_py[2] == point_r_z_cpp

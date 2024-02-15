@@ -101,7 +101,6 @@ class dtm_reader(Image):
         self.alt_data = self.data[:, :].astype("float64")
 
         if geoid_filename is not None:
-
             logging.debug("remove geoid height")
             self.grid_row, self.grid_col = np.mgrid[0 : self.nb_rows : 1, 0 : self.nb_columns : 1]
             lat, lon = transform_index_to_physical_point(self.transform, self.grid_row, self.grid_col)
@@ -172,10 +171,12 @@ def interpolate_geoid_height(geoid_filename, positions, interpolation_method="li
     points = (row_indexes, col_indexes)
 
     # add modulo lon/lat
-    min_lon = geoid_image.origin_col
-    max_lon = min_lon + geoid_image.nb_columns * geoid_image.pixel_size_col
-    positions[:, 0] += (positions[:, 0] + min_lon < 0) * 360.0
-    positions[:, 0] -= (positions[:, 0] - max_lon > 0) * 360.0
+    min_lon = geoid_image.origin_col + geoid_image.pixel_size_col / 2
+    max_lon = (
+        geoid_image.origin_col + geoid_image.nb_columns * geoid_image.pixel_size_col - geoid_image.pixel_size_col / 2
+    )
+    positions[:, 0] += ((positions[:, 0] + min_lon) < 0) * 360.0
+    positions[:, 0] -= ((positions[:, 0] - max_lon) > 0) * 360.0
     if np.any(np.abs(positions[:, 1]) > 90.0):
         raise RuntimeError("Geoid cannot handle latitudes greater than 90 deg.")
     indexes_geoid = transform_physical_point_to_index(geoid_image.trans_inv, positions[:, 1], positions[:, 0])

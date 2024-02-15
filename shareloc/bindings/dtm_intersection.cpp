@@ -21,6 +21,7 @@ limitations under the License.
   Cpp copy of dtm_intersection.py
  */
 #include "dtm_intersection.hpp"
+#include <iostream>
 
 using namespace std;
 namespace py = pybind11;
@@ -136,6 +137,14 @@ array<double, 3> DTMIntersection::index_to_ter(array<double, 3> const& vect_ter)
     return ter;
 }
 
+tuple<double,double> DTMIntersection::get_alt_offset(int epsg)const{
+
+    if(epsg!=m_epsg){
+        //throw runtime_error("C++ : DTMintersection get_alt_offset not valid epsg");
+        cout<<"C++ : DTMintersection get_alt_offset not valid epsg"<<endl;
+    }
+    return{0.,0.};
+}
 
 double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_col)const{
 
@@ -956,4 +965,84 @@ for(int i = 0; i < nb_rows-1; ++i){
 }
 
 return make_tuple(alt_min_cell,alt_max_cell);
+}
+
+
+
+py::array_t<double> DTMIntersection::intersection_n_los_dtm(
+    py::array_t<double, py::array::c_style | py::array::forcecast> los_input
+    ) const
+{
+
+    py::buffer_info buf = los_input.request();
+    double* los = static_cast<double*>(buf.ptr);
+
+    int nb_points = buf.shape[0];
+    int nb_alt = buf.shape[1];
+
+    vector<double> los_i_x(nb_alt);
+    vector<double> los_i_y(nb_alt);
+    vector<double> los_i_z(nb_alt);
+
+    bool var;//garbadge variable
+    bool solution;
+    array<double,3> position_cube;
+    double alti;
+    vector<double> los_index_x (2);
+    vector<double> los_index_y (2);
+    vector<double> los_index_z (2);
+    double position_x;
+    double position_y;
+    double position_z;
+    vector<double> res_lon(nb_points);
+    vector<double> res_lat(nb_points);
+    vector<double> res_alt(nb_points);
+
+
+    for(int i = 0;i<nb_points;++i){
+
+        for(int alt =0;alt<nb_alt;++alt){
+            los_i_x[alt] = los[i * buf.shape[1] * buf.shape[2] + alt * buf.shape[2] + 0];
+            los_i_y[alt] = los[i * buf.shape[1] * buf.shape[2] + alt * buf.shape[2] + 1];
+            los_i_z[alt] = los[i * buf.shape[1] * buf.shape[2] + alt * buf.shape[2] + 2];
+        }
+
+        tie(var, solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
+        intersect_dtm_cube(los_i_x, los_i_y, los_i_z);
+        
+        if(solution){
+            tie(var, var, position_x, position_y, position_z) =\
+            intersection(los_index_x, los_index_y, los_index_z, position_cube, alti);
+        }
+        else{
+            position_x = numeric_limits<double>::quiet_NaN(); 
+            position_y = numeric_limits<double>::quiet_NaN(); 
+            position_z = numeric_limits<double>::quiet_NaN(); 
+        }
+        res_lon[i] = position_x;
+        res_lat[i] = position_y;
+        res_alt[i] = position_z;
+    }
+
+    //Cast into np.array
+
+    vector<double> res;
+    res.reserve(nb_points*3);
+
+    res.insert(res.end(), res_lon.begin(), res_lon.end());
+    res.insert(res.end(), res_lat.begin(), res_lat.end());
+    res.insert(res.end(), res_alt.begin(), res_alt.end());
+
+
+    const size_t rows = nb_points;
+    const size_t cols = 3;
+
+
+    auto result = py::array_t<double>(
+        {rows, cols},
+        {sizeof(double), rows * sizeof(double)}, // strides
+        res.data()
+    );
+    
+    return result;
 }

@@ -32,6 +32,8 @@ import pytest
 
 # Shareloc bindings
 import bindings_cpp
+from shareloc.dtm_reader import dtm_reader
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
 
 # Shareloc imports
 from shareloc.geomodels import GeoModel
@@ -99,12 +101,11 @@ def test_method_rpc_cpp():
 
     rpc.direct_loc_h(vector_double, vector_double, vector_double, False)
     rpc.direct_loc_grid_h(integer, integer, integer, integer, integer, integer, double)
-    rpc.direct_loc_dtm(double, double, string)
     rpc.inverse_loc(vector_double, vector_double, vector_double)
     rpc.filter_coordinates(vector_double, vector_double, False, string)
     rpc.direct_loc_inverse_iterative(vector_double, vector_double, vector_double, integer, False)
     rpc.get_alt_min_max()
-    rpc.los_extrema(double, double, double, double, False, 4326)
+    rpc.los_extrema(double, double, double, double, False)
 
 
 def test_function_rpc_cpp():
@@ -845,8 +846,8 @@ def test_los_extrema():
 
     # --Normal case
     res_py = rpc_py.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
-    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
-    res_optim = rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, alt_max, fill_nan)
+    res_optim = rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan)
 
     res_cpp = np.array(res_cpp).T
 
@@ -855,8 +856,8 @@ def test_los_extrema():
 
     # --Case alt_max=None/nan for c++
     res_py = rpc_py.los_extrema(row, col, alt_min, None, fill_nan, epsg)
-    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, np.nan, fill_nan, epsg)
-    res_optim = rpc_optim.los_extrema(row, col, alt_min, np.nan, fill_nan, epsg)
+    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, np.nan, fill_nan)
+    res_optim = rpc_optim.los_extrema(row, col, alt_min, np.nan, fill_nan)
 
     res_cpp = np.array(res_cpp).T
 
@@ -867,25 +868,109 @@ def test_los_extrema():
     alt_min = 15000
     alt_max = -15000
     res_py = rpc_py.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
-    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
-    res_optim = rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+    res_cpp = rpc_cpp.los_extrema(row, col, alt_min, alt_max, fill_nan)
+    res_optim = rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan)
 
     res_cpp = np.array(res_cpp).T
 
     np.testing.assert_allclose(res_py, res_cpp, 0, 0)
     np.testing.assert_allclose(res_py, res_optim, 0, 0)
 
-    # --Case espg!=4326
 
-    epsg = 1234
-    try:
-        rpc_cpp.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
-        raise AssertionError()
-    except RuntimeError:
-        assert True
+def test_direct_loc_dtm():
+    """
+    test direct_loc_dtm method
+    """
 
-    try:
-        rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
-        raise AssertionError()
-    except RuntimeError:
-        assert True
+    rpc_file = os.path.join(data_path(), "rpc/phr_ventoux/RPC_PHR1B_P_201308051042194_SEN_690908101-001.XML")
+    mnt = os.path.join(data_path(), "dtm/srtm_ventoux/srtm90_non_void_filled/N44E005.hgt")
+
+    rpc_py = GeoModel(rpc_file, "RPC")
+    rpc_optim = GeoModel(rpc_file, "RPCoptim")
+
+    dtm_image = dtm_reader(mnt, read_data=True)
+    dtm_py = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+    dtm_cpp = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    nrb_point = 1e4
+    first_row = 1
+    first_col = 1
+    last_row = 38608
+    last_col = 36416
+
+    row_vect = np.linspace(first_row, last_row, int(nrb_point ** (1 / 2)) + 1)
+    col_vect = np.linspace(first_col, last_col, int(nrb_point ** (1 / 2)) + 1)
+
+    row_vect, col_vect = np.meshgrid(row_vect, col_vect)
+
+    row_vect = np.ndarray.flatten(row_vect)
+    col_vect = np.ndarray.flatten(col_vect)
+
+    res_py = rpc_py.direct_loc_dtm(row_vect, col_vect, dtm_py)
+    res_optim = rpc_optim.direct_loc_dtm(row_vect, col_vect, dtm_cpp)
+
+    np.testing.assert_allclose(res_optim[:, 0], res_py[:, 0], 0, 3e-15)
+    np.testing.assert_allclose(res_optim[:, 1], res_py[:, 1], 0, 3e-14)
+    np.testing.assert_allclose(res_optim[:, 2], res_py[:, 2], 0, 4e-10)
+
+
+def test_direct_loc_dtm_utm():
+    """
+    Test direct loc dtm
+    """
+
+    rpc_file = os.path.join(data_path(), "rpc/phr_ventoux/RPC_PHR1B_P_201308051042194_SEN_690908101-001.XML")
+    mnt = os.path.join(data_path(), "dtm/srtm_ventoux/srtm90_resampled_UTM31/N44E005_UTM.tif")
+
+    rpc_py = GeoModel(rpc_file, "RPC")
+    rpc_optim = GeoModel(rpc_file, "RPCoptim")
+
+    dtm_image = dtm_reader(mnt, read_data=True)
+    dtm_py = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+    dtm_cpp = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    nrb_point = 1e4
+    first_row = 1
+    first_col = 1
+    last_row = 38608
+    last_col = 36416
+
+    row_vect = np.linspace(first_row, last_row, int(nrb_point ** (1 / 2)) + 1)
+    col_vect = np.linspace(first_col, last_col, int(nrb_point ** (1 / 2)) + 1)
+
+    row_vect, col_vect = np.meshgrid(row_vect, col_vect)
+
+    row_vect = np.ndarray.flatten(row_vect)
+    col_vect = np.ndarray.flatten(col_vect)
+
+    res_py = rpc_py.direct_loc_dtm(row_vect, col_vect, dtm_py)
+
+    with pytest.raises(RuntimeError):
+        _ = rpc_optim.direct_loc_dtm(row_vect, col_vect, dtm_cpp)
+    res_py_dtm_optim = rpc_py.direct_loc_dtm(row_vect, col_vect, dtm_cpp)
+
+    np.testing.assert_array_equal(res_py, res_py_dtm_optim)

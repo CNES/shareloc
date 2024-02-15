@@ -166,14 +166,17 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         direct localization on dtm
 
         :param row:  line sensor position
-        :type row: float
+        :type row: list or np.array
         :param col:  column sensor position
-        :type col: float
-        :param dtm: dtm intersection model
-        :type dtm: shareloc.geofunctions.dtm_intersection
+        :type col: list or np.array
+        :param dtm: dtm intersection c++ model
+        :type dtm: shareloc.bindings.dtm_intersection.cpp
         :return: ground position (lon,lat,h) in dtm coordinates system
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
+        res_optim = super().direct_loc_dtm(row, col, dtm)
+        res_optim = np.array([res_optim[0], res_optim[1], res_optim[2]]).T
+        return res_optim
 
     def inverse_loc(self, lon, lat, alt):
         """
@@ -191,7 +194,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         (row, col, alt) = super().inverse_loc(lon, lat, alt)
         return row, col, alt
 
-    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False, epsg=4326):
+    def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False):
         """
         compute los extrema
 
@@ -209,7 +212,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         :rtype: numpy.array (2x3)
         """
 
-        res_cpp = super().los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+        res_cpp = super().los_extrema(row, col, alt_min, alt_max, fill_nan)
         res_cpp = np.array(res_cpp).T
 
         return res_cpp

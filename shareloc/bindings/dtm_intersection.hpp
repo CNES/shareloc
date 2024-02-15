@@ -65,6 +65,9 @@ public:
     /**index_to_ter*/
     std::array<double, 3> index_to_ter(std::array<double, 3> const& vect_ter)const;
 
+    /**get_alt_offset*/
+    std::tuple<double,double> get_alt_offset(int epsg)const;
+
     /**interpolate*/
     double interpolate(double delta_shift_row, double delta_shift_col) const;
 
@@ -90,6 +93,12 @@ public:
         std::vector<double> const& los_z_index,
         std::array<double, 3> const& point_b,
         double h_intersect) const;
+
+    /**intersection_n_los_dtm*/
+    pybind11::array_t<double> intersection_n_los_dtm(
+        pybind11::array_t<double, pybind11::array::c_style | pybind11::array::forcecast> los_input
+        ) const;
+
 
     //-- getter --//
 

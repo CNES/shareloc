@@ -28,7 +28,6 @@ which is callable in a python code as a python module.
 #include <pybind11/stl.h>
 
 #include "rpc.hpp"
-#include "dtm_intersection.hpp"
 #include "rectification.cpp"
 
 namespace py = pybind11;
@@ -43,9 +42,11 @@ PYBIND11_MODULE(bindings_cpp, m) {
         .def("ter_to_index", &DTMIntersection::ter_to_index)
         .def("ter_to_indexs", &DTMIntersection::ter_to_indexs)
         .def("index_to_ter", &DTMIntersection::index_to_ter)
+        .def("get_alt_offset", &DTMIntersection::get_alt_offset)
         .def("interpolate", &DTMIntersection::interpolate)
         .def("intersect_dtm_cube", &DTMIntersection::intersect_dtm_cube)
         .def("intersection", &DTMIntersection::intersection)
+        .def("intersection_n_los_dtm", &DTMIntersection::intersection_n_los_dtm)
         .def("get_alt_data", &DTMIntersection::get_alt_data)
         .def("get_alt_min", &DTMIntersection::get_alt_min)
         .def("get_alt_max", &DTMIntersection::get_alt_max)

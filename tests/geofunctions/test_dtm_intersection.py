@@ -60,26 +60,30 @@ def test_geoid_height(lon, lat, valid_alt):
     geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
     assert geoid_height == pytest.approx(valid_alt, abs=1e-6)
 
+    geoid_file = os.path.join(data_path(), "dtm/geoid/egm96.grd")
+    geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
+    # ground truth have been computed using .gtx small alt diff between .gtx and .grd
+    assert geoid_height == pytest.approx(valid_alt, abs=1e-3)
+
 
 @pytest.mark.parametrize(
     "lon,lat, valid_alt",
-    [
-        (0.1, 0.0, 17.12881622),
-        (0.0, 0.0, 17.16157913),
-        (10.125, 0.0, 8.72032166),
-        (5.19368066, 44.20749145, 50.8618354),
-        (5.17381589, 44.22559175, 50.87610),
-        (-119.0, -9, -12.516327),
-    ],
+    [(179.875, 44.0, -7.97550010)],
 )
 @pytest.mark.unit_tests
-def test_geoid_height_egm96_grd(lon, lat, valid_alt):
+@pytest.mark.xfail(reason="egm96.gtx has no longitude overlap")
+def test_geoid_height_anti_meridian(lon, lat, valid_alt):
     """
     Test interpolate geoid height
     """
-    geoid_file = os.path.join(data_path(), "dtm/geoid/egm96.grd")
+    geoid_file = os.path.join(data_path(), "dtm/geoid/egm96_15.gtx")
     positions = np.asarray([lon, lat])[np.newaxis, :]
     geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
+    assert geoid_height == pytest.approx(valid_alt, abs=1e-6)
+
+    geoid_file = os.path.join(data_path(), "dtm/geoid/egm96.grd")
+    geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
+    # ground truth have been computed using .gtx small alt diff between .gtx and .grd
     assert geoid_height == pytest.approx(valid_alt, abs=1e-3)
 
 

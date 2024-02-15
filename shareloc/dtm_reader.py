@@ -165,6 +165,13 @@ def interpolate_geoid_height(geoid_filename, positions, interpolation_method="li
 
     geoid_image = Image(geoid_filename, read_data=True)
 
+    # Check longitude overlap is not present, rounding to handle egm2008 with rounded pixel size
+    if geoid_image.nb_columns * geoid_image.pixel_size_col - 360 < 10**-8:
+        logging.debug("add one pixel overlap on longitudes")
+        geoid_image.nb_columns += 1
+        # Check if we can add a column
+        geoid_image.data = np.column_stack((geoid_image.data[:, :], geoid_image.data[:, 0]))
+
     # Prepare grid for interpolation
     row_indexes = np.arange(0, geoid_image.nb_rows, 1)
     col_indexes = np.arange(0, geoid_image.nb_columns, 1)

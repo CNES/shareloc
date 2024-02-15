@@ -29,7 +29,12 @@ from setuptools import setup
 extensions = [
     Pybind11Extension(
         "bindings_cpp",
-        ["shareloc/bindings/bind.cpp", "shareloc/bindings/dtm_intersection.cpp", "shareloc/bindings/rpc.cpp"],
+        [
+            "shareloc/bindings/bind.cpp",
+            "shareloc/bindings/dtm_intersection.cpp",
+            "shareloc/bindings/rpc.cpp",
+            "shareloc/bindings/GeoModelTemplate.cpp",
+        ],
         language="c++",
         # cxx_std=20, # Uncomment to expect C++20
         extra_compile_args=["-O3"],

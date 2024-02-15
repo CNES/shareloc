@@ -22,13 +22,15 @@
 Helpers shared testing generic module:
 contains global shared generic functions for tests/*.py
 """
-# pylint: disable=R0801
+# pylint: disable=R0801, C0103
 
 # Standard imports
 import os
 
 # Shareloc bindings
 import bindings_cpp
+from shareloc.dtm_reader import dtm_reader
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
 
 # Shareloc imports
 from shareloc.geomodels.rpc_readers import rpc_reader
@@ -121,3 +123,30 @@ def bindings_cpp_constructor(file_path: str):
         raise ValueError("RPCoptim : No RPC coefficients readable")
 
     return rpc_cpp
+
+
+def DTMIntersection_constructor(file_path: str):
+    """
+    Create DTMIntersection python and c++ object from mnt file path
+
+    :param file_path: path to rpc file
+    :type file_path: str
+    :return: python and c++ DTMIntersection object
+    :retype: tuple(DTMIntersection python, DTMIntersection c++)
+    """
+    dtm_image = dtm_reader(file_path, read_data=True)
+    dtm_py = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+    dtm_cpp = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+    return dtm_py, dtm_cpp

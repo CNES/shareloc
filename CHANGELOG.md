@@ -12,6 +12,23 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.0a2 Geoid interpolation correction, udpate on RPC C++ class (WIP), DTMintersection C++  (February 2024)
+
+### Added
+
+- RPCoptim C++ direct_loc_dtm()  method [#290]
+- Epipolar angle rectification function [#294]
+- DTMintersection C++ [#288, #295]
+
+### Changed
+
+- RPCoptim C++ geomodel class optimisation [#286]
+
+### Fixed
+
+- fix geoid interpolation  [#298]
+
+
 ## 0.2.0a1 GeoModel factory, RPC C++ class (WIP), by strip rectification, code optimisations (January 2024)
 
 ### Added

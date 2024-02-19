@@ -64,15 +64,17 @@ Direct localization returns ground coordinates  :math:`(\lambda,\phi,h)` for ima
     def direct(self, row, col, h=None, using_geotransform=False):
         """
         direct localization
-        :param row :  sensor row
-        :type row : float
-        :param col : sensor col
-        :type col : float
+
+        :param row: sensor row
+        :type row: float or 1D np.ndarray
+        :param col: sensor col
+        :type col: float or 1D np.ndarray
         :param h: altitude, if none DTM is used
-        :type h : float
+        :type h: float or 1D np.ndarray
         :param using_geotransform: using_geotransform
-        :type using_geotransform : boolean
-        :return coordinates : [lon,lat,h] (3D np.array)
+        :type using_geotransform: boolean
+        :return coordinates: [lon,lat,h] (2D np.array)
+        :rtype: np.ndarray of 2D dimension
         """
 
 
@@ -86,13 +88,14 @@ inverse localization returns image position (row,column) for ground coordinates 
     def inverse(self, lon, lat, h=None, using_geotransform=False):
         """
         inverse localization
-        :param lat :  latitude (or y)
-        :param lon : longitude (or x)
-        :param h : altitude
+
+        :param lat:  latitude (or y)
+        :param lon: longitude (or x)
+        :param h: altitude
         :param using_geotransform: using_geotransform
-        :type using_geotransform : boolean
-        :return coordinates : [row,col,h] (2D np.array)
-        :rtype numpy.array
+        :type using_geotransform: boolean
+        :return: coordinates [row,col,h] (1D np.ndarray)
+        :rtype: Tuple(1D np.ndarray row position, 1D np.ndarray col position, 1D np.ndarray alt)
         """
 
 

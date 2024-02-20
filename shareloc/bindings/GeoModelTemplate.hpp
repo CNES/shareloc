@@ -58,14 +58,14 @@ public:
     direct_loc_dtm(
         double row,
         double col,
-        DTMIntersection dtm) const;
+        DTMIntersection const& dtm) const;
 
     /**direct_loc_dtm*/
     virtual std::tuple<std::vector<double>,std::vector<double>,std::vector<double>>\
     direct_loc_dtm(
         std::vector<double> const& row,
         std::vector<double> const& col,
-        DTMIntersection dtm) const;
+        DTMIntersection const& dtm) const;
 
     /**inverse_loc*/
     virtual std::tuple<double,double,double>\

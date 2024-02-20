@@ -167,7 +167,7 @@ tuple<vector<vector<double>>,vector<vector<double>>> RPC::direct_loc_grid_h(
 tuple<double,double,double> RPC::direct_loc_dtm(
     double row,
     double col,
-    DTMIntersection dtm) const
+    DTMIntersection const& dtm) const
 {
     if(dtm.get_epsg() != 4326){
         throw runtime_error("C++ : direct_loc_dtm : epsg!=4326 -> Exiting");
@@ -210,7 +210,7 @@ tuple<double,double,double> RPC::direct_loc_dtm(
 tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_dtm(
     vector<double> const& row,
     vector<double> const& col,
-    DTMIntersection dtm) const
+    DTMIntersection const& dtm) const
 {
     if(dtm.get_epsg() != 4326){
         throw runtime_error("C++ : direct_loc_dtm : epsg!=4326 -> Exiting");

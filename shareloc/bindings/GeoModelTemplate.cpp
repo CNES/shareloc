@@ -50,7 +50,7 @@ std::tuple<double,double,double>\
  GeoModelTemplate::direct_loc_dtm(
     double row,
     double col,
-    DTMIntersection dtm) const{
+    DTMIntersection const& dtm) const{
     std::tuple<double,double,double> vect;
     return vect;
 }
@@ -59,7 +59,7 @@ std::tuple<std::vector<double>,std::vector<double>,std::vector<double>>\
  GeoModelTemplate::direct_loc_dtm(
     std::vector<double> const& row,
     std::vector<double> const& col,
-    DTMIntersection dtm) const{
+    DTMIntersection const& dtm) const{
     std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> vect;
     return vect;
 }

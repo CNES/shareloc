@@ -221,9 +221,12 @@ class RPC(GeoModelTemplate):
             alt = np.full(col.shape[0], fill_value=alt[0])
 
         points = np.zeros((col.size, 3))
+
+        points[:, 2] = alt
         filter_nan, points[:, 0], points[:, 1] = self.filter_coordinates(row, col, fill_nan)
         row = row[filter_nan]
         col = col[filter_nan]
+        alt = alt[filter_nan]
 
         # Direct localization using direct RPC
         if self.direct_coefficient:
@@ -252,6 +255,7 @@ class RPC(GeoModelTemplate):
                 self.scale_y,
                 self.offset_y,
             )
+            points[filter_nan, 2] = alt
 
         # Direct localization using inverse RPC
         else:
@@ -259,7 +263,6 @@ class RPC(GeoModelTemplate):
             (points[filter_nan, 0], points[filter_nan, 1], points[filter_nan, 2]) = self.direct_loc_inverse_iterative(
                 row, col, alt, 10, fill_nan
             )
-        points[:, 2] = alt
         return points
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):

@@ -320,6 +320,11 @@ def test_rpc_direct_iterative_nan():
     assert p_direct0[0][0] == p_direct1[0]
     assert p_direct0[1][0] == p_direct1[1]
 
+    p_direct0 = fctrat.direct_loc_h(row, col, alt, fill_nan=True)
+    p_direct1 = fctrat.direct_loc_h(row[0], col[0], alt, fill_nan=True)
+
+    np.testing.assert_array_equal(p_direct0[0, :], p_direct1[0, :])
+
 
 def test_rpc_direct_iterative_all_nan():
     """
@@ -339,6 +344,9 @@ def test_rpc_direct_iterative_all_nan():
     direct_loc_nan = fctrat.direct_loc_inverse_iterative(row, col, alt, 10, False)
     assert np.all(np.isnan(direct_loc_nan[0]))
     assert np.all(np.isnan(direct_loc_nan[1]))
+    direct_loc_nan = fctrat.direct_loc_h(row, col, alt, False)
+    assert np.all(np.isnan(direct_loc_nan[:, 0]))
+    assert np.all(np.isnan(direct_loc_nan[:, 1]))
 
     # Point error col = 600, row = 200
     assert direct_loc_tab[0][0] == direct_loc_one_value[0][0]

@@ -64,7 +64,40 @@ PYBIND11_MODULE(bindings_cpp, m) {
         .def("get_nb_rows", &DTMIntersection::get_nb_rows)
         .def("get_nb_columns", &DTMIntersection::get_nb_columns);
 
-    py::class_<RPC>(m, "RPC")
+    py::class_<GeoModelTemplate>(m, "GeoModelTemplate")
+        .def(py::init<>())
+        .def("direct_loc_h", py::overload_cast<double,
+                                        double,
+                                        double,
+                                        bool>(&GeoModelTemplate::direct_loc_h, py::const_))
+
+        .def("direct_loc_h", py::overload_cast<std::vector<double> const&,
+                                        std::vector<double> const&,
+                                        std::vector<double> const&,
+                                        bool>(&GeoModelTemplate::direct_loc_h, py::const_))
+
+        .def("direct_loc_dtm", py::overload_cast<double,
+                                        double,
+                                        DTMIntersection>
+                                        (&GeoModelTemplate::direct_loc_dtm, py::const_))
+
+        .def("direct_loc_dtm", py::overload_cast<std::vector<double> const&,
+                                        std::vector<double> const&,
+                                        DTMIntersection>
+                                        (&GeoModelTemplate::direct_loc_dtm, py::const_))
+
+        .def("inverse_loc",py::overload_cast<double,
+                                        double,
+                                        double>
+                                        (&GeoModelTemplate::inverse_loc, py::const_))
+
+        .def("inverse_loc",py::overload_cast<std::vector<double> const&,
+                                        std::vector<double> const&,
+                                        std::vector<double> const&>
+                                        (&GeoModelTemplate::inverse_loc, py::const_));
+
+
+    py::class_<RPC,GeoModelTemplate>(m, "RPC")
         .def(py::init<bool,
                 bool,
                 std::array<double, 20>,
@@ -76,19 +109,50 @@ PYBIND11_MODULE(bindings_cpp, m) {
                 std::array<double, 20>,
                 std::array<double, 20>,
                 std::array<double, 10>>())
-        .def("direct_loc_h", &RPC::direct_loc_h)//spécifier le type le type d'entrée
+        .def("direct_loc_h", py::overload_cast<double,
+                                                double,
+                                                double,
+                                                bool>
+                                                (&RPC::direct_loc_h, py::const_))
+
+        .def("direct_loc_h", py::overload_cast<std::vector<double> const&,
+                                                std::vector<double> const&,
+                                                std::vector<double> const&,bool>
+                                                (&RPC::direct_loc_h, py::const_))
+
         .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
-        .def("direct_loc_dtm", &RPC::direct_loc_dtm)
-        .def("inverse_loc",py::overload_cast<double, double, double>(&RPC::inverse_loc, py::const_) )
-        .def("inverse_loc",py::overload_cast<std::vector<double> const&, std::vector<double> const&, std::vector<double> const&>(&RPC::inverse_loc, py::const_) )
+
+        .def("direct_loc_dtm", py::overload_cast<double,
+                                                double,
+                                                DTMIntersection>
+                                                (&RPC::direct_loc_dtm, py::const_))
+
+        .def("direct_loc_dtm", py::overload_cast<std::vector<double> const&,
+                                                std::vector<double> const&,
+                                                DTMIntersection>
+                                                (&RPC::direct_loc_dtm, py::const_))
+
+        .def("inverse_loc",py::overload_cast<double,
+                                        double,
+                                        double>
+                                        (&RPC::inverse_loc, py::const_))
+
+        .def("inverse_loc",py::overload_cast<std::vector<double> const&,
+                                        std::vector<double> const&,
+                                        std::vector<double> const&>
+                                        (&RPC::inverse_loc, py::const_))
 
         .def("filter_coordinates", &RPC::filter_coordinates)
 
-        .def("compute_loc_inverse_derivates",
-                (std::tuple<double,double,double,double> (RPC::*)
-                 (double,double,double)) &RPC::compute_loc_inverse_derivates)
+        .def("compute_loc_inverse_derivates", &RPC::compute_loc_inverse_derivates)
 
-        .def("direct_loc_inverse_iterative", &RPC::direct_loc_inverse_iterative)
+        .def("direct_loc_inverse_iterative",py::overload_cast<double,double,double,int,bool>\
+                (&RPC::direct_loc_inverse_iterative, py::const_))
+
+        .def("direct_loc_inverse_iterative",py::overload_cast<std::vector<double> const&,\
+                std::vector<double> const&,std::vector<double> const&,int,bool>\
+                (&RPC::direct_loc_inverse_iterative, py::const_))
+
         .def("get_alt_min_max", &RPC::get_alt_min_max)
         .def("los_extrema", &RPC::los_extrema)
         .def("get_num_col", &RPC::get_num_col)
@@ -118,8 +182,8 @@ PYBIND11_MODULE(bindings_cpp, m) {
             "Compute rational function polynomial for only one point");
 
     m.def("compute_rational_function_polynomial", &compute_rational_function_polynomial,
-            "Compute rational function polynomial. Useful to compute direct and inverse localization"
-            "using direct or inverse RPC.");
+        "Compute rational function polynomial. Useful to compute direct and inverse localization"
+        "using direct or inverse RPC.");
 
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude,
             "Compute latitude derivative polynomial equation");
@@ -132,6 +196,41 @@ PYBIND11_MODULE(bindings_cpp, m) {
     
     m.def("compute_epipolar_angle", &compute_epipolar_angle,
             "compute epipolar angle");
+
+
+
+
+m.def("coloc", py::overload_cast <GeoModelTemplate const&,
+                                GeoModelTemplate const&,
+                                vector<double> const&,
+                                vector<double> const&,
+                                DTMIntersection>(&coloc));
+
+m.def("coloc", py::overload_cast<GeoModelTemplate const&,
+                                GeoModelTemplate const&,
+                                double,
+                                double,
+                                DTMIntersection>(&coloc));
+
+m.def("coloc", py::overload_cast<GeoModelTemplate const&,
+                                GeoModelTemplate const&,
+                                vector<double> const&,
+                                vector<double> const&,
+                                vector<double> const&>(&coloc));
+
+m.def("coloc", py::overload_cast<GeoModelTemplate const&,
+                                GeoModelTemplate const&,
+                                double,
+                                double,
+                                double>(&coloc));
+
+m.def("moving_along_axis", &moving_along_axis<DTMIntersection>);
+m.def("moving_along_axis", &moving_along_axis<double>);
+
+m.def("compute_local_epipolar_line", &compute_local_epipolar_line<DTMIntersection>);
+m.def("compute_local_epipolar_line", &compute_local_epipolar_line<double>);
+
+
 }
 
 //c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)

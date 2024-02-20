@@ -20,15 +20,16 @@ limitations under the License.
 */
 
 /**
-Thes purpose of this module is only to "bind" cpp code.
-It gives to the compiler the instructions to compile the usefull cpp code into an .so file
-which is callable in a python code as a python module.
+Rectification function
 */
 
 #include <vector>
 #include <array>
 #include <cmath>
 #include <iostream>
+
+#include "GeoModelTemplate.hpp"
+#include "localization.cpp"
 
 using namespace std;
 
@@ -133,3 +134,86 @@ double compute_epipolar_angle(array<double,3> const& end_line,
 
 //     return alpha;
 // }
+
+
+template <typename T>
+tuple<array<double,3>,array<double,3>> moving_along_axis(GeoModelTemplate const& geom_model_left,
+                                                        GeoModelTemplate const&  geom_model_right,
+                                                        array<double,3>          current_coords,
+                                                        double                   spacing,
+                                                        const T&                 elevation,
+                                                        int                      epi_step,
+                                                        double                   epi_angles,
+                                                        int                      axis
+){
+
+    //Check axis
+    if (axis != 0 && axis != 1){
+        throw runtime_error("axis value is not available");
+    }
+
+    epi_angles = epi_angles + (1 - axis) * M_PI / 2. ;
+
+    double unit_vector_along_epi_x = epi_step * spacing * cos(epi_angles);
+    double unit_vector_along_epi_y = epi_step * spacing * sin(epi_angles);
+
+    double next_left_0 = current_coords[0] + unit_vector_along_epi_y;
+    double next_left_1 = current_coords[1] + unit_vector_along_epi_x;
+    double next_left_2 = current_coords[2];
+
+    // Find the corresponding next pixels in the right image
+    double next_right_0;
+    double next_right_1;
+    double next_right_2;
+
+    tie(next_right_0, next_right_1, next_right_2) = coloc(
+        geom_model_left, geom_model_right, next_left_0, next_left_1, elevation
+    );
+
+    array<double,3> next_left = {next_left_0, next_left_1, next_left_2};
+    array<double,3> next_right = {next_right_0, next_right_1, next_right_2};
+    return {next_left,next_right};
+
+}
+
+template <typename T>
+tuple<array<double,3>,array<double,3>> compute_local_epipolar_line(
+                                                    GeoModelTemplate const& geom_model_left,
+                                                    GeoModelTemplate const& geom_model_right,
+                                                    array<double,3>         left_point,
+                                                    const T&                elevation,
+                                                    double                  elevation_offset
+){
+    // Right correspondent of the left coordinate
+    double right_corr_0;
+    double right_corr_1;
+    double right_corr_2;
+    tie(right_corr_0, right_corr_1,right_corr_2) = coloc(
+        geom_model_left, geom_model_right, left_point[0], left_point[1], elevation
+    );
+    double ground_elev = right_corr_2;
+
+    // Find the beginning of the epipolar line in the left image, using right
+    // correspondent at lower elevation
+    right_corr_2 = ground_elev - elevation_offset;
+    double epi_line_start_0;
+    double epi_line_start_1;
+    double epi_line_start_2;
+    tie(epi_line_start_0, epi_line_start_1, epi_line_start_2) = coloc(
+        geom_model_right, geom_model_left, right_corr_0, right_corr_1,right_corr_2
+    );
+
+    // Find the ending of the epipolar line in the left image, using right
+    // correspondent at higher elevation
+    right_corr_2 = ground_elev + elevation_offset;
+    double epi_line_end_0;
+    double epi_line_end_1;
+    double epi_line_end_2;
+    tie(epi_line_end_0, epi_line_end_1, epi_line_end_2) = coloc(
+        geom_model_right, geom_model_left, right_corr_0, right_corr_1,right_corr_2
+    );
+
+    array<double,3> epi_line_start = {epi_line_start_0, epi_line_start_1, epi_line_start_2};
+    array<double,3> epi_line_end = {epi_line_end_0, epi_line_end_1, epi_line_end_2};
+    return {epi_line_start, epi_line_end};
+}

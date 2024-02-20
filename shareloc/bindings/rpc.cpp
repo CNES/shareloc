@@ -79,6 +79,38 @@ RPC::RPC(bool inverse_coefficient_input,
     m_alt_minmax = {m_offset_alt - m_scale_alt, m_offset_alt + m_scale_alt};
 }
 
+tuple<double,double,double> RPC::direct_loc_h(
+    double row,
+    double col,
+    double alt,
+    bool fill_nan) const
+{
+    if (m_direct_coefficient){
+        return compute_rational_function_polynomial_unitary(
+            col,
+            row,
+            alt,
+            m_num_lon,
+            m_den_lon,
+            m_num_lat,
+            m_den_lat,
+            m_scale_col,
+            m_offset_col,
+            m_scale_row,
+            m_offset_row,
+            m_scale_alt,
+            m_offset_alt,
+            m_scale_lon,
+            m_offset_lon,
+            m_scale_lat,
+            m_offset_lat
+        );
+
+    }else{
+        return direct_loc_inverse_iterative(row, col, alt, 10, fill_nan);
+    }
+}
+
 tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
     vector<double> const& row,
     vector<double> const& col,
@@ -130,6 +162,49 @@ tuple<vector<vector<double>>,vector<vector<double>>> RPC::direct_loc_grid_h(
 {
     tuple<vector<vector<double>>,vector<vector<double>>> res;
     return res;
+}
+
+tuple<double,double,double> RPC::direct_loc_dtm(
+    double row,
+    double col,
+    DTMIntersection dtm) const
+{
+    if(dtm.get_epsg() != 4326){
+        throw runtime_error("C++ : direct_loc_dtm : epsg!=4326 -> Exiting");
+    }
+
+    double min_dtm = dtm.get_alt_min() - 1.0;
+    double max_dtm = dtm.get_alt_max() + 1.0;
+    
+    vector<double> lon (2);
+    vector<double> lat (2);
+    vector<double> alt (2);
+    bool var;//garbage variable
+    bool solution;
+    array<double,3> position_cube;
+    double alti;
+    vector<double> los_index_x (2);
+    vector<double> los_index_y (2);
+    vector<double> los_index_z (2);
+    double position_x;
+    double position_y;
+    double position_z;
+
+    tie(lon, lat, alt) = los_extrema(row, col, min_dtm, max_dtm);
+    tie(var, solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
+    dtm.intersect_dtm_cube(lon, lat, alt);
+    
+    if(solution){
+        tie(var, var, position_x, position_y, position_z) =\
+        dtm.intersection(los_index_x, los_index_y, los_index_z, position_cube, alti);
+    }
+    else{
+        position_x = numeric_limits<double>::quiet_NaN(); 
+        position_y = numeric_limits<double>::quiet_NaN(); 
+        position_z = numeric_limits<double>::quiet_NaN(); 
+    }
+
+    return {position_x,position_y,position_z};
 }
 
 tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_dtm(
@@ -329,6 +404,76 @@ RPC::compute_loc_inverse_derivates(
     double drow_dlat = m_scale_row / m_scale_lat * (num_drow_dlat * den_drow - den_drow_dlat * num_drow) / (den_drow*den_drow);
 
     return {dcol_dlon, dcol_dlat, drow_dlon, drow_dlat};
+}
+
+tuple<double,double,double> RPC::direct_loc_inverse_iterative(
+    double row,
+    double col,
+    double alt,
+    int nb_iter_max,
+    bool fill_nan)const
+{
+
+    double lon_out;
+    double lat_out;
+
+    // desired precision in pixels
+    constexpr double eps = 1e-6;
+
+    // Nan Filtering : if input nan -> output nan
+    if(isnan(row) || isnan(col)){
+        lon_out = numeric_limits<double>::quiet_NaN();
+        lat_out = numeric_limits<double>::quiet_NaN();
+        return {lon_out, lat_out, alt};
+    }
+    else{
+        lon_out = m_offset_lon;
+        lat_out = m_offset_lat;
+    }
+
+    auto const [row_start, col_start, alt_start] = inverse_loc(lon_out, lat_out, alt);
+    (void) alt_start; // disable "unused variable"
+
+    // computing the residue between the sensor positions and those estimated
+    //by the inverse localization
+    double delta_col = col - col_start;
+    double delta_row = row - row_start;
+
+
+    // while the required precision is not achieved
+    int iteration = 0;
+    while ((abs(delta_col) > eps || abs(delta_row) > eps) && iteration < nb_iter_max){
+
+        // partial derivatives
+        auto const [dcol_dlon, dcol_dlat, drow_dlon, drow_dlat] = compute_loc_inverse_derivates(
+            lon_out, lat_out, alt
+        );
+
+
+        double const det = dcol_dlon * drow_dlat - drow_dlon * dcol_dlat;
+
+        double const delta_lon = (drow_dlat * delta_col - dcol_dlat * delta_row) / det;
+        double const delta_lat = (-drow_dlon * delta_col + dcol_dlon * delta_row) / det;
+
+        // update ground coordinates
+        lon_out = lon_out + delta_lon;
+        lat_out = lat_out + delta_lat;
+
+
+
+        auto const [row_estim,col_estim,alt_estim] = inverse_loc(lon_out, lat_out, alt);
+        (void) alt_estim; // disable "unused variable"
+        //5e-11 = maxerror w/r to python and alt_estim useless
+
+        // updating the residue between the sensor positions
+        // and those estimated by the inverse localization
+        delta_col = col - col_estim;
+        delta_row = row - row_estim;
+
+        ++iteration;
+    }
+
+    return {lon_out, lat_out, alt};
 }
 
 tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iterative(

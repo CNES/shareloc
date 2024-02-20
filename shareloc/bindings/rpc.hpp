@@ -25,6 +25,7 @@ limitations under the License.
 #define RPC_H
 
 #include "dtm_intersection.hpp"
+#include "GeoModelTemplate.hpp"
 
 #include <string>
 #include <vector>
@@ -39,7 +40,7 @@ limitations under the License.
   Framework of the RPC python class.
  */
 
-class RPC
+class RPC : public GeoModelTemplate
 {
 public:
 
@@ -57,11 +58,18 @@ public:
         std::array<double, 10> const& norm_coeffs);
 
     /**direct_loc_h*/
+    std::tuple<double,double,double> direct_loc_h(
+        double row,
+        double col,
+        double alt,
+        bool fill_nan=false) const override;
+
+    /**direct_loc_h*/
     std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> direct_loc_h(
         std::vector<double> const& row,
         std::vector<double> const& col,
         std::vector<double> const& alt,
-        bool fill_nan=false) const;
+        bool fill_nan=false) const override;
 
     /**direct_loc_grid_h*/
     std::tuple<std::vector<std::vector<double>>,std::vector<std::vector<double>>> direct_loc_grid_h(
@@ -73,23 +81,29 @@ public:
         int nbcol,
         double alt) const;
 
+    /**direct_loc_dtm unitary*/
+    std::tuple<double,double,double> direct_loc_dtm(
+    double row,
+    double col,
+    DTMIntersection dtm) const override;
+
     /**direct_loc_dtm*/
     std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> direct_loc_dtm(
         std::vector<double> const& row,
         std::vector<double> const& col,
-        DTMIntersection dtm) const;//override + dtm is a python class not a std::string
+        DTMIntersection dtm) const;//override
 
     /**inverse_loc unitary*/
     std::tuple<double,double,double> inverse_loc(
         double lon,
         double lat,
-        double alt)const;
+        double alt)const override;
 
     /**inverse_loc*/
     std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> inverse_loc(
         std::vector<double> const& lon,
         std::vector<double> const& lat,
-        std::vector<double> const& alt)const;// override;
+        std::vector<double> const& alt)const override;
 
     /**filter_coordinates*/
     std::tuple<std::vector<bool>,std::vector<double>,std::vector<double>> filter_coordinates(
@@ -104,6 +118,15 @@ public:
         double lon,
         double lat,
         double alt) const;
+
+    /**direct_loc_inverse_iterative*/
+    std::tuple<double, double, double>
+    direct_loc_inverse_iterative(
+        double row,
+        double col,
+        double alt,
+        int nb_iter_max=10,
+        bool fill_nan=false)const;
 
     /**direct_loc_inverse_iterative*/
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>

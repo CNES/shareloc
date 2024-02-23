@@ -43,6 +43,9 @@ class DTMIntersection
 
 public:
 
+    /**Constructor empty*/
+    DTMIntersection();
+
     /**Constructor*/
     DTMIntersection(
         int dtm_image_epsg,
@@ -51,7 +54,7 @@ public:
         int dtm_image_nb_rows,
         int dtm_image_nb_columns,
         std::tuple<double,double,double,double,double,double> dtm_image_transform
-    );//determiner comment passer les arg
+    );
 
     /**eq_plan*/
     double eq_plan(int i, std::array<double, 3> const& position)const;
@@ -117,9 +120,9 @@ public:
     /**get_plane_coef_d*/
     std::array<double,6> const& get_plane_coef_d() const noexcept {return m_plane_coef_d;};
     /**get_alt_min_cell*/
-    std::vector<double> get_alt_min_cell() const noexcept {return m_alt_min_cell;};
+    std::vector<double> const& get_alt_min_cell() const noexcept {return m_alt_min_cell;};
     /**get_alt_max_cell*/
-    std::vector<double> get_alt_max_cell() const noexcept {return m_alt_max_cell;};
+    std::vector<double> const& get_alt_max_cell() const noexcept {return m_alt_max_cell;};
     /**get_tol_z*/
     double get_tol_z() const noexcept {return m_tol_z;};// = 0.0001
     /**get_epsg*/
@@ -134,6 +137,42 @@ public:
     int get_nb_rows() const noexcept {return m_nb_rows;};
     /**get_nb_columns*/
     int get_nb_columns() const noexcept {return m_nb_columns;};
+
+    //-- setter --//
+
+    /**set_alt_data*/
+    void set_alt_data(std::vector<double> const& a) noexcept {m_alt_data = a;};
+    /**set_alt_min*/
+    void set_alt_min(double a) noexcept {m_alt_min = a;};
+    /**set_alt_max*/
+    void set_alt_max(double a) noexcept {m_alt_max = a;};
+    /**set_plane_coef_a*/
+    void set_plane_coef_a(std::array<double,6> const& a) noexcept {m_plane_coef_a = a;};
+    /**set_plane_coef_b*/
+    void set_plane_coef_b(std::array<double,6> const& a) noexcept {m_plane_coef_b = a;};
+    /**set_plane_coef_c*/
+    void set_plane_coef_c(std::array<double,6> const& a) noexcept {m_plane_coef_c = a;};
+    /**set_plane_coef_d*/
+    void set_plane_coef_d(std::array<double,6> const& a) noexcept {m_plane_coef_d = a;};
+    /**set_alt_min_cell*/
+    void set_alt_min_cell(std::vector<double> const& a) noexcept {m_alt_min_cell = a;};
+    /**set_alt_max_cell*/
+    void set_alt_max_cell(std::vector<double> const& a) noexcept {m_alt_max_cell = a;};
+    /**set_tol_z*/
+    void set_tol_z(double a) noexcept {m_tol_z = a;};// = 0.0001
+    /**set_epsg*/
+    void set_epsg(int a) noexcept {m_epsg = a;};
+    /**set_plans*/
+    void set_plans(std::vector<double> const& a) noexcept {m_plans = a;};
+    /**get trans_inv*/
+    void set_trans_inv(std::array<double,6> const& a) noexcept {m_trans_inv = a;};
+    /**set_transform*/
+    void set_transform(std::array<double,6> const& a) noexcept {m_transform = a;};
+    /**set_nb_rows*/
+    void set_nb_rows(int a) noexcept {m_nb_rows = a;};
+    /**set_nb_columns*/
+    void set_nb_columns(int a) noexcept {m_nb_columns = a;};
+
 
 
 

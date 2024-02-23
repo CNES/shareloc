@@ -36,6 +36,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(bindings_cpp, m) {
 
     py::class_<DTMIntersection>(m, "DTMIntersection")
+        .def(py::init<>())
         .def(py::init<int,py::array_t<double, py::array::c_style | py::array::forcecast> \
                 ,int,int,std::tuple<double,double,double,double,double,double>>())
         .def("eq_plan", &DTMIntersection::eq_plan)
@@ -62,7 +63,72 @@ PYBIND11_MODULE(bindings_cpp, m) {
         .def("get_trans_inv", &DTMIntersection::get_trans_inv)
         .def("get_transform", &DTMIntersection::get_transform)
         .def("get_nb_rows", &DTMIntersection::get_nb_rows)
-        .def("get_nb_columns", &DTMIntersection::get_nb_columns);
+        .def("get_nb_columns", &DTMIntersection::get_nb_columns)
+        .def("set_alt_data", &DTMIntersection::set_alt_data)
+        .def("set_alt_min", &DTMIntersection::set_alt_min)
+        .def("set_alt_max", &DTMIntersection::set_alt_max)
+        .def("set_plane_coef_a", &DTMIntersection::set_plane_coef_a)
+        .def("set_plane_coef_b", &DTMIntersection::set_plane_coef_b)
+        .def("set_plane_coef_c", &DTMIntersection::set_plane_coef_c)
+        .def("set_plane_coef_d", &DTMIntersection::set_plane_coef_d)
+        .def("set_alt_min_cell", &DTMIntersection::set_alt_min_cell)
+        .def("set_alt_max_cell", &DTMIntersection::set_alt_max_cell)
+        .def("set_tol_z", &DTMIntersection::set_tol_z)
+        .def("set_epsg", &DTMIntersection::set_epsg)
+        .def("set_plans", &DTMIntersection::set_plans)
+        .def("set_trans_inv", &DTMIntersection::set_trans_inv)
+        .def("set_transform", &DTMIntersection::set_transform)
+        .def("set_nb_rows", &DTMIntersection::set_nb_rows)
+        .def("set_nb_columns", &DTMIntersection::set_nb_columns)
+        .def(py::pickle(
+                [](const DTMIntersection &p) { // __getstate__
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(
+                        p.get_alt_data(),
+                        p.get_alt_min(),
+                        p.get_alt_max(),
+                        p.get_plane_coef_a(),
+                        p.get_plane_coef_b(),
+                        p.get_plane_coef_c(),
+                        p.get_plane_coef_d(),
+                        p.get_alt_min_cell(),
+                        p.get_alt_max_cell(),
+                        p.get_tol_z(),
+                        p.get_epsg(),
+                        p.get_plans(),
+                        p.get_trans_inv(),
+                        p.get_transform(),
+                        p.get_nb_rows(),
+                        p.get_nb_columns());
+                },
+                [](py::tuple t) { // __setstate__
+                if (t.size() != 16)
+                        throw std::runtime_error("Invalid state!");
+
+                /* Create a new C++ instance */
+                DTMIntersection p;
+
+                /* Assign any additional state */
+                p.set_alt_data(t[0].cast<std::vector<double>>());
+                p.set_alt_min(t[1].cast<double>());
+                p.set_alt_max(t[2].cast<double>());
+                p.set_plane_coef_a(t[3].cast<std::array<double,6>>());
+                p.set_plane_coef_b(t[4].cast<std::array<double,6>>());
+                p.set_plane_coef_c(t[5].cast<std::array<double,6>>());
+                p.set_plane_coef_d(t[6].cast<std::array<double,6>>());
+                p.set_alt_min_cell(t[7].cast<std::vector<double>>());
+                p.set_alt_max_cell(t[8].cast<std::vector<double>>());
+                p.set_tol_z(t[9].cast<double>());
+                p.set_epsg(t[10].cast<int>());
+                p.set_plans(t[11].cast<std::vector<double>>());
+                p.set_trans_inv(t[12].cast<std::array<double,6>>());
+                p.set_transform(t[13].cast<std::array<double,6>>());
+                p.set_nb_rows(t[14].cast<int>());
+                p.set_nb_columns(t[15].cast<int>());
+
+                return p;
+                }
+        ));
 
     py::class_<GeoModelTemplate>(m, "GeoModelTemplate")
         .def(py::init<>())

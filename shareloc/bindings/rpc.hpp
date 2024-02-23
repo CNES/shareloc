@@ -85,13 +85,13 @@ public:
     std::tuple<double,double,double> direct_loc_dtm(
     double row,
     double col,
-    DTMIntersection dtm) const override;
+    DTMIntersection const& dtm) const override;
 
     /**direct_loc_dtm*/
     std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> direct_loc_dtm(
         std::vector<double> const& row,
         std::vector<double> const& col,
-        DTMIntersection dtm) const;//override
+        DTMIntersection const& dtm) const;//override
 
     /**inverse_loc unitary*/
     std::tuple<double,double,double> inverse_loc(

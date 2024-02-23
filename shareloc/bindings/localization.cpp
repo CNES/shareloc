@@ -36,7 +36,7 @@ tuple<vector<double>,vector<double>,vector<double>> coloc(GeoModelTemplate const
                                         GeoModelTemplate const& geom2,
                                         vector<double> const& vector_row,
                                         vector<double> const& vector_col,
-                                        DTMIntersection elevation){
+                                        DTMIntersection const& elevation){
 
     size_t nb_points = vector_row.size();
     vector<double> lon(nb_points);
@@ -51,7 +51,7 @@ tuple<double,double,double> coloc(GeoModelTemplate const& geom1,
                                     GeoModelTemplate const& geom2,
                                     double row,
                                     double col,
-                                    DTMIntersection elevation){
+                                    DTMIntersection const& elevation){
 
     double lon;
     double lat;

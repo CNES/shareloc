@@ -78,12 +78,12 @@ PYBIND11_MODULE(bindings_cpp, m) {
 
         .def("direct_loc_dtm", py::overload_cast<double,
                                         double,
-                                        DTMIntersection>
+                                        DTMIntersection const&>
                                         (&GeoModelTemplate::direct_loc_dtm, py::const_))
 
         .def("direct_loc_dtm", py::overload_cast<std::vector<double> const&,
                                         std::vector<double> const&,
-                                        DTMIntersection>
+                                        DTMIntersection const&>
                                         (&GeoModelTemplate::direct_loc_dtm, py::const_))
 
         .def("inverse_loc",py::overload_cast<double,
@@ -124,12 +124,12 @@ PYBIND11_MODULE(bindings_cpp, m) {
 
         .def("direct_loc_dtm", py::overload_cast<double,
                                                 double,
-                                                DTMIntersection>
+                                                DTMIntersection const&>
                                                 (&RPC::direct_loc_dtm, py::const_))
 
         .def("direct_loc_dtm", py::overload_cast<std::vector<double> const&,
                                                 std::vector<double> const&,
-                                                DTMIntersection>
+                                                DTMIntersection const&>
                                                 (&RPC::direct_loc_dtm, py::const_))
 
         .def("inverse_loc",py::overload_cast<double,
@@ -204,13 +204,13 @@ m.def("coloc", py::overload_cast <GeoModelTemplate const&,
                                 GeoModelTemplate const&,
                                 vector<double> const&,
                                 vector<double> const&,
-                                DTMIntersection>(&coloc));
+                                DTMIntersection const&>(&coloc));
 
 m.def("coloc", py::overload_cast<GeoModelTemplate const&,
                                 GeoModelTemplate const&,
                                 double,
                                 double,
-                                DTMIntersection>(&coloc));
+                                DTMIntersection const&>(&coloc));
 
 m.def("coloc", py::overload_cast<GeoModelTemplate const&,
                                 GeoModelTemplate const&,
@@ -224,13 +224,16 @@ m.def("coloc", py::overload_cast<GeoModelTemplate const&,
                                 double,
                                 double>(&coloc));
 
-m.def("moving_along_axis", &moving_along_axis<DTMIntersection>);
+m.def("moving_along_axis", &moving_along_axis<DTMIntersection const&>);
 m.def("moving_along_axis", &moving_along_axis<double>);
 
-m.def("compute_local_epipolar_line", &compute_local_epipolar_line<DTMIntersection>);
+m.def("compute_local_epipolar_line", &compute_local_epipolar_line<DTMIntersection const&>);
 m.def("compute_local_epipolar_line", &compute_local_epipolar_line<double>);
 
-
+m.def("compute_strip_of_epipolar_grid", &compute_strip_of_epipolar_grid<DTMIntersection const&>,
+        "compute_strip_of_epipolar_grid");
+m.def("compute_strip_of_epipolar_grid", &compute_strip_of_epipolar_grid<double>,
+        "compute_strip_of_epipolar_grid");
 }
 
 //c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)

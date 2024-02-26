@@ -24,6 +24,7 @@ Test module for localisation class shareloc/bindings/dtm_intersection.cpp
 # pylint: disable=duplicate-code
 # Standard imports
 import os
+import pickle
 
 import numpy as np
 
@@ -35,6 +36,7 @@ from shareloc.dtm_reader import dtm_reader
 
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
+from shareloc.geomodels import GeoModel
 
 # Shareloc test imports
 from ..helpers import data_path
@@ -42,7 +44,7 @@ from ..helpers import data_path
 
 @pytest.mark.unit_tests
 @pytest.mark.parametrize(
-    "roi,roi_phys,fill_nodata,fill_value",  # add read_data arg once #293 finished
+    "roi,roi_phys,fill_nodata,fill_value",
     [
         (None, False, None, 0.0),
         ([256, 256, 512, 512], False, None, 0.0),
@@ -50,7 +52,7 @@ from ..helpers import data_path
         (None, False, "mean", 12.0),
     ],
 )
-def test_constructor(roi, roi_phys, fill_nodata, fill_value):  # TODO : add more constructor use cases  before merge
+def test_constructor(roi, roi_phys, fill_nodata, fill_value):
     """
     Test DTMIntersection cpp constructor
     """
@@ -451,3 +453,90 @@ def test_intersection():
     assert point_r_py[0] == point_r_x_cpp
     assert point_r_py[1] == point_r_y_cpp
     assert point_r_py[2] == point_r_z_cpp
+
+
+@pytest.mark.unit_tests
+@pytest.mark.parametrize(
+    "roi,roi_phys,fill_nodata,fill_value",
+    [
+        (None, False, None, 0.0),
+        ([256, 256, 512, 512], False, None, 0.0),
+        ([44.57333333333334, 5.426666666666667, 44.36, 5.64], True, None, 0.0),
+        (None, False, "mean", 12.0),
+    ],
+)
+def test_serialization(roi, roi_phys, fill_nodata, fill_value):
+    """
+    Test DTMIntersection serialization
+    """
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
+    dtm_image = dtm_reader(
+        dtm_file,
+        geoid_file,
+        read_data=True,
+        roi=roi,
+        roi_is_in_physical_space=roi_phys,
+        fill_nodata=fill_nodata,
+        fill_value=fill_value,
+    )
+
+    dtm_original = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    data = pickle.dumps(dtm_original)
+    dtm_deserialized = pickle.loads(data)
+
+    np.testing.assert_array_equal(
+        np.array(dtm_deserialized.get_alt_min_cell()), np.array(dtm_original.get_alt_min_cell())
+    )
+    np.testing.assert_array_equal(
+        np.array(dtm_deserialized.get_alt_max_cell()), np.array(dtm_original.get_alt_max_cell())
+    )
+
+    np.testing.assert_array_equal(np.array(dtm_deserialized.get_alt_data()), np.array(dtm_original.get_alt_data()))
+
+    np.testing.assert_array_equal(
+        np.array(dtm_deserialized.get_plane_coef_a()), np.array(dtm_original.get_plane_coef_a())
+    )
+    np.testing.assert_array_equal(
+        np.array(dtm_deserialized.get_plane_coef_b()), np.array(dtm_original.get_plane_coef_b())
+    )
+    np.testing.assert_array_equal(
+        np.array(dtm_deserialized.get_plane_coef_c()), np.array(dtm_original.get_plane_coef_c())
+    )
+    np.testing.assert_array_equal(
+        np.array(dtm_deserialized.get_plane_coef_d()), np.array(dtm_original.get_plane_coef_d())
+    )
+
+    np.testing.assert_array_equal(np.array(dtm_deserialized.get_plans()), np.array(dtm_original.get_plans()))
+
+    assert dtm_deserialized.get_alt_min() == dtm_original.get_alt_min()
+    assert dtm_deserialized.get_alt_max() == dtm_original.get_alt_max()
+
+    assert dtm_deserialized.get_tol_z() == dtm_original.get_tol_z()
+    assert dtm_deserialized.get_epsg() == dtm_original.get_epsg()
+
+    assert dtm_deserialized.get_nb_rows() == dtm_original.get_nb_rows()
+    assert dtm_deserialized.get_nb_columns() == dtm_original.get_nb_columns()
+
+    np.testing.assert_array_equal(np.array(dtm_deserialized.get_trans_inv()), np.array(dtm_original.get_trans_inv()))
+    np.testing.assert_array_equal(np.array(dtm_deserialized.get_transform()), np.array(dtm_original.get_transform()))
+
+    # Test intersection
+
+    rpc_file = os.path.join(data_path(), "rpc/phr_ventoux/RPC_PHR1B_P_201308051042194_SEN_690908101-001.XML")
+    rpc_optim = GeoModel(rpc_file, "RPCoptim")
+
+    rows = [i * 10 for i in range(10)]
+    cols = [i * 10 for i in range(10)]
+
+    res_original = rpc_optim.direct_loc_dtm(rows, cols, dtm_original)
+    res_deserialized = rpc_optim.direct_loc_dtm(rows, cols, dtm_deserialized)
+
+    np.testing.assert_array_equal(res_original, res_deserialized)

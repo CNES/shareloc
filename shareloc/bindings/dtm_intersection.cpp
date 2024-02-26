@@ -29,6 +29,8 @@ namespace py = pybind11;
 
 //---- DTMIntersection methodes ----//
 
+DTMIntersection::DTMIntersection(){}
+
 DTMIntersection::DTMIntersection(
         int dtm_image_epsg,
         py::array_t<double, py::array::c_style | py::array::forcecast> dtm_image_alt_data,

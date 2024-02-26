@@ -619,14 +619,10 @@ class Grid(GeoModelTemplate):
         col = (1 - h_x) * col_min + h_x * col_max
         row = (1 - h_x) * row_min + h_x * row_max
 
-        if row > self.rowmax:
-            row = self.rowmax
-        if row < self.row0:
-            row = self.row0
-        if col > self.colmax:
-            col = self.colmax
-        if col < self.col0:
-            col = self.col0
+        row = min(row, self.rowmax)
+        row = max(row, self.row0)
+        col = min(col, self.colmax)
+        col = max(col, self.col0)
         return row, col, is_extrapolated
 
     # gitlab issue #58

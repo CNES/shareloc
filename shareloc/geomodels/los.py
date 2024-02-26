@@ -91,6 +91,10 @@ class LOS:
         #
         #  direction vector creation
         vis_norm = np.linalg.norm(vis, axis=1)
+
+        # discard null norm vis = sis
+        vis_norm[vis_norm == 0] = np.nan
+
         rep_vis_norm = np.tile(vis_norm, (3, 1)).transpose()
         self._viewing_vectors = vis / rep_vis_norm
 

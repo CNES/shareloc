@@ -34,6 +34,7 @@ limitations under the License.
 #include <array>
 #include <algorithm>
 #include <numeric>
+#include <string>
 
 /**
   Class RPC
@@ -105,14 +106,6 @@ public:
         std::vector<double> const& lat,
         std::vector<double> const& alt)const override;
 
-    /**filter_coordinates*/
-    std::tuple<std::vector<bool>,std::vector<double>,std::vector<double>> filter_coordinates(
-        std::vector<double> const& first_coord,
-        std::vector<double> const& second_coord,
-        bool fill_nan=false,
-        std::string direction="direct")const;
-
-
     /**compute_loc_inverse_derivates unitary*/
     std::tuple<double, double, double, double> compute_loc_inverse_derivates(
         double lon,
@@ -149,6 +142,62 @@ public:
         double alt_max,
         bool fill_nan=false) const;
 
+    /**compute_rational_function_polynomial_unitary*/
+    std::tuple<double,double,double>
+    compute_rational_function_polynomial_unitary(
+        double lon_col,
+        double lat_row,
+        double alt,
+        std::array<double, 20> const& num_col,
+        std::array<double, 20> const& den_col,
+        std::array<double, 20> const& num_lin,
+        std::array<double, 20> const& den_lin,
+        bool fill_nan,
+        std::string direction,
+
+        //input
+        double scale_lon_col,
+        double offset_lon_col,
+        double scale_lat_row,
+        double offset_lat_row,
+        double scale_alt,
+        double offset_alt,
+
+        //output
+        double scale_col,
+        double offset_col,
+        double scale_lin,
+        double offset_lin
+    ) const;
+
+    /**compute_rational_function_polynomial*/
+    std::tuple<std::vector<double>,
+    std::vector<double>,
+    std::vector<double>>compute_rational_function_polynomial(
+        std::vector<double> const& lon_col,
+        std::vector<double> const& lat_row,
+        std::vector<double> const& alt,
+        std::array<double, 20> const& num_col,
+        std::array<double, 20> const& den_col,
+        std::array<double, 20> const& num_lin,
+        std::array<double, 20> const& den_lin,
+        bool fill_nan,
+        std::string direction,
+
+        //input
+        double scale_lon_col,
+        double offset_lon_col,
+        double scale_lat_row,
+        double offset_lat_row,
+        double scale_alt,
+        double offset_alt,
+
+        //output
+        double scale_col,
+        double offset_col,
+        double scale_lin,
+        double offset_lin
+    ) const;
 
     //-- getter --//
 
@@ -246,60 +295,6 @@ std::array<double, 20> pre_polynomial_equation(
 double polynomial_equation(
         std::array<double, 20> const& norms,
         std::array<double, 20> const& coeffs);
-
-/** compute_rational_function_polynomial unitary*/
-std::tuple<double,double,double> compute_rational_function_polynomial_unitary(
-    double lon_col_norm,
-    double lat_row_norm,
-    double alt_norm,
-    std::array<double, 20> const& num_col,
-    std::array<double, 20> const& den_col,
-    std::array<double, 20> const& num_lin,
-    std::array<double, 20> const& den_lin,
-
-    //input
-    double scale_lon_col,
-    double offset_lon_col,
-    double scale_lat_row,
-    double offset_lat_row,
-    double scale_alt,
-    double offset_alt,
-
-    //output
-    double scale_col,
-    double offset_col,
-    double scale_lin,
-    double offset_lin
-);
-
-
-/**Compute rational function polynomial. Useful to compute direct and inverse localization
-        "using direct or inverse RPC."*/
-std::tuple<std::vector<double>, std::vector<double>, std::vector<double>>
-compute_rational_function_polynomial(
-    std::vector<double> const& lon_col_norm,
-    std::vector<double> const& lat_row_norm,
-    std::vector<double> const& alt_norm,
-    std::array<double, 20> const& num_col,
-    std::array<double, 20> const& den_col,
-    std::array<double, 20> const& num_lin,
-    std::array<double, 20> const& den_lin,
-
-    //input
-    double scale_lon_col,
-    double offset_lon_col,
-    double scale_lat_row,
-    double offset_lat_row,
-    double scale_alt,
-    double offset_alt,
-
-    //output
-    double scale_col,
-    double offset_col,
-    double scale_lin,
-    double offset_lin
-);
-
 
 /** Compute derivative_polynomial_latitude*/
 double derivative_polynomial_latitude(

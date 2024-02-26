@@ -208,8 +208,6 @@ PYBIND11_MODULE(bindings_cpp, m) {
                                         std::vector<double> const&>
                                         (&RPC::inverse_loc, py::const_))
 
-        .def("filter_coordinates", &RPC::filter_coordinates)
-
         .def("compute_loc_inverse_derivates", &RPC::compute_loc_inverse_derivates)
 
         .def("direct_loc_inverse_iterative",py::overload_cast<double,double,double,int,bool>\
@@ -221,6 +219,11 @@ PYBIND11_MODULE(bindings_cpp, m) {
 
         .def("get_alt_min_max", &RPC::get_alt_min_max)
         .def("los_extrema", &RPC::los_extrema)
+        .def("compute_rational_function_polynomial_unitary",
+                &RPC::compute_rational_function_polynomial_unitary)
+
+        .def("compute_rational_function_polynomial", 
+                &RPC::compute_rational_function_polynomial)
         .def("get_num_col", &RPC::get_num_col)
         .def("get_den_col", &RPC::get_den_col)
         .def("get_num_row", &RPC::get_num_row)
@@ -242,14 +245,6 @@ PYBIND11_MODULE(bindings_cpp, m) {
 
     //m.doc() = "Pybind hello world"; // optional module docstring
     m.def("polynomial_equation", &polynomial_equation, "Compute polynomial equation");
-
-    m.def("compute_rational_function_polynomial_unitary",
-            &compute_rational_function_polynomial_unitary,
-            "Compute rational function polynomial for only one point");
-
-    m.def("compute_rational_function_polynomial", &compute_rational_function_polynomial,
-        "Compute rational function polynomial. Useful to compute direct and inverse localization"
-        "using direct or inverse RPC.");
 
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude,
             "Compute latitude derivative polynomial equation");

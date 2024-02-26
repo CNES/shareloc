@@ -57,7 +57,7 @@ class Localization:
         :param epsg: coordinate system of world points, if None model coordiante system will be used
         :type epsg: int
         """
-        self.use_rpc = model.type == "RPC"
+        self.use_rpc = model.type in ["RPC", "RPCoptim"]
         self.model = model
         self.default_elevation = 0.0
         self.dtm = None
@@ -91,7 +91,7 @@ class Localization:
             epsg = self.model.epsg
         elif self.dtm is not None:
             coords = self.model.direct_loc_dtm(row, col, self.dtm)
-            epsg = self.dtm.epsg
+            epsg = self.dtm.get_epsg()
         else:
             coords = self.model.direct_loc_h(row, col, self.default_elevation)
             epsg = self.model.epsg
@@ -161,7 +161,6 @@ class Localization:
             lat = converted_coords[:, 1]
             h = converted_coords[:, 2]
         row, col, __ = self.model.inverse_loc(lon, lat, h)
-
         if using_geotransform and self.image is not None:
             row, col = transform_physical_point_to_index(self.image.trans_inv, row, col)
         return row, col, h

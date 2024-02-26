@@ -50,6 +50,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
     def __init__(self, rpc_params):
         GeoModelTemplate.__init__(self)
 
+        self.type = "RPCoptim"
         norm_coeffs = [
             rpc_params["offset_x"],
             rpc_params["scale_x"],  # longitude
@@ -126,6 +127,14 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         else:
             raise ValueError("RPCoptim : No RPC coefficients readable")
 
+        self.col0 = self.get_offset_col() - self.get_scale_col()
+        self.colmax = self.get_offset_col() + self.get_scale_col()
+        self.row0 = self.get_offset_row() - self.get_scale_row()
+        self.rowmax = self.get_offset_row() + self.get_scale_row()
+
+        self.epsg = 4326  # rpc_params does not have an espg key
+        # But PHRDIMAP_ files have an epsg code specfied
+
     @classmethod
     def load(cls, geomodel_path):
         """
@@ -157,13 +166,28 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         :return: ground position (lon,lat,h)
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
+        if not isinstance(alt, (list, np.ndarray)) and isinstance(row, (list, np.ndarray)):
+            alt = [alt]
+
+        # TODO : use py::array in c++
         res_optim = super().direct_loc_h(row, col, alt, fill_nan)
-        res_optim = np.array([res_optim[0], res_optim[1], res_optim[2]]).T
+        # same output as python
+        if not isinstance(res_optim[0], (list, np.ndarray)):
+            res_optim_0 = [res_optim[0]]
+            res_optim_1 = [res_optim[1]]
+            res_optim_2 = [res_optim[2]]
+        else:
+            res_optim_0 = res_optim[0]
+            res_optim_1 = res_optim[1]
+            res_optim_2 = res_optim[2]
+
+        res_optim = np.array([res_optim_0, res_optim_1, res_optim_2]).T
+
         return res_optim
 
     def direct_loc_dtm(self, row, col, dtm):
         """
-        direct localization on dtm
+        direct localization on dtm only if dtm's epsg code is 4326
 
         :param row:  line sensor position
         :type row: list or np.array
@@ -174,8 +198,19 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         :return: ground position (lon,lat,h) in dtm coordinates system
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
+        # TODO : use py::array in c++
         res_optim = super().direct_loc_dtm(row, col, dtm)
-        res_optim = np.array([res_optim[0], res_optim[1], res_optim[2]]).T
+        if not isinstance(res_optim[0], (list, np.ndarray)):
+            res_optim_0 = [res_optim[0]]
+            res_optim_1 = [res_optim[1]]
+            res_optim_2 = [res_optim[2]]
+        else:
+            res_optim_0 = res_optim[0]
+            res_optim_1 = res_optim[1]
+            res_optim_2 = res_optim[2]
+
+        res_optim = np.array([res_optim_0, res_optim_1, res_optim_2]).T
+
         return res_optim
 
     def inverse_loc(self, lon, lat, alt):
@@ -192,7 +227,8 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
         (row, col, alt) = super().inverse_loc(lon, lat, alt)
-        return row, col, alt
+
+        return np.array(row), np.array(col), np.array(alt)
 
     def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False):
         """

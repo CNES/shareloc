@@ -41,7 +41,6 @@ PYBIND11_MODULE(bindings_cpp, m) {
                 ,int,int,std::tuple<double,double,double,double,double,double>>())
         .def("eq_plan", &DTMIntersection::eq_plan)
         .def("ter_to_index", &DTMIntersection::ter_to_index)
-        .def("ter_to_indexs", &DTMIntersection::ter_to_indexs)
         .def("index_to_ter", &DTMIntersection::index_to_ter)
         .def("get_alt_offset", &DTMIntersection::get_alt_offset)
         .def("interpolate", &DTMIntersection::interpolate)
@@ -186,8 +185,6 @@ PYBIND11_MODULE(bindings_cpp, m) {
                                                 std::vector<double> const&,bool>
                                                 (&RPC::direct_loc_h, py::const_))
 
-        .def("direct_loc_grid_h", &RPC::direct_loc_grid_h)
-
         .def("direct_loc_dtm", py::overload_cast<double,
                                                 double,
                                                 DTMIntersection const&>
@@ -243,7 +240,6 @@ PYBIND11_MODULE(bindings_cpp, m) {
         .def("get_offset_lat", &RPC::get_offset_lat)
         .def("get_scale_lat", &RPC::get_scale_lat);
 
-    //m.doc() = "Pybind hello world"; // optional module docstring
     m.def("polynomial_equation", &polynomial_equation, "Compute polynomial equation");
 
     m.def("derivative_polynomial_latitude", &derivative_polynomial_latitude,
@@ -297,8 +293,6 @@ m.def("compute_strip_of_epipolar_grid", &compute_strip_of_epipolar_grid<double>,
         "compute_strip_of_epipolar_grid");
 }
 
-//c++ -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC $(python3 -m pybind11 --includes)
-//bind.cpp -o bindings_cpp$(python3-config --extension-suffix)
-
+// Commande to compile c++ bindings
 // c++ -w -O3 -Wall -Wextra -shared -std=c++20 -march=native -fPIC
 //$(python3 -m pybind11 --includes) bind.cpp -o bindings_cpp$(python3-config --extension-suffix)

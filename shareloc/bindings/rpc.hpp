@@ -17,10 +17,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/**
-  Cpp copy of rpc.py
- */
-
 #ifndef RPC_H
 #define RPC_H
 
@@ -72,27 +68,17 @@ public:
         std::vector<double> const& alt,
         bool fill_nan=false) const override;
 
-    /**direct_loc_grid_h*/
-    std::tuple<std::vector<std::vector<double>>,std::vector<std::vector<double>>> direct_loc_grid_h(
-        int row0,
-        int col0,
-        int steprow,
-        int stepcol,
-        int nbrow,
-        int nbcol,
-        double alt) const;
-
     /**direct_loc_dtm unitary*/
     std::tuple<double,double,double> direct_loc_dtm(
-    double row,
-    double col,
-    DTMIntersection const& dtm) const override;
+        double row,
+        double col,
+        DTMIntersection const& dtm) const override;
 
     /**direct_loc_dtm*/
     std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> direct_loc_dtm(
         std::vector<double> const& row,
         std::vector<double> const& col,
-        DTMIntersection const& dtm) const;//override
+        DTMIntersection const& dtm) const;
 
     /**inverse_loc unitary*/
     std::tuple<double,double,double> inverse_loc(
@@ -242,13 +228,8 @@ public:
 
 private:
 
-    std::string m_datum;
-    std::map<std::string, double> m_rpc_params;//it's a simple dict -> maybe inappropiate
+    std::map<std::string, double> m_rpc_params;
     double m_lim_extrapol;
-
-    std::vector<std::vector<double>> m_monomes;// to convert to array
-    std::vector<std::vector<double>> m_monomes_deriv_1;
-    std::vector<std::vector<double>> m_monomes_deriv_2;
 
     bool m_inverse_coefficient;
     bool m_direct_coefficient;

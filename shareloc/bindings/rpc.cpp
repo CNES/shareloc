@@ -17,9 +17,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/**
-  Cpp copy of rpc.py
- */
 #include "rpc.hpp"
 
 #include <stdexcept>
@@ -119,14 +116,8 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
     vector<double> const& alt,
     bool fill_nan) const
 {
-    // vector<double> lon_out;
-    // vector<double> lat_out;
-    // vector<double> alt_out;
+
     if (m_direct_coefficient){
-        // if(abs(col_norm[i])>lim_extrapol ||
-        //     abs(row_norm[i])>lim_extrapol ||
-        //     abs(alt_norm[i])>lim_extrapol){
-        //     cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;}
 
         return compute_rational_function_polynomial(
             col,
@@ -153,19 +144,6 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
     }else{
         return direct_loc_inverse_iterative(row, col, alt, 10, fill_nan);
     }
-}
-
-tuple<vector<vector<double>>,vector<vector<double>>> RPC::direct_loc_grid_h(
-    int row0,
-    int col0,
-    int steprow,
-    int stepcol,
-    int nbrow,
-    int nbcol,
-    double alt) const
-{
-    tuple<vector<vector<double>>,vector<vector<double>>> res;
-    return res;
 }
 
 tuple<double,double,double> RPC::direct_loc_dtm(
@@ -228,7 +206,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_dtm(
     vector<double> lon (2);
     vector<double> lat (2);
     vector<double> alt (2);
-    bool var;//garbadge variable
+    bool var;//garbage variable
     bool solution;
     array<double,3> position_cube;
     double alti;
@@ -270,10 +248,6 @@ tuple<double,double,double> RPC::inverse_loc(
     double lat,
     double alt)const
 {
-    // if(abs(lon_norm[i])>lim_extrapol ||
-    //     abs(lat_norm[i])>lim_extrapol ||
-    //     abs(alt_norm[i])>lim_extrapol){
-    //     //cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
 
     auto [col_out, row_out, alt_out] = compute_rational_function_polynomial_unitary(
         lon,
@@ -296,7 +270,7 @@ tuple<double,double,double> RPC::inverse_loc(
         m_scale_row,
         m_offset_row
     );
-    // TODO: Dangereux de changer les ordres
+
     return {row_out, col_out, alt_out};
 }
 
@@ -305,11 +279,6 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
     vector<double> const& lat,
     vector<double> const& alt) const
 {
-    // if(abs(lon_norm[i])>lim_extrapol ||
-    //     abs(lat_norm[i])>lim_extrapol ||
-    //     abs(alt_norm[i])>lim_extrapol){
-    //     //cout<<"Warning : normalisation values exceed lim_extrapol"<<endl;
-    // }
 
     auto [col_out, row_out, alt_res] = compute_rational_function_polynomial(
         lon,
@@ -342,7 +311,6 @@ RPC::compute_loc_inverse_derivates(
     double alt)const
 {
     //Normalisation
-
     double lon_norm = (lon - m_offset_lon)/m_scale_lon;
     double lat_norm = (lat - m_offset_lat)/m_scale_lat;
     double alt_norm = (alt - m_offset_alt)/m_scale_alt;
@@ -354,8 +322,6 @@ RPC::compute_loc_inverse_derivates(
     double num_drow = polynomial_equation(norms, m_num_row);
     double den_drow = polynomial_equation(norms, m_den_row);
 
-
-    // TODO: The same w/ derivative_polynomial_latitude & longitude
     double num_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, m_num_col);
     double den_dcol_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, m_den_col);
     double num_drow_dlon = derivative_polynomial_longitude(lon_norm, lat_norm, alt_norm, m_num_row);
@@ -436,7 +402,6 @@ tuple<double,double,double> RPC::direct_loc_inverse_iterative(
 
         auto const [row_estim,col_estim,alt_estim] = inverse_loc(lon_out, lat_out, alt);
         (void) alt_estim; // disable "unused variable"
-        //5e-11 = maxerror w/r to python and alt_estim useless
 
         // updating the residue between the sensor positions
         // and those estimated by the inverse localization
@@ -462,7 +427,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iter
 
     size_t nb_points = col_norm.size();
 
-    vector<double> lon_out(nb_points);//array<double, nb_points> => ‘size_t nb_points’ is not const
+    vector<double> lon_out(nb_points);
     vector<double> lat_out(nb_points);
     vector<bool> is_nan(nb_points);
 
@@ -491,7 +456,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iter
         }
 
 
-        // Initialisation /!\ CAN BE OUTSIDE THE LOOP but  alt_norm[i]
+        // Initialisation
         auto const [row_start, col_start, alt_start] = inverse_loc(lon_out[i], lat_out[i], alt_norm[i]);
         (void) alt_start; // disable "unused variable"
 
@@ -524,7 +489,6 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iter
 
             auto const [row_estim,col_estim,alt_estim] = inverse_loc(lon_out[i], lat_out[i], alt_norm[i]);
             (void) alt_estim; // disable "unused variable"
-            //5e-11 = maxerror w/r to python and alt_estim useless
 
             // updating the residue between the sensor positions
             // and those estimated by the inverse localization
@@ -570,7 +534,6 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::los_extrema(
         los_alt_max = los_alt_min_max[1];
     }
 
-    // TODO: array
     vector<double> row_array = {row,row};
     vector<double> col_array = {col,col};
     vector<double> alt_array = {los_alt_max,los_alt_min};

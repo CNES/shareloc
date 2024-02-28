@@ -17,10 +17,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/**
-  Cpp copy of dtm_intersection.py
- */
-
 #ifndef DTM_INTERSECTION_H
 #define DTM_INTERSECTION_H
 
@@ -61,9 +57,6 @@ public:
 
     /**ter_to_index*/
     std::array<double, 3> ter_to_index(std::array<double, 3> const& vect_ter)const;
-
-    /**ter_to_indexs*/
-    std::vector<double> ter_to_indexs(std::vector<double> const& vect_ter);//maybe unecessary
 
     /**index_to_ter*/
     std::array<double, 3> index_to_ter(std::array<double, 3> const& vect_ter)const;
@@ -207,7 +200,7 @@ private:
         std::vector<double> m_plans;
 
         /**trans_inv attribut*/
-        std::array<double,6> m_trans_inv; //affine.affine en python
+        std::array<double,6> m_trans_inv; //affine.affine in python
         /**transform attribut*/
         std::array<double,6> m_transform;
         /**nb_rows attribut*/

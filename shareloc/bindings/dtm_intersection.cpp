@@ -17,9 +17,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/**
-  Cpp copy of dtm_intersection.py
- */
 #include "dtm_intersection.hpp"
 #include <iostream>
 
@@ -27,7 +24,7 @@ using namespace std;
 namespace py = pybind11;
 
 
-//---- DTMIntersection methodes ----//
+//---- DTMIntersection methods ----//
 
 DTMIntersection::DTMIntersection(){}
 
@@ -71,7 +68,7 @@ DTMIntersection::DTMIntersection(
     0.0, 1.0, 0.0, 0.0,
     0.0, 1.0, 0.0, dtm_image_nb_columns - 1.0,
     0.0, 0.0, 1.0, m_alt_min,
-    0.0, 0.0, 1.0, m_alt_max};//2D -> 1D nb_columns = 4
+    0.0, 0.0, 1.0, m_alt_max};//2D -> 1D : nb_columns = 4
 
 
     apply([&](auto... args) { m_transform = {args...}; }, dtm_image_transform);
@@ -119,11 +116,6 @@ array<double, 3> DTMIntersection::ter_to_index(array<double, 3> const& vect_ter)
     return ter;
 }
 
-vector<double> DTMIntersection::ter_to_indexs(vector<double> const& vect_ter){//maybe unecessary
-    vector<double> res;
-    return res;
-}
-
 array<double, 3> DTMIntersection::index_to_ter(array<double, 3> const& vect_ter)const{
 
     
@@ -142,7 +134,6 @@ array<double, 3> DTMIntersection::index_to_ter(array<double, 3> const& vect_ter)
 tuple<double,double> DTMIntersection::get_alt_offset(int epsg)const{
 
     if(epsg!=m_epsg){
-        //throw runtime_error("C++ : DTMintersection get_alt_offset not valid epsg");
         cout<<"C++ : DTMintersection get_alt_offset not valid epsg"<<endl;
     }
     return{0.,0.};
@@ -942,29 +933,29 @@ tuple<vector<double>,
 vector<double>> init_min_max(vector<double> const& alt_data,int nb_rows,int nb_columns)
 {
 
-vector<double> alt_min_cell ((nb_rows-1)*(nb_columns-1));
-vector<double> alt_max_cell ((nb_rows-1)*(nb_columns-1));
+    vector<double> alt_min_cell ((nb_rows-1)*(nb_columns-1));
+    vector<double> alt_max_cell ((nb_rows-1)*(nb_columns-1));
 
-for(int i = 0; i < nb_rows-1; ++i){
-    for(int j = 0; j < nb_columns-1; ++j){
+    for(int i = 0; i < nb_rows-1; ++i){
+        for(int j = 0; j < nb_columns-1; ++j){
 
-        double val_sub_array_flat_1 = alt_data[nb_columns * i + j];
-        double val_sub_array_flat_2 = alt_data[nb_columns * (i+1) + j];
-        double val_sub_array_flat_3 = alt_data[nb_columns * i + (j+1)];
-        double val_sub_array_flat_4 = alt_data[nb_columns * (i+1) + (j+1)];
+            double val_sub_array_flat_1 = alt_data[nb_columns * i + j];
+            double val_sub_array_flat_2 = alt_data[nb_columns * (i+1) + j];
+            double val_sub_array_flat_3 = alt_data[nb_columns * i + (j+1)];
+            double val_sub_array_flat_4 = alt_data[nb_columns * (i+1) + (j+1)];
 
-        alt_min_cell[(nb_columns-1)*i+j] = floor(min({val_sub_array_flat_1,
-                                                        val_sub_array_flat_2,
-                                                        val_sub_array_flat_3,
-                                                        val_sub_array_flat_4}));
+            alt_min_cell[(nb_columns-1)*i+j] = floor(min({val_sub_array_flat_1,
+                                                            val_sub_array_flat_2,
+                                                            val_sub_array_flat_3,
+                                                            val_sub_array_flat_4}));
 
-        alt_max_cell[(nb_columns-1)*i+j] = ceil(max({val_sub_array_flat_1,
-                                                        val_sub_array_flat_2,
-                                                        val_sub_array_flat_3,
-                                                        val_sub_array_flat_4}));
-        
+            alt_max_cell[(nb_columns-1)*i+j] = ceil(max({val_sub_array_flat_1,
+                                                            val_sub_array_flat_2,
+                                                            val_sub_array_flat_3,
+                                                            val_sub_array_flat_4}));
+            
+        }
     }
-}
 
 return make_tuple(alt_min_cell,alt_max_cell);
 }
@@ -1026,7 +1017,7 @@ py::array_t<double> DTMIntersection::intersection_n_los_dtm(
         res_alt[i] = position_z;
     }
 
-    //Cast into np.array
+    //Cast output into np.array
 
     vector<double> res;
     res.reserve(nb_points*3);

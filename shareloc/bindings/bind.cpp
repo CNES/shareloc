@@ -134,11 +134,13 @@ PYBIND11_MODULE(bindings_cpp, m) {
         .def("direct_loc_h", py::overload_cast<double,
                                         double,
                                         double,
+                                        bool,
                                         bool>(&GeoModelTemplate::direct_loc_h, py::const_))
 
         .def("direct_loc_h", py::overload_cast<std::vector<double> const&,
                                         std::vector<double> const&,
                                         std::vector<double> const&,
+                                        bool,
                                         bool>(&GeoModelTemplate::direct_loc_h, py::const_))
 
         .def("direct_loc_dtm", py::overload_cast<double,
@@ -177,12 +179,15 @@ PYBIND11_MODULE(bindings_cpp, m) {
         .def("direct_loc_h", py::overload_cast<double,
                                                 double,
                                                 double,
+                                                bool,
                                                 bool>
                                                 (&RPC::direct_loc_h, py::const_))
 
         .def("direct_loc_h", py::overload_cast<std::vector<double> const&,
                                                 std::vector<double> const&,
-                                                std::vector<double> const&,bool>
+                                                std::vector<double> const&,
+                                                bool,
+                                                bool>
                                                 (&RPC::direct_loc_h, py::const_))
 
         .def("direct_loc_dtm", py::overload_cast<double,

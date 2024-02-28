@@ -151,7 +151,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         cls.geomodel_path = geomodel_path
         return cls(rpc_reader(geomodel_path, topleftconvention=True))
 
-    def direct_loc_h(self, row, col, alt, fill_nan=False):
+    def direct_loc_h(self, row, col, alt, fill_nan=False, using_direct_coef=False):
         """
         direct localization at constant altitude
 
@@ -170,7 +170,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
             alt = [alt]
 
         # TODO : use py::array in c++
-        res_optim = super().direct_loc_h(row, col, alt, fill_nan)
+        res_optim = super().direct_loc_h(row, col, alt, fill_nan, using_direct_coef)
         # same output as python
         if not isinstance(res_optim[0], (list, np.ndarray)):
             res_optim_0 = [res_optim[0]]

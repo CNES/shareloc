@@ -31,7 +31,8 @@ std::tuple<double,double,double>\
     double row,
     double col,
     double alt, 
-    bool fill_nan)const{
+    bool fill_nan,
+    bool using_direct_coef)const{
     std::tuple<double,double,double> vect;
     return vect;
 }
@@ -41,7 +42,8 @@ std::tuple<std::vector<double>,std::vector<double>,std::vector<double>>\
     std::vector<double> const& row,
     std::vector<double> const& col,
     std::vector<double> const& alt, 
-    bool fill_nan)const{
+    bool fill_nan,
+    bool using_direct_coef)const{
     std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> vect;
     return vect;
 }

@@ -80,9 +80,12 @@ tuple<double,double,double> RPC::direct_loc_h(
     double row,
     double col,
     double alt,
-    bool fill_nan) const
+    bool fill_nan,
+    bool using_direct_coef) const
 {
-    if (m_direct_coefficient){
+    if(!using_direct_coef && m_inverse_coefficient){
+        return direct_loc_inverse_iterative(row, col, alt, 10, fill_nan);
+    }else if(using_direct_coef && m_direct_coefficient){
         return compute_rational_function_polynomial_unitary(
             col,
             row,
@@ -104,9 +107,10 @@ tuple<double,double,double> RPC::direct_loc_h(
             m_scale_lat,
             m_offset_lat
         );
-
-    }else{
-        return direct_loc_inverse_iterative(row, col, alt, 10, fill_nan);
+    }
+    else{
+        throw runtime_error("C++ : direct_loc_h: using_direct_coef doesn't\
+         match with available coefficients");
     }
 }
 
@@ -114,11 +118,14 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
     vector<double> const& row,
     vector<double> const& col,
     vector<double> const& alt,
-    bool fill_nan) const
+    bool fill_nan,
+    bool using_direct_coef) const
 {
 
-    if (m_direct_coefficient){
-
+    if (!using_direct_coef && m_inverse_coefficient){
+        return direct_loc_inverse_iterative(row, col, alt, 10, fill_nan);
+    }
+    else if(using_direct_coef && m_direct_coefficient){
         return compute_rational_function_polynomial(
             col,
             row,
@@ -139,10 +146,11 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
             m_offset_lon,
             m_scale_lat,
             m_offset_lat
-            );
-
-    }else{
-        return direct_loc_inverse_iterative(row, col, alt, 10, fill_nan);
+        );
+    }
+    else{
+        throw runtime_error("C++ : direct_loc_h: using_direct_coef doesn't\
+         match with available coefficients");
     }
 }
 

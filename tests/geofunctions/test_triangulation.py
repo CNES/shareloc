@@ -156,9 +156,11 @@ def test_epi_triangulation_sift_rpc():
     id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     geom_model_left = GeoModel(file_geom)
+    geom_model_left_optim = GeoModel(file_geom, "RPCoptim")
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     geom_model_right = GeoModel(file_geom)
+    geom_model_right_optim = GeoModel(file_geom, "RPCoptim")
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
@@ -169,9 +171,14 @@ def test_epi_triangulation_sift_rpc():
     point_ecef, __, __ = epipolar_triangulation(
         matches, None, "sift", geom_model_left, geom_model_right, grid_left_filename, grid_right_filename
     )
+
+    point_ecef_optim, __, __ = epipolar_triangulation(
+        matches, None, "sift", geom_model_left_optim, geom_model_right_optim, grid_left_filename, grid_right_filename
+    )
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     # print(valid - point_ecef[0,:])
     assert valid == pytest.approx(point_ecef[0, :], abs=1e-3)
+    np.testing.assert_allclose(point_ecef, point_ecef_optim, 0, 1e-8)
 
 
 def stats_diff(cloud, array_epi):
@@ -217,9 +224,11 @@ def test_epi_triangulation_disp_rpc():
     id_scene = "PHR1B_P_201709281038045_SEN_PRG_FC_178608-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     geom_model_left = GeoModel(file_geom)
+    geom_model_left_optim = GeoModel(file_geom, "RPCoptim")
     id_scene = "PHR1B_P_201709281038393_SEN_PRG_FC_178609-001"
     file_geom = os.path.join(data_folder, f"rpc/{id_scene}.geom")
     geom_model_right = GeoModel(file_geom)
+    geom_model_right_optim = GeoModel(file_geom, "RPCoptim")
 
     # grid_left_filename = os.path.join(data_path(), "rectification_grids",
     #                                  "grid_{}.tif".format(id_scene_left))
@@ -232,8 +241,19 @@ def test_epi_triangulation_disp_rpc():
     disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.pickle")
     with open(disp_filename, "rb") as disp_file:
         disp = pickle.load(disp_file)
-    point_ecef, _, _ = epipolar_triangulation(
+    point_ecef, point_wsg84, _ = epipolar_triangulation(
         disp, None, "disp", geom_model_left, geom_model_right, grid_left_filename, grid_right_filename, residues=True
+    )
+
+    point_ecef_optim, point_wsg84_optim, _ = epipolar_triangulation(
+        disp,
+        None,
+        "disp",
+        geom_model_left_optim,
+        geom_model_right_optim,
+        grid_left_filename,
+        grid_right_filename,
+        residues=True,
     )
 
     # open cloud
@@ -249,6 +269,13 @@ def test_epi_triangulation_disp_rpc():
     assert point_ecef[index, 2] == pytest.approx(cloud.z.values.flatten()[index], abs=1e-3)
     assert stats[:, 2] == pytest.approx([0, 0, 0], abs=6e-4)
 
+    np.testing.assert_allclose(point_ecef[:, 0], point_ecef_optim[:, 0], 0, 3e-8)
+    np.testing.assert_allclose(point_ecef[:, 1], point_ecef_optim[:, 1], 0, 2e-9)
+    np.testing.assert_allclose(point_ecef[:, 2], point_ecef_optim[:, 2], 0, 3e-8)
+    np.testing.assert_allclose(point_wsg84[:, 0], point_wsg84_optim[:, 0], 0, 7e-14)
+    np.testing.assert_allclose(point_wsg84[:, 1], point_wsg84_optim[:, 1], 0, 3e-14)
+    np.testing.assert_allclose(point_wsg84[:, 2], point_wsg84_optim[:, 2], 0, 4e-8)
+
 
 @pytest.mark.unit_tests
 def test_epi_triangulation_disp_rpc_roi():
@@ -258,8 +285,10 @@ def test_epi_triangulation_disp_rpc_roi():
     data_folder = data_path()
     file_geom = os.path.join(data_folder, "rpc/phr_ventoux/left_image.geom")
     geom_model_left = GeoModel(file_geom)
+    geom_model_left_optim = GeoModel(file_geom, "RPCoptim")
     file_geom = os.path.join(data_folder, "rpc/phr_ventoux/right_image.geom")
     geom_model_right = GeoModel(file_geom)
+    geom_model_right_optim = GeoModel(file_geom, "RPCoptim")
 
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid_ventoux.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid_ventoux.tif")
@@ -267,7 +296,7 @@ def test_epi_triangulation_disp_rpc_roi():
     disp_filename = os.path.join(data_path(), "triangulation", "disp1_ref.pickle")
     with open(disp_filename, "rb") as disp_file:
         disp = pickle.load(disp_file)
-    __, point_wgs84, __ = epipolar_triangulation(
+    point_ecef, point_wgs84, __ = epipolar_triangulation(
         disp,
         None,
         "disp",
@@ -278,6 +307,25 @@ def test_epi_triangulation_disp_rpc_roi():
         residues=True,
         fill_nan=True,
     )
+
+    point_ecef_optim, point_wgs84_optim, __ = epipolar_triangulation(
+        disp,
+        None,
+        "disp",
+        geom_model_left_optim,
+        geom_model_right_optim,
+        grid_left_filename,
+        grid_right_filename,
+        residues=True,
+        fill_nan=True,
+    )
+
+    np.testing.assert_allclose(point_ecef[:, 0], point_ecef_optim[:, 0], 0, 2e-7)
+    np.testing.assert_allclose(point_ecef[:, 1], point_ecef_optim[:, 1], 0, 2e-8)
+    np.testing.assert_allclose(point_ecef[:, 2], point_ecef_optim[:, 2], 0, 2e-7)
+    np.testing.assert_allclose(point_wgs84[:, 0], point_wgs84_optim[:, 0], 0, 7e-14)
+    np.testing.assert_allclose(point_wgs84[:, 1], point_wgs84_optim[:, 1], 0, 5e-14)
+    np.testing.assert_allclose(point_wgs84[:, 2], point_wgs84_optim[:, 2], 0, 2e-7)
 
     # open cloud
     cloud_filename = os.path.join(data_path(), "triangulation", "triangulation1_ref.pickle")

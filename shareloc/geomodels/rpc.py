@@ -221,19 +221,16 @@ class RPC(GeoModelTemplate):
             alt = np.full(col.shape[0], fill_value=alt[0])
 
         points = np.zeros((col.size, 3))
-
-        points[:, 2] = alt
         filter_nan, points[:, 0], points[:, 1] = self.filter_coordinates(row, col, fill_nan)
         row = row[filter_nan]
         col = col[filter_nan]
-        alt = alt[filter_nan]
 
         # Direct localization using direct RPC
         if self.direct_coefficient:
             # ground position
             col_norm = (col - self.offset_col) / self.scale_col
             row_norm = (row - self.offset_row) / self.scale_row
-            alt_norm = (alt - self.offset_alt) / self.scale_alt
+            alt_norm = (alt[filter_nan] - self.offset_alt) / self.scale_alt
 
             if np.sum(abs(col_norm) > self.lim_extrapol) > 0:
                 logging.debug("!!!!! column extrapolation in direct localization ")
@@ -255,14 +252,14 @@ class RPC(GeoModelTemplate):
                 self.scale_y,
                 self.offset_y,
             )
-            points[filter_nan, 2] = alt
 
         # Direct localization using inverse RPC
         else:
             logging.debug("direct localisation from inverse iterative")
             (points[filter_nan, 0], points[filter_nan, 1], points[filter_nan, 2]) = self.direct_loc_inverse_iterative(
-                row, col, alt, 10, fill_nan
+                row, col, alt[filter_nan], 10, fill_nan
             )
+        points[:, 2] = alt
         return points
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):

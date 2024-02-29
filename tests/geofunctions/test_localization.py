@@ -31,6 +31,7 @@ import os
 import numpy as np
 import pytest
 
+import bindings_cpp
 from shareloc.dtm_reader import dtm_reader
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.geofunctions.localization import Localization
@@ -65,6 +66,7 @@ def test_localize_direct_rpc():
     # geom_model = GeoModel(data)
     data = os.path.join(data_path(), "rpc/phr_ventoux/", "RPC_PHR1B_P_201308051042194_SEN_690908101-001.XML")
     geom_model = GeoModel(data)
+    geom_model_optim = GeoModel(data, "RPCoptim")
     # then read the Image to retrieve its geotransform
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
@@ -89,17 +91,31 @@ def test_localize_direct_rpc():
         dtm_image.transform,
     )
 
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
     # Localization class is then used using WGS84 output
     loc = Localization(geom_model, elevation=dtm_ventoux, image=image_left, epsg=4326)
+    loc_optim = Localization(geom_model_optim, elevation=dtm_ventoux_optim, image=image_left, epsg=4326)
 
     # use direct localisation of the first image pixel
     lonlatalt = loc.direct(row, col, using_geotransform=True)
+    lonlatalt_optim = loc_optim.direct(row, col, using_geotransform=True)
     # [5.19340615  44.20805808 503.51202179]
     # print(lonlatalt)
     # print(geom_model_1.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2]))
     assert lonlatalt[0][0] == pytest.approx(5.193406151946084, abs=1e-8)
     assert lonlatalt[0][1] == pytest.approx(44.20805807814395, abs=1e-8)
     assert lonlatalt[0][2] == pytest.approx(503.51202179, abs=1e-4)
+
+    assert lonlatalt[0][0] == lonlatalt_optim[0][0]
+    assert lonlatalt[0][1] == lonlatalt_optim[0][1]
+    assert lonlatalt[0][2] == lonlatalt_optim[0][2]
 
 
 @pytest.mark.unit_tests
@@ -281,12 +297,17 @@ def test_extent():
     """
     data_left = os.path.join(data_path(), "rectification", "left_image")
     geom_model = GeoModel(data_left + ".geom")
+    geom_model_optim = GeoModel(data_left + ".geom", "RPCoptim")
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
     image = Image(image_filename)
     loc_rpc_image = Localization(geom_model, elevation=None, image=image)
+    loc_rpc_image_optim = Localization(geom_model_optim, elevation=None, image=image)
     np.testing.assert_allclose(loc_rpc_image.extent(), [44.20518231, 5.19307549, 44.20739814, 5.19629785], atol=1e-8)
+    np.testing.assert_allclose(loc_rpc_image_optim.extent(), loc_rpc_image.extent())
     loc_rpc = Localization(geom_model)
+    loc_rpc_optim = Localization(geom_model_optim)
     np.testing.assert_allclose(loc_rpc.extent(), [44.041678, 5.155808, 44.229592, 5.412923], atol=1e-8)
+    np.testing.assert_array_equal(loc_rpc_optim.extent(), loc_rpc.extent())
 
 
 @pytest.mark.parametrize("col,row,valid_coord", [(1999.5, 999.5, (5.17388499778903, 44.2257233720898, 376.86))])
@@ -297,6 +318,7 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     """
     data = os.path.join(data_path(), "rectification", "left_image")
     geom_model_left = GeoModel(data + ".geom")
+    geom_model_left_optim = GeoModel(data + ".geom", "RPCoptim")
     image_filename = os.path.join(data_path(), "image/phr_ventoux/", "left_image.tif")
     image_left = Image(image_filename)
 
@@ -318,11 +340,21 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
         dtm_image.nb_columns,
         dtm_image.transform,
     )
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
     loc = Localization(geom_model_left, elevation=dtm_ventoux, image=image_left)
+    loc_optim = Localization(geom_model_left_optim, elevation=dtm_ventoux_optim, image=image_left)
     lonlatalt = loc.direct(row, col, using_geotransform=False)
+    lonlatalt_optim = loc_optim.direct(row, col, using_geotransform=False)
     assert valid_coord[0] == pytest.approx(lonlatalt[0, 0], abs=3.0 * 1e-5)
     assert valid_coord[1] == pytest.approx(lonlatalt[0, 1], abs=2.0 * 1e-4)
     assert valid_coord[2] == pytest.approx(lonlatalt[0, 2], abs=15.0)
+    np.testing.assert_array_equal(lonlatalt, lonlatalt_optim)
 
 
 @pytest.mark.parametrize("col,row,valid_coord", [(1999.5, 999.5, (5.17388499778903, 44.2257233720898, 376.86))])
@@ -378,9 +410,13 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     fichier_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
     fctrat = GeoModel(fichier_dimap)
+    fctrat_optim = GeoModel(fichier_dimap, "RPCoptim")
 
     loc_rpc = Localization(fctrat)
+    loc_rpc_optim = Localization(fctrat_optim)
+
     lonlatalt_rpc = loc_rpc.direct(row, col, h)
+    lonlatalt_rpc_optim = loc_rpc_optim.direct(row, col, h)
 
     diff_lon = lonlatalt[0][0] - lonlatalt_rpc[0][0]
     diff_lat = lonlatalt[0][1] - lonlatalt_rpc[0][1]
@@ -388,6 +424,13 @@ def test_sensor_loc_dir_vs_loc_rpc(row, col, h):
     assert diff_lon == pytest.approx(0.0, abs=1e-7)
     assert diff_lat == pytest.approx(0.0, abs=1e-7)
     assert diff_alt == pytest.approx(0.0, abs=1e-7)
+
+    diff_lon = lonlatalt_rpc[0][0] - lonlatalt_rpc_optim[0][0]
+    diff_lat = lonlatalt_rpc[0][1] - lonlatalt_rpc_optim[0][1]
+    diff_alt = lonlatalt_rpc[0][2] - lonlatalt_rpc_optim[0][2]
+    assert diff_lon == 0.0
+    assert diff_lat == 0.0
+    assert diff_alt == 0.0
 
 
 @pytest.mark.parametrize("index_x,index_y", [(10.5, 20.5)])
@@ -473,14 +516,25 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     fichier_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
 
     fctrat = GeoModel(fichier_dimap)
+    fctrat_optim = GeoModel(fichier_dimap, "RPCoptim")
 
     loc_rpc = Localization(fctrat)
+    loc_rpc_optim = Localization(fctrat_optim)
+
     [row_rpc, col_rpc, __] = loc_rpc.inverse(lon, lat, alt)
+    [row_rpc_optim, col_rpc_optim, __] = loc_rpc_optim.inverse(lon, lat, alt)
+
     diff_row = row_rpc - row
     diff_col = col_rpc - col
 
     assert diff_row == pytest.approx(0.0, abs=1e-2)
     assert diff_col == pytest.approx(0.0, abs=1e-2)
+
+    diff_row = row_rpc - row_rpc_optim
+    diff_col = col_rpc - col_rpc_optim
+
+    assert diff_row == pytest.approx(0.0, abs=4e-12)
+    assert diff_col == 0.0
 
 
 @pytest.mark.parametrize(
@@ -641,11 +695,15 @@ def test_colocalization(col, row, alt):
     id_scene = "P1BP--2018122638935449CP"
     file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
     fctrat = GeoModel(file_dimap)
+    fctrat_optim = GeoModel(file_dimap, "RPCoptim")
 
     row_coloc, col_coloc, _ = coloc_rpc(fctrat, fctrat, row, col, alt)
+    row_coloc_optim, col_coloc_optim, _ = coloc_rpc(fctrat_optim, fctrat_optim, row, col, alt)
 
     assert row == pytest.approx(row_coloc, abs=1e-1)
     assert col == pytest.approx(col_coloc, abs=1e-1)
+    assert row == pytest.approx(row_coloc_optim, abs=1e-1)
+    assert col == pytest.approx(col_coloc_optim, abs=1e-1)
 
 
 @pytest.mark.parametrize("col,row,h", [(500.0, 200.0, 100.0)])
@@ -656,17 +714,26 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     """
     data_left = os.path.join(data_path(), "rectification", "left_image")
     geom_model_left = GeoModel(data_left + ".geom")
+    geom_model_left_optim = GeoModel(data_left + ".geom", "RPCoptim")
     image_filename_left = os.path.join(data_path(), "image/phr_ventoux/", "left_image_pixsize_0_5.tif")
     image_left = Image(image_filename_left)
 
     data_right = os.path.join(data_path(), "rectification", "right_image")
     geom_model_right = GeoModel(data_right + ".geom")
+    geom_model_right_optim = GeoModel(data_right + ".geom", "RPCoptim")
     image_filename_right = os.path.join(data_path(), "image/phr_ventoux/", "right_image_pixsize_0_5.tif")
     image_right = Image(image_filename_right)
 
     row_coloc, col_coloc, _ = coloc_rpc(
         geom_model_left, geom_model_right, row, col, h, image_left, image_right, using_geotransform=True
     )
+
+    row_coloc_optim, col_coloc_optim, _ = coloc_rpc(
+        geom_model_left_optim, geom_model_right_optim, row, col, h, image_left, image_right, using_geotransform=True
+    )
+    np.testing.assert_allclose(row_coloc, row_coloc_optim, 0, 8e-12)
+    np.testing.assert_allclose(col_coloc, col_coloc_optim, 0, 2e-11)
+
     origin_left = [5000.0, 5000.0]
     pix_size_left = [0.5, 0.5]
     row_phys = origin_left[0] + (row + 0.5) * pix_size_left[0]
@@ -691,12 +758,26 @@ def test_sensor_loc_utm(col, row):
     """
     data_left = os.path.join(data_path(), "rectification", "left_image")
     geom_model = GeoModel(data_left + ".geom")
+    geom_model_optim = GeoModel(data_left + ".geom", "RPCoptim")
+
     epsg = 32631
     loc_wgs = Localization(geom_model)
+    loc_wgs_optim = Localization(geom_model_optim)
     loc_utm = Localization(geom_model, epsg=epsg)
+    loc_utm_optim = Localization(geom_model_optim, epsg=epsg)
+
     lonlath = loc_wgs.direct(np.array([row, row]), np.array([col, col]))
+    lonlath_optim = loc_wgs_optim.direct(np.array([row, row]), np.array([col, col]))
+
     coord_utm = coordinates_conversion(lonlath, geom_model.epsg, epsg)
+    coord_utm_optim = coordinates_conversion(lonlath_optim, geom_model_optim.epsg, epsg)
+
     inv_row, inv_col, __ = loc_utm.inverse(coord_utm[:, 0], coord_utm[:, 1])
+    inv_row_optim, inv_col_optim, __ = loc_utm_optim.inverse(coord_utm_optim[:, 0], coord_utm_optim[:, 1])
+
+    np.testing.assert_allclose(inv_row, inv_row_optim, 0, 8e-12)
+    np.testing.assert_allclose(inv_col, inv_col_optim, 0, 8e-12)
+
     assert row == pytest.approx(inv_row[0], abs=1e-8)
     assert col == pytest.approx(inv_col[0], abs=1e-8)
 
@@ -714,6 +795,7 @@ def test_sensor_loc_dir_dtm_multi_points():
     left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
 
     geom_model = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
+    geom_model_optim = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"), "RPCoptim")
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
@@ -733,10 +815,23 @@ def test_sensor_loc_dir_dtm_multi_points():
         dtm_image.nb_columns,
         dtm_image.transform,
     )
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
 
     loc = Localization(geom_model, image=left_im, elevation=dtm_ventoux)
+    loc_optim = Localization(geom_model_optim, image=left_im, elevation=dtm_ventoux_optim)
 
     row = np.array([100.0, 200.0])
     col = np.array([10.0, 20.5])
-    points = loc.direct(row, col)
-    print(points)
+    lonlat_alt = loc.direct(row, col)
+    lonlat_alt_optim = loc_optim.direct(row, col)
+    np.testing.assert_array_equal(lonlat_alt, lonlat_alt_optim)
+
+    row_id, col_id, _ = loc.inverse(lonlat_alt[:, 0], lonlat_alt[:, 1], lonlat_alt[:, 2])
+    np.testing.assert_allclose(row_id, row, 0, 0.02)
+    np.testing.assert_allclose(col_id, col, 0, 7e-3)

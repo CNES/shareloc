@@ -94,6 +94,8 @@ tuple<double,double,double> RPC::direct_loc_h(
             m_den_lon,
             m_num_lat,
             m_den_lat,
+            fill_nan,
+            "direct",
             m_scale_col,
             m_offset_col,
             m_scale_row,
@@ -134,6 +136,8 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
             m_den_lon,
             m_num_lat,
             m_den_lat,
+            fill_nan,
+            "direct",
             m_scale_col,
             m_offset_col,
             m_scale_row,
@@ -144,7 +148,7 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_h(
             m_offset_lon,
             m_scale_lat,
             m_offset_lat
-        );
+            );
 
     }else{
         return direct_loc_inverse_iterative(row, col, alt, 10, fill_nan);
@@ -279,6 +283,8 @@ tuple<double,double,double> RPC::inverse_loc(
         m_den_col,
         m_num_row,
         m_den_row,
+        false,
+        "inverse",
         m_scale_lon,
         m_offset_lon,
         m_scale_lat,
@@ -313,6 +319,8 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
         m_den_col,
         m_num_row,
         m_den_row,
+        false,
+        "inverse",
         m_scale_lon,
         m_offset_lon,
         m_scale_lat,
@@ -325,46 +333,6 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::inverse_loc(
         m_offset_row
     );
     return {row_out, col_out, alt_res};
-}
-
-
-tuple<vector<bool>,vector<double>,vector<double>> RPC::filter_coordinates(// May be useless
-    vector<double> const& first_coord,
-    vector<double> const& second_coord,
-    bool fill_nan,
-    string direction)const //mettre la direction de type enum
-{
-    // assert none problematic inputs
-        if (first_coord.size()!=second_coord.size()){
-            throw runtime_error("Error : C++ : filter_coordinates : ");
-            throw runtime_error("first_coord.size()!=second_coord.size()");
-            exit(EXIT_FAILURE);
-        }
-
-        // filter_nan computation
-        size_t size = second_coord.size();
-        vector<bool> filter_nan(size);
-        for (size_t i = 0; i < size; ++i) {
-            filter_nan[i] = !(isnan(first_coord[i]) || isnan(second_coord[i]));
-        }
-
-        // Output computation
-        vector<double>x_out(size,numeric_limits<double>::quiet_NaN());
-        vector<double>y_out(size,numeric_limits<double>::quiet_NaN());
-        if (fill_nan){
-            double out_x_nan_value;
-            double out_y_nan_value;
-            if (direction=="direct"){
-                out_x_nan_value = m_offset_lon;
-                out_y_nan_value = m_offset_lat;
-            }else{
-                out_x_nan_value = m_offset_col;
-                out_y_nan_value = m_offset_row;
-            }
-            fill(x_out.begin(), x_out.end(), out_x_nan_value);
-            fill(y_out.begin(), y_out.end(), out_y_nan_value);
-        }
-    return {filter_nan, x_out, y_out};
 }
 
 tuple<double, double, double, double>
@@ -422,8 +390,13 @@ tuple<double,double,double> RPC::direct_loc_inverse_iterative(
 
     // Nan Filtering : if input nan -> output nan
     if(isnan(row) || isnan(col)){
-        lon_out = numeric_limits<double>::quiet_NaN();
-        lat_out = numeric_limits<double>::quiet_NaN();
+        if(fill_nan){
+            lon_out = m_offset_lon;
+            lat_out = m_offset_lat;              
+        }else{
+            lon_out = numeric_limits<double>::quiet_NaN();
+            lat_out = numeric_limits<double>::quiet_NaN();
+        }
         return {lon_out, lat_out, alt};
     }
     else{
@@ -499,10 +472,15 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_inverse_iter
     // For all input point
     for (size_t i = 0;i<nb_points;++i){
 
-        // Nan Filtering : if input nan -> output nan
+        // Nan Filtering
         if(isnan(row_norm[i]) || isnan(col_norm[i])){
-            lon_out[i] = numeric_limits<double>::quiet_NaN();
-            lat_out[i] = numeric_limits<double>::quiet_NaN();
+            if(fill_nan){
+                lon_out[i] = m_offset_lon;
+                lat_out[i] = m_offset_lat;              
+            }else{
+                lon_out[i] = numeric_limits<double>::quiet_NaN();
+                lat_out[i] = numeric_limits<double>::quiet_NaN();
+            }
             is_nan[i] = true;
             continue;
         }
@@ -620,6 +598,152 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::los_extrema(
     return {lon, lat, alt};
 }
 
+tuple<double,double,double>
+RPC::compute_rational_function_polynomial_unitary(
+    double lon_col,
+    double lat_row,
+    double alt,
+    array<double, 20> const& num_col,
+    array<double, 20> const& den_col,
+    array<double, 20> const& num_lin,
+    array<double, 20> const& den_lin,
+    bool fill_nan,
+    string direction,
+
+    //input
+    double scale_lon_col,
+    double offset_lon_col,
+    double scale_lat_row,
+    double offset_lat_row,
+    double scale_alt,
+    double offset_alt,
+
+    //output
+    double scale_col,
+    double offset_col,
+    double scale_lin,
+    double offset_lin
+) const
+{
+    double row_lat_out;
+    double col_lon_out;
+    double alt_out;
+    if(isnan(lon_col) || isnan(lat_row)){
+
+        if(fill_nan){
+            if(direction=="direct"){
+                col_lon_out = m_offset_lon;
+                row_lat_out = m_offset_lat;
+                alt_out = alt;
+            }else{
+                col_lon_out = m_offset_col;
+                row_lat_out = m_offset_row;
+                alt_out = alt;
+            }
+        }else{
+            col_lon_out = numeric_limits<double>::quiet_NaN();
+            row_lat_out = numeric_limits<double>::quiet_NaN();
+            alt_out = alt;
+        }
+    }else{
+        alt_out = alt;
+
+        double lon_col_norm = (lon_col - offset_lon_col)/scale_lon_col;
+        double lat_row_norm = (lat_row - offset_lat_row)/scale_lat_row;
+        double alt_norm = (alt - offset_alt)/scale_alt;
+
+        alignas(64) array<double, 20> norms = pre_polynomial_equation(lon_col_norm, lat_row_norm, alt_norm);
+        double poly_num_col = polynomial_equation(norms, num_col);
+        double poly_den_col = polynomial_equation(norms, den_col);
+        double poly_num_lin = polynomial_equation(norms, num_lin);
+        double poly_den_lin = polynomial_equation(norms, den_lin);
+
+
+        col_lon_out = poly_num_col / poly_den_col * scale_col + offset_col;
+        row_lat_out = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
+    };
+
+    return {col_lon_out, row_lat_out, alt_out};
+}
+
+tuple<vector<double>,vector<double>,vector<double>> RPC::compute_rational_function_polynomial(
+    vector<double> const& lon_col,
+    vector<double> const& lat_row,
+    vector<double> const& alt,
+    array<double, 20> const& num_col,
+    array<double, 20> const& den_col,
+    array<double, 20> const& num_lin,
+    array<double, 20> const& den_lin,
+    bool fill_nan,
+    string direction,
+
+    //input
+    double scale_lon_col,
+    double offset_lon_col,
+    double scale_lat_row,
+    double offset_lat_row,
+    double scale_alt,
+    double offset_alt,
+
+    //output
+    double scale_col,
+    double offset_col,
+    double scale_lin,
+    double offset_lin
+)const{
+    auto [lon_col_norm,lat_row_norm,alt_norm] = check_sizes(lon_col,lat_row,alt);
+
+
+    vector<double> col_lon_out(lon_col_norm.size());
+    vector<double> row_lat_out(lon_col_norm.size());
+    vector<double> alt_out(lon_col_norm.size());
+
+    for(size_t i = 0;i<lon_col_norm.size();++i) {
+        //--- Nan filtering
+        if(isnan(lon_col_norm[i]) || isnan(lat_row_norm[i])){
+            if(fill_nan){
+                if(direction=="direct"){
+                    col_lon_out[i] = m_offset_lon;
+                    row_lat_out[i] = m_offset_lat;
+                    alt_out[i] = alt[i];
+                }else{
+                    col_lon_out[i] = m_offset_col;
+                    row_lat_out[i] = m_offset_row;
+                    alt_out[i] = alt[i];
+                }
+            }else{
+                col_lon_out[i] = numeric_limits<double>::quiet_NaN();
+                row_lat_out[i] = numeric_limits<double>::quiet_NaN();
+                alt_out[i] = alt[i];
+            }
+            continue;
+        }
+
+        alt_out[i] = alt_norm[i];
+
+        //--- Normalisation
+        lon_col_norm[i] = (lon_col_norm[i] - offset_lon_col)/scale_lon_col;
+        lat_row_norm[i] = (lat_row_norm[i] - offset_lat_row)/scale_lat_row;
+        alt_norm[i]     = (alt_norm[i] - offset_alt)/scale_alt;
+
+        //-- Computation
+
+        alignas(64) array<double, 20> norms = pre_polynomial_equation(lon_col_norm[i], lat_row_norm[i],alt_norm[i]);
+        double poly_num_col = polynomial_equation(norms, num_col);
+        double poly_den_col = polynomial_equation(norms, den_col);
+        double poly_num_lin = polynomial_equation(norms, num_lin);
+        double poly_den_lin = polynomial_equation(norms, den_lin);
+
+        if (poly_den_col!=0 and poly_den_lin!=0){
+            col_lon_out[i] = poly_num_col / poly_den_col * scale_col + offset_col;
+            row_lat_out[i] = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
+        }
+        else{
+            throw runtime_error("C++ : compute_rational_function_polynomial: 0 divison");
+        }
+    }
+    return {col_lon_out, row_lat_out, alt_out};
+}
 
 //
 //
@@ -689,127 +813,6 @@ double polynomial_equation(
         +  norms[18] * coeffs[18]
         +  norms[19] * coeffs[19];
 }
-
-
-tuple<double,double,double>
-compute_rational_function_polynomial_unitary(
-    double lon_col,
-    double lat_row,
-    double alt,
-    array<double, 20> const& num_col,
-    array<double, 20> const& den_col,
-    array<double, 20> const& num_lin,
-    array<double, 20> const& den_lin,
-
-    //input
-    double scale_lon_col,
-    double offset_lon_col,
-    double scale_lat_row,
-    double offset_lat_row,
-    double scale_alt,
-    double offset_alt,
-
-    //output
-    double scale_col,
-    double offset_col,
-    double scale_lin,
-    double offset_lin
-)
-{
-    double row_lat_out;
-    double col_lon_out;
-    double alt_out;
-    if(isnan(lon_col) || isnan(lat_row)){
-        col_lon_out = numeric_limits<double>::quiet_NaN();
-        row_lat_out = numeric_limits<double>::quiet_NaN();
-        alt_out = numeric_limits<double>::quiet_NaN();
-    }else{
-        alt_out = alt;
-
-        double lon_col_norm = (lon_col - offset_lon_col)/scale_lon_col;
-        double lat_row_norm = (lat_row - offset_lat_row)/scale_lat_row;
-        double alt_norm = (alt - offset_alt)/scale_alt;
-
-        alignas(64) array<double, 20> norms = pre_polynomial_equation(lon_col_norm, lat_row_norm, alt_norm);
-        double poly_num_col = polynomial_equation(norms, num_col);
-        double poly_den_col = polynomial_equation(norms, den_col);
-        double poly_num_lin = polynomial_equation(norms, num_lin);
-        double poly_den_lin = polynomial_equation(norms, den_lin);
-
-
-        col_lon_out = poly_num_col / poly_den_col * scale_col + offset_col;
-        row_lat_out = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
-    };
-
-    return {col_lon_out, row_lat_out, alt_out};
-}
-
-tuple<vector<double>,vector<double>,vector<double>> compute_rational_function_polynomial(
-    vector<double> const& lon_col,
-    vector<double> const& lat_row,
-    vector<double> const& alt,
-    array<double, 20> const& num_col,
-    array<double, 20> const& den_col,
-    array<double, 20> const& num_lin,
-    array<double, 20> const& den_lin,
-
-    //input
-    double scale_lon_col,
-    double offset_lon_col,
-    double scale_lat_row,
-    double offset_lat_row,
-    double scale_alt,
-    double offset_alt,
-
-    //output
-    double scale_col,
-    double offset_col,
-    double scale_lin,
-    double offset_lin
-){
-    auto [lon_col_norm,lat_row_norm,alt_norm] = check_sizes(lon_col,lat_row,alt);
-
-
-    vector<double> col_lon_out(lon_col_norm.size());
-    vector<double> row_lat_out(lon_col_norm.size());
-    vector<double> alt_out(lon_col_norm.size());
-
-    for(size_t i = 0;i<lon_col_norm.size();++i) {
-        //--- Nan filtering
-        if(isnan(lon_col_norm[i]) || isnan(lat_row_norm[i])){
-            col_lon_out[i] = numeric_limits<double>::quiet_NaN();
-            row_lat_out[i] = numeric_limits<double>::quiet_NaN();
-            alt_out[i] = numeric_limits<double>::quiet_NaN();
-            continue;
-        }
-
-        alt_out[i] = alt_norm[i];
-
-        //--- Normalisation
-        lon_col_norm[i] = (lon_col_norm[i] - offset_lon_col)/scale_lon_col;
-        lat_row_norm[i] = (lat_row_norm[i] - offset_lat_row)/scale_lat_row;
-        alt_norm[i]     = (alt_norm[i] - offset_alt)/scale_alt;
-
-        //-- Computation
-
-        alignas(64) array<double, 20> norms = pre_polynomial_equation(lon_col_norm[i], lat_row_norm[i],alt_norm[i]);
-        double poly_num_col = polynomial_equation(norms, num_col);
-        double poly_den_col = polynomial_equation(norms, den_col);
-        double poly_num_lin = polynomial_equation(norms, num_lin);
-        double poly_den_lin = polynomial_equation(norms, den_lin);
-
-        if (poly_den_col!=0 and poly_den_lin!=0){
-            col_lon_out[i] = poly_num_col / poly_den_col * scale_col + offset_col;
-            row_lat_out[i] = poly_num_lin / poly_den_lin * scale_lin + offset_lin;
-        }
-        else{
-            throw runtime_error("C++ : compute_rational_function_polynomial: 0 divison");
-        }
-    }
-    return {col_lon_out, row_lat_out, alt_out};
-}
-
-
 
 double derivative_polynomial_latitude(
     double lon_norm,

@@ -79,7 +79,6 @@ def test_interp_dtm(index_col, index_row, valid_alt):
     dtm_image = dtm_reader(
         fic,
         None,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=True,
         fill_nodata=None,
@@ -119,7 +118,6 @@ def test_interp_dtm_geoid(index_lon, index_lat, valid_alt):
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=True,
         fill_nodata=None,
@@ -148,7 +146,6 @@ def test_dtm_alt_min_max():
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=[256, 256, 512, 512],
         roi_is_in_physical_space=False,
         fill_nodata=None,

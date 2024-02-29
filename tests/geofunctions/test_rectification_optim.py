@@ -486,7 +486,7 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     # we use DTM and Geoid: a DTMIntersection class has to be used
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_image = dtm_reader(dtm_file, geoid_file, read_data=True)
+    dtm_image = dtm_reader(dtm_file, geoid_file)
     dtm_ventoux_py = DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,

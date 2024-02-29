@@ -39,7 +39,6 @@ The term :term:`DEM` can be used for Localization on DEM function and Rectificat
     dtm_image = dtm_reader( # dtm_reader with default arguments
         dtm_filename,
         geoid_filename=None,
-        read_data=False,
         roi=None,
         roi_is_in_physical_space=False,
         fill_nodata="rio_fillnodata",
@@ -68,4 +67,5 @@ Limitations
 -----------
 
  * nodata are not (yet) handled in `shareloc.geofunctions.DTMIntersection` code. Thus a filling strategy should be set when using nodata DTM. This can be done by setting `fill_nodata` arg in `shareloc.geofunctions.DTMIntersection`. Filling strategy examples can be found in test `test_dtm_image`
+
 

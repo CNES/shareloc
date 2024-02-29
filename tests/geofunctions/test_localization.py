@@ -77,7 +77,6 @@ def test_localize_direct_rpc():
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=True,
         fill_nodata=None,
@@ -143,7 +142,6 @@ def test_localize_direct_grid():
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=True,
         fill_nodata="min",
@@ -187,7 +185,6 @@ def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     dtm_image = dtm_reader(
         fic,
         geoid_filename=None,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=False,
         fill_nodata="rio_fillnodata",
@@ -327,7 +324,6 @@ def test_sensor_loc_dir_dtm_geoid(col, row, valid_coord):
     dtm_image = dtm_reader(
         dtm_file,
         geoid_filename=geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=False,
         fill_nodata="rio_fillnodata",
@@ -373,7 +369,6 @@ def test_sensor_loc_dir_dtm_geoid_utm(col, row, valid_coord):
     dtm_image = dtm_reader(
         dtm_file,
         geoid_filename=geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=False,
         fill_nodata="rio_fillnodata",
@@ -802,7 +797,6 @@ def test_sensor_loc_dir_dtm_multi_points():
     dtm_image = dtm_reader(
         dtm_file,
         geoid_filename=geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=False,
         fill_nodata="rio_fillnodata",

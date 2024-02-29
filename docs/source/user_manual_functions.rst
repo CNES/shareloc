@@ -244,7 +244,51 @@ Algorithm details can be found in reference below.
         :rtype: Tuple
         """
 
+Epipolar grid generation adapted for parallel computing
+-------------------------------------------------------
 
+We generate the left grid point by point, and for each point on the left grid, we compute its equivalent on the right grid using the colocalization function. Therefore, in the following sections, we will only focus on describing the process of generating the left grid.
+
+The algorithm follows these broad guidelines:
+
+ 1.Calculation of the top-left corner of the grid is performed using the *init_inputs_rectification* function.
+ 
+ 2.Starting from this first point, we compute the first columns of the grid.*compute_strip_of_epipolar_grid(axis=0)*
+ 
+ .. image:: images/0.png
+    :width: 40%
+    
+ 3.Computation of each row, by stride, from the first columns.*compute_strip_of_epipolar_grid(axis=1)*
+ 
+ .. image:: images/1.png
+    :width: 50%
+
+To calculate the next point from the current one, we follow these steps:
+
+ 1.Obtain the local epipolar line: We perform colocalization on the current left grid point to obtain its corresponding point on the right image. Then, we conduct another colocalization back to the left image but at different altitudes: h-elevation_offset and h+elevation_offset. This gives us the two ends of the local epipolar line.
+
+ .. image:: images/2.png
+    :width: 100%
+    
+ 2.Obtain the epipolar angle: Now that we have the local epipolar line, we can compute the (local) epipolar angle. It is measured from the horizontal to the local epipolar line. Note that in image processing, the horizontal axis points downwards, so the negative direction of the angles follows the trigonometric direction. We can choose whether we want to compute the point in the next columns (axis=1) or the next line (axis=0, in which case we add π/2 to the epipolar angle) of the grid.
+ 
+ .. image:: images/3.png
+    :width: 100%
+ 
+ 3.Moving along the chosen axis: With the direction determined for finding the next grid point in the image, we calculate the distance between the current point and the next point by multiplying the epipolar step of the grid, by the spacing of the image. Therefore, with the direction and distance, we can determine the coordinates of the new point on the grid.
+ 
+ .. image:: images/4.png
+    :width: 100%
+    
+ 4. Repeat in an iterative way until the grid is full.
+ 
+ 5. Once it is finished, the (position) grid is converted into a displacement grid.
+ 
+ - `Test using generation of epipolar grid <https://github.com/CNES/shareloc/blob/master/tests/geofunctions/test_rectification.py#L221>`_
+ - `test_compute_strip_of_epipolar_grid_dtm optimized (c++) <https://github.com/CNES/shareloc/blob/master/tests/geofunctions/test_rectification_optim.py#L469>`_
+ 
+Please note that the optimized code (c++) functions exclusively with EPSG=4326 (WSG84). Conversion for a different EPSG code is handled by the Python portion. Consequently, for reduced computation time, we recommend utilizing data in EPSG=4326.
+ 
 References :
 ------------
 - Youssefi D., Michel, J., Sarrazin, E., Buffe, F., Cournet, M., Delvit, J.,  L'Helguen, C., Melet, O., Emilien, A., Bosman, J., 2020. **CARS: A photogrammetry pipeline using dask graphs to construct a global 3d model**. IGARSS - IEEE International Geoscience and Remote Sensing Symposium.(`https://ieeexplore.ieee.org/document/9324020 <https://ieeexplore.ieee.org/document/9324020>`_)

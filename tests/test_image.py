@@ -126,3 +126,35 @@ def test_image_metadata_roi(
     )
     assert phys_row == phy_valid_row
     assert phys_col == phy_valid_col
+
+
+@pytest.mark.unit_tests
+@pytest.mark.parametrize(
+    "roi,data_size_ref",
+    [
+        ([-5, -5, 256, 256], (256, 256)),
+        ([0, 0, 1201, 1201], (1201, 1201)),  # dtm size
+        ([-15, -15, 1215, 1215], (1201, 1201)),
+        ([5, 5, 100, 100], (95, 95)),
+        ([5, 5, 1215, 1215], (1196, 1196)),
+    ],
+)
+def test_image_metadata_larger_roi(roi, data_size_ref):
+    """
+    Test image class with roi larger than image
+    """
+    image_filename = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    my_image_roi = Image(image_filename, read_data=True, roi=roi)
+
+    assert my_image_roi.data.shape == data_size_ref
+
+    # ROI in physical space
+    footprint_dtm = [43.9995833333333337, 4.9995833333333337, 45.0004166666666663, 6.0004166666666672]
+    footprint_dtm[0] -= 1
+    footprint_dtm[1] -= 1
+    footprint_dtm[2] += 1
+    footprint_dtm[3] += 1
+
+    my_image_roi = Image(image_filename, read_data=True, roi=footprint_dtm, roi_is_in_physical_space=True)
+
+    assert my_image_roi.data.shape == (1201, 1201)

@@ -71,7 +71,6 @@ class Image:
             self.transform = self.dataset.transform
             # bitwise not inversion (Affine.__invert implemented, pylint bug)
             self.trans_inv = ~self.transform  # pylint: disable=invalid-unary-operand-type
-
             if roi is not None:
                 # User have set ROI in physical space or not
                 if roi_is_in_physical_space:
@@ -85,16 +84,24 @@ class Image:
                     # in case of negative pixel size y
                     if row_off > row_max:
                         row_max, row_off = row_off, row_max
-                    row_off = np.floor(row_off)
-                    col_off = np.floor(col_off)
+
+                    row_off = max(np.floor(row_off), 0)
+                    col_off = max(np.floor(col_off), 0)
                     width = int(np.ceil(col_max - col_off))
                     height = int(np.ceil(row_max - row_off))
+
                     logging.debug("roi in image , offset : %s %s size %s %s", col_off, row_off, width, height)
                 else:
-                    row_off = roi[0]
-                    col_off = roi[1]
-                    width = roi[3] - roi[1]
-                    height = roi[2] - roi[0]
+                    row_off = max(roi[0], 0)
+                    col_off = max(roi[1], 0)
+                    row_off = min(row_off, self.dataset.height)
+                    col_off = min(col_off, self.dataset.width)
+                    width = roi[3] - col_off
+                    height = roi[2] - row_off
+
+                # set boundaries for ROI
+                width = min(width, self.dataset.width - col_off)
+                height = min(height, self.dataset.height - row_off)
 
                 roi_window = rasterio.windows.Window(col_off, row_off, width, height)
                 self.transform = self.dataset.window_transform(roi_window)

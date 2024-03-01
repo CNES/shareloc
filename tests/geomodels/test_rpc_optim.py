@@ -763,7 +763,7 @@ def test_direct_loc_dtm():
     rpc_py = GeoModel(rpc_file, "RPC")
     rpc_optim = GeoModel(rpc_file, "RPCoptim")
 
-    dtm_image = dtm_reader(mnt, read_data=True)
+    dtm_image = dtm_reader(mnt)
     dtm_py = DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,
@@ -814,7 +814,7 @@ def test_direct_loc_dtm_utm():
     rpc_py = GeoModel(rpc_file, "RPC")
     rpc_optim = GeoModel(rpc_file, "RPCoptim")
 
-    dtm_image = dtm_reader(mnt, read_data=True)
+    dtm_image = dtm_reader(mnt)
     dtm_py = DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,

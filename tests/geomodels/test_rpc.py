@@ -390,7 +390,7 @@ def test_rpc_direct_dtm(id_scene, index_x, index_y):
     data_folder_mnt = data_path("ellipsoide", id_scene)
 
     fic = os.path.join(data_folder_mnt, f"MNT_{id_scene}.tif")
-    dtm_image = dtm_reader(fic, read_data=True)
+    dtm_image = dtm_reader(fic)
     dtm = DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,

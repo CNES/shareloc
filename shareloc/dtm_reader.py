@@ -52,7 +52,6 @@ class dtm_reader(Image):
         self,
         dtm_filename,
         geoid_filename=None,
-        read_data=False,
         roi=None,
         roi_is_in_physical_space=False,
         fill_nodata="rio_fillnodata",
@@ -65,8 +64,6 @@ class dtm_reader(Image):
         :type dtm_filename: string
         :param geoid_filename: geoid filename, if None datum is ellispoid
         :type geoid_filename: string
-        :param read_data: read image data
-        :type read_data: bool
         :param roi: region of interest [row_min,col_min,row_max,col_max] or [xmin,y_min,x_max,y_max] if
             roi_is_in_physical_space activated
         :type roi: list
@@ -79,22 +76,22 @@ class dtm_reader(Image):
         :type fill_value: float
         """
 
-        super().__init__(dtm_filename, read_data=read_data, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space)
+        super().__init__(dtm_filename, read_data=True, roi=roi, roi_is_in_physical_space=roi_is_in_physical_space)
 
         self.dtm_filename = dtm_filename
         self.geoid_filename = geoid_filename
 
         self.stats = {}
-        if read_data:
-            if self.mask is not None:
-                valid_data = self.data[self.mask[:, :] == 255]
-            else:
-                valid_data = self.data
 
-            self.stats["min"] = valid_data.min()
-            self.stats["max"] = valid_data.max()
-            self.stats["mean"] = valid_data.mean()
-            self.stats["median"] = np.median(valid_data)
+        if self.mask is not None:
+            valid_data = self.data[self.mask[:, :] == 255]
+        else:
+            valid_data = self.data
+
+        self.stats["min"] = valid_data.min()
+        self.stats["max"] = valid_data.max()
+        self.stats["mean"] = valid_data.mean()
+        self.stats["median"] = np.median(valid_data)
 
         if fill_nodata is not None:
             self.fill_nodata(strategy=fill_nodata, fill_value=fill_value)

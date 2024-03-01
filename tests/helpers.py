@@ -134,7 +134,7 @@ def DTMIntersection_constructor(file_path: str):
     :return: python and c++ DTMIntersection object
     :retype: tuple(DTMIntersection python, DTMIntersection c++)
     """
-    dtm_image = dtm_reader(file_path, read_data=True)
+    dtm_image = dtm_reader(file_path)
     dtm_py = DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,

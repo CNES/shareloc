@@ -61,7 +61,6 @@ def test_constructor(roi, roi_phys, fill_nodata, fill_value):
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=roi,
         roi_is_in_physical_space=roi_phys,
         fill_nodata=fill_nodata,
@@ -136,7 +135,6 @@ def test_eq_plan(i, positon):
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=[256, 256, 512, 512],
         roi_is_in_physical_space=False,
         fill_nodata=None,
@@ -182,7 +180,6 @@ def test_interpolate(pos_row, pos_col):
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=[256, 256, 512, 512],
         roi_is_in_physical_space=False,
         fill_nodata=None,
@@ -231,7 +228,6 @@ def test_index_ter_methodes(coords):
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=[256, 256, 512, 512],
         roi_is_in_physical_space=False,
         fill_nodata=None,
@@ -276,7 +272,6 @@ def test_intersect_dtm_cube():
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=True,
         fill_nodata=None,
@@ -379,7 +374,6 @@ def test_init_min_max():
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=True,
         fill_nodata=None,
@@ -411,7 +405,6 @@ def test_intersection():
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=True,
         fill_nodata=None,
@@ -474,7 +467,6 @@ def test_serialization(roi, roi_phys, fill_nodata, fill_value):
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=roi,
         roi_is_in_physical_space=roi_phys,
         fill_nodata=fill_nodata,

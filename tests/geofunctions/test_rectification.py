@@ -175,7 +175,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid(init_
     # we use DTM and Geoid: a DTMIntersection class has to be used
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    dtm_image = dtm_reader(dtm_file, geoid_file, read_data=True)
+    dtm_image = dtm_reader(dtm_file, geoid_file)
     dtm_ventoux = DTMIntersection(
         dtm_image.epsg,
         dtm_image.alt_data,
@@ -236,7 +236,6 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid_roi(i
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=extent,
         roi_is_in_physical_space=True,
         fill_nodata=None,
@@ -365,7 +364,6 @@ def test_compute_stereorectification_epipolar_grids_geomodel_grid_dtm_geoid():
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,
-        read_data=True,
         roi=None,
         roi_is_in_physical_space=True,
         fill_nodata="mean",

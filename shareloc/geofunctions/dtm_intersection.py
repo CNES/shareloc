@@ -31,11 +31,7 @@ from affine import Affine
 
 # Shareloc imports
 from shareloc.math_utils import interpol_bilin
-from shareloc.proj_utils import (
-    coordinates_conversion,
-    transform_index_to_physical_point,
-    transform_physical_point_to_index,
-)
+from shareloc.proj_utils import transform_index_to_physical_point, transform_physical_point_to_index
 
 
 class DTMIntersection:
@@ -179,27 +175,19 @@ class DTMIntersection:
         (vect_ter[1], vect_ter[0]) = transform_index_to_physical_point(self.transform, vect_dtm[0], vect_dtm[1])
         return vect_ter
 
-    def get_alt_offset(self, epsg):
+    def get_footprint_corners(self):
         """
-        returns min/amx altitude offset between dtm coordinates system and another one
+        get_footprint_corners method
 
-        :param epsg: epsg code to compare with
-        :type epsg: int
-        :return: min/max altimetric difference between epsg in parameter minus dtm alti expressed in dtm epsg
-        :rtype: list of float (1x2)
+        :return: footrpint corners of dtm
+        :rtype: np.ndarray(4x2) top_left, top_right, bottom_right, bottom_left
         """
-        if epsg != self.epsg:
-            alti_moy = (self.alt_min + self.alt_max) / 2.0
-            corners = np.zeros([4, 2])
-            corners[:, 0] = [0.0, 0.0, self.nb_rows, self.nb_rows]
-            corners[:, 1] = [0.0, self.nb_columns, self.nb_columns, 0.0]
-            corners -= 0.5  # index to corner
-            ground_corners = np.zeros([3, 4])
-            ground_corners[2, :] = alti_moy
-            ground_corners[1::-1, :] = transform_index_to_physical_point(self.transform, corners[:, 0], corners[:, 1])
-            converted_corners = coordinates_conversion(ground_corners.transpose(), self.epsg, epsg)
-            return [np.min(converted_corners[:, 2]) - alti_moy, np.max(converted_corners[:, 2]) - alti_moy]
-        return [0.0, 0.0]
+
+        corners = np.zeros([4, 2])
+        corners[:, 0] = [0.0, 0.0, self.nb_rows, self.nb_rows]
+        corners[:, 1] = [0.0, self.nb_columns, self.nb_columns, 0.0]
+        corners -= 0.5  # index to corner
+        return corners
 
     def interpolate(self, pos_row, pos_col):
         """
@@ -892,3 +880,6 @@ class DTMIntersection:
 
     def get_epsg(self):  # same api as cpp for direct_loc_dtm
         return self.epsg
+
+    def get_transform(self):  # same api as cpp for direct_loc_dtm
+        return self.transform

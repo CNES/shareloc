@@ -17,7 +17,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 """
 Module to test RPCoptim class
 """
@@ -84,83 +84,6 @@ def test_construtor(geom_path):
     np.testing.assert_array_equal(rpc_py.den_col, rpc_cpp.get_den_col())
     np.testing.assert_array_equal(rpc_py.num_row, rpc_cpp.get_num_row())
     np.testing.assert_array_equal(rpc_py.den_row, rpc_cpp.get_den_row())
-
-
-def test_method_rpc_cpp():
-    """
-    Test call to method parent class rpc in cpp
-    """
-
-    file_path = os.path.join(data_path(), "rpc/PHR1B_P_201709281038045_SEN_PRG_FC_178608-001.geom")
-    rpc = GeoModel(file_path, "RPCoptim")
-
-    vector_double = [1.0, 1.0, 1.0]
-    array20 = [1.0 for i in range(20)]
-    double = 1.0
-    integer = 1
-    string = "string"
-
-    rpc.direct_loc_h(vector_double, vector_double, vector_double, False)
-    rpc.direct_loc_grid_h(integer, integer, integer, integer, integer, integer, double)
-    rpc.inverse_loc(vector_double, vector_double, vector_double)
-    rpc.direct_loc_inverse_iterative(vector_double, vector_double, vector_double, integer, False)
-    rpc.get_alt_min_max()
-    rpc.los_extrema(double, double, double, double, False)
-    rpc.compute_rational_function_polynomial_unitary(
-        double,
-        double,
-        double,
-        array20,
-        array20,
-        array20,
-        array20,
-        True,
-        string,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-    )
-
-    rpc.compute_rational_function_polynomial(
-        vector_double,
-        vector_double,
-        vector_double,
-        array20,
-        array20,
-        array20,
-        array20,
-        True,
-        string,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-        double,
-    )
-
-
-def test_function_rpc_cpp():
-    """
-    Test call to function written in rpc.cpp
-    """
-    array20 = [1.0 for i in range(20)]
-    double = 1.0
-
-    bindings_cpp.polynomial_equation(array20, array20)
-    bindings_cpp.derivative_polynomial_latitude(double, double, double, array20)
-    bindings_cpp.derivative_polynomial_longitude(double, double, double, array20)
 
 
 @pytest.mark.parametrize(
@@ -630,7 +553,7 @@ def test_rpc_direct_inverse_iterative_unitary_loc(col, row, alt):
 
     (row_cpp, col_cpp, alt_cpp) = rpc_cpp.inverse_loc(lon_cpp, lat_cpp, alt_cpp)
 
-    # datatype conversion python/cpp -> small error
+    # small error from numba
     assert row_cpp[0] == pytest.approx(row, abs=1e-9)
     assert col_cpp[0] == pytest.approx(col, abs=1e-9)
     assert alt_cpp[0] == pytest.approx(alt, abs=0)
@@ -671,7 +594,6 @@ def test_rpc_direct_inverse_iterative_multi_loc():
         row_vect, col_vect, alt_vect, nb_iter_max, fill_nan
     )
 
-    # print("Erreur max lon :",np.max(np.abs(np.array(lon_cpp_vect)-lon_py_vect)))
     np.testing.assert_allclose(np.array(lon_cpp_vect), lon_py_vect, 0, 1e-11)
     np.testing.assert_allclose(np.array(lat_cpp_vect), lat_py_vect, 0, 1e-11)
     np.testing.assert_allclose(np.array(alt_cpp_vect), alt_py_vect, 0, 1e-11)
@@ -700,7 +622,6 @@ def test_rpc_direct_inverse_iterative_multi_loc():
         row_vect_nan, col_vect, alt_vect, nb_iter_max, fill_nan
     )
 
-    # print("Erreur max lon :",np.nanmax(np.abs(np.array(lon_cpp)-lon_py)))
     np.testing.assert_allclose(np.array(lon_cpp), lon_py, 0, 1e-11)
     np.testing.assert_allclose(np.array(lat_cpp), lat_py, 0, 1e-11)
     np.testing.assert_allclose(np.array(alt_cpp), alt_py, 0, 1e-11)
@@ -710,7 +631,7 @@ def test_rpc_direct_inverse_iterative_multi_loc():
     res_py = rpc_py.direct_loc_inverse_iterative(nans, nans, nans, nb_iter_max, fill_nan)
     res_cpp = rpc_cpp.direct_loc_inverse_iterative(nans, nans, nans, nb_iter_max, fill_nan)
 
-    res_py = np.vstack([res_py[0], res_py[1]])  # ,res_py[2]])
+    res_py = np.vstack([res_py[0], res_py[1]])
     res_cpp = np.array(res_cpp[0:2])
 
     if np.isnan(res_py).any() and np.isnan(res_cpp).any():

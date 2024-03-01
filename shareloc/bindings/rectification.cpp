@@ -19,10 +19,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/**
-Rectification function
-*/
-
 #include <vector>
 #include <array>
 #include <cmath>
@@ -177,7 +173,7 @@ double> compute_strip_of_epipolar_grid(
     py::array_t<double, py::array::c_style | py::array::forcecast> epipolar_angles_in = py::none()
 ){
 
-    // Convert np.array to 1D std::vectro<double>
+    // Convert np.array to 1D std::vector<double>
     py::buffer_info buf_left = left_positions_point_in.request();
     double* left_positions_point = static_cast<double*>(buf_left.ptr);
 

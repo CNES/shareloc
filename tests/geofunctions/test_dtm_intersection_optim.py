@@ -17,7 +17,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 """
 Test module for localisation class shareloc/bindings/dtm_intersection.cpp
 """
@@ -116,7 +116,7 @@ def test_constructor(roi, roi_phys, fill_nodata, fill_value):
 
 
 @pytest.mark.unit_tests
-@pytest.mark.parametrize(  # Add pos_row=nb_rows
+@pytest.mark.parametrize(
     "i,positon",
     [
         (0, [5.00, 44.0, -100]),

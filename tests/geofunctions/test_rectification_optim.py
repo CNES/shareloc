@@ -17,7 +17,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 """
 Test module for rectification grid interpolation class shareloc/geofunctions/rectification*.py
 Ground truth references (otb_{left/right}_grid*.tif) have been generated using OTB StereoRectificationGridGenerator
@@ -114,8 +114,6 @@ def test_rectification_moving_along_lines():
     epi_step = 1
     alphas = 0.0
     default_elev = 0.0
-    # ground truth next pixel
-    # col pixel size of the image
     col_pixel_size = 1.0
     reference_next_cords = np.array([5000.5, 5000.5 + col_pixel_size, 0.0], dtype=np.float64)
 
@@ -150,8 +148,6 @@ def test_rectification_moving_to_next_lines():
     epi_step = 1
     alphas = 0.0
     default_elev = 0.0
-    # ground truth next pixel
-    # col pixel size of the image
     row_pixel_size = 1.0
     reference_next_cords = np.array([5000.5 + row_pixel_size, 5000.5, 0.0], dtype=np.float64)
 
@@ -483,7 +479,6 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     right_grid = np.load(os.path.join(data_path(), "rectification_optim", "right_grid_rpc_alti.npy"))  # (22,22,3)
     epi_angles = np.load(os.path.join(data_path(), "rectification_optim", "epi_angles_rpc_alti.npy"))  # (22,22)
 
-    # we use DTM and Geoid: a DTMIntersection class has to be used
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
     dtm_image = dtm_reader(dtm_file, geoid_file, read_data=True)

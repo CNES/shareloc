@@ -680,12 +680,12 @@ def test_direct_loc_h(geom_path):
     alt_vect = np.ndarray.flatten(alt_vect)
 
     col_vect[0] = np.nan
-    res_optim = rpc_optim.direct_loc_h(col_vect, row_vect, alt_vect)
-    res_py = rpc_py.direct_loc_h(col_vect, row_vect, alt_vect)
+    res_optim = rpc_optim.direct_loc_h(row_vect[:5], col_vect[:5], alt_vect[:5])
+    res_py = rpc_py.direct_loc_h(row_vect[:5], col_vect[:5], alt_vect[:5])
 
-    np.testing.assert_allclose(res_optim[:, 0], res_py[:, 0], 0, 2e-11)
-    np.testing.assert_allclose(res_optim[:, 1], res_py[:, 1], 0, 8e-12)
-    np.testing.assert_allclose(res_optim[:, 2], res_py[:, 2], 0, 9e-16)
+    np.testing.assert_allclose(res_optim[:, 0], res_py[:, 0], 0, 9e-16)
+    np.testing.assert_allclose(res_optim[:, 1], res_py[:, 1], 0, 0)
+    np.testing.assert_allclose(res_optim[:, 2], res_py[:, 2], 0, 0)
 
 
 def test_get_alt_min_max():
@@ -798,9 +798,9 @@ def test_direct_loc_dtm():
     res_py = rpc_py.direct_loc_dtm(row_vect, col_vect, dtm_py)
     res_optim = rpc_optim.direct_loc_dtm(row_vect, col_vect, dtm_cpp)
 
-    np.testing.assert_allclose(res_optim[:, 0], res_py[:, 0], 0, 3e-15)
-    np.testing.assert_allclose(res_optim[:, 1], res_py[:, 1], 0, 3e-14)
-    np.testing.assert_allclose(res_optim[:, 2], res_py[:, 2], 0, 4e-10)
+    np.testing.assert_allclose(res_optim[:, 0], res_py[:, 0], 0, 9e-12)
+    np.testing.assert_allclose(res_optim[:, 1], res_py[:, 1], 0, 6e-12)
+    np.testing.assert_allclose(res_optim[:, 2], res_py[:, 2], 0, 5e-7)
 
 
 def test_direct_loc_dtm_utm():

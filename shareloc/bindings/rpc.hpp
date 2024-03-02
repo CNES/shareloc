@@ -59,14 +59,16 @@ public:
         double row,
         double col,
         double alt,
-        bool fill_nan=false) const override;
+        bool fill_nan=false,
+        bool using_direct_coef=false) const override;
 
     /**direct_loc_h*/
     std::tuple<std::vector<double>,std::vector<double>,std::vector<double>> direct_loc_h(
         std::vector<double> const& row,
         std::vector<double> const& col,
         std::vector<double> const& alt,
-        bool fill_nan=false) const override;
+        bool fill_nan=false,
+        bool using_direct_coef=false) const override;
 
     /**direct_loc_dtm unitary*/
     std::tuple<double,double,double> direct_loc_dtm(

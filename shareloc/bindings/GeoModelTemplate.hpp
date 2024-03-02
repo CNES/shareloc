@@ -43,7 +43,8 @@ public:
         double row,
         double col,
         double alt, 
-        bool fill_nan=false)const;
+        bool fill_nan=false,
+        bool using_direct_coef=false)const;
 
     /**direct_loc_h*/
     virtual std::tuple<std::vector<double>,std::vector<double>,std::vector<double>>\
@@ -51,7 +52,8 @@ public:
         std::vector<double> const& row,
         std::vector<double> const& col,
         std::vector<double> const& alt, 
-        bool fill_nan=false)const;
+        bool fill_nan=false,
+        bool using_direct_coef=false)const;
 
     /**direct_loc_dtm*/
     virtual std::tuple<double,double,double>\

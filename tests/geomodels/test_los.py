@@ -131,11 +131,20 @@ def test_los_parameters():
 
     # Create los
     model_los = LOS(matches_left, geometrical_model, [310, 850])
-    assert np.allclose(
-        model_los.starting_points[0], np.array([4581872.88696028, 566896.05875082, 4387122.99450132]), rtol=0, atol=1e-8
+
+    np.testing.assert_allclose(
+        model_los.starting_points[0],
+        np.array([4581872.886817954, 566896.0588669669, 4387122.994634065]),
+        rtol=0,
+        atol=0,
     )
-    assert np.allclose(model_los.viewing_vectors[0], np.array([0.61688621, 0.00180051, 0.78705029]), rtol=0, atol=1e-8)
-    assert np.allclose(
-        model_los.ending_points[0], np.array([4581535.24740943, 566895.07328168, 4386692.2192622]), rtol=0, atol=1e-8
+    np.testing.assert_allclose(
+        model_los.viewing_vectors[0],
+        np.array([0.6168861918045335, 0.0018007411543079202, 0.7870503056934771]),
+        rtol=0,
+        atol=0,
+    )
+    np.testing.assert_allclose(
+        model_los.ending_points[0], np.array([4581535.247284677, 566895.0732696055, 4386692.2193931695]), rtol=0, atol=0
     )
     assert model_los.number == 121

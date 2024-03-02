@@ -195,7 +195,7 @@ class RPC(GeoModelTemplate):
         cls.geomodel_path = geomodel_path
         return cls(rpc_reader(geomodel_path, topleftconvention=True))
 
-    def direct_loc_h(self, row, col, alt, fill_nan=False):
+    def direct_loc_h(self, row, col, alt, fill_nan=False, using_direct_coef=False):
         """
         direct localization at constant altitude
 
@@ -207,6 +207,8 @@ class RPC(GeoModelTemplate):
         :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
             otherwise
         :type fill_nan: boolean
+        :param using_direct_coef: equals True if you want to use direct coefficients
+        :type using_direct_coef: boolean
         :return: ground position (lon,lat,h)
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
@@ -225,8 +227,14 @@ class RPC(GeoModelTemplate):
         row = row[filter_nan]
         col = col[filter_nan]
 
+        # Direct localization using inverse RPC
+        if not using_direct_coef and self.inverse_coefficient:
+            logging.debug("direct localisation from inverse iterative")
+            (points[filter_nan, 0], points[filter_nan, 1], points[filter_nan, 2]) = self.direct_loc_inverse_iterative(
+                row, col, alt[filter_nan], 10, fill_nan
+            )
         # Direct localization using direct RPC
-        if self.direct_coefficient:
+        elif using_direct_coef and self.direct_coefficient:
             # ground position
             col_norm = (col - self.offset_col) / self.scale_col
             row_norm = (row - self.offset_row) / self.scale_row
@@ -253,12 +261,9 @@ class RPC(GeoModelTemplate):
                 self.offset_y,
             )
 
-        # Direct localization using inverse RPC
         else:
-            logging.debug("direct localisation from inverse iterative")
-            (points[filter_nan, 0], points[filter_nan, 1], points[filter_nan, 2]) = self.direct_loc_inverse_iterative(
-                row, col, alt[filter_nan], 10, fill_nan
-            )
+            raise ValueError("Direct_loc_h: using_direct_coef doesn't match with available coefficients")
+
         points[:, 2] = alt
         return points
 

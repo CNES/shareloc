@@ -184,7 +184,6 @@ double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_c
 
 
 tuple<bool, 
-bool,
 array<double,3>,
 double,
 vector<double>,
@@ -396,7 +395,7 @@ vector<double>> DTMIntersection::intersect_dtm_cube(vector<double> const& los_x,
     // -----------------------------------------------------------------------
     // No solution if 0 or 1 single point is found (we have tangent to the cube)
     if(nbi<2){
-        return make_tuple(true,false, point_b, h_intersect, los_x_index, los_y_index, los_z_index);
+        return make_tuple(false, point_b, h_intersect, los_x_index, los_y_index, los_z_index);
     }
 
     // -----------------------------------------------------------------------
@@ -416,12 +415,10 @@ vector<double>> DTMIntersection::intersect_dtm_cube(vector<double> const& los_x,
     // -----------------------------------------------------------------------
     // End, return
 
-    return make_tuple(true,true, point_b, h_intersect, los_x_index, los_y_index, los_z_index);
+    return make_tuple(true, point_b, h_intersect, los_x_index, los_y_index, los_z_index);
 }
 
-tuple<bool,
-bool,
-double,double,double> DTMIntersection::intersection(
+tuple<bool,double,double,double> DTMIntersection::intersection(
     vector<double> const& los_x_index,//rpc -> size=2
     vector<double> const& los_y_index,
     vector<double> const& los_z_index,
@@ -454,7 +451,7 @@ double,double,double> DTMIntersection::intersection(
         double point_r_x = point_r[0];
         double point_r_y = point_r[1];
         double point_r_z = point_r[2];
-        return make_tuple(true,false,point_r_x,point_r_y,point_r_z);
+        return make_tuple(false,point_r_x,point_r_y,point_r_z);
     };
 
     //   1.2 - Init the rank of the first vertex of the line of sight
@@ -497,7 +494,7 @@ double,double,double> DTMIntersection::intersection(
                 double point_r_y = point_r[1];
                 double point_r_z = point_r[2];
 
-                return make_tuple(true,true,point_r_x,point_r_y,point_r_z);
+                return make_tuple(true,point_r_x,point_r_y,point_r_z);
             }
             // Positioning on next vertex
             i_0 += 1;
@@ -539,7 +536,7 @@ double,double,double> DTMIntersection::intersection(
                 double point_r_y = point_r[1];
                 double point_r_z = point_r[2];
 
-                return make_tuple(true,false,point_r_x,point_r_y,point_r_z);
+                return make_tuple(false,point_r_x,point_r_y,point_r_z);
             }
 
             // Iterative search loop of the intersected cell
@@ -886,7 +883,7 @@ double,double,double> DTMIntersection::intersection(
                         double point_r_y = point_r[1];
                         double point_r_z = point_r[2];
 
-                        return make_tuple(true, true, point_r_x, point_r_y, point_r_z);
+                        return make_tuple(true, point_r_x, point_r_y, point_r_z);
                     }
                 }
             }
@@ -912,7 +909,7 @@ double,double,double> DTMIntersection::intersection(
                 double point_r_y = point_r[1];
                 double point_r_z = point_r[2];
 
-                return make_tuple(true,false, point_r_x, point_r_y, point_r_z);           
+                return make_tuple(false, point_r_x, point_r_y, point_r_z);           
             }
         }// End of general case (LOS not vertical)
 
@@ -924,7 +921,7 @@ double,double,double> DTMIntersection::intersection(
     double point_r_y = point_r[1];
     double point_r_z = point_r[2];
 
-   return make_tuple(true,false, point_r_x, point_r_y, point_r_z);
+   return make_tuple(false, point_r_x, point_r_y, point_r_z);
 }
 
 //-- function --//
@@ -1000,11 +997,11 @@ py::array_t<double> DTMIntersection::intersection_n_los_dtm(
             los_i_z[alt] = los[i * buf.shape[1] * buf.shape[2] + alt * buf.shape[2] + 2];
         }
 
-        tie(var, solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
+        tie(solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
         intersect_dtm_cube(los_i_x, los_i_y, los_i_z);
         
         if(solution){
-            tie(var, var, position_x, position_y, position_z) =\
+            tie(var, position_x, position_y, position_z) =\
             intersection(los_index_x, los_index_y, los_index_z, position_cube, alti);
         }
         else{

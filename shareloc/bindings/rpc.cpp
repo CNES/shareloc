@@ -181,11 +181,11 @@ tuple<double,double,double> RPC::direct_loc_dtm(
     double position_z;
 
     tie(lon, lat, alt) = los_extrema(row, col, min_dtm, max_dtm);
-    tie(var, solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
+    tie(solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
     dtm.intersect_dtm_cube(lon, lat, alt);
     
     if(solution){
-        tie(var, var, position_x, position_y, position_z) =\
+        tie(var, position_x, position_y, position_z) =\
         dtm.intersection(los_index_x, los_index_y, los_index_z, position_cube, alti);
     }
     else{
@@ -231,11 +231,11 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_dtm(
     for(size_t i = 0;i<nb_points;++i){
 
         tie(lon, lat, alt) = los_extrema(row[i], col[i], min_dtm, max_dtm);
-        tie(var, solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
+        tie(solution, position_cube, alti, los_index_x, los_index_y, los_index_z) =\
         dtm.intersect_dtm_cube(lon, lat, alt);
         
         if(solution){
-            tie(var, var, position_x, position_y, position_z) =\
+            tie(var, position_x, position_y, position_z) =\
             dtm.intersection(los_index_x, los_index_y, los_index_z, position_cube, alti);
         }
         else{

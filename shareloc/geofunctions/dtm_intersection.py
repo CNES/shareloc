@@ -254,8 +254,8 @@ class DTMIntersection:
         :param los:  line of sight
         :type los: numpy.array
         :return: intersection information
-            (True,an intersection has been found ?, (lon,lat) of dtm position, altitude, line of sight in index frame)
-        :rtype: tuple (bool, bool, numpy.array, float, numpy.array)
+            (an intersection has been found ?, (lon,lat) of dtm position, altitude, line of sight in index frame)
+        :rtype: tuple (bool, numpy.array, float, numpy.array)
         """
         # los: (n,3):
         point_b = None
@@ -399,7 +399,7 @@ class DTMIntersection:
         # No solution if 0 or 1 single point is found (we have tangent to the cube)
         if nbi < 2:
             b_trouve = False
-            return (True, b_trouve, point_b, h_intersect, los_index)
+            return (b_trouve, point_b, h_intersect, los_index)
         # -----------------------------------------------------------------------
         # There are only 2 points left so we cross the cube
         # LAIG-FA-MAJA-2168-CNES: no more filtering on identical points. There may be a number of points > 2
@@ -418,7 +418,7 @@ class DTMIntersection:
         # End, return
         b_trouve = True
 
-        return (True, b_trouve, point_b, h_intersect, los_index)
+        return (b_trouve, point_b, h_intersect, los_index)
 
     # gitlab issue #56
     # pylint: disable=too-many-locals
@@ -436,7 +436,7 @@ class DTMIntersection:
         :param h_intersect:  altitude in DTM cube
         :type h_intersect: float
         :return: intersection information (True,an intersection has been found ?, position of intersection)
-        :rtype: tuple (bool, bool, numpy.array)
+        :rtype: tuple (bool, numpy.array)
         """
 
         npl = los_index.shape[0]
@@ -462,7 +462,7 @@ class DTMIntersection:
             #          . means that the line of sight goes into the DTM by the side
             #          . then below, no solution.
             b_trouve = False
-            return True, b_trouve, point_r
+            return b_trouve, point_r
 
         #   1.2 - Init the rank of the first vertex of the line of sight
         i_0 = int(np.floor(h_intersect_p1))
@@ -497,7 +497,7 @@ class DTMIntersection:
                     p_1[2] = alti_1
                     b_trouve = True
                     point_r = self.index_to_ter(p_1)
-                    return True, b_trouve, point_r
+                    return b_trouve, point_r
                 # Positioning on next vertex
                 i_0 += 1
             else:
@@ -537,7 +537,7 @@ class DTMIntersection:
                 # LDD - We're already out of bounds, we stop
                 if not ((a_2 < 1) and -1 < col_c < (n_row - 1) and -1 < row_c < (n_col - 1)):
                     b_trouve = False
-                    return True, b_trouve, point_r
+                    return b_trouve, point_r
 
                 # Iterative search loop of the intersected cell
                 while (a_2 < 1) and -1 < col_c < (n_row - 1) and -1 < row_c < (n_col - 1):
@@ -835,7 +835,7 @@ class DTMIntersection:
 
                             b_trouve = True
                             point_r = self.index_to_ter(p_1)
-                            return True, b_trouve, point_r
+                            return b_trouve, point_r
 
                 # End loop on meshes
 
@@ -853,13 +853,13 @@ class DTMIntersection:
                     # LDD - We looped on the meshes, we found nothing and we did not reach the next plane
                     # It means we're getting out of the grip, no need to continue
                     b_trouve = False
-                    return True, b_trouve, point_r
+                    return b_trouve, point_r
             # End of general case (LOS not vertical)
 
         # End loop on the vertices
         # End, return
         b_trouve = False
-        return True, b_trouve, point_r
+        return b_trouve, point_r
 
     def intersection_n_los_dtm(self, los):
         """
@@ -875,9 +875,9 @@ class DTMIntersection:
         direct_dtm = np.zeros((points_nb, 3))
         for i in range(points_nb):
             los_i = los[i, :, :]
-            (__, __, position_cube, alti, los_index) = self.intersect_dtm_cube(los_i)
+            (__, position_cube, alti, los_index) = self.intersect_dtm_cube(los_i)
             if position_cube is not None:
-                (__, __, position) = self.intersection(los_index, position_cube, alti)
+                (__, position) = self.intersection(los_index, position_cube, alti)
             else:
                 position = np.full(3, fill_value=np.nan)
             direct_dtm[i, :] = position

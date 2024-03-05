@@ -307,17 +307,16 @@ def test_intersect_dtm_cube():
         ]
     )
 
-    (true_py, b_trouve_py, position_cube_py, alti_py, los_index_py) = dtm_ventoux_py.intersect_dtm_cube(los)
+    (b_trouve_py, position_cube_py, alti_py, los_index_py) = dtm_ventoux_py.intersect_dtm_cube(los)
 
     los_x = los[:, 0].tolist()
     los_y = los[:, 1].tolist()
     los_z = los[:, 2].tolist()
 
-    (true_cpp, b_trouve_cpp, position_cube_cpp, alti_cpp, los_index_x_cpp, los_index_y_cpp, los_index_z_cpp) = (
+    (b_trouve_cpp, position_cube_cpp, alti_cpp, los_index_x_cpp, los_index_y_cpp, los_index_z_cpp) = (
         dtm_ventoux_optim.intersect_dtm_cube(los_x, los_y, los_z)
     )
 
-    assert true_py == true_cpp
     assert b_trouve_py == b_trouve_cpp
 
     assert position_cube_py is None
@@ -343,17 +342,16 @@ def test_intersect_dtm_cube():
         ]
     )
 
-    (true_py, b_trouve_py, position_cube_py, alti_py, los_index_py) = dtm_ventoux_py.intersect_dtm_cube(los)
+    (b_trouve_py, position_cube_py, alti_py, los_index_py) = dtm_ventoux_py.intersect_dtm_cube(los)
 
     los_x = los[:, 0].tolist()
     los_y = los[:, 1].tolist()
     los_z = los[:, 2].tolist()
 
-    (true_cpp, b_trouve_cpp, position_cube_cpp, alti_cpp, los_index_x_cpp, los_index_y_cpp, los_index_z_cpp) = (
+    (b_trouve_cpp, position_cube_cpp, alti_cpp, los_index_x_cpp, los_index_y_cpp, los_index_z_cpp) = (
         dtm_ventoux_optim.intersect_dtm_cube(los_x, los_y, los_z)
     )
 
-    assert true_py == true_cpp
     assert b_trouve_py == b_trouve_cpp
 
     np.testing.assert_array_equal(position_cube_py, position_cube_cpp)
@@ -433,15 +431,14 @@ def test_intersection():
     los_y_index = [233.88709199999994, 206.16837600000053]
     los_z_index = [2810.29295, -32718.1677]
 
-    (bool_1_py, bool_2_py, point_r_py) = dtm_ventoux_py.intersection(
+    (bool_2_py, point_r_py) = dtm_ventoux_py.intersection(
         np.array([los_x_index, los_y_index, los_z_index]).T, np.array(point_b), h_intersect
     )
 
-    (bool_1_cpp, bool_2_cpp, point_r_x_cpp, point_r_y_cpp, point_r_z_cpp) = dtm_ventoux_optim.intersection(
+    (bool_2_cpp, point_r_x_cpp, point_r_y_cpp, point_r_z_cpp) = dtm_ventoux_optim.intersection(
         los_x_index, los_y_index, los_z_index, point_b, h_intersect
     )
 
-    assert bool_1_py == bool_1_cpp
     assert bool_2_py == bool_2_cpp
     assert point_r_py[0] == point_r_x_cpp
     assert point_r_py[1] == point_r_y_cpp

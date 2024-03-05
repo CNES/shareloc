@@ -69,7 +69,6 @@ public:
 
     /**intersect_dtm_cube*/
     std::tuple<bool,
-    bool,
     std::array<double,3>,
     double,
     std::vector<double>,
@@ -80,7 +79,6 @@ public:
 
     /**intersection*/
     std::tuple<bool,
-    bool,
     double,
     double,
     double> intersection(

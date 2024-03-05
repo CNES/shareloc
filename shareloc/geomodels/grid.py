@@ -400,9 +400,9 @@ class Grid(GeoModelTemplate):
                 col = col0 + stepcol * j
                 row = row0 + steprow * i
                 los = self.compute_los(row, col, dtm.epsg)
-                (__, __, position_cube, alti, los_index) = dtm.intersect_dtm_cube(los)
+                (__, position_cube, alti, los_index) = dtm.intersect_dtm_cube(los)
                 if position_cube is not None:
-                    (__, __, point_dtm) = dtm.intersection(los_index, position_cube, alti)
+                    (__, point_dtm) = dtm.intersection(los_index, position_cube, alti)
                 else:
                     point_dtm = np.full(3, fill_value=np.nan)
                 # conversion of all tab

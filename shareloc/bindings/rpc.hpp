@@ -207,6 +207,9 @@ public:
     /**get_den_lat*/
     std::array<double, 20> const& get_den_lat() const noexcept {return m_den_lat;};
 
+    /**get_m_alt_minmax*/
+    std::array<double, 2> const& get_alt_minmax() const noexcept {return m_alt_minmax;};
+
     /**get_offset_row*/
     double get_offset_row() const noexcept {return m_offset_row;};
     /**get_scale_row*/

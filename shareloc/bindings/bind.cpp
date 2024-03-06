@@ -42,7 +42,7 @@ PYBIND11_MODULE(bindings_cpp, m) {
         .def("eq_plan", &DTMIntersection::eq_plan)
         .def("ter_to_index", &DTMIntersection::ter_to_index)
         .def("index_to_ter", &DTMIntersection::index_to_ter)
-        .def("get_alt_offset", &DTMIntersection::get_alt_offset)
+        .def("get_footprint_corners", &DTMIntersection::get_footprint_corners)
         .def("interpolate", &DTMIntersection::interpolate)
         .def("intersect_dtm_cube", &DTMIntersection::intersect_dtm_cube)
         .def("intersection", &DTMIntersection::intersection)
@@ -124,7 +124,6 @@ PYBIND11_MODULE(bindings_cpp, m) {
                 p.set_transform(t[13].cast<std::array<double,6>>());
                 p.set_nb_rows(t[14].cast<int>());
                 p.set_nb_columns(t[15].cast<int>());
-
                 return p;
                 }
         ));
@@ -234,6 +233,7 @@ PYBIND11_MODULE(bindings_cpp, m) {
         .def("get_den_lon", &RPC::get_den_lon)
         .def("get_num_lat", &RPC::get_num_lat)
         .def("get_den_lat", &RPC::get_den_lat)
+        .def("get_alt_minmax", &RPC::get_alt_minmax)
         .def("get_offset_row", &RPC::get_offset_row)
         .def("get_scale_row", &RPC::get_scale_row)
         .def("get_offset_col", &RPC::get_offset_col)

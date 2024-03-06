@@ -161,6 +161,7 @@ tuple<double,double,double> RPC::direct_loc_dtm(
 {
     if(dtm.get_epsg() != 4326){
         throw runtime_error("C++ : direct_loc_dtm : epsg!=4326 -> Exiting");
+        //cout<<"C++ : direct_loc_dtm : epsg!=4326 -> get_diff_alti_min/max initialized ?"<<endl;
     }
 
     double min_dtm = dtm.get_alt_min() - 1.0;
@@ -204,11 +205,12 @@ tuple<vector<double>,vector<double>,vector<double>> RPC::direct_loc_dtm(
 {
     if(dtm.get_epsg() != 4326){
         throw runtime_error("C++ : direct_loc_dtm : epsg!=4326 -> Exiting");
+        //cout<<"C++ : direct_loc_dtm : epsg!=4326 -> get_diff_alti_min/max initialized ?"<<endl;
     }
 
     double min_dtm = dtm.get_alt_min() - 1.0;
     double max_dtm = dtm.get_alt_max() + 1.0;
-    
+
     size_t nb_points = row.size();
 
     vector<double> lon (2);

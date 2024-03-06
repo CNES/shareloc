@@ -529,3 +529,40 @@ def test_serialization(roi, roi_phys, fill_nodata, fill_value):
     res_deserialized = rpc_optim.direct_loc_dtm(rows, cols, dtm_deserialized)
 
     np.testing.assert_array_equal(res_original, res_deserialized)
+
+
+def test_intersection_n_los_dtm():
+    """
+    Test intersection_n_los_dtm method
+    """
+    mnt = os.path.join(data_path(), "dtm/srtm_ventoux/srtm90_non_void_filled/N44E005.hgt")
+    dtm_image = dtm_reader(mnt)
+
+    dtm_ventoux_py = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    dtm_ventoux_optim = bindings_cpp.DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+    # los from rpc.py direct_loc_dtm of test_direct_loc_dtm from test_rpc_optim
+    los = np.array(
+        [
+            [[5.16280369, 44.23317309, 2758.0], [5.16086044, 44.22958834, 31.0]],
+            [[5.16284328, 44.23142179, 2758.0], [5.16090279, 44.22783679, 31.0]],
+            [[5.16288289, 44.22967056, 2758.0], [5.16094517, 44.22608531, 31.0]],
+        ]
+    )
+
+    res_optim = dtm_ventoux_optim.intersection_n_los_dtm(los)
+    res_py = dtm_ventoux_py.intersection_n_los_dtm(los)
+
+    np.testing.assert_array_equal(res_optim, res_py)

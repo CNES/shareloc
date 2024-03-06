@@ -751,6 +751,13 @@ def test_los_extrema():
     np.testing.assert_allclose(res_py, res_cpp, 0, 0)
     np.testing.assert_allclose(res_py, res_optim, 0, 0)
 
+    # -- case epsg!=4326
+    epsg = 32632
+    res_py = rpc_py.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+    res_optim = rpc_optim.los_extrema(row, col, alt_min, alt_max, fill_nan, epsg)
+
+    np.testing.assert_allclose(res_py, res_optim, 0, 0)
+
 
 def test_direct_loc_dtm():
     """
@@ -845,9 +852,10 @@ def test_direct_loc_dtm_utm():
     col_vect = np.ndarray.flatten(col_vect)
 
     res_py = rpc_py.direct_loc_dtm(row_vect, col_vect, dtm_py)
-
-    with pytest.raises(RuntimeError):
-        _ = rpc_optim.direct_loc_dtm(row_vect, col_vect, dtm_cpp)
+    res_optim = rpc_optim.direct_loc_dtm(row_vect, col_vect, dtm_cpp)
     res_py_dtm_optim = rpc_py.direct_loc_dtm(row_vect, col_vect, dtm_cpp)
 
     np.testing.assert_array_equal(res_py, res_py_dtm_optim)
+    np.testing.assert_allclose(res_optim[:, 0], res_py[:, 0], 0, 7e-7)
+    np.testing.assert_allclose(res_optim[:, 1], res_py[:, 1], 0, 7e-7)
+    np.testing.assert_allclose(res_optim[:, 2], res_py[:, 2], 0, 4e-7)

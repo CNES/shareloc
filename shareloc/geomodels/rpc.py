@@ -27,16 +27,21 @@ RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotif
 import logging
 import os
 from ast import literal_eval
+from typing import Union
 
 # Third party imports
 import numpy as np
+from affine import Affine
 from numba import config, njit, prange
+
+import bindings_cpp
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
 
 # Shareloc imports
 from shareloc.geomodels.geomodel import GeoModel
 from shareloc.geomodels.geomodel_template import GeoModelTemplate
 from shareloc.geomodels.rpc_readers import rpc_reader
-from shareloc.proj_utils import coordinates_conversion
+from shareloc.proj_utils import coordinates_conversion, transform_index_to_physical_point
 
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
@@ -315,13 +320,15 @@ class RPC(GeoModelTemplate):
             row = np.array([row])
             col = np.array([col])
 
-        diff_alti_min, diff_alti_max = dtm.get_alt_offset(self.epsg)
+        diff_alti_min, diff_alti_max = self.get_dtm_alt_offset(dtm.get_footprint_corners(), dtm)
+
         # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
         (min_dtm, max_dtm) = (dtm.get_alt_min() - 1.0 + diff_alti_min, dtm.get_alt_max() + 1.0 + diff_alti_max)
         if min_dtm < self.offset_alt - self.scale_alt:
             logging.debug("minimum dtm value is outside RPC validity domain, extrapolation will be done")
         if max_dtm > self.offset_alt + self.scale_alt:
             logging.debug("maximum dtm value is outside RPC validity domain, extrapolation will be done")
+
         los = self.los_extrema(row, col, min_dtm, max_dtm, epsg=dtm.get_epsg())
 
         # los -> (nb_point,nb_alt,3)
@@ -329,7 +336,6 @@ class RPC(GeoModelTemplate):
         los = np.expand_dims(los, axis=0)
         los = np.moveaxis(los, 1, -1)
         los = los.reshape((len(col), 2, 3))
-
         direct_dtm = dtm.intersection_n_los_dtm(los)
 
         return direct_dtm
@@ -559,6 +565,29 @@ class RPC(GeoModelTemplate):
         """
         return [self.offset_alt - self.scale_alt / 2.0, self.offset_alt + self.scale_alt / 2.0]
 
+    def get_dtm_alt_offset(self, corners: np.ndarray, dtm: Union[DTMIntersection, bindings_cpp.DTMIntersection]):
+        """
+        returns min/max altitude offset between dtm coordinates system and RPC one
+
+        :param corners: corners of the DTM's footprint
+        :type corners: np.ndarray (4x2)
+        :param dtm: DTM to get alt offset from
+        :type dtm: DTMIntersection or bindings_cpp.DTMIntersection
+        :return: min/max altimetric difference between RPC's epsg minus dtm alti expressed in dtm epsg
+        :rtype: list of float (1x2)
+        """
+
+        alti_moy = (dtm.get_alt_min() + dtm.get_alt_max()) / 2.0
+
+        ground_corners = np.zeros([3, 4])
+        ground_corners[2, :] = alti_moy
+        transform = dtm.get_transform()
+        if not isinstance(transform, Affine):
+            transform = Affine.from_gdal(*transform)
+        ground_corners[1::-1, :] = transform_index_to_physical_point(transform, corners[:, 0], corners[:, 1])
+        converted_corners = coordinates_conversion(ground_corners.transpose(), dtm.get_epsg(), self.epsg)
+        return [np.min(converted_corners[:, 2]) - alti_moy, np.max(converted_corners[:, 2]) - alti_moy]
+
     def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False, epsg=None):
         """
         compute los extrema
@@ -603,6 +632,7 @@ class RPC(GeoModelTemplate):
             col_array = np.array([col, col])
             alt_array = np.array([los_alt_max, los_alt_min])
         los_edges = self.direct_loc_h(row_array, col_array, alt_array, fill_nan)
+
         if extrapolate:
             diff = los_edges[0::2, :] - los_edges[1::2, :]
             delta_alt = diff[:, 2]
@@ -612,8 +642,10 @@ class RPC(GeoModelTemplate):
             coeff_alt_min = np.tile(coeff_alt_min[:, np.newaxis], (1, 3))
             los_edges[0::2, :] = los_edges[1::2, :] + diff * coeff_alt_max
             los_edges[1::2, :] = los_edges[1::2, :] + diff * coeff_alt_min
+
         if epsg is not None and epsg != self.epsg:
             los_edges = coordinates_conversion(los_edges, self.epsg, epsg)
+
         return los_edges
 
 

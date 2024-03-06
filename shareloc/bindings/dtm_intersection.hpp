@@ -61,8 +61,8 @@ public:
     /**index_to_ter*/
     std::array<double, 3> index_to_ter(std::array<double, 3> const& vect_ter)const;
 
-    /**get_alt_offset*/
-    std::tuple<double,double> get_alt_offset(int epsg)const;
+    /**get_footprint_corners*/
+    pybind11::array_t<double> get_footprint_corners()const;
 
     /**interpolate*/
     double interpolate(double delta_shift_row, double delta_shift_col) const;
@@ -163,10 +163,6 @@ public:
     void set_nb_rows(int a) noexcept {m_nb_rows = a;};
     /**set_nb_columns*/
     void set_nb_columns(int a) noexcept {m_nb_columns = a;};
-
-
-
-
 
 private:
 

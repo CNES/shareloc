@@ -131,12 +131,14 @@ array<double, 3> DTMIntersection::index_to_ter(array<double, 3> const& vect_ter)
     return ter;
 }
 
-tuple<double,double> DTMIntersection::get_alt_offset(int epsg)const{
+py::array_t<double> DTMIntersection::get_footprint_corners()const{
 
-    if(epsg!=m_epsg){
-        cout<<"C++ : DTMintersection get_alt_offset not valid epsg"<<endl;
-    }
-    return{0.,0.};
+    vector<double> res = {-0.5,-0.5,\
+                        -0.5,this->get_nb_columns()-0.5,\
+                        this->get_nb_rows()-0.5,this->get_nb_columns()-0.5,\
+                        this->get_nb_rows()-0.5,-0.5};
+    
+    return py::array_t<double>({4, 2}, res.data());
 }
 
 double DTMIntersection::interpolate(double delta_shift_row, double delta_shift_col)const{

@@ -840,11 +840,9 @@ check_sizes(
     vector<double> alt_norm;
 
     if(lat_row.size()<lon_col.size()){
-        cout<<" lat_row.size()!=lon_col.size() -> truncate lon_col"<<endl;
         copy(lon_col.begin(), lon_col.begin()+lat_row.size(), back_inserter(lon_col_norm));
         lat_row_norm = lat_row;
     }else if (lat_row.size()>lon_col.size()){
-        cout<<" lat_row.size()!=lon_col.size() -> truncate lat_row "<<endl;
         lon_col_norm = lon_col;
         copy(lat_row.begin(), lat_row.begin()+lon_col.size(), back_inserter(lat_row_norm));
     }else{
@@ -853,7 +851,6 @@ check_sizes(
     };
 
     if (alt.size()!=lon_col_norm.size()){
-        cout<<" alt.size()!=lon_col_norm.size() -> alt vect = alt[0]"<<endl;
         alt_norm.resize(lon_col_norm.size(),alt[0]);
     }else{
         alt_norm =alt;

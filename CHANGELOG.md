@@ -12,6 +12,24 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.0 RPC, DTMintersection, Rectification C++ code optimisation (Mars 2024)
+
+### Added
+
+- Compute rectification grid by strips in C++  [#239, #247, #248, #249, #251, #270, #280, #297, #302]
+- Force Y axis sign [#306]
+
+### Changed
+
+- Use RPC inverse coefficients by default in direct location [#287]
+- Refactoring get_alt_offset() function [#296]
+
+### Fixed
+
+- fix altitude NaN filtering  [#210]
+- fix image ROI outside the extent [#305]
+
+
 ## 0.2.0a2 Geoid interpolation correction, udpate on RPC C++ class (WIP), DTMintersection C++  (February 2024)
 
 ### Added

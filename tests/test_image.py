@@ -158,3 +158,30 @@ def test_image_metadata_larger_roi(roi, data_size_ref):
     my_image_roi = Image(image_filename, read_data=True, roi=footprint_dtm, roi_is_in_physical_space=True)
 
     assert my_image_roi.data.shape == (1201, 1201)
+
+
+def test_y_axis_inversion():
+    """
+    Test the handling of y axis direction
+    """
+
+    y_pos_ref = Image(os.path.join(data_path(), "image/phr_ventoux/left_image.tif"))
+    y_neg_ref = Image(os.path.join(data_path(), "image/phr_ventoux/left_image_y_inverted.tif"))
+
+    # North force y positive
+    y_pos_north = Image(os.path.join(data_path(), "image/phr_ventoux/left_image.tif"), vertical_direction="north")
+    y_neg_north = Image(
+        os.path.join(data_path(), "image/phr_ventoux/left_image_y_inverted.tif"), vertical_direction="north"
+    )
+    assert y_pos_ref.transform == y_pos_north.transform
+    assert y_pos_ref.transform == y_neg_north.transform
+    assert y_neg_north.transform[4] > 0
+
+    # South force y negative
+    y_pos_south = Image(os.path.join(data_path(), "image/phr_ventoux/left_image.tif"), vertical_direction="south")
+    y_neg_south = Image(
+        os.path.join(data_path(), "image/phr_ventoux/left_image_y_inverted.tif"), vertical_direction="south"
+    )
+    assert y_neg_ref.transform == y_pos_south.transform
+    assert y_neg_ref.transform == y_neg_south.transform
+    assert y_pos_south.transform[4] < 0

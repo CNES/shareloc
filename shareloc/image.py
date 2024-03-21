@@ -38,13 +38,16 @@ from shareloc.proj_utils import transform_physical_point_to_index
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-branches
 class Image:
     """
     class Image to handle image data
     Shareloc reference for raster image input based on rasterio.
     """
 
-    def __init__(self, image_path, read_data=False, roi=None, roi_is_in_physical_space=False):
+    def __init__(
+        self, image_path, read_data=False, roi=None, roi_is_in_physical_space=False, vertical_direction="auto"
+    ):
         """
         constructor
 
@@ -57,7 +60,15 @@ class Image:
         :type roi  : list
         :param roi_is_in_physical_space  : ROI value in physical space
         :type roi_is_in_physical_space  : bool
+        :vertical_direction: option to choose direction when moving to next row, by default ("auto") there is
+            no forced direction
+                "north": downward, y>0
+                "south": upward, y<0
+        :type vertical_direction: str
         """
+
+        self.vertical_direction = vertical_direction
+
         if image_path is not None:
             # Image path
             self.image_path = image_path
@@ -114,6 +125,31 @@ class Image:
                 self.nb_rows = self.dataset.height
                 self.nb_columns = self.dataset.width
                 roi_window = None
+
+            # Invert y axis if needed
+            if self.vertical_direction == "north" and self.transform[4] < 0:  # force y positive
+                logging.info("Changing y (vertical) axis direction: north y>0")
+                self.transform = Affine(
+                    self.transform[0],
+                    self.transform[1],
+                    self.transform[2],
+                    -self.transform[3],
+                    -self.transform[4],
+                    -self.transform[5],
+                )
+                self.trans_inv = ~self.transform  # pylint: disable=invalid-unary-operand-type
+
+            elif self.vertical_direction == "south" and self.transform[4] > 0:  # force y negative
+                logging.info("Changing y (vertical) axis direction: south y<0")
+                self.transform = Affine(
+                    self.transform[0],
+                    self.transform[1],
+                    self.transform[2],
+                    -self.transform[3],
+                    -self.transform[4],
+                    -self.transform[5],
+                )
+                self.trans_inv = ~self.transform  # pylint: disable=invalid-unary-operand-type
 
             # Georeferenced coordinates of the upper-left origin
             self.origin_row = self.transform[5]

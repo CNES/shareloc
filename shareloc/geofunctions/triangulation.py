@@ -103,9 +103,26 @@ def distance_point_los(los, points):
     """
     # norm(BA vect u)/norm(u)
 
-    vis = los.viewing_vectors
-    vect_sis_p = points - los.starting_points
-    dist = np.linalg.norm(np.cross(vect_sis_p, vis), axis=1)
+    # only one view
+    vis = los.viewing_vectors[:, np.newaxis, :]
+    sis = los.starting_points[:, np.newaxis, :]
+    return n_view_distance(sis, vis, points)
+
+
+def n_view_distance(sis: np.ndarray, vis: np.ndarray, points: np.ndarray) -> np.ndarray:
+    """
+    distance between points and LOS
+    norm of cross product between vector defined by LOS sis and point and LOS vis
+
+    :param sis: LOS hat, numpy np.ndarray of size (nb_points,nb_views,3)
+    :param vis: LOS viewing vector, np.ndarray of size (nb_points,nb_views,3)
+    :param points: 3D points
+    :return: distance
+    """
+    # norm(BA vect u)/norm(u)
+    nb_views = sis.shape[1]
+    vect_sis_p = np.tile(points[:, np.newaxis, :], (1, nb_views, 1)) - sis
+    dist = np.linalg.norm(np.cross(vect_sis_p, vis), axis=2)
     return dist
 
 
@@ -126,6 +143,17 @@ def los_triangulation(left_los, right_los):
     sis = np.dstack((left_los.starting_points, right_los.starting_points))
     sis = np.swapaxes(sis, 1, 2)
 
+    return n_view_triangulation(sis, vis)
+
+
+def n_view_triangulation(sis: np.ndarray, vis: np.ndarray) -> np.ndarray:
+    """
+    n view triangulation for nb_points mapping
+
+    :param sis: LOS hat as numpy np.ndarray of size (nb_points,nb_views,3)
+    :param vis: LOS viewing vector np.ndarray of size (nb_points,nb_views,3)
+    :return: triangulation as a np.ndarray of size (nb_points,3)
+    """
     vivi = vis[..., :, np.newaxis] * vis[..., np.newaxis, :]
     id_vivi = np.eye(3) - vivi
     sum_id_vivi = np.nansum(id_vivi, axis=-3)
@@ -162,7 +190,7 @@ def transform_disp_to_matches(disp, mask=None):
     epi_left_pos = np.vstack((col.flatten(), row.flatten()))
 
     epi_right_pos = np.vstack((col.flatten() + disp_array.flatten(), row.flatten()))
-    return (epi_left_pos.transpose(), epi_right_pos.transpose(), values_ok.flatten())
+    return epi_left_pos.transpose(), epi_right_pos.transpose(), values_ok.flatten()
 
 
 # CARS API
@@ -240,6 +268,6 @@ def epipolar_triangulation(
     intersections_residues_masked = np.zeros((tab_size, 1))
     intersections_ecef_masked[values_ok, :] = intersections_ecef
     intersections_wgs84_masked[values_ok, :] = intersections_wgs84
-    intersections_residues_masked[values_ok, 0] = intersections_residues
+    intersections_residues_masked[values_ok, :] = intersections_residues
 
     return intersections_ecef_masked, intersections_wgs84_masked, intersections_residues_masked

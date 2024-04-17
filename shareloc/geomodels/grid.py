@@ -292,7 +292,7 @@ class Grid(GeoModelTemplate):
         for point_index in np.arange(points_nb):
             row_i = row[point_index]
             col_i = col[point_index]
-            los = self.compute_los(row_i, col_i, dtm.epsg)
+            los = self.compute_los(row_i, col_i, dtm.get_epsg())
 
             all_los[point_index, :, :] = los
 
@@ -399,7 +399,7 @@ class Grid(GeoModelTemplate):
             for j in range(nbcol):
                 col = col0 + stepcol * j
                 row = row0 + steprow * i
-                los = self.compute_los(row, col, dtm.epsg)
+                los = self.compute_los(row, col, dtm.get_epsg())
                 (__, position_cube, alti, los_index) = dtm.intersect_dtm_cube(los)
                 if position_cube is not None:
                     (__, point_dtm) = dtm.intersection(los_index, position_cube, alti)

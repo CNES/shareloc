@@ -791,6 +791,9 @@ def test_sensor_loc_dir_dtm_multi_points():
 
     geom_model = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"))
     geom_model_optim = GeoModel(os.path.join(data_path(), "rectification", "left_image.geom"), "RPCoptim")
+    geom_model_grid = GeoModel(
+        os.path.join(data_path(), "grid", "phr_ventoux", "GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif"), "GRID"
+    )
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
@@ -829,3 +832,10 @@ def test_sensor_loc_dir_dtm_multi_points():
     row_id, col_id, _ = loc.inverse(lonlat_alt[:, 0], lonlat_alt[:, 1], lonlat_alt[:, 2])
     np.testing.assert_allclose(row_id, row, 0, 0.02)
     np.testing.assert_allclose(col_id, col, 0, 7e-3)
+
+    loc_grid = Localization(geom_model_grid, image=left_im, elevation=dtm_ventoux)
+    loc_grid_optim = Localization(geom_model_grid, image=left_im, elevation=dtm_ventoux_optim)
+
+    lonlat_alt = loc_grid.direct(row, col)
+    lonlat_alt_optim = loc_grid_optim.direct(row, col)
+    np.testing.assert_array_equal(lonlat_alt, lonlat_alt_optim)

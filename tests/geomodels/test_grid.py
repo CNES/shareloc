@@ -79,7 +79,7 @@ def test_grid_extrapolation(get_geotiff_grid):
     )
 
     # Point to extrapolate in row col
-    point = [0.5, 0.5]
+    point = np.array([[0.5, 0.5], [-0.5, -0.5], [490.0, 500.0]])
 
     # Row array coordinates
     row_indexes = np.arange(grid_origin[0], grid_origin[0] + grid_image.nb_rows * grid_step[0], grid_step[0])
@@ -87,7 +87,7 @@ def test_grid_extrapolation(get_geotiff_grid):
     col_indexes = np.arange(grid_origin[1], grid_origin[1] + grid_image.nb_columns * grid_step[1], grid_step[1])
 
     # Shareloc
-    shareloc_outputs = gri_geotiff.direct_loc_h(point[0], point[1], 1000.0)
+    shareloc_outputs = gri_geotiff.direct_loc_h(point[:, 0], point[:, 1], 1000.0)
 
     # Extrapolation with scipy in 2D
     scipy_outputs = scipy.interpolate.interpn(
@@ -95,4 +95,53 @@ def test_grid_extrapolation(get_geotiff_grid):
     )
 
     # Test output equals to scipy ground truth
-    np.testing.assert_allclose(shareloc_outputs[0][1], scipy_outputs[0])
+    np.testing.assert_allclose(shareloc_outputs[:, 1], scipy_outputs, rtol=0.0, atol=1e-9)
+
+    # inverse loc extrapolation
+    gri_geotiff.estimate_inverse_loc_predictor()
+    row_inv, col_inv, _ = gri_geotiff.inverse_loc(
+        shareloc_outputs[:, 0], shareloc_outputs[:, 1], shareloc_outputs[:, 2]
+    )
+    np.testing.assert_allclose(np.array((row_inv, col_inv)).transpose(), point, rtol=0.0, atol=1e-7)
+
+
+@pytest.mark.unit_tests
+def test_sensor_loc_nan(get_geotiff_grid):
+    """
+    Test direct localization  with grid containing NaN
+    """
+    h = 0
+    row = np.array([np.nan])
+    col = np.array([np.nan])
+    gri, _ = get_geotiff_grid
+    loc = gri.direct_loc_h(row, col, h)
+    assert np.array_equal(loc, np.array([[np.nan, np.nan, h]]), equal_nan=True)
+    gri.estimate_inverse_loc_predictor()
+    lon = np.array([np.nan])
+    lat = np.array([np.nan])
+    res_inv = gri.inverse_loc(lon, lat, h)
+    np.testing.assert_allclose(res_inv, [[np.nan], [np.nan], [0]], rtol=0, atol=1e-9)
+
+
+@pytest.mark.unit_tests
+def test_sensor_loc_inv(get_geotiff_grid):
+    """
+    test grid readers
+    """
+    gri, _ = get_geotiff_grid
+    lon = 2.1828713504608683
+    lat = 48.942429997483146
+    h = 200.0
+    gri.estimate_inverse_loc_predictor()
+    res = gri.inverse_loc(lon, lat, h)
+    np.testing.assert_allclose(res, [[50], [100], [200.0]], rtol=0, atol=1e-9)
+    lon = np.array([2.1828713504608683, np.nan, 2.1828713504608683, np.nan, 2.1828713504608683])
+    lat = np.array([48.942429997483146, np.nan, np.nan, 48.942429997483146, 48.942429997483146])
+    h = 200.0
+    res = gri.inverse_loc(lon, lat, h)
+    np.testing.assert_allclose(
+        res,
+        [[50, np.nan, np.nan, np.nan, 50], [100, np.nan, np.nan, np.nan, 100], [200.0, 200.0, 200.0, 200.0, 200.0]],
+        rtol=0,
+        atol=1e-9,
+    )

@@ -687,9 +687,8 @@ class Grid(GeoModelTemplate):
         dlon_l = ((1 - h_x) * dlon_lb + (h_x) * dlon_lh) * 1e6
         dlat_l = ((1 - h_x) * dlat_lb + (h_x) * dlat_lh) * 1e6
         det = dlon_c * dlat_l - dlon_l * dlat_c
-        if abs(det) > 0.000000000001:
-            partial_derivative_mat = np.array([[dlat_l, -dlon_l], [-dlat_c, dlon_c]]) / det
-        else:
+        partial_derivative_mat = np.array([[dlat_l, -dlon_l], [-dlat_c, dlon_c]]) / det
+        if abs(det) <= 0.000000000001:
             logging.warning("inverse_loc() inverse_partial_derivative() determinant is null")
         return partial_derivative_mat
 

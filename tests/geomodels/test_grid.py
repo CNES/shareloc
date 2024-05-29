@@ -23,6 +23,8 @@ Module to test functions that use direct grid
 """
 
 # Third party imports
+import os
+
 import numpy as np
 import pytest
 import scipy
@@ -103,6 +105,50 @@ def test_grid_extrapolation(get_geotiff_grid):
         shareloc_outputs[:, 0], shareloc_outputs[:, 1], shareloc_outputs[:, 2]
     )
     np.testing.assert_allclose(np.array((row_inv, col_inv)).transpose(), point, rtol=0.0, atol=1e-7)
+
+
+@pytest.mark.unit_tests
+def test_compare_extrapolation():
+    """
+    The purpose of this test is to give an idea of
+    the extrapolation precision for PHR ventoux grid example ([200,200] line/pixels step) using two grids, which have
+    different size
+    """
+    grid_path = os.path.join(data_path(), "grid", "phr_ventoux")
+    gri = GeoModel(os.path.join(grid_path, "GRID_PHR1B_P_201308051042194_SEN_690908101-001.tif"), "GRID")
+    gri_large = GeoModel(os.path.join(grid_path, "GRID_PHR1B_P_201308051042194_SEN_690908101-001_LARGE.tif"), "GRID")
+    # Point to extrapolate in row col
+    points = np.array(
+        [[6000.5, 6000.5], [7100.5, 6000.5], [8000.5, 6000.5], [6000.5, 8100.5], [6000.5, 9000.5], [8000.5, 9000.5]]
+    )
+    lonlatalt = gri_large.direct_loc_h(points[:, 0], points[:, 1], 1000.0)
+    gri_large.estimate_inverse_loc_predictor()
+    row_inv, col_inv, _ = gri_large.inverse_loc(lonlatalt[:, 0], lonlatalt[:, 1], lonlatalt[:, 2])
+
+    # 3 coordinates are inside the large grid, very close results are expected (1e-8 pixels)
+    np.testing.assert_allclose(np.array((row_inv, col_inv)).transpose(), points, rtol=0.0, atol=1e-8)
+
+    lonlatalt = gri_large.direct_loc_h(points[:, 0], points[:, 1], 1000.0)
+    gri.estimate_inverse_loc_predictor()
+    row_inv, col_inv, _ = gri.inverse_loc(lonlatalt[:, 0], lonlatalt[:, 1], lonlatalt[:, 2])
+    inv_loc = np.array((row_inv, col_inv)).transpose()
+    # first point is inside the grid
+    np.testing.assert_allclose(inv_loc[0, :], points[0, :], rtol=0.0, atol=1e-8)
+
+    # extrapolation of 100 rows
+    np.testing.assert_allclose(inv_loc[1, :], points[1, :], rtol=0.0, atol=6e-3)
+
+    # extrapolation of 1000 rows
+    np.testing.assert_allclose(inv_loc[2, :], points[2, :], rtol=0.0, atol=6e-2)
+
+    # extrapolation of 100 cols
+    np.testing.assert_allclose(inv_loc[3, :], points[3, :], rtol=0.0, atol=8e-3)
+
+    # extrapolation of 1000 cols
+    np.testing.assert_allclose(inv_loc[4, :], points[4, :], rtol=0.0, atol=8e-2)
+
+    # extrapolation of 1000 rows 1000 cols
+    np.testing.assert_allclose(inv_loc[5, :], points[5, :], rtol=0.0, atol=4e-2)
 
 
 @pytest.mark.unit_tests

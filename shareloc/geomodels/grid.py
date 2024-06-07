@@ -201,19 +201,19 @@ class Grid(GeoModelTemplate):
         :type col: float or 1D numpy.ndarray dtype=float64
         :param alt: altitude
         :type alt: float
-        :param fill_nan: fill numpy.nan values with lon and lat offset
-            if true (same as OTB/OSSIM), nan is returned otherwise
+        :param fill_nan: not used, preserved for API symmetry
         :type fill_nan: boolean
         :return: ground position (lon,lat,h)
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
+
         # Vectorization doesn't handle yet altitude as np.ndarray (3D interpolation work).
         # TODO: clean interfaces to remove this part
         if isinstance(alt, (list, np.ndarray)):
             logging.debug("grid doesn't handle alt as array, first value is used")
             alt = alt[0]
         if fill_nan:
-            logging.debug("fill nan %s", fill_nan)
+            logging.warning("fill nan strategy not available for grids")
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
         alt_down = self.alts_down[grid_index_down]
         alt_up = self.alts_down[grid_index_up]
@@ -229,16 +229,17 @@ class Grid(GeoModelTemplate):
             col = np.array([col])
             row = np.array([row])
 
-        position = np.zeros((col.size, 3))
+        filter_nan = np.logical_not(np.logical_or(np.isnan(col), np.isnan(row)))
+        position = np.nan * np.zeros((col.size, 3))
         position[:, 2] = alt
-        pos_row = (row - self.row0) / self.steprow
-        pos_col = (col - self.col0) / self.stepcol
-        # pylint disable for code clarity interpol_bilin_vectorized returns one list of 2 elements in this case
-        # pylint: disable=unbalanced-tuple-unpacking
-        [vlon, vlat] = interpol_bilin_vectorized(mats, self.nbrow, self.nbcol, pos_row, pos_col)
-        position[:, 0] = alti_coef * vlon[0, :] + (1 - alti_coef) * vlon[1, :]
-        position[:, 1] = alti_coef * vlat[0, :] + (1 - alti_coef) * vlat[1, :]
-
+        if np.any(filter_nan):
+            pos_row = (row[filter_nan] - self.row0) / self.steprow
+            pos_col = (col[filter_nan] - self.col0) / self.stepcol
+            # pylint disable for code clarity interpol_bilin_vectorized returns one list of 2 elements in this case
+            # pylint: disable=unbalanced-tuple-unpacking
+            [vlon, vlat] = interpol_bilin_vectorized(mats, self.nbrow, self.nbcol, pos_row, pos_col)
+            position[filter_nan, 0] = alti_coef * vlon[0, :] + (1 - alti_coef) * vlon[1, :]
+            position[filter_nan, 1] = alti_coef * vlat[0, :] + (1 - alti_coef) * vlat[1, :]
         return position
 
     def compute_los(self, row, col, epsg):
@@ -284,20 +285,21 @@ class Grid(GeoModelTemplate):
             row = np.array([row])
             col = np.array([col])
 
-        points_nb = len(row)
-        points_dtm = np.zeros((points_nb, 3))
+        filter_nan = np.logical_not(np.logical_or(np.isnan(col), np.isnan(row)))
+        points_dtm = np.nan * np.zeros((col.size, 3))
+        if np.any(filter_nan):
+            row_filtered = row[filter_nan]
+            col_filtered = col[filter_nan]
+            points_nb = row_filtered.size
+            all_los = np.empty((points_nb, self.nbalt, 3))
+            for point_index in np.arange(points_nb):
+                row_i = row_filtered[point_index]
+                col_i = col_filtered[point_index]
+                los = self.compute_los(row_i, col_i, dtm.get_epsg())
 
-        all_los = np.empty((points_nb, self.nbalt, 3))
+                all_los[point_index, :, :] = los
 
-        for point_index in np.arange(points_nb):
-            row_i = row[point_index]
-            col_i = col[point_index]
-            los = self.compute_los(row_i, col_i, dtm.get_epsg())
-
-            all_los[point_index, :, :] = los
-
-        points_dtm = dtm.intersection_n_los_dtm(all_los)
-
+            points_dtm[filter_nan, :] = dtm.intersection_n_los_dtm(all_los)
         return points_dtm
 
     def los_extrema(self, row, col, alt_min, alt_max):
@@ -602,10 +604,10 @@ class Grid(GeoModelTemplate):
         lon_n = (lon - self.pred_ofset_scale_lon[0]) / self.pred_ofset_scale_lon[1]
         lat_n = (lat - self.pred_ofset_scale_lat[0]) / self.pred_ofset_scale_lat[1]
         if abs(lon_n) > (1 + extrapolation_threshold / 100.0):
-            logging.warning("Be careful: longitude extrapolation: %1.8f", lon_n)
+            logging.debug("Be careful: longitude extrapolation: %1.8f", lon_n)
             is_extrapolated = True
         if abs(lat_n) > (1 + extrapolation_threshold / 100.0):
-            logging.warning("Be careful: latitude extrapolation: %1.8f", lat_n)
+            logging.debug("Be careful: latitude extrapolation: %1.8f", lat_n)
             is_extrapolated = True
 
         # polynome application
@@ -619,10 +621,6 @@ class Grid(GeoModelTemplate):
         col = (1 - h_x) * col_min + h_x * col_max
         row = (1 - h_x) * row_min + h_x * row_max
 
-        row = min(row, self.rowmax)
-        row = max(row, self.row0)
-        col = min(col, self.colmax)
-        col = max(col, self.col0)
         return row, col, is_extrapolated
 
     # gitlab issue #58
@@ -648,8 +646,16 @@ class Grid(GeoModelTemplate):
         """
         pos_row = (row - self.row0) / self.steprow
         pos_col = (col - self.col0) / self.stepcol
-        index_row = int(np.floor(pos_row))
-        index_col = int(np.floor(pos_col))
+        index_row = np.floor(pos_row)
+        index_col = np.floor(pos_col)
+
+        index_row = min(index_row, self.nbrow - 2)
+        index_row = max(index_row, 0)
+        index_col = min(index_col, self.nbcol - 2)
+        index_col = max(index_col, 0)
+        index_row = int(index_row)
+        index_col = int(index_col)
+
         (grid_index_up, grid_index_down) = self.return_grid_index(alt)
 
         lon_h00 = self.lon_data[grid_index_up, index_row, index_col]
@@ -700,18 +706,22 @@ class Grid(GeoModelTemplate):
         * direct loc col_0,row_0 -> lon_0, lat_0
         Then iterative process:
         * calculate geographic error dlon,dlat
-        * calculate senor correction dlon,dlat -> dcol,drow
+        * calculate sensor correction dlon,dlat -> dcol,drow
         * apply direct localization  -> lon_i,lat_i
+        * compute localisation error
+        * compute local inverse gradient
+        * move along derivatives to compute row_i,col_i
+        * loop until measurement  error is below threshold or max number of iterations
 
-        TODO explain algo
+
         TODO optimization (for loop,...)
 
         :param lon: longitude
-        :type lon: float
+        :type lon: float or 1D numpy.ndarray dtype=float64
         :param lat: latitude
-        :type lat: float
+        :type lat: float or 1D numpy.ndarray dtype=float64
         :param alt: altitude
-        :type alt: float
+        :type alt: float or 1D numpy.ndarray dtype=float64
         :param nb_iterations: max number of iterations (15 by default)
         :type nb_iterations: int
         :return: sensor position (row,col,alt)
@@ -720,19 +730,23 @@ class Grid(GeoModelTemplate):
 
         # Test added for rectification to work
         # TODO: refactoring with interfaces clean
-        if not isinstance(lon, (list, np.ndarray)):
+        if not isinstance(lon, np.ndarray):
             lon = np.array([lon])
             lat = np.array([lat])
-        if not isinstance(alt, (list, np.ndarray)):
+        if not isinstance(alt, np.ndarray):
             alt = np.array([alt])
 
         if alt.shape[0] != lon.shape[0]:
             alt = np.full(lon.shape[0], fill_value=alt[0])
 
         points_nb = len(lon)
-        row = np.zeros((points_nb))
-        col = np.zeros((points_nb))
-        for point_index in np.arange(points_nb):
+        filter_nan = np.logical_not(np.logical_or(np.isnan(lon), np.isnan(lat)))
+        points_nb_valid = np.sum(filter_nan)
+        logging.debug("number of valid points %d,  number of points %d", points_nb_valid, points_nb)
+        row = np.nan * np.zeros((points_nb))
+        col = np.nan * np.zeros((points_nb))
+        points_valid = np.arange(points_nb)[filter_nan]
+        for point_index in points_valid:
             lon_i = lon[point_index]
             lat_i = lat[point_index]
             alt_i = alt[point_index]
@@ -740,24 +754,24 @@ class Grid(GeoModelTemplate):
             iteration = 0
             coslon = np.cos(np.deg2rad(lat_i))
             rtx = 1e-12 * 6378000**2
-            (row_i, col_i, extrapol) = self.inverse_loc_predictor(lon_i, lat_i, alt_i)
+            row_i, col_i, _ = self.inverse_loc_predictor(lon_i, lat_i, alt_i)
             m2_error = 10.0
             valid_point = 0
-            if not extrapol:
-                # Iterative process
-                # while error in m2 > 1mm
-                while (m2_error > 1e-6) and (iteration < nb_iterations):
-                    position = self.direct_loc_h(row_i, col_i, alt_i)
-                    dlon_microrad = (position[0][0] - lon_i) * deg2mrad
-                    dlat_microrad = (position[0][1] - lat_i) * deg2mrad
-                    m2_error = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
-                    dsol = np.array([dlon_microrad, dlat_microrad])
-                    mat_dp = self.inverse_partial_derivative(row_i, col_i, alt_i)
-                    dimg = mat_dp @ dsol
-                    col_i += -dimg[0]
-                    row_i += -dimg[1]
-                    iteration += 1
-                    valid_point = 1
+
+            # Iterative process
+            # while error in m2 > 1mm
+            while (m2_error > 1e-6) and (iteration < nb_iterations):
+                position = self.direct_loc_h(row_i, col_i, alt_i)
+                dlon_microrad = (position[0][0] - lon_i) * deg2mrad
+                dlat_microrad = (position[0][1] - lat_i) * deg2mrad
+                m2_error = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
+                dsol = np.array([dlon_microrad, dlat_microrad])
+                mat_dp = self.inverse_partial_derivative(row_i, col_i, alt_i)
+                dimg = mat_dp @ dsol
+                col_i += -dimg[0]
+                row_i += -dimg[1]
+                iteration += 1
+                valid_point = 1
             if valid_point == 0:
                 (row_i, col_i) = (None, None)
             row[point_index] = row_i

@@ -166,6 +166,12 @@ def test_localize_direct_grid():
     assert lonlatalt[1] == pytest.approx(44.20805807814395, abs=1e-7)
     assert lonlatalt[2] == pytest.approx(503.51202179, abs=1e-3)
 
+    # test nan
+    row = np.array([0, np.nan])
+    col = np.array([0, np.nan])
+    lonlatalt = np.squeeze(loc.direct(row, col, using_geotransform=True))
+    assert np.array_equal(lonlatalt[1], np.full((3,), np.nan), equal_nan=True)
+
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):
     """

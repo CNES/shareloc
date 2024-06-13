@@ -111,8 +111,8 @@ class Image:
                     height = roi[2] - row_off
 
                 # set boundaries for ROI
-                width = min(width, self.dataset.width - col_off)
-                height = min(height, self.dataset.height - row_off)
+                width = int(min(width, self.dataset.width - col_off))
+                height = int(min(height, self.dataset.height - row_off))
 
                 roi_window = rasterio.windows.Window(col_off, row_off, width, height)
                 self.transform = self.dataset.window_transform(roi_window)

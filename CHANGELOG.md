@@ -12,6 +12,22 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.1 GRID model extrapolation and bug corrections, N views triangulation (June 2024)
+
+### Added
+
+- Grid extrapolation [#311]
+- N views triangulation [#308]
+
+### Changed
+
+### Fixed
+
+- fix Numpy 2.0 pickle compatibility [#319]
+- fix DTMIntersection failure with GRID models [#310]
+- fix pylint failed [#315]
+- fix DTMIntersection C++ binding interface [#316]
+
 ## 0.2.0 RPC, DTMintersection, Rectification C++ code optimisation (Mars 2024)
 
 ### Added

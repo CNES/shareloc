@@ -12,14 +12,18 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.2 M_PI identifier not found (July 2024)
+
+### Fixed
+
+- Fix M_PI identifier not found (Windows compatibility) [#322]
+
 ## 0.2.1 GRID model extrapolation and bug corrections, N views triangulation (June 2024)
 
 ### Added
 
 - Grid extrapolation [#311]
 - N views triangulation [#308]
-
-### Changed
 
 ### Fixed
 

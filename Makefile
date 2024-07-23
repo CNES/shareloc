@@ -81,8 +81,8 @@ venv: ## create virtualenv in "venv" dir if not exists
 
 .PHONY: install
 install: venv  ## install the package in dev mode in virtualenv
-	[ "${CHECK_SHARELOC}" ] || echo "Install shareloc package from local directory"
-	[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/python -m pip install -e .[dev,docs,notebook]
+	@[ "${CHECK_SHARELOC}" ] || echo "Install shareloc package from local directory"
+	@[ "${CHECK_SHARELOC}" ] || ${VENV}/bin/python -m pip install -e .[dev,docs,notebook]
 	@test -f .git/hooks/pre-commit || echo "Install pre-commit"
 	@test -f .git/hooks/pre-commit || ${VENV}/bin/pre-commit install -t pre-commit
 	@test -f .git/hooks/pre-push || ${VENV}/bin/pre-commit install -t pre-push

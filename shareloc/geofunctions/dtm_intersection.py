@@ -73,17 +73,10 @@ class DTMIntersection:
 
         """
 
-        self.alt_data = None
-        self.alt_min = None
-        self.alt_max = None
         self.origin_x = None
         self.origin_y = None
         self.pixel_size_x = None
         self.pixel_size_y = None
-        self.plane_coef_a = None
-        self.plane_coef_b = None
-        self.plane_coef_c = None
-        self.plane_coef_d = None
         self.alt_min_cell = None
         self.alt_max_cell = None
         self.tol_z = 0.0001

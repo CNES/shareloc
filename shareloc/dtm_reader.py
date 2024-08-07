@@ -157,7 +157,7 @@ def interpolate_geoid_height(geoid_filename, positions, interpolation_method="li
     :param interpolation_method: default is 'linear' (interpn interpolation method)
     :type interpolation_method: str
     :return: geoid height
-    :rtype: 1 numpy array (number of points)
+    :rtype: numpy array (number of points)
     """
 
     geoid_image = Image(geoid_filename, read_data=True)
@@ -184,4 +184,11 @@ def interpolate_geoid_height(geoid_filename, positions, interpolation_method="li
     if np.any(np.abs(positions[:, 1]) > 90.0):
         raise RuntimeError("Geoid cannot handle latitudes greater than 90 deg.")
     indexes_geoid = transform_physical_point_to_index(geoid_image.trans_inv, positions[:, 1], positions[:, 0])
-    return interpolate.interpn(points, geoid_image.data[:, :], indexes_geoid, method=interpolation_method)
+    return interpolate.interpn(
+        points,
+        geoid_image.data[:, :],
+        indexes_geoid,
+        method=interpolation_method,
+        bounds_error=False,
+        fill_value=np.nan,
+    )

@@ -49,6 +49,7 @@ from ..helpers import data_path
         (5.17381589, 44.22559175, 50.87610),
         (-119.0, -9, -12.516327),
         (179.875, 44.0, -7.975677),
+        (np.nan, np.nan, np.nan),
     ],
 )
 @pytest.mark.unit_tests
@@ -59,12 +60,12 @@ def test_geoid_height(lon, lat, valid_alt):
     geoid_file = os.path.join(data_path(), "dtm/geoid/egm96_15.gtx")
     positions = np.asarray([lon, lat])[np.newaxis, :]
     geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
-    assert geoid_height == pytest.approx(valid_alt, abs=1e-6)
+    assert geoid_height == pytest.approx(valid_alt, abs=1e-6, nan_ok=True)
 
     geoid_file = os.path.join(data_path(), "dtm/geoid/egm96.grd")
     geoid_height = interpolate_geoid_height(geoid_file, positions)[0]
     # ground truth have been computed using .gtx small alt diff between .gtx and .grd
-    assert geoid_height == pytest.approx(valid_alt, abs=1e-3)
+    assert geoid_height == pytest.approx(valid_alt, abs=1e-3, nan_ok=True)
 
 
 @pytest.mark.parametrize("index_col,index_row, valid_alt", [(10.0, 20.0, 196.0), (20.5, 25.5, 189.5)])

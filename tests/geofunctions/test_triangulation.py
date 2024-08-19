@@ -140,7 +140,7 @@ def test_epi_triangulation_sift():
     matches = np.load(matches_filename)
 
     point_ecef, __, __ = epipolar_triangulation(
-        matches, None, "sift", grid_left, grid_right, grid_left_filename, grid_right_filename
+        matches, None, "sift", grid_left, grid_right, grid_left_filename, grid_right_filename, is_displacement_grid=True
     )
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     assert valid == pytest.approx(point_ecef[0, :], abs=0.5)
@@ -169,16 +169,69 @@ def test_epi_triangulation_sift_rpc():
     matches = np.load(matches_filename)
 
     point_ecef, __, __ = epipolar_triangulation(
-        matches, None, "sift", geom_model_left, geom_model_right, grid_left_filename, grid_right_filename
+        matches,
+        None,
+        "sift",
+        geom_model_left,
+        geom_model_right,
+        grid_left_filename,
+        grid_right_filename,
+        is_displacement_grid=True,
     )
 
     point_ecef_optim, __, __ = epipolar_triangulation(
-        matches, None, "sift", geom_model_left_optim, geom_model_right_optim, grid_left_filename, grid_right_filename
+        matches,
+        None,
+        "sift",
+        geom_model_left_optim,
+        geom_model_right_optim,
+        grid_left_filename,
+        grid_right_filename,
+        is_displacement_grid=True,
     )
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     # print(valid - point_ecef[0,:])
     assert valid == pytest.approx(point_ecef[0, :], abs=1e-3)
     np.testing.assert_allclose(point_ecef, point_ecef_optim, 0, 1e-8)
+
+
+@pytest.mark.unit_tests
+def test_epi_triangulation_sift_rpc_loc_grid():
+    """
+    Test epipolar triangulation
+    """
+
+    data_folder = data_path()
+    id_scene = "phr_gizeh"
+    file_geom = os.path.join(data_folder, f"rpc/{id_scene}/img1.geom")
+    geom_model_left = GeoModel(file_geom)
+    file_geom = os.path.join(data_folder, f"rpc/{id_scene}/img2.geom")
+    geom_model_right = GeoModel(file_geom)
+
+    grid_left_filename = os.path.join(data_path(), "rectification_grids", id_scene, "left_epi_grid.tif")
+    grid_right_filename = os.path.join(data_path(), "rectification_grids", id_scene, "right_epi_grid.tif")
+
+    matches = np.array(
+        [
+            [300, 400, 302, 420],
+            [300, 410, 302, 430],
+        ]
+    )
+
+    point_ecef, __, __ = epipolar_triangulation(
+        matches,
+        None,
+        "sift",
+        geom_model_left,
+        geom_model_right,
+        grid_left_filename,
+        grid_right_filename,
+        is_displacement_grid=False,
+    )
+
+    valid = [4733007.44057619, 2859047.05062282, 3168330.19887048]
+    # print(valid - point_ecef[0,:])
+    assert valid == pytest.approx(point_ecef[0, :], abs=1e-3)
 
 
 def stats_diff(cloud, array_epi):
@@ -242,7 +295,15 @@ def test_epi_triangulation_disp_rpc():
     with open(disp_filename, "rb") as disp_file:
         disp = pickle.load(disp_file)
     point_ecef, point_wsg84, _ = epipolar_triangulation(
-        disp, None, "disp", geom_model_left, geom_model_right, grid_left_filename, grid_right_filename, residues=True
+        disp,
+        None,
+        "disp",
+        geom_model_left,
+        geom_model_right,
+        grid_left_filename,
+        grid_right_filename,
+        residues=True,
+        is_displacement_grid=True,
     )
 
     point_ecef_optim, point_wsg84_optim, _ = epipolar_triangulation(
@@ -254,6 +315,7 @@ def test_epi_triangulation_disp_rpc():
         grid_left_filename,
         grid_right_filename,
         residues=True,
+        is_displacement_grid=True,
     )
 
     # open cloud
@@ -306,6 +368,7 @@ def test_epi_triangulation_disp_rpc_roi():
         grid_right_filename,
         residues=True,
         fill_nan=True,
+        is_displacement_grid=True,
     )
 
     point_ecef_optim, point_wgs84_optim, __ = epipolar_triangulation(
@@ -318,6 +381,7 @@ def test_epi_triangulation_disp_rpc_roi():
         grid_right_filename,
         residues=True,
         fill_nan=True,
+        is_displacement_grid=True,
     )
 
     np.testing.assert_allclose(point_ecef[:, 0], point_ecef_optim[:, 0], 0, 2e-7)
@@ -366,7 +430,15 @@ def test_epi_triangulation_disp_grid():
         disp = pickle.load(disp_file)
 
     point_ecef, _, _ = epipolar_triangulation(
-        disp, None, "disp", gri_left, gri_right, grid_left_filename, grid_right_filename, residues=True
+        disp,
+        None,
+        "disp",
+        gri_left,
+        gri_right,
+        grid_left_filename,
+        grid_right_filename,
+        residues=True,
+        is_displacement_grid=True,
     )
 
     # open cloud
@@ -404,7 +476,15 @@ def test_epi_triangulation_disp_grid_masked():
         disp = pickle.load(disp_file)
     mask_array = disp.msk.values
     point_ecef, __, __ = epipolar_triangulation(
-        disp, mask_array, "disp", gri_left, gri_right, grid_left_filename, grid_right_filename, residues=True
+        disp,
+        mask_array,
+        "disp",
+        gri_left,
+        gri_right,
+        grid_left_filename,
+        grid_right_filename,
+        residues=True,
+        is_displacement_grid=True,
     )
 
     assert np.array_equal(point_ecef[0, :], [0, 0, 0])

@@ -193,8 +193,8 @@ Rectification Grid Computation
 
 :term:`Rectification` or stereo-rectification refers to the image transformation in epipolar geometry.
 
-A rectification grid is a displacement grid used to resample sensor gemetry to epipolar one.
-Shareloc rectification grids respects OTB convention for displacement grids. 
+A rectification grid is a localisation or displacement grid used to resample sensor gemetry to epipolar one.
+Shareloc rectification grids respects OTB convention for displacement grids if `as_displacement_grid` is activated.
 
 To generate the images in epipolar geometry from the grids computed by shareloc and the original images, one can refer to the Orfeo Toolbox documentation `here <https://www.orfeo-toolbox.org/CookBook/recipes/stereo.html#resample-images-in-epipolar-geometry>`_ .
 Algorithm details can be found in reference below.
@@ -209,6 +209,7 @@ Algorithm details can be found in reference below.
         elevation: Union[float, DTMIntersection] = 0.0,
         epi_step: float = 1.0,
         elevation_offset: float = 50.0,
+        as_displacement_grid = False
     ) -> Tuple[np.ndarray, np.ndarray, int, int, float, Affine]:
         """
         Compute stereo-rectification epipolar grids. Rectification scheme is composed of :
@@ -231,16 +232,20 @@ Algorithm details can be found in reference below.
         :type epi_step: float
         :param elevation_offset: elevation difference used to estimate the local tangent
         :type elevation_offset: float
+        :param as_displacement_grid: False: generates localisation grids, True: displacement grids
+        :type as_displacement_grid: bool
         :return:
-            Returns a Tuple containing :
-                - left epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3):
-                    [nb rows, nb cols, [row displacement, col displacement, alt]]
-                - right epipolar grid, np.ndarray object convention (nb_rows,nb_cols,3)
-                    [nb rows, nb cols, [row displacement, col displacement, alt]]
-                - number of rows of the epipolar image, int
-                - number of columns of the epipolar image, int
-                - mean value of the baseline to sensor altitude ratio, float
-                - epipolar grid geotransform, Affine
+            Returns left and right epipolar displacement grid, epipolar image size, mean of base to height ratio
+            and geotransfrom of the grid in a tuple containing :
+            - left epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3):
+            [nb rows, nb cols, [row displacement, col displacement, alt]] if as_displacement_grid is True
+            [nb rows, nb cols, [row localisation, col localisation, alt]] if as_displacement_grid is False
+            - right epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3) :
+            [nb rows, nb cols, [row displacement, col displacement, alt]] if as_displacement_grid is True
+            [nb rows, nb cols, [row localisation, col localisation, alt]] if as_displacement_grid is False
+            - size of epipolar image, [nb_rows,nb_cols]
+            - mean value of the baseline to sensor altitude ratio, float
+            - epipolar grid geotransform, Affine
         :rtype: Tuple
         """
 

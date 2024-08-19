@@ -12,6 +12,20 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.3 Localisation grids for rectification (August 2024)
+
+### Added
+
+ - Rectification grids can be returned as localisation grids instead of displacement grids [#313]
+
+### Changed
+
+ - Allow nan values in geoid interpolation [#321]
+
+### Fixed
+
+ - Fix sphinx warnings during docs generation [#323]
+
 ## 0.2.2 M_PI identifier not found (July 2024)
 
 ### Fixed

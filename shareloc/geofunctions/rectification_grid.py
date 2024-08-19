@@ -34,11 +34,13 @@ class RectificationGrid:
     Rectification grid
     """
 
-    def __init__(self, grid_filename):
+    def __init__(self, grid_filename, is_displacement_grid=False):
         """
         Constructor
         :param grid_filename: grid filename
         :type filename: string
+        :param is_displacement_grid: True if is a displacement grid
+        :type is_displacement_grid: bool
         """
         self.grid_filename = grid_filename
 
@@ -54,16 +56,22 @@ class RectificationGrid:
         last_col = ori_col + step_col * dataset.width
         last_row = ori_row + step_row * dataset.height
 
-        # transform dep to positions
-        self.row_dep = dataset.read(2).transpose()
-        self.col_dep = dataset.read(1).transpose()
-
         cols = np.arange(ori_col, last_col, step_col)
         rows = np.arange(ori_row, last_row, step_row)
-        self.grid_row, self.grid_col = np.mgrid[ori_col:last_col:step_col, ori_row:last_row:step_row]
         self.points = (cols, rows)
-        self.row_positions = self.row_dep + self.grid_col
-        self.col_positions = self.col_dep + self.grid_row
+
+        if is_displacement_grid:
+            # transform dep to positions
+            self.row_dep = dataset.read(2).transpose()
+            self.col_dep = dataset.read(1).transpose()
+
+            self.grid_row, self.grid_col = np.mgrid[ori_col:last_col:step_col, ori_row:last_row:step_row]
+            self.points = (cols, rows)
+            self.row_positions = self.row_dep + self.grid_col
+            self.col_positions = self.col_dep + self.grid_row
+        else:
+            self.row_positions = dataset.read(2).transpose()
+            self.col_positions = dataset.read(1).transpose()
 
     def get_positions(self):
         """

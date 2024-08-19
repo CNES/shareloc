@@ -546,6 +546,7 @@ def init_inputs_rectification(
 
     # Use the mean spacing as before
     spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
+
     __, grid_size, rectified_image_size, footprint = prepare_rectification(
         left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset
     )
@@ -620,6 +621,7 @@ def compute_stereorectification_epipolar_grids(
     elevation: Union[float, DTMIntersection] = 0.0,
     epi_step: float = 1.0,
     elevation_offset: float = 50.0,
+    as_displacement_grid=False,
 ) -> Tuple[np.ndarray, np.ndarray, List[int], float, Affine]:
     """
     Compute stereo-rectification epipolar grids. Rectification scheme is composed of :
@@ -642,13 +644,18 @@ def compute_stereorectification_epipolar_grids(
     :type epi_step: float
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
+    :param as_displacement_grid: False: generates localisation grids, True: displacement grids
+    :type as_displacement_grid: bool
     :return:
-        Returns left and right epipolar displacement grid, epipolar image size, mean of base to height ratio
+        Returns left and right epipolar displacement/localisation  grid,
+        epipolar image size, mean of base to height ratio
         and geotransfrom of the grid in a tuple containing :
         - left epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3):
-        [nb rows, nb cols, [row displacement, col displacement, alt]]
+        [nb rows, nb cols, [row displacement, col displacement, alt]] if as_displacement_grid is True
+        [nb rows, nb cols, [row localisation, col localisation, alt]] if as_displacement_grid is False
         - right epipolar grid, np.ndarray object with size (nb_rows,nb_cols,3) :
-        [nb rows, nb cols, [row displacement, col displacement, alt]]
+        [nb rows, nb cols, [row displacement, col displacement, alt]] if as_displacement_grid is True
+        [nb rows, nb cols, [row localisation, col localisation, alt]] if as_displacement_grid is False
         - size of epipolar image, [nb_rows,nb_cols]
         - mean value of the baseline to sensor altitude ratio, float
         - epipolar grid geotransform, Affine
@@ -704,7 +711,8 @@ def compute_stereorectification_epipolar_grids(
         grid_size[1] * grid_size[0]
     )
 
-    # Convert position to displacement grids
-    left_grid, right_grid, transform = positions_to_displacement_grid(left_grid, right_grid, epi_step)
+    if as_displacement_grid:
+        # Convert position to displacement grids
+        left_grid, right_grid, _ = positions_to_displacement_grid(left_grid, right_grid, epi_step)
 
-    return left_grid, right_grid, rectified_image_size, mean_baseline_ratio, transform
+    return left_grid, right_grid, rectified_image_size, mean_baseline_ratio

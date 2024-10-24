@@ -145,6 +145,20 @@ def test_epi_triangulation_sift():
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     assert valid == pytest.approx(point_ecef[0, :], abs=0.5)
 
+    point_ecef_cubic, __, __ = epipolar_triangulation(
+        matches,
+        None,
+        "sift",
+        grid_left,
+        grid_right,
+        grid_left_filename,
+        grid_right_filename,
+        is_displacement_grid=True,
+        interpolator="cubic",
+    )
+
+    assert point_ecef_cubic == pytest.approx(point_ecef, abs=0.115)
+
 
 @pytest.mark.unit_tests
 def test_epi_triangulation_sift_rpc():

@@ -23,10 +23,12 @@ This module contains the rectification_grids class to handle CARS rectification 
 """
 # pylint: disable=no-member
 
+import logging
+
 # Third party imports
 import numpy as np
 import rasterio as rio
-from scipy import interpolate
+from scipy import __version__, interpolate
 
 
 class RectificationGrid:
@@ -74,6 +76,10 @@ class RectificationGrid:
         else:
             self.row_positions = dataset.read(2).transpose()
             self.col_positions = dataset.read(1).transpose()
+
+        if interpolator == "cubic" and int(__version__.split(".")[1]) >= 13:
+            logging.warning("cubic_legacy interpolator is used with scipy>=1.13.")
+            interpolator = "cubic_legacy"
 
         self.interpolator = interpolate.RegularGridInterpolator(
             self.points,

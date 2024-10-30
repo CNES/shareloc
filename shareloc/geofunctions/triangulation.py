@@ -208,6 +208,7 @@ def epipolar_triangulation(
     residues=False,
     fill_nan=False,
     is_displacement_grid=False,
+    interpolator="linear",
 ):
     """
     epipolar triangulation
@@ -237,6 +238,8 @@ def epipolar_triangulation(
     :type fill_nan: boolean
     :param is_displacement_grid: True if grids are displacement grids
     :type is_displacement_grid: bool
+    :param interpolator: grid interpolator
+    :type interpolator: str
     :return: intersections in cartesian crs
     :rtype: numpy.array
     """
@@ -252,8 +255,12 @@ def epipolar_triangulation(
         raise KeyError("matches type should be sift or disp")
 
     # interpolate left
-    rectif_grid_left = RectificationGrid(grid_left, is_displacement_grid=is_displacement_grid)
-    rectif_grid_right = RectificationGrid(grid_right, is_displacement_grid=is_displacement_grid)
+    rectif_grid_left = RectificationGrid(
+        grid_left, is_displacement_grid=is_displacement_grid, interpolator=interpolator
+    )
+    rectif_grid_right = RectificationGrid(
+        grid_right, is_displacement_grid=is_displacement_grid, interpolator=interpolator
+    )
 
     # interpolate_right
     matches_sensor_left = rectif_grid_left.interpolate(epi_pos_left)

@@ -23,10 +23,12 @@ This module contains the rectification_grids class to handle CARS rectification 
 """
 # pylint: disable=no-member
 
+import logging
+
 # Third party imports
 import numpy as np
 import rasterio as rio
-from scipy import interpolate
+from scipy import __version__, interpolate
 
 
 class RectificationGrid:
@@ -34,13 +36,15 @@ class RectificationGrid:
     Rectification grid
     """
 
-    def __init__(self, grid_filename, is_displacement_grid=False):
+    def __init__(self, grid_filename: str, is_displacement_grid: bool = False, interpolator: str = "linear"):
         """
         Constructor
         :param grid_filename: grid filename
         :type filename: string
         :param is_displacement_grid: True if is a displacement grid
         :type is_displacement_grid: bool
+        :param interpolator: grid interpolator for scipy/interpolate.RegularGridInterpolator
+        :type interpolator: str
         """
         self.grid_filename = grid_filename
 
@@ -73,6 +77,18 @@ class RectificationGrid:
             self.row_positions = dataset.read(2).transpose()
             self.col_positions = dataset.read(1).transpose()
 
+        if interpolator == "cubic" and int(__version__.split(".")[1]) >= 13:
+            logging.warning("cubic_legacy interpolator is used with scipy>=1.13.")
+            interpolator = "cubic_legacy"
+
+        self.interpolator = interpolate.RegularGridInterpolator(
+            self.points,
+            np.stack((self.col_positions, self.row_positions), axis=2),
+            method=interpolator,
+            bounds_error=False,
+            fill_value=None,
+        )
+
     def get_positions(self):
         """
         return grid positions
@@ -91,11 +107,5 @@ class RectificationGrid:
         :return interpolated positions : array  Nx2 [col,row]
         :rtype  np.array
         """
-        interp_row = interpolate.interpn(
-            self.points, self.row_positions, positions, method="linear", bounds_error=False, fill_value=None
-        )
-        interp_col = interpolate.interpn(
-            self.points, self.col_positions, positions, method="linear", bounds_error=False, fill_value=None
-        )
-        interp_pos = np.stack((interp_col, interp_row)).transpose()
-        return interp_pos
+
+        return self.interpolator(positions)

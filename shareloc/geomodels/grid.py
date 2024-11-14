@@ -163,8 +163,13 @@ class Grid(GeoModelTemplate):
         self.colmax = self.col0 + self.stepcol * (self.nbcol - 1)
         for key in metadata:
             if key.endswith("REF"):
-                self.repter = metadata[key]
-                self.epsg = int(metadata[key].split(":")[1])
+                proj_ref = metadata[key]
+                self.repter = proj_ref
+                if proj_ref.startswith("EPSG:"):
+                    self.epsg = int(proj_ref.split(":")[1])
+                else:
+                    logging.debug("use default epsg : 4326 for the grid crs.")
+                    self.epsg = 4326
 
     def parse_metadata_alti(self, metadata):
         """

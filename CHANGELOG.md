@@ -12,6 +12,17 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.4 Grid Interpolation method parameter (November 2024)
+
+### Added
+
+ - Interpolator type can be selected in rectification grid interpolation [#327]
+
+### Fixed
+
+- Fix remove interpolator to be cubic_legacy with scipy>=1.13 [#332] 
+- Fix grid geomodel crash with Proj4 crs [#330]
+
 ## 0.2.3 Localisation grids for rectification (August 2024)
 
 ### Added

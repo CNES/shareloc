@@ -49,6 +49,16 @@ def fixture_get_geotiff_grid():
     return gri_geotiff, grid_image
 
 
+def test_read_grid_ref():
+    """
+    The purpose of this test is to test grid handling with non EPSG based metadata REF key
+    """
+    grid_path = os.path.join(data_path(), "grid", "grid_ref_proj4.tif")
+    grid = GeoModel(grid_path, "GRID")
+    assert grid.epsg == 4326
+    assert grid.repter == "+proj=latlon +R=1737400.0 +no_defs +type=crs"
+
+
 @pytest.mark.unit_tests
 def test_grid_geotiff(get_geotiff_grid):
     """

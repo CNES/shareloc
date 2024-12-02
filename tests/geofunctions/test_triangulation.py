@@ -33,6 +33,7 @@ import pickle
 # Third party imports
 import numpy as np
 import pytest
+from scipy import __version__
 
 # Shareloc imports
 from shareloc.geofunctions.triangulation import distance_point_los, epipolar_triangulation, sensor_triangulation
@@ -145,6 +146,11 @@ def test_epi_triangulation_sift():
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     assert valid == pytest.approx(point_ecef[0, :], abs=0.5)
 
+    interpolator = "cubic"
+    if int(__version__.split(".")[1]) >= 13:
+        # issue 328
+        interpolator = "cubic_legacy"
+
     point_ecef_cubic, __, __ = epipolar_triangulation(
         matches,
         None,
@@ -154,7 +160,7 @@ def test_epi_triangulation_sift():
         grid_left_filename,
         grid_right_filename,
         is_displacement_grid=True,
-        interpolator="cubic",
+        interpolator=interpolator,
     )
 
     assert point_ecef_cubic == pytest.approx(point_ecef, abs=0.115)

@@ -551,7 +551,7 @@ def init_inputs_rectification(
     elevation: Union[float, DTMIntersection] = 0.0,
     epi_step: float = 1.0,
     elevation_offset: float = 50.0,
-    margin=0,
+    margin: int = 0,
 ) -> Tuple[np.ndarray, np.ndarray, float, List[int], List[int]]:
     """
     Inputs rectification with its starting point, spacing, grid size, rectified_image size.
@@ -659,8 +659,8 @@ def compute_stereorectification_epipolar_grids(
     elevation: Union[float, DTMIntersection] = 0.0,
     epi_step: float = 1.0,
     elevation_offset: float = 50.0,
-    as_displacement_grid=False,
-    margin=0,
+    as_displacement_grid: bool = False,
+    margin: int = 0,
 ) -> Tuple[np.ndarray, np.ndarray, List[int], float, Affine]:
     """
     Compute stereo-rectification epipolar grids. Rectification scheme is composed of :

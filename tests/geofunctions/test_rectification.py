@@ -310,7 +310,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_dtm_geoid_roi(i
 
     dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
     geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
-    extent = get_epipolar_extent(left_im, geom_model_left, geom_model_right, margin=0.0016667)
+    extent = get_epipolar_extent(left_im, geom_model_left, geom_model_right, additional_margin=0.0016667)
     dtm_image = dtm_reader(
         dtm_file,
         geoid_file,

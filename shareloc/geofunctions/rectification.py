@@ -241,16 +241,16 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     maxx = max(urx, llx, lrx, ulx)
     maxy = max(ury, lly, lry, uly)
 
-    # Add margins
+    # 5) Compute the size of epipolar images
+    rectified_image_size = [int((maxy - miny) / mean_spacing), int((maxx - minx) / mean_spacing)]
+
+    # Add margins for grids
     minx -= margin * epi_step
     miny -= margin * epi_step
     maxx += margin * epi_step
     maxy += margin * epi_step
 
-    # 5) Compute the size of epipolar images
-    rectified_image_size = [int((maxy - miny) / mean_spacing), int((maxx - minx) / mean_spacing)]
-
-    # 6) Georeferenced coordinates of the [ul, ll, lr, ur] position of left epipolar image
+    # 6) Georeferenced coordinates of the [ul, ll, lr, ur] position of left grid
     left_epi_ul = [
         left_origin[0] + (unit_vector_along_epi_y * minx + unit_vector_ortho_epi_y * miny),
         left_origin[1] + (unit_vector_along_epi_x * minx + unit_vector_ortho_epi_x * miny),
@@ -277,8 +277,8 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     # 7) Compute the size of the epipolar grids, convention [nb_row, nb_col]
     # Two cells are added to the grid in order to harmonize the OTB conventions.
     grid_size = [
-        int(rectified_image_size[0] / epi_step + 2),
-        int(rectified_image_size[1] / epi_step + 2),
+        int(rectified_image_size[0] / epi_step + 2) + 2 * margin,
+        int(rectified_image_size[1] / epi_step + 2) + 2 * margin,
     ]
 
     # 8) Compute starting point

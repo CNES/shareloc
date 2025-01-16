@@ -215,7 +215,7 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_with_margins(in
         default_elev,
         epi_step,
         elevation_offset,
-        margin=0,
+        margin=margin,
     )
 
     # update baseline
@@ -241,8 +241,8 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_with_margins(in
     # )
 
     # Check size of rectified images
-    assert img_size_row == 612 + 2 * margin * epi_step
-    assert img_size_col == 612 + 2 * margin * epi_step
+    assert img_size_row == 612
+    assert img_size_col == 612
 
     # Check mean_baseline_ratio
     # ground truth mean baseline ratio from OTB

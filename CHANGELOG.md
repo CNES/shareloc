@@ -12,6 +12,12 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.5 Margins for rectification grid (January 2025)
+
+### Added
+
+ - Add a configurable margin to rectification grid [#333]
+
 ## 0.2.4 Grid Interpolation method parameter (November 2024)
 
 ### Added

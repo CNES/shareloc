@@ -162,7 +162,7 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, e
 
 
 # pylint: disable=too-many-locals
-def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset):
+def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset, margin=0):
     """
     Determine size and spacing of the epipolar grids.
     Determine size of the epipolar images and the upper-left origin of the stereo-rectified left image (starting point)
@@ -179,6 +179,8 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     :type epi_step: int
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: int
+    :param margin: margin of the rectification grid (in grid pixels)
+    :type margin: int
     :return:
         - epipolar grids spacing (pixel size), 1D np.array [row pixel size, col pixel size]
         - epipolar grids size, 1D np.array [number of row, number of columns]
@@ -242,7 +244,13 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     # 5) Compute the size of epipolar images
     rectified_image_size = [int((maxy - miny) / mean_spacing), int((maxx - minx) / mean_spacing)]
 
-    # 6) Georeferenced coordinates of the [ul, ll, lr, ur] position of left epipolar image
+    # Add margins for grids
+    minx -= margin * epi_step
+    miny -= margin * epi_step
+    maxx += margin * epi_step
+    maxy += margin * epi_step
+
+    # 6) Georeferenced coordinates of the [ul, ll, lr, ur] position of left grid
     left_epi_ul = [
         left_origin[0] + (unit_vector_along_epi_y * minx + unit_vector_ortho_epi_y * miny),
         left_origin[1] + (unit_vector_along_epi_x * minx + unit_vector_ortho_epi_x * miny),
@@ -268,16 +276,30 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
 
     # 7) Compute the size of the epipolar grids, convention [nb_row, nb_col]
     # Two cells are added to the grid in order to harmonize the OTB conventions.
-    grid_size = [int(rectified_image_size[0] / epi_step + 2), int(rectified_image_size[1] / epi_step + 2)]
+    grid_size = [
+        int(rectified_image_size[0] / epi_step + 2) + 2 * margin,
+        int(rectified_image_size[1] / epi_step + 2) + 2 * margin,
+    ]
 
-    return grid_pixel_size, grid_size, rectified_image_size, footprint
+    # 8) Compute starting point
+    start_left = np.array(np.copy(left_epi_ul))
+    start_left = np.reshape(start_left, (1, -1))
+
+    return grid_pixel_size, grid_size, rectified_image_size, footprint, start_left
 
 
 def get_epipolar_extent(
-    left_im, geom_model_left, geom_model_right, elevation=0.0, epi_step=30.0, elevation_offset=50.0, margin=0.0
+    left_im,
+    geom_model_left,
+    geom_model_right,
+    elevation=0.0,
+    epi_step=30.0,
+    elevation_offset=50.0,
+    grid_margin=0,
+    additional_margin=0.0,
 ):
     """
-    return epipolar footprint using reprojection of epipolar geometry in left image.
+    Return epipolar rectification grid footprint using reprojection of epipolar geometry in left image.
 
     :param left_im: left image
     :type left_im: shareloc.image object
@@ -291,13 +313,15 @@ def get_epipolar_extent(
     :type epi_step: float
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
-    :param margin: footprint margin (in degrees)
-    :type margin: float
+    :param grid_margin: margin of the rectification grid (in grid pixels)
+    :type grid_margin: int
+    :param additional_margin: footprint margin (in degrees)
+    :type additional_margin: float
     :return: [lon_min,lat_min,lon max,lat max] (2D np.array)
     :rtype: numpy.array
     """
-    __, __, __, footprint = prepare_rectification(
-        left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset
+    __, __, __, footprint, _ = prepare_rectification(
+        left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset, grid_margin
     )
 
     loc_left = Localization(geom_model_left, image=left_im)
@@ -306,7 +330,14 @@ def get_epipolar_extent(
     [lon_min, lat_min, __] = np.min(on_ground_pos, 0)
     [lon_max, lat_max, __] = np.max(on_ground_pos, 0)
     # Sometimes a margin is added because we don't know the epipolar grid footprint size.
-    return np.array([lat_min - margin, lon_min - margin, lat_max + margin, lon_max + margin])
+    return np.array(
+        [
+            lat_min - additional_margin,
+            lon_min - additional_margin,
+            lat_max + additional_margin,
+            lon_max + additional_margin,
+        ]
+    )
 
 
 def moving_along_axis(
@@ -411,6 +442,8 @@ def compute_strip_of_epipolar_grid(
     :param epipolar_angles: 2D array (rows,cols) containing epipolar angles at each grid node (angle in between epipolar
         coordinate system and left image coordinate system), size must be coherent with positions_point 1st,2nd dim
     :type epipolar_angles: np.ndarray
+    :param margin: margin of the rectification grid (in grid pixels)
+    :type margin: int
     :return:
         - left  epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
         - right epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
@@ -472,7 +505,7 @@ def compute_strip_of_epipolar_grid(
     # Grid creation
     # 1/ move along axis
     # 2/ compute local epipolar line
-    # 3/ compute locale epipolar angle
+    # 3/ compute local epipolar angle
     # 4/ fill the output
     # 5/ compute and increment the baseline ratio
     for point in range(1, strip_size):
@@ -504,6 +537,7 @@ def compute_strip_of_epipolar_grid(
 
     # Compute the mean baseline ratio
     mean_baseline_ratio /= left_grid.shape[0] * left_grid.shape[1] - already_computed_ratio
+
     return left_grid, right_grid, epi_angles_out, mean_baseline_ratio
 
 
@@ -517,6 +551,7 @@ def init_inputs_rectification(
     elevation: Union[float, DTMIntersection] = 0.0,
     epi_step: float = 1.0,
     elevation_offset: float = 50.0,
+    margin: int = 0,
 ) -> Tuple[np.ndarray, np.ndarray, float, List[int], List[int]]:
     """
     Inputs rectification with its starting point, spacing, grid size, rectified_image size.
@@ -535,6 +570,8 @@ def init_inputs_rectification(
     :type epi_step: float
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
+    :param margin: margin of the rectification grid (in grid pixels)
+    :type margin: int
     :return: returns a Tuple containing:
     - left starting point, np.ndarray of size (1,1,3)
     - right starting point, np.ndarray of size (1,1,3)
@@ -547,11 +584,12 @@ def init_inputs_rectification(
     # Use the mean spacing as before
     spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
-    __, grid_size, rectified_image_size, footprint = prepare_rectification(
-        left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset
+    __, grid_size, rectified_image_size, _, starting_point = prepare_rectification(
+        left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset, margin
     )
-    # Starting points are the upper-left origin of the left epipolar image, and it's correspondent in the right image
-    start_left = np.array(np.copy(footprint[0]))
+
+    # Starting points are NOT the upper-left origin of the left epipolar image, and its correspondent in the right image
+    start_left = np.array(np.copy(starting_point))
     start_left = np.reshape(start_left, (1, -1))
 
     start_right = np.zeros(3, dtype=start_left.dtype)
@@ -565,7 +603,7 @@ def init_inputs_rectification(
     start_right[:, 1] = init_col[0]
     start_right[:, 2] = init_alt[0]
 
-    init_left_point = np.array(footprint[0])
+    init_left_point = np.copy(start_left)
     init_left_point = init_left_point[np.newaxis, np.newaxis, :]
 
     init_right_point = np.copy(start_right)
@@ -621,7 +659,8 @@ def compute_stereorectification_epipolar_grids(
     elevation: Union[float, DTMIntersection] = 0.0,
     epi_step: float = 1.0,
     elevation_offset: float = 50.0,
-    as_displacement_grid=False,
+    as_displacement_grid: bool = False,
+    margin: int = 0,
 ) -> Tuple[np.ndarray, np.ndarray, List[int], float, Affine]:
     """
     Compute stereo-rectification epipolar grids. Rectification scheme is composed of :
@@ -670,7 +709,7 @@ def compute_stereorectification_epipolar_grids(
         grid_size,
         rectified_image_size,
     ) = init_inputs_rectification(
-        left_im, geom_model_left, right_im, geom_model_right, elevation, epi_step, elevation_offset
+        left_im, geom_model_left, right_im, geom_model_right, elevation, epi_step, elevation_offset, margin
     )
 
     # Create the first row by moving along columns (axis = 0) with number of rows of the grids.

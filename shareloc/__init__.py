@@ -25,7 +25,6 @@ Shareloc module init file
 # Standard imports
 from importlib.metadata import version
 
-# VERSION through setuptools_scm when python3 > 3.8
 try:
     __version__ = version("shareloc")
 except Exception:  # pylint: disable=broad-except

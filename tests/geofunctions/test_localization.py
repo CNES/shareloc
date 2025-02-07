@@ -540,22 +540,20 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
 
 @pytest.mark.parametrize(
     "col_min_valid",
-    [([4.15161251e-02, 1.95057636e-01, 1.10977819e00, -8.35016563e-04, -3.50772271e-02, -9.46432481e-03])],
+    [[4.15161251e-02, 1.95057636e-01, 1.10977819e00, -8.35016563e-04, -3.50772271e-02, -9.46432481e-03]],
 )
 @pytest.mark.parametrize(
-    "row_min_valid", [([0.05440845, 1.26513831, -0.36737151, -0.00229532, -0.07459378, -0.02558954])]
+    "row_min_valid", [[0.05440845, 1.26513831, -0.36737151, -0.00229532, -0.07459378, -0.02558954]]
 )
 @pytest.mark.parametrize(
     "col_max_valid",
-    [([1.76451389e-02, 2.05533045e-01, 1.11758291e00, -9.50086076e-04, -3.59923603e-02, -1.03291594e-02])],
+    [[1.76451389e-02, 2.05533045e-01, 1.11758291e00, -9.50086076e-04, -3.59923603e-02, -1.03291594e-02]],
 )
-@pytest.mark.parametrize(
-    "row_max_valid", [([0.07565692, 1.27499912, -0.36677813, -0.00252395, -0.07539624, -0.0270914])]
-)
-@pytest.mark.parametrize("valid_offset_lon", [([57.37295223744326, 0.15660032225072484])])
-@pytest.mark.parametrize("valid_offset_lat", [([22.066877016445275, 0.14641205050748773])])
-@pytest.mark.parametrize("valid_offset_row", [([24913.0, 24912.5])])
-@pytest.mark.parametrize("valid_offset_col", [([19975.5, 19975.0])])
+@pytest.mark.parametrize("row_max_valid", [[0.07565692, 1.27499912, -0.36677813, -0.00252395, -0.07539624, -0.0270914]])
+@pytest.mark.parametrize("valid_offset_lon", [[57.37295223744326, 0.15660032225072484]])
+@pytest.mark.parametrize("valid_offset_lat", [[22.066877016445275, 0.14641205050748773]])
+@pytest.mark.parametrize("valid_offset_row", [[24913.0, 24912.5]])
+@pytest.mark.parametrize("valid_offset_col", [[19975.5, 19975.0]])
 @pytest.mark.unit_tests
 def test_pred_loc_inv(
     col_min_valid,

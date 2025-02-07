@@ -40,7 +40,7 @@ export BROWSER_PYSCRIPT
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
 # Python global variables definition
-PYTHON_VERSION_MIN = 3.8
+PYTHON_VERSION_MIN = 3.9
 
 
 # Set PYTHON if not defined in command line

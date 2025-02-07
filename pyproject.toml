@@ -31,3 +31,6 @@ module = [
     'setuptools',
 ]
 ignore_missing_imports = true
+
+[tool.cibuildwheel]
+skip = ["pp*", "cp36-*", "cp37-*", "cp38-*"]

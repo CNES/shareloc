@@ -84,13 +84,16 @@ class dtm_reader(Image):
         self.stats = {}
 
         if self.mask is not None:
-            valid_data = self.data[self.mask[:, :] == 255]
+            self.mask[np.isnan(self.data)] = 0
         else:
-            valid_data = self.data
+            # no nodata in dtm, we create a mask with nans
+            self.mask = (1 - np.isnan(self.data)) * 255
 
-        self.stats["min"] = valid_data.min()
-        self.stats["max"] = valid_data.max()
-        self.stats["mean"] = valid_data.mean()
+        valid_data = self.data[self.mask[:, :] == 255]
+
+        self.stats["min"] = np.min(valid_data)
+        self.stats["max"] = np.max(valid_data)
+        self.stats["mean"] = np.mean(valid_data)
         self.stats["median"] = np.median(valid_data)
 
         if fill_nodata is not None:
@@ -115,7 +118,7 @@ class dtm_reader(Image):
 
     def fill_nodata(self, strategy="rio_fillnodata", max_search_distance=100.0, smoothing_iterations=0, fill_value=0.0):
         """
-        fill nodata in DTM image
+        fill nodata in DTM image, nan values in dtm are also filled
 
         :param strategy: fill strategy ('constant'/'min'/'median'/'max'/'mean'/'rio_fillnodata'/)
         :type strategy: str
@@ -127,22 +130,20 @@ class dtm_reader(Image):
             if None 'min' is used
         :type fill_value: float
         """
-        if self.mask is not None:
-            if strategy in self.stats:
-                self.data[self.mask[:, :] == 0] = self.stats[strategy]
-            elif strategy == "rio_fillnodata":
-                self.data = fillnodata(self.data, self.mask[:, :], max_search_distance, smoothing_iterations)
-                if np.sum(self.data[self.mask[:, :] == 0] == self.nodata) != 0:
-                    if fill_value is None:
-                        fill_value = self.stats["min"]
-                    logging.info("Shareloc dtm_reader: not all nodata have been filled, fill with %d", fill_value)
-                    self.data[self.data[:, :] == self.nodata] = fill_value
-            elif strategy == "constant":
-                self.data[self.mask[:, :] == 0] = fill_value
-            else:
-                logging.warning("Shareloc dtm_reader: fill nodata strategy not available")
+
+        if strategy in self.stats:
+            self.data[self.mask[:, :] == 0] = self.stats[strategy]
+        elif strategy == "rio_fillnodata":
+            self.data = fillnodata(self.data, self.mask[:, :], max_search_distance, smoothing_iterations)
+            if np.sum(self.data[self.mask[:, :] == 0] == self.nodata) != 0:
+                if fill_value is None:
+                    fill_value = self.stats["min"]
+                logging.info("Shareloc dtm_reader: not all nodata have been filled, fill with %d", fill_value)
+                self.data[self.data[:, :] == self.nodata] = fill_value
+        elif strategy == "constant":
+            self.data[self.mask[:, :] == 0] = fill_value
         else:
-            logging.debug("Shareloc dtm_reader: no nodata mask has been defined")
+            logging.warning("Shareloc dtm_reader: fill nodata strategy not available")
 
 
 def interpolate_geoid_height(geoid_filename, positions, interpolation_method="linear"):

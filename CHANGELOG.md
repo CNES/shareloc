@@ -4,11 +4,19 @@ Only the first "Unreleased" section of this file corresponding of next release c
 When publication of a new release, the section "Unreleased" is blocked to the next chosen version and name of the milestone at a given date.
 A new section Unreleased is opened then for next dev phase.
 
-## 0.2.6 Cross-platforms wheels
+## 0.2.6 Cross-platforms wheels (February 2025)
 
 ### Added
 
  - Add wheels in PyPI package for Windows and Ubuntu
+
+### Changed
+
+ - Support for Python 3.8 is over
+
+### Fixed
+
+- Fix crash due to nan in DEM [#341]
 
 ## 0.2.5 Margins for rectification grid (January 2025)
 

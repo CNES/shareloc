@@ -70,3 +70,27 @@ def test_dtm_fillnodata():
     dtm_file_srtm_hole = os.path.join(data_path(), "dtm", "srtm_ventoux", "N44E005_big_hole.tif")
     my_image_fill_hole = dtm_reader(dtm_file_srtm_hole, fill_nodata="rio_fillnodata")
     assert my_image_fill_hole.data[403, 1119] == 32
+
+
+def test_dtm_with_nan():
+    """
+    Test dtm image containing nan
+    """
+
+    # image containing one NaN and nodata value
+    dtm_file = os.path.join(data_path(), "dtm", "dtm_philondenx_32630_nan.tif")
+
+    dtm_with_nan = dtm_reader(dtm_file, fill_nodata="mean")
+    assert dtm_with_nan.stats["min"] == pytest.approx(210.45277, abs=1e-5)
+    assert dtm_with_nan.stats["max"] == pytest.approx(244.91403, abs=1e-5)
+    assert dtm_with_nan.stats["mean"] == pytest.approx(221.15659, abs=1e-5)
+    assert dtm_with_nan.stats["median"] == pytest.approx(221.11378, abs=1e-5)
+    assert np.sum(np.isnan(dtm_with_nan.data[:, :])) == 0
+    # image containing one NaN and no nodata value
+    dtm_file = os.path.join(data_path(), "dtm", "dtm_philondenx_32630_nan_no_nodata.tif")
+    dtm_with_nan = dtm_reader(dtm_file, fill_nodata="mean")
+    assert dtm_with_nan.stats["min"] == 0.0
+    assert dtm_with_nan.stats["max"] == pytest.approx(244.91403, abs=1e-5)
+    assert dtm_with_nan.stats["mean"] == pytest.approx(179.98820, abs=1e-5)
+    assert dtm_with_nan.stats["median"] == pytest.approx(220.37231, abs=1e-5)
+    assert np.sum(np.isnan(dtm_with_nan.data[:, :])) == 0

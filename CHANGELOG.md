@@ -4,6 +4,12 @@ Only the first "Unreleased" section of this file corresponding of next release c
 When publication of a new release, the section "Unreleased" is blocked to the next chosen version and name of the milestone at a given date.
 A new section Unreleased is opened then for next dev phase.
 
+## 0.2.7 Lighten triangulation (February 2025)
+
+### Changed
+
+ - Initialisation of interpolation is made outside of epipolar_triangulation to improve performance [#343]
+
 ## 0.2.6 Cross-platforms wheels (February 2025)
 
 ### Added

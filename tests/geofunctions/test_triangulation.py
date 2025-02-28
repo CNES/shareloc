@@ -36,6 +36,7 @@ import pytest
 from scipy import __version__
 
 # Shareloc imports
+from shareloc.geofunctions.rectification_grid import RectificationGrid
 from shareloc.geofunctions.triangulation import distance_point_los, epipolar_triangulation, sensor_triangulation
 from shareloc.geomodels import GeoModel
 
@@ -137,11 +138,14 @@ def test_epi_triangulation_sift():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
 
+    rectif_grid_left = RectificationGrid(grid_left_filename, is_displacement_grid=True)
+    rectif_grid_right = RectificationGrid(grid_right_filename, is_displacement_grid=True)
+
     matches_filename = os.path.join(data_path(), "triangulation", "matches-crop.npy")
     matches = np.load(matches_filename)
 
     point_ecef, __, __ = epipolar_triangulation(
-        matches, None, "sift", grid_left, grid_right, grid_left_filename, grid_right_filename, is_displacement_grid=True
+        matches, None, "sift", grid_left, grid_right, rectif_grid_left, rectif_grid_right
     )
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     assert valid == pytest.approx(point_ecef[0, :], abs=0.5)
@@ -151,16 +155,17 @@ def test_epi_triangulation_sift():
         # issue 328
         interpolator = "cubic_legacy"
 
+    rectif_grid_left = RectificationGrid(grid_left_filename, is_displacement_grid=True, interpolator=interpolator)
+    rectif_grid_right = RectificationGrid(grid_right_filename, is_displacement_grid=True, interpolator=interpolator)
+
     point_ecef_cubic, __, __ = epipolar_triangulation(
         matches,
         None,
         "sift",
         grid_left,
         grid_right,
-        grid_left_filename,
-        grid_right_filename,
-        is_displacement_grid=True,
-        interpolator=interpolator,
+        rectif_grid_left,
+        rectif_grid_right,
     )
 
     assert point_ecef_cubic == pytest.approx(point_ecef, abs=0.115)
@@ -185,6 +190,9 @@ def test_epi_triangulation_sift_rpc():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
 
+    rectif_grid_left = RectificationGrid(grid_left_filename, is_displacement_grid=True)
+    rectif_grid_right = RectificationGrid(grid_right_filename, is_displacement_grid=True)
+
     matches_filename = os.path.join(data_path(), "triangulation", "matches-crop.npy")
     matches = np.load(matches_filename)
 
@@ -194,9 +202,8 @@ def test_epi_triangulation_sift_rpc():
         "sift",
         geom_model_left,
         geom_model_right,
-        grid_left_filename,
-        grid_right_filename,
-        is_displacement_grid=True,
+        rectif_grid_left,
+        rectif_grid_right,
     )
 
     point_ecef_optim, __, __ = epipolar_triangulation(
@@ -205,9 +212,8 @@ def test_epi_triangulation_sift_rpc():
         "sift",
         geom_model_left_optim,
         geom_model_right_optim,
-        grid_left_filename,
-        grid_right_filename,
-        is_displacement_grid=True,
+        rectif_grid_left,
+        rectif_grid_right,
     )
     valid = [4584341.37359843123704195022583, 572313.675204274943098425865173, 4382784.51356450468301773071289]
     # print(valid - point_ecef[0,:])
@@ -231,6 +237,9 @@ def test_epi_triangulation_sift_rpc_loc_grid():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", id_scene, "left_epi_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", id_scene, "right_epi_grid.tif")
 
+    rectif_grid_left = RectificationGrid(grid_left_filename, is_displacement_grid=False)
+    rectif_grid_right = RectificationGrid(grid_right_filename, is_displacement_grid=False)
+
     matches = np.array(
         [
             [300, 400, 302, 420],
@@ -244,9 +253,8 @@ def test_epi_triangulation_sift_rpc_loc_grid():
         "sift",
         geom_model_left,
         geom_model_right,
-        grid_left_filename,
-        grid_right_filename,
-        is_displacement_grid=False,
+        rectif_grid_left,
+        rectif_grid_right,
     )
 
     valid = [4733007.44057619, 2859047.05062282, 3168330.19887048]
@@ -311,6 +319,9 @@ def test_epi_triangulation_disp_rpc():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
 
+    rectif_grid_left = RectificationGrid(grid_left_filename, is_displacement_grid=True)
+    rectif_grid_right = RectificationGrid(grid_right_filename, is_displacement_grid=True)
+
     disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.pickle")
     with open(disp_filename, "rb") as disp_file:
         disp = pickle.load(disp_file)
@@ -320,10 +331,9 @@ def test_epi_triangulation_disp_rpc():
         "disp",
         geom_model_left,
         geom_model_right,
-        grid_left_filename,
-        grid_right_filename,
+        rectif_grid_left,
+        rectif_grid_right,
         residues=True,
-        is_displacement_grid=True,
     )
 
     point_ecef_optim, point_wsg84_optim, _ = epipolar_triangulation(
@@ -332,10 +342,9 @@ def test_epi_triangulation_disp_rpc():
         "disp",
         geom_model_left_optim,
         geom_model_right_optim,
-        grid_left_filename,
-        grid_right_filename,
+        rectif_grid_left,
+        rectif_grid_right,
         residues=True,
-        is_displacement_grid=True,
     )
 
     # open cloud
@@ -375,6 +384,9 @@ def test_epi_triangulation_disp_rpc_roi():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid_ventoux.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid_ventoux.tif")
 
+    rectif_grid_left = RectificationGrid(grid_left_filename, is_displacement_grid=True)
+    rectif_grid_right = RectificationGrid(grid_right_filename, is_displacement_grid=True)
+
     disp_filename = os.path.join(data_path(), "triangulation", "disp1_ref.pickle")
     with open(disp_filename, "rb") as disp_file:
         disp = pickle.load(disp_file)
@@ -384,11 +396,10 @@ def test_epi_triangulation_disp_rpc_roi():
         "disp",
         geom_model_left,
         geom_model_right,
-        grid_left_filename,
-        grid_right_filename,
+        rectif_grid_left,
+        rectif_grid_right,
         residues=True,
         fill_nan=True,
-        is_displacement_grid=True,
     )
 
     point_ecef_optim, point_wgs84_optim, __ = epipolar_triangulation(
@@ -397,11 +408,10 @@ def test_epi_triangulation_disp_rpc_roi():
         "disp",
         geom_model_left_optim,
         geom_model_right_optim,
-        grid_left_filename,
-        grid_right_filename,
+        rectif_grid_left,
+        rectif_grid_right,
         residues=True,
         fill_nan=True,
-        is_displacement_grid=True,
     )
 
     np.testing.assert_allclose(point_ecef[:, 0], point_ecef_optim[:, 0], 0, 2e-7)
@@ -445,6 +455,9 @@ def test_epi_triangulation_disp_grid():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
 
+    rectif_grid_left = RectificationGrid(grid_left_filename, is_displacement_grid=True)
+    rectif_grid_right = RectificationGrid(grid_right_filename, is_displacement_grid=True)
+
     disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.pickle")
     with open(disp_filename, "rb") as disp_file:
         disp = pickle.load(disp_file)
@@ -455,10 +468,9 @@ def test_epi_triangulation_disp_grid():
         "disp",
         gri_left,
         gri_right,
-        grid_left_filename,
-        grid_right_filename,
+        rectif_grid_left,
+        rectif_grid_right,
         residues=True,
-        is_displacement_grid=True,
     )
 
     # open cloud
@@ -491,6 +503,9 @@ def test_epi_triangulation_disp_grid_masked():
     grid_left_filename = os.path.join(data_path(), "rectification_grids", "left_epipolar_grid.tif")
     grid_right_filename = os.path.join(data_path(), "rectification_grids", "right_epipolar_grid.tif")
 
+    rectif_grid_left = RectificationGrid(grid_left_filename, is_displacement_grid=True)
+    rectif_grid_right = RectificationGrid(grid_right_filename, is_displacement_grid=True)
+
     disp_filename = os.path.join(data_path(), "triangulation", "disparity-crop.pickle")
     with open(disp_filename, "rb") as disp_file:
         disp = pickle.load(disp_file)
@@ -501,10 +516,9 @@ def test_epi_triangulation_disp_grid_masked():
         "disp",
         gri_left,
         gri_right,
-        grid_left_filename,
-        grid_right_filename,
+        rectif_grid_left,
+        rectif_grid_right,
         residues=True,
-        is_displacement_grid=True,
     )
 
     assert np.array_equal(point_ecef[0, :], [0, 0, 0])

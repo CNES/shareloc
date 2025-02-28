@@ -26,7 +26,6 @@ This module contains triangulation methods.
 import numpy as np
 
 # Shareloc imports
-from shareloc.geofunctions.rectification_grid import RectificationGrid
 from shareloc.geomodels.los import LOS
 from shareloc.proj_utils import coordinates_conversion
 
@@ -207,8 +206,6 @@ def epipolar_triangulation(
     right_min_max=None,
     residues=False,
     fill_nan=False,
-    is_displacement_grid=False,
-    interpolator="linear",
 ):
     """
     epipolar triangulation
@@ -223,10 +220,10 @@ def epipolar_triangulation(
     :type geometrical_model_left: GeomodelTemplate
     :param geometrical_model_right: right image geometrical model
     :type geometrical_model_right: GeomodelTemplate
-    :param grid_left: left rectification grid filename
-    :type grid_left: str
-    :param grid_right: right rectification grid filename
-    :type grid_right: str
+    :param grid_left: interpolated left rectification grid
+    :type grid_left: shareloc.geofunctions.rectification_grid.RectificationGrid
+    :param grid_right: interpolated right rectification grid
+    :type grid_right: shareloc.geofunctions.rectification_grid.RectificationGrid
     :param left_min_max: left min/max for los creation, if None model min/max will be used
     :type left_min_max: list
     :param right_min_max: right min/max for los creation, if None model min/max will be used
@@ -254,17 +251,9 @@ def epipolar_triangulation(
     else:
         raise KeyError("matches type should be sift or disp")
 
-    # interpolate left
-    rectif_grid_left = RectificationGrid(
-        grid_left, is_displacement_grid=is_displacement_grid, interpolator=interpolator
-    )
-    rectif_grid_right = RectificationGrid(
-        grid_right, is_displacement_grid=is_displacement_grid, interpolator=interpolator
-    )
-
     # interpolate_right
-    matches_sensor_left = rectif_grid_left.interpolate(epi_pos_left)
-    matches_sensor_right = rectif_grid_right.interpolate(epi_pos_right)
+    matches_sensor_left = grid_left.interpolate(epi_pos_left)
+    matches_sensor_right = grid_right.interpolate(epi_pos_right)
     matches_sensor = np.concatenate((matches_sensor_left, matches_sensor_right), axis=1)
 
     # triangulate positions in sensor geometry

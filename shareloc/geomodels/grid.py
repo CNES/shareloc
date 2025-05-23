@@ -145,16 +145,25 @@ class Grid(GeoModelTemplate):
                 "Only Geotiff grids are accepted. Please refer to the documentation for grid supported format."
             )
         metadata = grid_image.dataset.tags()
-        self.nbalt = int(grid_image.dataset.count / 2)
-        self.nbrow = grid_image.nb_rows
-        self.nbcol = grid_image.nb_columns
-        # data in global or specific metadata namespace
         for tags in grid_image.dataset.tag_namespaces():
             metadata.update(grid_image.dataset.tags(ns=tags))
-        indexes = self.parse_metadata_alti(metadata)
-        lon_indexes = indexes * 2
+        grid_with_status = self.check_status_band(metadata)
+        logging.debug("grid contains status dataset : %s", grid_with_status)
+        self.nbalt = int(grid_image.dataset.count / (2 + grid_with_status))
+        # data in global or specific metadata namespace
+
+        indexes = self.parse_metadata_alti(metadata, grid_with_status)
+
+        self.nbrow = grid_image.nb_rows
+        self.nbcol = grid_image.nb_columns
+
+        lon_indexes = indexes * (2 + grid_with_status)
         self.lon_data = grid_image.data[lon_indexes, :, :]
         self.lat_data = grid_image.data[lon_indexes + 1, :, :]
+        if grid_with_status:
+            data_status = grid_image.data[lon_indexes + 2, :, :]
+            if np.sum(data_status[:, :] != 0):
+                logging.warning("grid contains non valid data")
         self.stepcol = grid_image.pixel_size_col
         self.steprow = grid_image.pixel_size_row
         self.col0 = grid_image.origin_col
@@ -171,17 +180,37 @@ class Grid(GeoModelTemplate):
                     logging.debug("use default epsg : 4326 for the grid crs.")
                     self.epsg = 4326
 
-    def parse_metadata_alti(self, metadata):
+    def check_status_band(self, metadata):
+        """
+        parse metadata to check if status band are present
+
+        :param metadata: Geotiff metadata
+        :type metadata: dict
+
+        :return True if grid contains status band, False otherwise
+        """
+        for _, value in metadata.items():
+            if value == "status":
+                return True
+        return False
+
+    def parse_metadata_alti(self, metadata, status_band=False):
         """
         parse metadata to sort altitude in decreasing order
 
         :param metadata: Geotiff metadata
         :type metadata: dict
+        :param status_band: status_band
+        :type status_band: bool
+
+        :return lon indexes
         """
+
         alt_array = np.zeros([self.nbalt])
+
         for key in metadata.keys():
             if "ALTITUDE" in key:
-                band_index = int(int(key.split("B")[1]) / 2)
+                band_index = int(int(key.split("B")[1]) / (2 + status_band))
                 alt_array[band_index] = float(metadata[key])
         indexes = np.argsort(alt_array)[::-1]
         self.alts_down = alt_array[indexes]

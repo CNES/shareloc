@@ -59,6 +59,21 @@ def test_read_grid_ref():
     assert grid.repter == "+proj=latlon +R=1737400.0 +no_defs +type=crs"
 
 
+def test_read_grid_with_status():
+    """
+    The purpose of this test is to test grid with status band
+    """
+    grid_path = os.path.join(data_path(), "grid", "grid_with_status.tif")
+    grid = GeoModel(grid_path, "GRID")
+    lonlatalt = grid.direct_loc_h(0, 0, 0.0)[0]
+    assert grid.nbalt == 4
+    # comparison with Libgeo 8.1
+    np.testing.assert_allclose(lonlatalt, [35.432040062983624, 30.273583522181006, 0.0], rtol=0, atol=1e-14)
+    assert grid.epsg == 4326
+
+    assert grid.repter == "EPSG:4326"
+
+
 @pytest.mark.unit_tests
 def test_grid_geotiff(get_geotiff_grid):
     """

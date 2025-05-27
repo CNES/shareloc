@@ -3,28 +3,28 @@ repos:
   hooks:
   - id: isort
     name: Isort
-    stages: [commit]
+    stages: [pre-commit]
     language: system
     entry: isort
     types: [python]
 
   - id: black
     name: Black
-    stages: [commit]
+    stages: [pre-commit]
     language: system
     entry: black
     types: [python]
 
   - id: flake8
     name: Flake8
-    stages: [commit]
+    stages: [pre-commit]
     language: system
     entry: flake8
     types: [python]
 
   - id: pylint
     name: PyLint
-    stages: [commit]
+    stages: [pre-commit]
     language: system
     entry: pylint --rcfile=.pylintrc
     files: \.py$
@@ -35,5 +35,5 @@ repos:
     language: system
     files: ^(docs/.*|shareloc/.*)$
     pass_filenames: False
-    stages: [push]
+    stages: [pre-push]
 

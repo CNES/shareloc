@@ -142,7 +142,11 @@ def los_triangulation(left_los, right_los):
     sis = np.dstack((left_los.starting_points, right_los.starting_points))
     sis = np.swapaxes(sis, 1, 2)
 
-    return n_view_triangulation(sis, vis)
+    filtering = np.logical_not(np.isnan(np.sum(np.sum(sis, axis=1), axis=1) + np.sum(np.sum(vis, axis=1), axis=1)))
+    results = np.nan * np.ones((vis.shape[0], 3))
+    if np.any(filtering):
+        results[filtering, :] = n_view_triangulation(sis[filtering, :, :], vis[filtering, :, :])
+    return results
 
 
 def n_view_triangulation(sis: np.ndarray, vis: np.ndarray) -> np.ndarray:

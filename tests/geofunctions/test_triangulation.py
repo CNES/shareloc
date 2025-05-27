@@ -37,8 +37,14 @@ from scipy import __version__
 
 # Shareloc imports
 from shareloc.geofunctions.rectification_grid import RectificationGrid
-from shareloc.geofunctions.triangulation import distance_point_los, epipolar_triangulation, sensor_triangulation
+from shareloc.geofunctions.triangulation import (
+    distance_point_los,
+    epipolar_triangulation,
+    los_triangulation,
+    sensor_triangulation,
+)
 from shareloc.geomodels import GeoModel
+from shareloc.geomodels.los import LOS
 
 # Shareloc test imports
 from ..helpers import data_path
@@ -73,6 +79,36 @@ def test_sensor_triangulation(row, col, h):
     assert lonlatalt[0][2] == pytest.approx(point_wgs84[0, 2], abs=8e-3)
     # residues is approx 0.0 meter here since los intersection is ensured by colocalization
     assert distance == pytest.approx(0.0, abs=1e-3)
+
+
+@pytest.mark.parametrize("col,row,h", [(1000.5, 1500.5, 10.0)])
+@pytest.mark.unit_tests
+def test_sensor_triangulation_nan(row, col, h):
+    """
+    Test sensor triangulation with NaNs
+    """
+    # First read the left and right geometric models (here Grids)
+    id_scene_right = "P1BP--2017092838319324CP"
+    grid_right = prepare_loc("ellipsoide", id_scene_right)
+    id_scene_left = "P1BP--2017092838284574CP"
+    grid_left = prepare_loc("ellipsoide", id_scene_left)
+
+    # We need matches between left and right image. In real case use correlator or SIFT points.
+    # In this test example we create a match by colocalization of one point.
+    grid_right.estimate_inverse_loc_predictor()
+    lonlatalt = grid_left.direct_loc_h(row, col, h)
+    inv_row, inv_col, __ = grid_right.inverse_loc(lonlatalt[0][0], lonlatalt[0][1], lonlatalt[0][2])
+    # matches are defined as Nx4 array, here N=1
+    matches = np.repeat(np.expand_dims(np.array([col, row, inv_col[0], inv_row[0]]), axis=0), 4, axis=0)
+    matches_left = matches[:, 0:2]
+    left_los = LOS(matches_left, grid_left)
+    left_los.viewing_vectors[1, :] = np.nan
+    matches_right = matches[:, 2:4]
+    right_los = LOS(matches_right, grid_right)
+    right_los.viewing_vectors[1, :] = np.nan
+    right_los.viewing_vectors[2, :] = np.nan
+    results = los_triangulation(left_los, right_los)
+    np.testing.assert_equal(np.sum(np.isnan(results), axis=1), np.array([0, 3, 3, 0]))
 
 
 def prepare_loc(alti="geoide", id_scene="P1BP--2017030824934340CP"):

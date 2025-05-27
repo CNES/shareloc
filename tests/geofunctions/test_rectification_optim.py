@@ -325,6 +325,7 @@ def test_compute_strip_of_epipolar_grid_alti(init_rpc_geom_model):
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 3e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=2e-14)
+    assert res_cpp[4] == 0
 
     # Axis 0 Multi
     left_positions_point = np.array([left_grid[0, :, :]])
@@ -369,6 +370,7 @@ def test_compute_strip_of_epipolar_grid_alti(init_rpc_geom_model):
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 6e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=2e-13)
+    assert res_cpp[4] == 0
 
     # Axis 1 Solo
     left_positions_point = np.array([[left_grid[0, 0, :]]])
@@ -413,6 +415,7 @@ def test_compute_strip_of_epipolar_grid_alti(init_rpc_geom_model):
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 3e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=3e-14)
+    assert res_cpp[4] == 0
 
     # Axis 1 Multi
     left_positions_point = left_grid[:, 0, :]
@@ -460,6 +463,7 @@ def test_compute_strip_of_epipolar_grid_alti(init_rpc_geom_model):
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 6e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=2e-14)
+    assert res_cpp[4] == 0
 
 
 def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
@@ -538,6 +542,7 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 3e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=3e-14)
+    assert res_cpp[4] == 0
 
     # Axis 0 Multi
     left_positions_point = np.array([left_grid[0, :, :]])
@@ -581,7 +586,7 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 4e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 6e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=2e-13)
-
+    assert res_cpp[4] == 0
     # Axis 1 Solo
     left_positions_point = np.array([[left_grid[0, 0, :]]])
     right_positions_point = np.array([[right_grid[0, 0, :]]])
@@ -624,6 +629,7 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 3e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=3e-14)
+    assert res_cpp[4] == 0
 
     # Axis 1 Multi
     left_positions_point = left_grid[:, 0, :]
@@ -670,3 +676,4 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 8e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=7e-14)
+    assert res_cpp[4] == 0

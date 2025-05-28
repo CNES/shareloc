@@ -164,7 +164,7 @@ template <typename T>
 tuple<py::array_t<double>,
 py::array_t<double>,
 py::array_t<double>,
-double> compute_strip_of_epipolar_grid(
+double,int> compute_strip_of_epipolar_grid(
     GeoModelTemplate const&  geom_model_left,
     GeoModelTemplate const&  geom_model_right,
     py::array_t<double, py::array::c_style | py::array::forcecast> left_positions_point_in,
@@ -197,6 +197,10 @@ double> compute_strip_of_epipolar_grid(
 
     // Instantiate mean baseline ratio
     double mean_baseline_ratio = 0.;
+
+    // Instantiate number of nan in mean baseline ratio
+    int nan_count = 0;
+
 
     // compute the output size depending on axis
     array<int,3> size_shape;
@@ -296,7 +300,12 @@ double> compute_strip_of_epipolar_grid(
                     + (local_epi_end_ar[0] - local_epi_start_ar[0]) * (local_epi_end_ar[0] - local_epi_start_ar[0])
                 ) / (2. * elevation_offset);
 
-                mean_baseline_ratio += local_baseline_ratio;
+                if(isnan(local_baseline_ratio)){
+                    nan_count+=1;
+                }
+                else{
+                    mean_baseline_ratio += local_baseline_ratio;
+                }
             }else{
                 epipolar_angles_computed[i_row_col] = epipolar_angles[row*nb_cols+col];
             }
@@ -378,14 +387,18 @@ double> compute_strip_of_epipolar_grid(
                     (local_epi_end_ar[1] - local_epi_start_ar[1]) * (local_epi_end_ar[1] - local_epi_start_ar[1])
                     + (local_epi_end_ar[0] - local_epi_start_ar[0]) * (local_epi_end_ar[0] - local_epi_start_ar[0])
                 ) / (2. * elevation_offset);
-
-                mean_baseline_ratio += local_baseline_ratio;
+                if(isnan(local_baseline_ratio)){
+                    nan_count+=1;
+                }
+                else{
+                    mean_baseline_ratio += local_baseline_ratio;
+                }
             }
         }
     }
 
     // Compute the mean baseline ratio
-    mean_baseline_ratio /= grid_rows * grid_cols - already_computed_ratio;
+    mean_baseline_ratio /= grid_rows * grid_cols - already_computed_ratio - nan_count;
 
     //to numpy array
     size_t grid_rows_out = (size_t)grid_rows;
@@ -408,6 +421,6 @@ double> compute_strip_of_epipolar_grid(
         epipolar_angles_out.data()
     );
 
-    return {left_grid_out, right_grid_out, np_epipolar_angles_out, mean_baseline_ratio};
+    return {left_grid_out, right_grid_out, np_epipolar_angles_out, mean_baseline_ratio, nan_count};
 
 }

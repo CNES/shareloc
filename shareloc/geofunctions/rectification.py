@@ -22,6 +22,8 @@
 This module contains functions to generate stereo-rectification epipolar grids
 """
 
+import logging
+
 # Standard imports
 import math
 from typing import List, Tuple, Union
@@ -411,7 +413,7 @@ def compute_strip_of_epipolar_grid(
     elevation: Union[float, DTMIntersection] = 0.0,
     elevation_offset: float = 50.0,
     epipolar_angles: np.ndarray = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float, int]:
     """
     Compute stereo-rectification epipolar grids by strip. We start with a starting positions_point,
     and optional already computed epipolar_angles at these points, and we move strip_size times along axis direction
@@ -442,20 +444,21 @@ def compute_strip_of_epipolar_grid(
     :param epipolar_angles: 2D array (rows,cols) containing epipolar angles at each grid node (angle in between epipolar
         coordinate system and left image coordinate system), size must be coherent with positions_point 1st,2nd dim
     :type epipolar_angles: np.ndarray
-    :param margin: margin of the rectification grid (in grid pixels)
-    :type margin: int
     :return:
         - left  epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
         - right epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
         - array of epipolar angles (rows,cols)
-        - mean baseline ratio of the strip computed on rows x cols elements minus provided epipolar angles shape.
-            We consider that if epipolar angles are provided, then baseline ratio for these elements have been
-            already computed.
+        - mean baseline ratio of the strip computed on rows x cols elements minus provided epipolar angles shape,
+            and number of  NaNs in local epipolar lines computations. We consider that if epipolar angles are provided,
+            then baseline ratio for these elements have been already computed.
+        - number of NaNs in mean baseline ratio
     :rtype: Tuple
     """
 
     # Instantiate mean baseline ratio
     mean_baseline_ratio = 0
+    # count nan
+    nan_count = 0
 
     # compute the output size depending on axis
     size_shape = (
@@ -492,7 +495,8 @@ def compute_strip_of_epipolar_grid(
             (local_epi_end[:, 1] - local_epi_start[:, 1]) * (local_epi_end[:, 1] - local_epi_start[:, 1])
             + (local_epi_end[:, 0] - local_epi_start[:, 0]) * (local_epi_end[:, 0] - local_epi_start[:, 0])
         ) / (2 * elevation_offset)
-        mean_baseline_ratio += np.sum(local_baseline_ratio)
+        nan_count += np.sum(np.isnan(local_baseline_ratio))
+        mean_baseline_ratio += np.nansum(local_baseline_ratio)
     else:
         already_computed_ratio = epipolar_angles.shape[0] * epipolar_angles.shape[1]
     epipolar_angles = np.squeeze(epipolar_angles)
@@ -533,12 +537,19 @@ def compute_strip_of_epipolar_grid(
             (local_epi_end[:, 1] - local_epi_start[:, 1]) * (local_epi_end[:, 1] - local_epi_start[:, 1])
             + (local_epi_end[:, 0] - local_epi_start[:, 0]) * (local_epi_end[:, 0] - local_epi_start[:, 0])
         ) / (2 * elevation_offset)
-        mean_baseline_ratio += np.sum(local_baseline_ratio)
+        nan_count += np.sum(np.isnan(local_baseline_ratio))
+        mean_baseline_ratio += np.nansum(local_baseline_ratio)
 
     # Compute the mean baseline ratio
-    mean_baseline_ratio /= left_grid.shape[0] * left_grid.shape[1] - already_computed_ratio
+    if nan_count == left_grid.shape[0] * left_grid.shape[1]:
+        logging.warning("local ratio are all NaN on current rectification strip")
+        mean_baseline_ratio = np.nan
+    elif nan_count > 0:
+        logging.warning("local ratio contains NaN in current rectification strip")
 
-    return left_grid, right_grid, epi_angles_out, mean_baseline_ratio
+    mean_baseline_ratio /= left_grid.shape[0] * left_grid.shape[1] - nan_count - already_computed_ratio
+
+    return left_grid, right_grid, epi_angles_out, mean_baseline_ratio, nan_count
 
 
 # disable for api symmetry between left and right data
@@ -685,6 +696,8 @@ def compute_stereorectification_epipolar_grids(
     :type elevation_offset: float
     :param as_displacement_grid: False: generates localisation grids, True: displacement grids
     :type as_displacement_grid: bool
+    :param margin: margin to add to the grid
+    :type margin: int
     :return:
         Returns left and right epipolar displacement/localisation  grid,
         epipolar image size, mean of base to height ratio
@@ -714,7 +727,7 @@ def compute_stereorectification_epipolar_grids(
 
     # Create the first row by moving along columns (axis = 0) with number of rows of the grids.
     # It returns (grid_size[0],1,3) shaped grids, epipolar angles, and mean baseline ratio for the first columns.
-    left_grid, right_grid, alphas, mean_br_col = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br_col, nan_count_col = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_starting_point,
@@ -731,7 +744,7 @@ def compute_stereorectification_epipolar_grids(
     # It returns (grid_size[0],grid_size[1],3) shaped grids, epipolar angles, and mean baseline ratio
     # for the (grid_size[0] -1 ,grid_size[1],3) positions, already computed epipolar angles
     # are not included in mean baseline ratio.
-    left_grid, right_grid, alphas, mean_br = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br, nan_count = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_grid,
@@ -746,9 +759,9 @@ def compute_stereorectification_epipolar_grids(
     )
 
     # Compute global mean baseline ratio using the two strip
-    mean_baseline_ratio = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
-        grid_size[1] * grid_size[0]
-    )
+    mean_baseline_ratio = (
+        mean_br * (grid_size[1] * (grid_size[0] - 1) - nan_count) + mean_br_col * (grid_size[0] - nan_count_col)
+    ) / (grid_size[1] * grid_size[0] - nan_count - nan_count_col)
 
     if as_displacement_grid:
         # Convert position to displacement grids

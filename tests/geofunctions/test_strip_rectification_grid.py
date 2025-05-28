@@ -64,7 +64,7 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular(
     # Change size to make the grid rectangular
     grid_size[0] = 21
 
-    left_grid, right_grid, alphas, mean_br_col = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br_col, nan_col = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_position_point,
@@ -77,7 +77,7 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular(
         elevation_offset=elevation_offset,
     )
 
-    left_grid, right_grid, alphas, mean_br = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br, nan_count = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_grid,
@@ -90,6 +90,8 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular(
         elevation_offset=elevation_offset,
         epipolar_angles=alphas,
     )
+
+    assert nan_col + nan_count == 0
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
         grid_size[1] * grid_size[0]
     )
@@ -134,7 +136,7 @@ def test_compute_strip_of_epipolar_grid_columns_lines(init_inputs_rectification_
         grid_size,
     ) = init_inputs_rectification_fixture
 
-    left_grid, right_grid, alphas, mean_br_col = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br_col, nan_col = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_position_point,
@@ -147,7 +149,7 @@ def test_compute_strip_of_epipolar_grid_columns_lines(init_inputs_rectification_
         elevation_offset=elevation_offset,
     )
 
-    left_grid, right_grid, alphas, mean_br = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br, nan_count = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_grid,
@@ -160,6 +162,8 @@ def test_compute_strip_of_epipolar_grid_columns_lines(init_inputs_rectification_
         elevation_offset=elevation_offset,
         epipolar_angles=alphas,
     )
+
+    assert nan_col + nan_count == 0
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_col * grid_size[0]) / (
         grid_size[1] * grid_size[0]
     )
@@ -205,7 +209,7 @@ def test_compute_strip_of_epipolar_grid_lines_columns(init_inputs_rectification_
         grid_size,
     ) = init_inputs_rectification_fixture
 
-    left_grid, right_grid, alphas, mean_br_line = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, alphas, mean_br_line, nan_line = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_position_point,
@@ -218,7 +222,7 @@ def test_compute_strip_of_epipolar_grid_lines_columns(init_inputs_rectification_
         elevation_offset=elevation_offset,
     )
 
-    left_grid, right_grid, _, mean_br = compute_strip_of_epipolar_grid(
+    left_grid, right_grid, _, mean_br, nan_count = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_grid,
@@ -231,6 +235,8 @@ def test_compute_strip_of_epipolar_grid_lines_columns(init_inputs_rectification_
         elevation_offset=elevation_offset,
         epipolar_angles=alphas,
     )
+
+    assert nan_count + nan_line == 0
     mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_line * grid_size[0]) / (
         grid_size[1] * grid_size[0]
     )
@@ -298,7 +304,7 @@ def test_positions_to_displacement_grid():
 def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixture):
     """
     Test epipolar creation grid by strip. This test presents how to use computation by strips.
-    It is useful for describing parralelisation opportunity
+    It is useful for describing parallelisation opportunity
     """
     geom_model_left, geom_model_right = init_rpc_geom_model
     (
@@ -316,7 +322,7 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
     size_strip = 8
 
     # First row is computed
-    first_left_points, first_right_points, first_alphas, mean_br_col = compute_strip_of_epipolar_grid(
+    first_left_points, first_right_points, first_alphas, mean_br_col, nan_col = compute_strip_of_epipolar_grid(
         geom_model_left,
         geom_model_right,
         left_position_point,
@@ -330,6 +336,7 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
     )
     sum_br = mean_br_col * grid_size[0]
 
+    nan_count = 0
     left_strips = []
     right_strips = []
     alphas_strip = []
@@ -353,7 +360,7 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
 
     # loop on the strip
     for idx, left_strip in enumerate(left_strips):
-        strip_left_grid, strip_right_grid, _, mbr = compute_strip_of_epipolar_grid(
+        strip_left_grid, strip_right_grid, _, mbr, nan_strip = compute_strip_of_epipolar_grid(
             geom_model_left,
             geom_model_right,
             left_strip,
@@ -370,6 +377,7 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
         left_grid[idx * size_strip : size_strip + idx * size_strip, :, :] = strip_left_grid[:, :, 0:2]
         right_grid[idx * size_strip : size_strip + idx * size_strip, :, :] = strip_right_grid[:, :, 0:2]
 
+        nan_count += nan_strip
         sum_br = sum_br + mbr * left_strip.shape[0] * (grid_size[1] - 1)
 
     # Shareloc reference
@@ -387,6 +395,7 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
     np.testing.assert_array_equal(reference_right_grid[1], right_grid[:, :, 0])
     np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=2.0e-12)
 
+    assert nan_col + nan_count == 0
     mean_br = sum_br / (grid_size[0] * grid_size[1])
     reference_mean_br = 0.704004723
     assert mean_br == pytest.approx(reference_mean_br, abs=1e-7)

@@ -57,7 +57,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         GeoModelTemplate.__init__(self)
 
         self.type = "RPCoptim"
-        if "espg" not in rpc_params:
+        if "epsg" not in rpc_params:
             self.epsg = 4326
         else:
             self.epsg = rpc_params["epsg"]
@@ -194,7 +194,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
 
         res_optim = np.array([res_optim_0, res_optim_1, res_optim_2]).T
 
-        return res_optim
+        return self.check_lonlat(res_optim)
 
     def direct_loc_dtm(self, row, col, dtm):
         """
@@ -223,6 +223,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
                 res_optim_2 = res_optim[2]
 
             res_optim = np.array([res_optim_0, res_optim_1, res_optim_2]).T
+            res_optim = self.check_lonlat(res_optim)
 
         else:  # Beginning in python and core in c++
 
@@ -262,6 +263,13 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         :return: sensor position (row, col, alt)
         :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
+        if not isinstance(lon, (list, np.ndarray)):
+            lon = np.array([lon])
+            lat = np.array([lat])
+        if not isinstance(alt, (list, np.ndarray)):
+            alt = np.array([alt])
+
+        [lon, lat, alt] = self.check_lonlat(np.array([lon, lat, alt]).transpose()).transpose()
         (row, col, alt) = super().inverse_loc(lon, lat, alt)
 
         return np.array(row), np.array(col), np.array(alt)

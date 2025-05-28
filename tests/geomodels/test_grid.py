@@ -186,12 +186,12 @@ def test_sensor_loc_nan(get_geotiff_grid):
     col = np.array([np.nan])
     gri, _ = get_geotiff_grid
     loc = gri.direct_loc_h(row, col, h)
-    assert np.array_equal(loc, np.array([[np.nan, np.nan, h]]), equal_nan=True)
+    assert np.array_equal(loc, np.array([[np.nan, np.nan, np.nan]]), equal_nan=True)
     gri.estimate_inverse_loc_predictor()
     lon = np.array([np.nan])
     lat = np.array([np.nan])
     res_inv = gri.inverse_loc(lon, lat, h)
-    np.testing.assert_allclose(res_inv, [[np.nan], [np.nan], [0]], rtol=0, atol=1e-9)
+    np.testing.assert_allclose(res_inv, [[np.nan], [np.nan], [np.nan]], rtol=0, atol=1e-9)
 
 
 @pytest.mark.unit_tests
@@ -212,7 +212,7 @@ def test_sensor_loc_inv(get_geotiff_grid):
     res = gri.inverse_loc(lon, lat, h)
     np.testing.assert_allclose(
         res,
-        [[50, np.nan, np.nan, np.nan, 50], [100, np.nan, np.nan, np.nan, 100], [200.0, 200.0, 200.0, 200.0, 200.0]],
+        [[50, np.nan, np.nan, np.nan, 50], [100, np.nan, np.nan, np.nan, 100], [200.0, np.nan, np.nan, np.nan, 200.0]],
         rtol=0,
         atol=1e-9,
     )

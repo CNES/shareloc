@@ -21,9 +21,10 @@
 """
 This module contains the GeoModel abstract class
 """
-
 # Standard imports
 from abc import abstractmethod
+
+import numpy as np
 
 
 class GeoModelTemplate:
@@ -100,3 +101,18 @@ class GeoModelTemplate:
 
         :param geomodel_path: filename of geomodel
         """
+
+    def check_lonlat(self, lonlath: np.ndarray) -> np.ndarray:
+        """
+        returns filtered latlonh. abs(longitude) should be <= 180, abs(latitude) should be <=90,
+        and no NaN in coordinates.
+
+        :param latlonh: np.array of latlonh
+        :return: filtered array
+        """
+        filtering = np.logical_or(
+            np.logical_or(np.abs(lonlath[:, 0]) > 180.0, np.abs(lonlath[:, 1]) > 90.0),
+            np.sum(np.isnan(lonlath), axis=1) > 0,
+        )
+        lonlath[filtering, :] = np.nan
+        return lonlath

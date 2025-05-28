@@ -270,7 +270,7 @@ class RPC(GeoModelTemplate):
             raise ValueError("Direct_loc_h: using_direct_coef doesn't match with available coefficients")
 
         points[:, 2] = alt
-        return points
+        return self.check_lonlat(points)
 
     def direct_loc_grid_h(self, row0, col0, steprow, stepcol, nbrow, nbcol, alt):
         """
@@ -337,7 +337,8 @@ class RPC(GeoModelTemplate):
         los = np.moveaxis(los, 1, -1)
         los = los.reshape((len(col), 2, 3))
         direct_dtm = dtm.intersection_n_los_dtm(los)
-
+        if dtm.get_epsg() == 4326:
+            direct_dtm = self.check_lonlat(direct_dtm)
         return direct_dtm
 
     def inverse_loc(self, lon, lat, alt):
@@ -362,6 +363,8 @@ class RPC(GeoModelTemplate):
 
             if alt.shape[0] != lon.shape[0]:
                 alt = np.full(lon.shape[0], fill_value=alt[0])
+
+            [lon, lat, alt] = self.check_lonlat(np.array([lon, lat, alt]).transpose()).transpose()
 
             lon_norm = (lon - self.offset_x) / self.scale_x
             lat_norm = (lat - self.offset_y) / self.scale_y

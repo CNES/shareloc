@@ -48,6 +48,7 @@ def coordinates_conversion(coords, epsg_in, epsg_out):
         alti = coords[:, 2]
     coords = np.array(warp.transform(srs_in, srs_out, coords[:, 0], coords[:, 1], alti))
     coords = coords.transpose()
+    coords[np.isinf(coords)] = np.nan
     return coords
 
 

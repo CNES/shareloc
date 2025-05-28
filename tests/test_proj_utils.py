@@ -37,9 +37,15 @@ def test_coordinates_conversion():
     in_crs = 4326
     out_crs = 4978
 
-    point_wgs84 = np.asarray([[7.05396752, 43.73000865, 4900.0], [7.05860411, 43.72347311, -30.0]])
+    point_wgs84 = np.asarray(
+        [[7.05396752, 43.73000865, 4900.0], [7.05860411, 43.72347311, -30.0], [np.nan, np.nan, np.nan]]
+    )
     point_ecef = coordinates_conversion(point_wgs84, in_crs, out_crs)
     coords_vt_ecef = np.asarray(
-        [[4584837.334948, 567331.361674, 4389850.562378], [4581754.08394, 567326.291517, 4385917.904472]]
+        [
+            [4584837.334948, 567331.361674, 4389850.562378],
+            [4581754.08394, 567326.291517, 4385917.904472],
+            [np.nan, np.nan, np.nan],
+        ]
     )
     np.testing.assert_allclose(point_ecef, coords_vt_ecef, atol=1e-5, rtol=0)

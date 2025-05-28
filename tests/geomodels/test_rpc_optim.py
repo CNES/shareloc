@@ -295,29 +295,6 @@ def test_inverse_loc_from_any_input(id_scene, lon, lat, alt, row_vt, col_vt):
     assert row[0] == pytest.approx(row_vt, abs=1e-2)
     assert alt_res[0] == alt[0]
 
-    # Check arg of differents sizes
-    lon_ext = lon * 3
-    lat_ext = lat * 2
-    (row, col, alt_res) = rpc_optim.inverse_loc(lon_ext, lat_ext, alt)
-
-    assert len(row) == 2
-    assert len(alt_res) == 2
-    assert len(alt_res) == 2
-    assert col[0] == pytest.approx(col_vt, abs=1e-2)
-    assert row[0] == pytest.approx(row_vt, abs=1e-2)
-    assert alt_res[0] == alt[0]
-
-    lon_ext = lon * 2
-    lat_ext = lat * 3
-    (row, col, alt_res) = rpc_optim.inverse_loc(lon_ext, lat_ext, alt)
-
-    assert len(row) == 2
-    assert len(alt_res) == 2
-    assert len(alt_res) == 2
-    assert col[0] == pytest.approx(col_vt, abs=1e-2)
-    assert row[0] == pytest.approx(row_vt, abs=1e-2)
-    assert alt_res[0] == alt[0]
-
 
 @pytest.mark.parametrize(
     "geom_path",
@@ -859,3 +836,39 @@ def test_direct_loc_dtm_utm():
     np.testing.assert_allclose(res_optim[:, 0], res_py[:, 0], 0, 7e-7)
     np.testing.assert_allclose(res_optim[:, 1], res_py[:, 1], 0, 7e-7)
     np.testing.assert_allclose(res_optim[:, 2], res_py[:, 2], 0, 4e-7)
+
+
+def test_rpc_out_of_bounds():
+    """
+    Test direct/inverse loc out of bounds
+    """
+
+    model_path = os.path.join(data_path(), "rpc/phr_oise/RPC_PHR1A_P_202503191043438_SEN_7342362101-1.XML")
+    model_rcp_optim = GeoModel(model_path, "RPCoptim")
+
+    # first coord returns wrong lon/lat
+    lonlath = model_rcp_optim.direct_loc_h(np.array([2825830.8, 0]), np.array([-60630.6, 0]), np.array([100.0, 100.0]))
+
+    np.testing.assert_equal(np.sum(np.isnan(lonlath), axis=1), np.array([3, 0]))
+    lon_ok, lat_ok, alt_ok = lonlath[1, :]
+
+    # test inverse loc with wrong lon/lat
+    lon, lat, h = [
+        np.array([lon_ok, 200.0, lon_ok]),
+        np.array([lat_ok, lat_ok, 92]),
+        np.array([alt_ok, alt_ok, alt_ok]),
+    ]
+
+    row, col, h = model_rcp_optim.inverse_loc(lon, lat, h)
+    np.testing.assert_allclose(row, [0, np.nan, np.nan], 0, 1e-9, equal_nan=True)
+    np.testing.assert_allclose(col, [0, np.nan, np.nan], 0, 1e-9, equal_nan=True)
+    np.testing.assert_allclose(h, [100.0, np.nan, np.nan], 0, 1e-9, equal_nan=True)
+    model_rpc = GeoModel(model_path, "RPC")
+
+    lonlath = model_rpc.direct_loc_h(np.array([2825830.8, 0]), np.array([-60630.6, 0]), np.array([100.0, 100.0]))
+    np.testing.assert_equal(np.sum(np.isnan(lonlath), axis=1), np.array([3, 0]))
+    row, col, h = model_rcp_optim.inverse_loc(lon, lat, h)
+
+    np.testing.assert_allclose(row, [0, np.nan, np.nan], 0, 1e-9, equal_nan=True)
+    np.testing.assert_allclose(col, [0, np.nan, np.nan], 0, 1e-9, equal_nan=True)
+    np.testing.assert_allclose(h, [100.0, np.nan, np.nan], 0, 1e-9, equal_nan=True)

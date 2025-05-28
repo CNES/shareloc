@@ -274,6 +274,8 @@ class Grid(GeoModelTemplate):
             [vlon, vlat] = interpol_bilin_vectorized(mats, self.nbrow, self.nbcol, pos_row, pos_col)
             position[filter_nan, 0] = alti_coef * vlon[0, :] + (1 - alti_coef) * vlon[1, :]
             position[filter_nan, 1] = alti_coef * vlat[0, :] + (1 - alti_coef) * vlat[1, :]
+        if self.epsg == 4326:
+            position = self.check_lonlat(position)
         return position
 
     def compute_los(self, row, col, epsg):
@@ -334,6 +336,8 @@ class Grid(GeoModelTemplate):
                 all_los[point_index, :, :] = los
 
             points_dtm[filter_nan, :] = dtm.intersection_n_los_dtm(all_los)
+        if self.epsg == 4326:
+            points_dtm = self.check_lonlat(points_dtm)
         return points_dtm
 
     def los_extrema(self, row, col, alt_min, alt_max):
@@ -772,6 +776,8 @@ class Grid(GeoModelTemplate):
 
         if alt.shape[0] != lon.shape[0]:
             alt = np.full(lon.shape[0], fill_value=alt[0])
+
+        [lon, lat, alt] = self.check_lonlat(np.array([lon, lat, alt]).transpose()).transpose()
 
         points_nb = len(lon)
         filter_nan = np.logical_not(np.logical_or(np.isnan(lon), np.isnan(lat)))

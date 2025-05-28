@@ -573,3 +573,29 @@ def test_read_via_rasterio():
 
     assert row_calc[0] == pytest.approx(row, abs=1e-9)
     assert col_calc[0] == pytest.approx(col, abs=1e-9)
+
+
+def test_geomodel_check_lonlat():
+    """
+    Test coordinate filtering
+    """
+    model_path = os.path.join(data_path(), "rpc/phr_oise/RPC_PHR1A_P_202503191043438_SEN_7342362101-1.XML")
+    model = GeoModel(model_path)
+
+    coordinates = np.zeros((8, 3))
+    coordinates[0, :] = [10.0, 20.0, 100.0]  # OK
+    coordinates[1, :] = [np.nan, 20.0, 100.0]  # nan on lon
+    coordinates[2, :] = [10.0, np.nan, 100.0]  # nan on lat
+    coordinates[2, :] = [10.0, -5.0, np.nan]  # nan on alt
+    coordinates[3, :] = [np.nan, np.nan, np.nan]  # full nan
+    coordinates[4, :] = [185, 20.0, 100.0]  # wrong lon
+    coordinates[5, :] = [100, -95, 100.0]  # wrong lat
+    coordinates[6, :] = [-185, 20.0, 100.0]  # wrong lon
+    coordinates[7, :] = [100, 95, 100.0]  # wrong lat
+
+    coordinates_filtered = model.check_lonlat(coordinates)
+    # full nan except first row
+    coordinates_vt = np.nan * np.zeros((8, 3))
+    coordinates_vt[0, :] = coordinates[0, :]
+
+    np.testing.assert_equal(coordinates_vt, coordinates_filtered)

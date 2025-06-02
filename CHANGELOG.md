@@ -4,6 +4,30 @@ Only the first "Unreleased" section of this file corresponding of next release c
 When publication of a new release, the section "Unreleased" is blocked to the next chosen version and name of the milestone at a given date.
 A new section Unreleased is opened then for next dev phase.
 
+## Unreleased
+
+### Added
+
+### Changed
+
+### Fixed
+
+## 0.2.8 Robustify geo functions (June 2025)
+
+### Added
+
+ - Handle multi altitudes layers location grids geomodels, which contains status layer [#344] 
+
+### Changed
+
+ - Robustify localisations [#351] 
+ - Robustify triangulations [#352]
+
+### Fixed
+
+ - Fix NaN in mean baseline ratio [#350]
+
+
 ## 0.2.7 Lighten triangulation (February 2025)
 
 ### Changed

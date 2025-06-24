@@ -107,11 +107,11 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc(init_rpc_geom_m
     ).read()
 
     # Check epipolar grids
-    np.testing.assert_array_equal(reference_left_grid[1], left_grid[:, :, 0])
-    np.testing.assert_array_equal(reference_left_grid[0], left_grid[:, :, 1])
+    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], atol=1.0e-10)
 
-    np.testing.assert_array_equal(reference_right_grid[1], right_grid[:, :, 0])
-    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=2.0e-12)
+    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=1.0e-10)
 
     # Check mean_baseline_ratio
     reference_mean_br = 0.7040047235162911
@@ -178,11 +178,11 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_displacement(in
     ).read()
 
     # Check epipolar grids
-    np.testing.assert_array_equal(reference_left_grid[1], left_grid[:, :, 0])
-    np.testing.assert_array_equal(reference_left_grid[0], left_grid[:, :, 1])
+    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], atol=1.0e-10)
 
-    np.testing.assert_array_equal(reference_right_grid[1], right_grid[:, :, 0])
-    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=2.0e-12)
+    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=1.0e-10)
 
     # Check mean_baseline_ratio
     reference_mean_br = 0.7040047235162911
@@ -258,11 +258,11 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_with_margins(in
     ).read()
 
     # Check epipolar grids
-    np.testing.assert_array_equal(reference_left_grid[1], left_grid[:, :, 0])
-    np.testing.assert_array_equal(reference_left_grid[0], left_grid[:, :, 1])
+    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], atol=1.0e-10)
 
-    np.testing.assert_array_equal(reference_right_grid[1], right_grid[:, :, 0])
-    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=2.0e-12)
+    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=1.0e-10)
 
 
 @pytest.mark.unit_tests

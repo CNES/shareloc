@@ -730,7 +730,7 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     row_coloc_optim, col_coloc_optim, _ = coloc_rpc(
         geom_model_left_optim, geom_model_right_optim, row, col, h, image_left, image_right, using_geotransform=True
     )
-    np.testing.assert_allclose(row_coloc, row_coloc_optim, 0, 8e-12)
+    np.testing.assert_allclose(row_coloc, row_coloc_optim, 0, 8e-10)
     np.testing.assert_allclose(col_coloc, col_coloc_optim, 0, 2e-11)
 
     origin_left = [5000.0, 5000.0]

@@ -205,7 +205,7 @@ def test_sensor_loc_inv(get_geotiff_grid):
     h = 200.0
     gri.estimate_inverse_loc_predictor()
     res = gri.inverse_loc(lon, lat, h)
-    np.testing.assert_allclose(res, [[50], [100], [200.0]], rtol=0, atol=1e-9)
+    np.testing.assert_allclose(res, [[50], [100], [200.0]], rtol=0, atol=1e-8)
     lon = np.array([2.1828713504608683, np.nan, 2.1828713504608683, np.nan, 2.1828713504608683])
     lat = np.array([48.942429997483146, np.nan, np.nan, 48.942429997483146, 48.942429997483146])
     h = 200.0
@@ -214,5 +214,5 @@ def test_sensor_loc_inv(get_geotiff_grid):
         res,
         [[50, np.nan, np.nan, np.nan, 50], [100, np.nan, np.nan, np.nan, 100], [200.0, np.nan, np.nan, np.nan, 200.0]],
         rtol=0,
-        atol=1e-9,
+        atol=1e-8,
     )

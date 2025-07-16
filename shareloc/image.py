@@ -114,7 +114,20 @@ class Image:
                 width = int(min(width, self.dataset.width - col_off))
                 height = int(min(height, self.dataset.height - row_off))
 
-                roi_window = rasterio.windows.Window(col_off, row_off, width, height)
+                try:
+                    roi_window = rasterio.windows.Window(col_off, row_off, width, height)
+                except ValueError as err:
+                    bbox = self.dataset.bounds
+                    roi_to_show = [float(x) for x in roi]
+
+                    mss = "Number of columns or rows must be non-negative"
+                    if str(err) == mss:
+                        raise RuntimeError("the roi bounds are {} while the dtm bounds are {}".format(
+                            [roi_to_show[1], roi_to_show[0], roi_to_show[3], roi_to_show[2]],
+                            [bbox.left, bbox.bottom, bbox.right, bbox.top])) from err
+                    raise
+
+
                 self.transform = self.dataset.window_transform(roi_window)
                 # bitwise not inversion (Affine.__invert implemented, pylint bug)
                 self.trans_inv = ~self.transform  # pylint: disable=invalid-unary-operand-type

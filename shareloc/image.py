@@ -122,11 +122,13 @@ class Image:
 
                     mss = "Number of columns or rows must be non-negative"
                     if str(err) == mss:
-                        raise RuntimeError("the roi bounds are {} while the dtm bounds are {}".format(
-                            [roi_to_show[1], roi_to_show[0], roi_to_show[3], roi_to_show[2]],
-                            [bbox.left, bbox.bottom, bbox.right, bbox.top])) from err
+                        raise RuntimeError(
+                            f"the roi bounds are "
+                            f"{[roi_to_show[1], roi_to_show[0], roi_to_show[3], roi_to_show[2]]} "
+                            f"while the dtm bounds are "
+                            f"{[bbox.left, bbox.bottom, bbox.right, bbox.top]}"
+                        ) from err
                     raise
-
 
                 self.transform = self.dataset.window_transform(roi_window)
                 # bitwise not inversion (Affine.__invert implemented, pylint bug)

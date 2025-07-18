@@ -86,11 +86,11 @@ doc:
       - ./docs/build/html/
     expire_in: 1 day
 
-
-# Push git project from gitlab to github on master commits
+# Push git project from gitlab to github
 github-sync:
   extends:
     - .github-sync-base
+
   variables:
     BRANCH: "master"
-    GITHUB_URL: https://github.com/CNES/shareloc.git
+    GITHUB_URL: github.com/CNES/shareloc.git

@@ -94,3 +94,24 @@ def test_dtm_with_nan():
     assert dtm_with_nan.stats["mean"] == pytest.approx(179.98820, abs=1e-5)
     assert dtm_with_nan.stats["median"] == pytest.approx(220.37231, abs=1e-5)
     assert np.sum(np.isnan(dtm_with_nan.data[:, :])) == 0
+
+
+def test_dtm_outside_roi():
+    """
+    Raise error when the dtm is outside the roi
+    """
+
+    # Set test data SRTM dtm path
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+
+    roi = [31.099861111111114, 29.950138888888887, 31.149861111111115, 30.000138888888888]
+
+    with pytest.raises(RuntimeError) as excinfo:
+        _ = dtm_reader(dtm_file, roi=roi, roi_is_in_physical_space=True, fill_nodata=None)
+
+    assert str(excinfo.value) == (
+        "the roi bounds are "
+        "[29.950138888888887, 31.099861111111114, 30.000138888888888, "
+        "31.149861111111115] while the dtm bounds are [4.999583333333334, "
+        "43.999583333333334, 6.000416666666667, 45.000416666666666]"
+    )

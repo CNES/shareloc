@@ -1,0 +1,96 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_REF_NAME == "master"
+
+stages:
+  - init
+  - env
+  - build
+  - test
+  - sonarqube
+  - sync
+
+variables: 
+    # template SonarQube
+    SONARQUBE_TOKEN: "${CARS_CI_SONARQUBE_TOKEN}"
+
+include:
+  # Sonarqube job
+  - project: "usinelogicielle/public/gitlab-ci-templates"
+    ref: v1.1.3
+    file: "jobs/sonarqube-gitlab-ci.yml"
+  # Variable defintion
+  - component: $CI_SERVER_FQDN/dali/cars-park/cars-ci/cars-ci-variables@master
+  # Jobs for gitlab-github synchronisation
+  - component: $CI_SERVER_FQDN/dali/cars-park/cars-ci/cars-ci-github@master
+
+# Install shareloc in a virtual-env and export so that following jobs can use it
+python-env: 
+    stage: env
+    image: ${PYTHON_IMAGE}
+    script:
+        - pip install virtualenv 
+        - virtualenv python_env
+        - source python_env/bin/activate
+        - VENV="python_env" make install
+    timeout: 15 minutes
+    artifacts:
+        untracked: true
+        expire_in: 1 day
+
+
+unit-test:
+  stage: test
+  image: ${PYTHON_IMAGE}
+  # Use dedicated runner for end2end tests
+  tags:
+    - ${TEST_RUNNER_TAG}
+  script:
+    - source python_env/bin/activate
+    - VENV="python_env" make test
+  artifacts:
+    paths:
+      - ./pytest-report.xml
+      - ./coverage.xml
+    expire_in: 1 day
+
+
+lint:
+  stage: test
+  image: ${PYTHON_IMAGE}
+  needs: 
+    - python-env
+  allow_failure: true
+  script:
+    - VENV="python_env" make lint
+  artifacts:
+    paths:
+      - ./pylint-report.txt
+    expire_in: 1 day
+
+doc:
+  stage: test
+  # The sphinxdoc/docker-ci contains the dependency required to generate the
+  # Shareloc documentation (latex, dvipng and sphinx)
+  # https://hub.docker.com/r/sphinxdoc/docker-ci
+  image: ${UL_ARTIFACTORY_HOST}/publicremotes-docker/sphinxdoc/docker-ci
+  script:
+    # Create a venv for documentation generation
+    - python3 -m venv doc_env
+    # Call documentation target
+    - VENV="doc_env" make docs
+  artifacts:
+    # Export documentation as artifact, it can be opened directly from gitlab
+    paths:
+      - ./docs/build/html/
+    expire_in: 1 day
+
+# Push git project from gitlab to github
+github-sync:
+  extends:
+    - .github-sync-base
+
+  variables:
+    BRANCH: "master"
+    GITHUB_URL: github.com/CNES/shareloc.git

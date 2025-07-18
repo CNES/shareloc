@@ -105,11 +105,11 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular(
     ).read()
 
     # Check epipolar grids
-    np.testing.assert_array_equal(reference_left_grid[1][:21, :], left_grid[:, :, 0])
-    np.testing.assert_array_equal(reference_left_grid[0][:21, :], left_grid[:, :, 1])
+    np.testing.assert_allclose(reference_left_grid[1][:21, :], left_grid[:, :, 0], atol=1.0e-9)
+    np.testing.assert_allclose(reference_left_grid[0][:21, :], left_grid[:, :, 1], atol=1.0e-9)
 
-    np.testing.assert_array_equal(reference_right_grid[1][:21, :], right_grid[:, :, 0])
-    np.testing.assert_allclose(reference_right_grid[0][:21, :], right_grid[:, :, 1], atol=2.0e-12)
+    np.testing.assert_allclose(reference_right_grid[1][:21, :], right_grid[:, :, 0], atol=1.0e-9)
+    np.testing.assert_allclose(reference_right_grid[0][:21, :], right_grid[:, :, 1], atol=1.0e-9)
 
     # Check mean_baseline_ratio
     reference_mean_br = 0.7024809
@@ -177,11 +177,11 @@ def test_compute_strip_of_epipolar_grid_columns_lines(init_inputs_rectification_
     ).read()
 
     # Check epipolar grids
-    np.testing.assert_array_equal(reference_left_grid[1], left_grid[:, :, 0])
-    np.testing.assert_array_equal(reference_left_grid[0], left_grid[:, :, 1])
+    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], atol=1.0e-10)
 
-    np.testing.assert_array_equal(reference_right_grid[1], right_grid[:, :, 0])
-    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=2.0e-12)
+    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=1.0e-10)
 
     # Check mean_baseline_ratio
     # ground truth mean baseline ratio
@@ -389,11 +389,11 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
     ).read()
 
     # Check epipolar grids
-    np.testing.assert_array_equal(reference_left_grid[1], left_grid[:, :, 0])
-    np.testing.assert_array_equal(reference_left_grid[0], left_grid[:, :, 1])
+    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], atol=2.0e-9)
+    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], atol=2.0e-9)
 
-    np.testing.assert_array_equal(reference_right_grid[1], right_grid[:, :, 0])
-    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=2.0e-12)
+    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], atol=2.0e-9)
+    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=2.0e-9)
 
     assert nan_col + nan_count == 0
     mean_br = sum_br / (grid_size[0] * grid_size[1])

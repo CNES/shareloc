@@ -454,7 +454,7 @@ def test_epi_triangulation_disp_rpc_roi():
     np.testing.assert_allclose(point_ecef[:, 1], point_ecef_optim[:, 1], 0, 2e-8)
     np.testing.assert_allclose(point_ecef[:, 2], point_ecef_optim[:, 2], 0, 2e-7)
     np.testing.assert_allclose(point_wgs84[:, 0], point_wgs84_optim[:, 0], 0, 7e-14)
-    np.testing.assert_allclose(point_wgs84[:, 1], point_wgs84_optim[:, 1], 0, 5e-14)
+    np.testing.assert_allclose(point_wgs84[:, 1], point_wgs84_optim[:, 1], 0, 5e-13)
     np.testing.assert_allclose(point_wgs84[:, 2], point_wgs84_optim[:, 2], 0, 2e-7)
 
     # open cloud

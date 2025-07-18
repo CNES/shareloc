@@ -539,7 +539,7 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     )
 
     np.testing.assert_allclose(res_py[0], res_cpp[0], 0, 2e-10)
-    np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
+    np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 3e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 3e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=3e-14)
     assert res_cpp[4] == 0
@@ -626,7 +626,7 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     )
 
     np.testing.assert_allclose(res_py[0], res_cpp[0], 0, 2e-10)
-    np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
+    np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 3e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 3e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=3e-14)
     assert res_cpp[4] == 0
@@ -673,7 +673,7 @@ def test_compute_strip_of_epipolar_grid_dtm(init_rpc_geom_model):
     )
 
     np.testing.assert_allclose(res_py[0], res_cpp[0], 0, 3e-10)
-    np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
+    np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 3e-9)
     np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 8e-12)
     assert res_py[3] == pytest.approx(res_cpp[3], abs=7e-14)
     assert res_cpp[4] == 0

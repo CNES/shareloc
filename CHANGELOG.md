@@ -12,6 +12,16 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+### 0.2.9  Gitlab-ci migration (August 2025)
+
+### Changed
+
+ - The shareloc ci is now run by gitlab [cars#1081]
+
+### Fixed
+
+ - Add an error message when the selected SRTM tile is not valid [cars#1101]
+
 ## 0.2.8 Robustify geo functions (June 2025)
 
 ### Added

@@ -12,6 +12,7 @@ This file keeps track of authors contributions.
 ## Development Lead
 
 * David Youssefi <david.youssefi@cnes.fr>
+* Valentine Bellet <valentine.bellet@cnes.fr>
 * Emmanuel Dubois <emmanuel.dubois@cnes.fr>
 * Jonathan Guinet <jonathan.guinet@cs-soprasteria.com>
 
@@ -30,6 +31,7 @@ This file keeps track of authors contributions.
 * Yoann Steux <yoann.steux@cs-soprasteria.com>
 * Mathis Roux <mathis.roux@cs-soprasteria.com>
 * Cédric Traizet <cedric.traizet@cs-soprasteria.com>
+* Tommy Calendini <tommy.calendini@cs-soprasteria.com>
 
 Update here with new contributors.
 

@@ -16,11 +16,11 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Changed
 
- - The shareloc ci is now run by gitlab [#213]
+ - The shareloc ci is now run by gitlab [cars#1081]
 
 ### Fixed
 
- - Add an error message when the selected SRTM tile is not valid [#220]
+ - Add an error message when the selected SRTM tile is not valid [cars#1101]
 
 ## 0.2.8 Robustify geo functions (June 2025)
 

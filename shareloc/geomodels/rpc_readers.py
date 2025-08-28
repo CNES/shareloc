@@ -359,6 +359,47 @@ def identify_ossim_kwl(ossim_kwl_file):
         return None
 
 
+def convert_rio_rpc_to_rpc_dict(rio_rpc: Dict, topleftconvention=True) -> Dict:
+    """
+    Convert rio dict to  shareloc rpc reader dict
+
+    :param rio_rpc: rasterio rpc dict (from RPC.to_dict())
+    :param topleftconvention: [0,0] position
+    :type topleftconvention: boolean
+        If False : [0,0] is at the center of the Top Left pixel
+        If True : [0,0] is at the top left of the Top Left pixel (OSSIM)
+
+    :return rpc_param dict to instatiate shareloc.rpc.RPC
+    """
+
+    rpc_params = {}
+    rpc_params["offset_alt"] = rio_rpc["height_off"]
+    rpc_params["scale_alt"] = rio_rpc["height_scale"]
+    rpc_params["offset_y"] = rio_rpc["lat_off"]
+    rpc_params["scale_y"] = rio_rpc["lat_scale"]
+    rpc_params["den_row"] = rio_rpc["line_den_coeff"]
+    rpc_params["num_row"] = rio_rpc["line_num_coeff"]
+    rpc_params["offset_row"] = rio_rpc["line_off"]
+    rpc_params["scale_row"] = rio_rpc["line_scale"]
+    rpc_params["offset_x"] = rio_rpc["long_off"]
+    rpc_params["scale_x"] = rio_rpc["long_scale"]
+    rpc_params["den_col"] = rio_rpc["samp_den_coeff"]
+    rpc_params["num_col"] = rio_rpc["samp_num_coeff"]
+    rpc_params["offset_col"] = rio_rpc["samp_off"]
+    rpc_params["scale_col"] = rio_rpc["samp_scale"]
+    rpc_params["num_x"] = None
+    rpc_params["den_x"] = None
+    rpc_params["num_y"] = None
+    rpc_params["den_y"] = None
+    rpc_params["driver_type"] = "rasterio_rpc"
+
+    if topleftconvention:
+        rpc_params["offset_col"] += 0.5
+        rpc_params["offset_row"] += 0.5
+
+    return rpc_params
+
+
 def rpc_reader_via_rasterio(geomodel_path, topleftconvention=True) -> Dict:
     """
     Load via rasterio RPC object
@@ -382,30 +423,4 @@ def rpc_reader_via_rasterio(geomodel_path, topleftconvention=True) -> Dict:
         return None
 
     rpcs = rpcs.to_dict()
-
-    rpc_params = {}
-    rpc_params["offset_alt"] = rpcs["height_off"]
-    rpc_params["scale_alt"] = rpcs["height_scale"]
-    rpc_params["offset_y"] = rpcs["lat_off"]
-    rpc_params["scale_y"] = rpcs["lat_scale"]
-    rpc_params["den_row"] = rpcs["line_den_coeff"]
-    rpc_params["num_row"] = rpcs["line_num_coeff"]
-    rpc_params["offset_row"] = rpcs["line_off"]
-    rpc_params["scale_row"] = rpcs["line_scale"]
-    rpc_params["offset_x"] = rpcs["long_off"]
-    rpc_params["scale_x"] = rpcs["long_scale"]
-    rpc_params["den_col"] = rpcs["samp_den_coeff"]
-    rpc_params["num_col"] = rpcs["samp_num_coeff"]
-    rpc_params["offset_col"] = rpcs["samp_off"]
-    rpc_params["scale_col"] = rpcs["samp_scale"]
-    rpc_params["num_x"] = None
-    rpc_params["den_x"] = None
-    rpc_params["num_y"] = None
-    rpc_params["den_y"] = None
-    rpc_params["driver_type"] = "rasterio_rpc"
-
-    if topleftconvention:
-        rpc_params["offset_col"] += 0.5
-        rpc_params["offset_row"] += 0.5
-
-    return rpc_params
+    return convert_rio_rpc_to_rpc_dict(rpcs, topleftconvention)

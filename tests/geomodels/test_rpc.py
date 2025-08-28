@@ -25,8 +25,12 @@ Module to test functions that use rpc
 # pylint: disable=no-member
 
 
+import json
+
 # Standard imports
 import os
+import shutil
+import tempfile
 
 # Third party imports
 import numpy as np
@@ -38,7 +42,14 @@ from shareloc.dtm_reader import dtm_reader
 # Shareloc imports
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.geomodels import GeoModel
-from shareloc.geomodels.rpc_readers import identify_dimap, identify_ossim_kwl, rpc_reader_via_rasterio
+from shareloc.geomodels.rpc_readers import (
+    convert_rio_rpc_to_rpc_dict,
+    identify_dimap,
+    identify_ossim_kwl,
+    rpc_reader,
+    rpc_reader_via_rasterio,
+)
+from shareloc.geomodels.rpc_writers import geotiff_rpc_updater, rpc_dict_to_rio_rpcs, write_rio_rpc_as_json
 
 # Shareloc test imports
 from ..helpers import data_path
@@ -599,3 +610,41 @@ def test_geomodel_check_lonlat():
     coordinates_vt[0, :] = coordinates[0, :]
 
     np.testing.assert_equal(coordinates_vt, coordinates_filtered)
+
+
+def test_rpc_writer():
+    """
+    Test rpc writer function
+    """
+
+    input_image = os.path.join(data_path(), "image/phr_gizeh/img1.tif")
+    input_geom = os.path.join(data_path(), "rpc/phr_gizeh/img1.geom")
+
+    rpc_in = rpc_reader(input_geom)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        temp_geotif = os.path.join(tmp, "img1.tif")
+        shutil.copyfile(input_image, temp_geotif)
+        rio_rpc = rpc_dict_to_rio_rpcs(rpc_in)
+        geotiff_rpc_updater(rio_rpc, temp_geotif)
+        rpc_geotif = rpc_reader(temp_geotif)
+        assert rpc_geotif.pop("driver_type") == "rasterio_rpc"
+        rpc_in.pop("driver_type")
+        assert rpc_geotif == rpc_in
+        # overwrite file to clear geotif rpc
+        shutil.copyfile(input_image, temp_geotif)
+        geotiff_rpc_updater(rio_rpc, temp_geotif, export_rpb=True)
+        rpb_file = os.path.splitext(temp_geotif)[0] + ".RPB"
+        assert os.path.isfile(rpb_file)
+        rpc_geotif_rpb = rpc_reader(temp_geotif)
+        assert rpc_geotif_rpb.pop("driver_type") == "rasterio_rpc"
+        assert rpc_geotif_rpb == rpc_in
+
+        temp_json = os.path.join(tmp, "img1.json")
+        write_rio_rpc_as_json(rio_rpc, temp_json)
+
+        with open(temp_json, "r", encoding="utf8") as json_file:
+            rio_rpc_dict_json = json.load(json_file)
+            rpc_json = convert_rio_rpc_to_rpc_dict(rio_rpc_dict_json)
+            assert rpc_json.pop("driver_type") == "rasterio_rpc"
+            assert rpc_json == rpc_in

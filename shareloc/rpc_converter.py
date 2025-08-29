@@ -46,6 +46,9 @@ def rpc_converter(input_rpc: str, output_file: str, rpc_format: str, loglevel):
 
 
 def setup_logging(loglevel=logging.INFO):
+    """
+    Setup logging with log level
+    """
     logging.getLogger().setLevel(loglevel)
 
 

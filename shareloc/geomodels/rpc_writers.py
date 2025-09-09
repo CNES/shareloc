@@ -36,12 +36,13 @@ from rasterio.rpc import RPC
 AVALAIBLE_FORMATS = ["geotiff", "geotiff_rpb", "rpb", "json"]
 
 
-def rpc_writer(rpc_params: dict, filename: str, out_format: str = "geotiff"):
+def rpc_writer(rpc_params: dict, filename: str, out_format: str = "geotiff", override: bool = False):
     """
     writer from  RPC dict, upper layer function to handle rpc_params for shareloc.rpc_reader.rpc_reader()
     :param rpc_params : rpc dict from rpc_reader
     :param filename : output file, in case of out_format is geotiff or geotiff_rpb, filename muse be in existing geotiff
     :param out_format : output_format in : geotiff, geotiff_rpb, rpb, json
+    :param override : if True override rpc if already present in geotiff
     """
     if out_format not in AVALAIBLE_FORMATS:
         raise ValueError(f"{out_format} is no handled. must be one of {AVALAIBLE_FORMATS}")
@@ -52,7 +53,7 @@ def rpc_writer(rpc_params: dict, filename: str, out_format: str = "geotiff"):
         export_rpb = False
         if out_format.endswith("rpb"):
             export_rpb = True
-        geotiff_rpc_updater(rio_rpcs, filename, export_rpb)
+        geotiff_rpc_updater(rio_rpcs, filename, export_rpb, override)
     elif out_format == "rpb":
         write_rio_rpc_as_rpb(rio_rpcs, filename)
     elif out_format == "json":

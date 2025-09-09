@@ -30,19 +30,20 @@ from shareloc.geomodels.rpc_readers import rpc_reader
 from shareloc.geomodels.rpc_writers import rpc_writer
 
 
-def rpc_converter(input_rpc: str, output_file: str, rpc_format: str, loglevel):
+def rpc_converter(input_rpc: str, output_file: str, rpc_format: str, loglevel, override: bool):
     """
     convert rpc to another format.
     :param input_rpc: input rpc
     :param output_file: output file, existing geotiff or filename
     :param rpc_format: output rpc format
+    :param override : if True override rpc if already present in geotiff
     """
     setup_logging(loglevel)
     rpc_dict = rpc_reader(input_rpc)
     driver_type = rpc_dict["driver_type"]
     logging.info("driver type used to read rpc %s", driver_type)
 
-    rpc_writer(rpc_dict, output_file, rpc_format)
+    rpc_writer(rpc_dict, output_file, rpc_format, override)
 
 
 def setup_logging(loglevel=logging.INFO):
@@ -68,9 +69,11 @@ def cli():
         ),
     )
     parser.add_argument("input_rpc", type=str, help="input rpc")
-    parser.add_argument("output_file", type=str, help="output_rfile")
+    parser.add_argument("output_file", type=str, help="output_file")
+    parser.add_argument("--override", action="store_true", help="override geotiff rpc if already present.")
     parser.add_argument(
-        "rpc_format",
+        "--rpc_format",
+        default="geotiff",
         type=str,
         help="output rpc format in geotiff, geotiff_rpb, rpb, json. "
         "if format is geotiff or geotiff_rpb output_file "
@@ -80,7 +83,7 @@ def cli():
     )
     parser.add_argument(
         "--loglevel",
-        default="DEBUG",
+        default="INFO",
         choices=("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"),
         help="Logger level (default: WARNING. Should be one of " "(DEBUG, INFO, WARNING, ERROR, CRITICAL)",
     )

@@ -27,22 +27,26 @@ The following command is an example to add `rpc.geom` rpc coefficient to `img.ti
 
 .. code-block:: console
 
-    usage: shareloc-rpcconverter [-h] [--loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}] input_rpc output_file rpc_format
+    usage: shareloc-rpcconverter [-h] [--override] [--rpc_format RPC_FORMAT] [--loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}] input_rpc output_file
 
     convert RPC models
 
     positional arguments:
       input_rpc             input rpc
-      output_file           output_rfile
-      rpc_format            output rpc format in geotiff, geotiff_rpb, rpb, json. if format is geotiff or geotiff_rpb output_file must be an existing tif, which will be updated with rpc
-                            tifftag,or external .RPB file in case of geotiff_rpb, if rpb, output_file must be a .RPB.
+      output_file           output_file
 
     options:
       -h, --help            show this help message and exit
+      --override            override geotiff rpc if already present.
+      --rpc_format RPC_FORMAT
+                            output rpc format in geotiff, geotiff_rpb, rpb, json. if format is geotiff or geotiff_rpb output_file must be an existing tif, which will be
+                            updated with rpc tifftag,or external .RPB file in case of geotiff_rpb, if rpb, output_file must be a .RPB.
       --loglevel {DEBUG,INFO,WARNING,ERROR,CRITICAL}
-                            Logger level (default: WARNING. Should be one of (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+                            Logger level (default: INFO. Should be one of (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 
     This script takes as input an RPC model and transforms it to another format"
+
+
 
 
 Numba parallelisation

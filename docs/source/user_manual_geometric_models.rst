@@ -40,9 +40,14 @@ Supported RPC formats
 ---------------------
 
 * DIMAP format (V1/V2/V3)
-* OSSIM keywordlist
+* OSSIM keywordlist (.geom)
 * Geotiff RPC
 * All gdal supported format containing rpc (https://gdal.org/drivers/raster/index.html)
+
+There is no standard format for RPC model. We recommend to use Geotiff RPC, which can be stored inside the .tif file as GDAL `RPCCoefficientTag` as described in the `RPC in Geotiff`_.
+RPC can be also stored in the .RPB file (with the same name of the image).
+This second way is useful for expert users who wants to change RPC coefficients (scale and offset for example). A console script ``shareloc-rpcconverter`` is available to convert rpc formats.
+See :ref:`faq` for examples
 
 RPC class API Example
 ----------------------

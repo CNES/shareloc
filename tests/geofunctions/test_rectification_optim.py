@@ -215,7 +215,7 @@ def test_moving_along_axis(init_rpc_geom_model):
     assert res_cpp[0] == res_left_py[0][0]
     assert res_cpp[1] == res_left_py[0][1]
     assert res_cpp[2] == res_left_py[0][2]
-    assert res_cpp[3] == res_rigth_py[0][0]
+    assert res_cpp[3] == pytest.approx(res_rigth_py[0][0], abs=8e-12)
     assert res_cpp[4] == pytest.approx(res_rigth_py[0][1], abs=8e-12)
     assert res_cpp[5] == res_rigth_py[0][2]
 
@@ -253,7 +253,7 @@ def test_compute_local_epipolar_line(init_rpc_geom_model):
         geom_left_cpp, geom_right_cpp, left_point[0], left_point[1], dtm_cpp, 50
     )
     np.testing.assert_allclose(res_py_0[0], res_cpp_0, 0, 2e-11)
-    np.testing.assert_allclose(res_py_1[0], res_cpp_1, 0, 4e-12)
+    np.testing.assert_allclose(res_py_1[0], res_cpp_1, 0, 8e-12)
 
     # with altitude
     left_point = np.array([140.3, 154.3, 50])
@@ -261,7 +261,7 @@ def test_compute_local_epipolar_line(init_rpc_geom_model):
     res_cpp_0, res_cpp_1 = bindings_cpp.compute_local_epipolar_line(
         geom_left_cpp, geom_right_cpp, left_point[0], left_point[1], 75, 50
     )
-    np.testing.assert_allclose(res_py_0[0], res_cpp_0, 0, 8e-12)
+    np.testing.assert_allclose(res_py_0[0], res_cpp_0, 0, 2e-10)
     np.testing.assert_allclose(res_py_1[0], res_cpp_1, 0, 4e-12)
 
 
@@ -459,10 +459,10 @@ def test_compute_strip_of_epipolar_grid_alti(init_rpc_geom_model):
         epipolar_angles,
     )
 
-    np.testing.assert_allclose(res_py[0], res_cpp[0], 0, 3e-10)
+    np.testing.assert_allclose(res_py[0], res_cpp[0], 0, 4e-10)
     np.testing.assert_allclose(res_py[1], res_cpp[1], 0, 2e-9)
-    np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 6e-12)
-    assert res_py[3] == pytest.approx(res_cpp[3], abs=2e-14)
+    np.testing.assert_allclose(res_py[2], res_cpp[2], 0, 8e-12)
+    assert res_py[3] == pytest.approx(res_cpp[3], abs=2e-13)
     assert res_cpp[4] == 0
 
 

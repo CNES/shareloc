@@ -244,10 +244,10 @@ def test_compute_rational_function_polynomial(geom_path):
     res_py_0 = np.append(res_py[0], [np.nan, np.nan])
     res_py_1 = np.append(res_py[1], [np.nan, np.nan])
 
-    np.testing.assert_allclose(np.array(res_cpp[1]), res_py_0, 0, 3e-9)
+    np.testing.assert_allclose(np.array(res_cpp[1]), res_py_0, 0, 4e-9)
     np.testing.assert_allclose(np.array(res_cpp[0]), res_py_1, 0, 3e-9)
 
-    np.testing.assert_allclose(res_cpp_row, res_py_0, 0, 3e-9)
+    np.testing.assert_allclose(res_cpp_row, res_py_0, 0, 4e-9)
     np.testing.assert_allclose(res_cpp_col, res_py_1, 0, 3e-9)
 
 

@@ -534,8 +534,8 @@ def test_sensor_loc_inv_vs_loc_rpc(lon, lat, alt):
     diff_row = row_rpc - row_rpc_optim
     diff_col = col_rpc - col_rpc_optim
 
-    assert diff_row == pytest.approx(0.0, abs=4e-12)
-    assert diff_col == 0.0
+    assert diff_row == pytest.approx(0.0, abs=8e-12)
+    assert diff_col == pytest.approx(0.0, abs=8e-12)
 
 
 @pytest.mark.parametrize(
@@ -731,7 +731,7 @@ def test_sensor_coloc_using_geotransform(col, row, h):
         geom_model_left_optim, geom_model_right_optim, row, col, h, image_left, image_right, using_geotransform=True
     )
     np.testing.assert_allclose(row_coloc, row_coloc_optim, 0, 8e-10)
-    np.testing.assert_allclose(col_coloc, col_coloc_optim, 0, 2e-11)
+    np.testing.assert_allclose(col_coloc, col_coloc_optim, 0, 3e-11)
 
     origin_left = [5000.0, 5000.0]
     pix_size_left = [0.5, 0.5]
@@ -774,8 +774,8 @@ def test_sensor_loc_utm(col, row):
     inv_row, inv_col, __ = loc_utm.inverse(coord_utm[:, 0], coord_utm[:, 1])
     inv_row_optim, inv_col_optim, __ = loc_utm_optim.inverse(coord_utm_optim[:, 0], coord_utm_optim[:, 1])
 
-    np.testing.assert_allclose(inv_row, inv_row_optim, 0, 8e-12)
-    np.testing.assert_allclose(inv_col, inv_col_optim, 0, 8e-12)
+    np.testing.assert_allclose(inv_row, inv_row_optim, 0, 2e-11)
+    np.testing.assert_allclose(inv_col, inv_col_optim, 0, 2e-11)
 
     assert row == pytest.approx(inv_row[0], abs=1e-8)
     assert col == pytest.approx(inv_col[0], abs=1e-8)

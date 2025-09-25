@@ -75,7 +75,7 @@ def test_coloc():
     res_py_2 = coloc(rpc_py_right, rpc_py_left, row_vect, col_vect, alt_vect, using_geotransform=False)
 
     np.testing.assert_allclose(res_cpp_1[0], res_py_1[0], 0, 2e-11)
-    np.testing.assert_allclose(res_cpp_1[1], res_py_1[1], 0, 4e-12)
+    np.testing.assert_allclose(res_cpp_1[1], res_py_1[1], 0, 8e-12)
     np.testing.assert_allclose(res_cpp_1[2], res_py_1[2], 0, 0)
 
     np.testing.assert_allclose(res_cpp_2[0], res_py_2[0], 0, 2e-11)

@@ -12,7 +12,18 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
-### 0.2.9  Gitlab-ci migration (August 2025)
+
+## 0.2.10 RPC converter tool (September 2025)
+
+### Added
+
+ - New tool shareloc_rpcconverter to convert RPC files between different formats (.geom and .RPB) [#358]
+
+### Fixed
+
+ - Update some tests threshold with numba==0.62/llvmlite==0.45  
+
+## 0.2.9  Gitlab-ci migration (August 2025)
 
 ### Changed
 
@@ -21,6 +32,7 @@ A new section Unreleased is opened then for next dev phase.
 ### Fixed
 
  - Add an error message when the selected SRTM tile is not valid [cars#1101]
+
 
 ## 0.2.8 Robustify geo functions (June 2025)
 

@@ -217,7 +217,6 @@ def test_gld_dtm(idxrow, idxcol, row0, col0, steprow, stepcol, nbrow, nbcol):
     Test loc direct grid on dtm function
     """
     dtmbsq, gri = prepare_loc()
-
     gri_gld = gri.direct_loc_grid_dtm(row0, col0, steprow, stepcol, nbrow, nbcol, dtmbsq)
 
     lonlatalt = gri_gld[:, idxrow, idxcol]
@@ -239,12 +238,9 @@ def test_loc_dir_instersect_cube_dtm(col, row, valid_lon, valid_lat, valid_alt):
     """
     dtmbsq, gri = prepare_loc()
 
-    los = np.zeros((3, gri.nbalt))
-    vislonlat = gri.interpolate_grid_in_plani(row, col)
-    los[0, :] = vislonlat[0]
-    los[1, :] = vislonlat[1]
-    los[2, :] = gri.alts_down
-    los = los.T
+    los = np.zeros((gri.nbalt, 3))
+    los[:, 0:2] = gri.interpolate_grid_in_plani(row, col)
+    los[:, 2] = gri.alts_down
     (__, position, __, __) = dtmbsq.intersect_dtm_cube(los)
     position = dtmbsq.index_to_ter(position)
     assert position[0] == pytest.approx(valid_lon, abs=1e-12)
@@ -260,9 +256,9 @@ def test_loc_dir_interp_visee_unitaire_gld(row, col, valid_lon, valid_lat):
     Test los interpolation
     """
     ___, gri = prepare_loc()
-    los = gri.interpolate_grid_in_plani(row, col)
-    assert los[0][1] == pytest.approx(valid_lon, abs=1e-12)
-    assert los[1][1] == pytest.approx(valid_lat, abs=1e-12)
+    los = np.squeeze(gri.interpolate_grid_in_plani(row, col))
+    assert los[1, 0] == pytest.approx(valid_lon, abs=1e-12)
+    assert los[1, 1] == pytest.approx(valid_lat, abs=1e-12)
 
 
 @pytest.mark.parametrize("col,row,h", [(50.5, 100.5, 100.0)])
@@ -591,12 +587,9 @@ def test_loc_intersection(row, col, valid_lon, valid_lat, valid_alt):
     """
     dtmbsq, gri = prepare_loc()
 
-    los = np.zeros((3, gri.nbalt))
-    vislonlat = gri.interpolate_grid_in_plani(row, col)
-    los[0, :] = vislonlat[0]
-    los[1, :] = vislonlat[1]
-    los[2, :] = gri.alts_down
-    los = los.T
+    los = np.zeros((gri.nbalt, 3))
+    los[:, 0:2] = gri.interpolate_grid_in_plani(row, col)
+    los[:, 2] = gri.alts_down
     (__, point_b, alti, los_index) = dtmbsq.intersect_dtm_cube(los)
     (__, point_dtm) = dtmbsq.intersection(los_index, point_b, alti)
     assert point_dtm[0] == pytest.approx(valid_lon, abs=1e-12)

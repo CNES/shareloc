@@ -773,36 +773,43 @@ class Grid(GeoModelTemplate):
         row = np.nan * np.zeros((points_nb))
         col = np.nan * np.zeros((points_nb))
         points_valid = np.arange(points_nb)[filter_nan]
+        altmin = self.alts_down[-1]
+        altmax = self.alts_down[0]
         for point_index in points_valid:
             lon_i = lon[point_index]
             lat_i = lat[point_index]
             alt_i = alt[point_index]
-            deg2mrad = np.deg2rad(1.0) * 1e6
-            iteration = 0
-            coslon = np.cos(np.deg2rad(lat_i))
-            rtx = 1e-12 * 6378000**2
-            row_i, col_i, _ = self.inverse_loc_predictor(lon_i, lat_i, alt_i)
-            m2_error = 10.0
-            valid_point = 0
+            if alt_i < altmin or alt_i > altmax:
+                logging.debug("altitude %f is outside altitude bounds", alt_i)
+                row[point_index] = np.nan
+                col[point_index] = np.nan
+            else:
+                deg2mrad = np.deg2rad(1.0) * 1e6
+                iteration = 0
+                coslon = np.cos(np.deg2rad(lat_i))
+                rtx = 1e-12 * 6378000**2
+                row_i, col_i, _ = self.inverse_loc_predictor(lon_i, lat_i, alt_i)
+                m2_error = 10.0
+                valid_point = 0
 
-            # Iterative process
-            # while error in m2 > 1mm
-            while (m2_error > 1e-6) and (iteration < nb_iterations):
-                position = self.direct_loc_h(row_i, col_i, alt_i)
-                dlon_microrad = (position[0][0] - lon_i) * deg2mrad
-                dlat_microrad = (position[0][1] - lat_i) * deg2mrad
-                m2_error = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
-                dsol = np.array([dlon_microrad, dlat_microrad])
-                mat_dp = self.inverse_partial_derivative(row_i, col_i, alt_i)
-                dimg = mat_dp @ dsol
-                col_i += -dimg[0]
-                row_i += -dimg[1]
-                iteration += 1
-                valid_point = 1
-            if valid_point == 0:
-                (row_i, col_i) = (None, None)
-            row[point_index] = row_i
-            col[point_index] = col_i
+                # Iterative process
+                # while error in m2 > 1mm
+                while (m2_error > 1e-6) and (iteration < nb_iterations):
+                    position = self.direct_loc_h(row_i, col_i, alt_i)
+                    dlon_microrad = (position[0][0] - lon_i) * deg2mrad
+                    dlat_microrad = (position[0][1] - lat_i) * deg2mrad
+                    m2_error = rtx * (dlat_microrad**2 + (dlon_microrad * coslon) ** 2)
+                    dsol = np.array([dlon_microrad, dlat_microrad])
+                    mat_dp = self.inverse_partial_derivative(row_i, col_i, alt_i)
+                    dimg = mat_dp @ dsol
+                    col_i += -dimg[0]
+                    row_i += -dimg[1]
+                    iteration += 1
+                    valid_point = 1
+                if valid_point == 0:
+                    (row_i, col_i) = (None, None)
+                row[point_index] = row_i
+                col[point_index] = col_i
         return row, col, alt
 
 

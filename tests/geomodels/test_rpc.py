@@ -287,6 +287,30 @@ def test_rpc_direct_inverse_iterative_vs_direct(col, row, alt):
     assert lonlatalt[0][1] == pytest.approx(y_inv, abs=10.0 / 111111000)
 
 
+@pytest.mark.parametrize("col,row,alt", [(600, 200, 125)])
+def test_rpc_direct_empty_shape(col, row, alt):
+    """
+    test direct location using array with empty shape
+    """
+    data_folder = data_path()
+    id_scene = "P1BP--2018122638935449CP"
+    file_dimap = os.path.join(data_folder, f"rpc/PHRDIMAP_{id_scene}.XML")
+
+    fctrat = GeoModel(file_dimap)
+
+    # create array with empty shape
+    lonlath = fctrat.direct_loc_h(np.array(row), np.array(col), np.array(alt))
+    lonlath2 = fctrat.direct_loc_h(np.array(row), np.array(col), alt)
+    assert np.array_equal(lonlath, lonlath2)
+    lonlath3 = fctrat.direct_loc_h(np.array([row]), np.array([col]), alt)
+    assert np.array_equal(lonlath, lonlath3)
+    _ = fctrat.direct_loc_inverse_iterative(np.array(row), np.array(col), np.array(alt))
+    _ = fctrat.direct_loc_inverse_iterative(np.array(row), np.array(col), alt)
+    _ = fctrat.direct_loc_inverse_iterative(np.array([row]), np.array([col]), alt)
+    _ = fctrat.direct_loc_inverse_iterative(np.array([row, row]), np.array([col, col]), alt)
+    _ = fctrat.direct_loc_inverse_iterative(np.array([row, row]), np.array([col, col]), np.array(alt))
+
+
 def test_rpc_direct_inverse_iterative_vs_direct_multiple_points():
     """
     compare direct localization and iterative direct localization with multiple points

@@ -144,7 +144,7 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         self.rowmax = self.get_offset_row() + self.get_scale_row()
 
         self.epsg = 4326  # rpc_params does not have an espg key
-        # But PHRDIMAP_ files have an epsg code specfied
+        # But PHRDIMAP_ files have an epsg code specified
 
     @classmethod
     def load(cls, geomodel_path):
@@ -177,8 +177,15 @@ class RPCoptim(bindings_cpp.RPC, GeoModelTemplate):
         :return: ground position (lon,lat,h)
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
-        if not isinstance(alt, (list, np.ndarray)) and isinstance(row, (list, np.ndarray)):
-            alt = [alt]
+        if not isinstance(col, (list, np.ndarray)) or np.ndim(col) == 0:
+            col = np.array([col])
+            row = np.array([row])
+
+        if not isinstance(alt, (list, np.ndarray)) or np.ndim(alt) == 0:
+            alt = np.array([alt])
+
+        if alt.shape[0] != col.shape[0]:
+            alt = np.full(col.shape[0], fill_value=alt[0])
 
         # TODO : use py::array in c++
         res_optim = super().direct_loc_h(row, col, alt, fill_nan, using_direct_coef)

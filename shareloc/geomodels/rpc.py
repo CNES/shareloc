@@ -217,11 +217,11 @@ class RPC(GeoModelTemplate):
         :return: ground position (lon,lat,h)
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
-        if not isinstance(col, (list, np.ndarray)):
+        if not isinstance(col, (list, np.ndarray)) or np.ndim(col) == 0:
             col = np.array([col])
             row = np.array([row])
 
-        if not isinstance(alt, (list, np.ndarray)):
+        if not isinstance(alt, (list, np.ndarray)) or np.ndim(alt) == 0:
             alt = np.array([alt])
 
         if alt.shape[0] != col.shape[0]:
@@ -316,7 +316,7 @@ class RPC(GeoModelTemplate):
         :return: ground position (lon,lat,h) in dtm coordinates system
         :rtype: numpy.ndarray 2D dimension with (N,3) shape, where N is number of input coordinates
         """
-        if not isinstance(col, (list, np.ndarray)):
+        if not isinstance(col, (list, np.ndarray)) or np.ndim(col) == 0:
             row = np.array([row])
             col = np.array([col])
 
@@ -355,10 +355,10 @@ class RPC(GeoModelTemplate):
         :rtype: tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
         """
         if self.inverse_coefficient:
-            if not isinstance(lon, (list, np.ndarray)):
+            if not isinstance(lon, (list, np.ndarray)) or np.ndim(lon) == 0:
                 lon = np.array([lon])
                 lat = np.array([lat])
-            if not isinstance(alt, (list, np.ndarray)):
+            if not isinstance(alt, (list, np.ndarray)) or np.ndim(alt) == 0:
                 alt = np.array([alt])
 
             if alt.shape[0] != lon.shape[0]:
@@ -485,11 +485,11 @@ class RPC(GeoModelTemplate):
         """
 
         if self.inverse_coefficient:
-            if not isinstance(row, (list, np.ndarray)):
+            if not isinstance(row, (list, np.ndarray)) or np.ndim(row) == 0:
                 col = np.array([col])
                 row = np.array([row])
 
-            if not isinstance(alt, (list, np.ndarray)):
+            if not isinstance(alt, (list, np.ndarray)) or np.ndim(alt) == 0:
                 alt = np.array([alt])
 
             if alt.shape[0] != col.shape[0]:

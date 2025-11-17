@@ -194,6 +194,40 @@ def test_sensor_loc_nan(get_geotiff_grid):
     np.testing.assert_allclose(res_inv, [[np.nan], [np.nan], [np.nan]], rtol=0, atol=1e-9)
 
 
+def test_sensor_loc_empty_shape(get_geotiff_grid):
+    """
+    Test direct localization  with grid containing NaN
+    """
+    h = np.array(0)
+    row = np.array(100)
+    col = np.array(100)
+    gri, _ = get_geotiff_grid
+    lonlath = gri.direct_loc_h(row, col, h)
+    lonlath2 = gri.direct_loc_h(row, col, 0)
+    assert np.array_equal(lonlath, lonlath2)
+
+
+@pytest.mark.parametrize("idxcol,idxrow", [(5, 3)])
+@pytest.mark.unit_tests
+def test_direct_loc_grid_h(get_geotiff_grid, idxrow, idxcol):
+    """
+    Test loc direct grid on ellispoid
+    """
+    gri, _ = get_geotiff_grid
+    steprow = 200.0
+    stepcol = 200.0
+    alt = 100.0
+    gri_gld = gri.direct_loc_grid_h(gri.row0, gri.col0, steprow, stepcol, 10, 10, 100.0)
+
+    lonlatalt = gri_gld[:, idxrow, idxcol]
+
+    row = gri.row0 + steprow * idxrow
+    col = gri.col0 + stepcol * idxcol
+
+    valid_lonlatalt = np.squeeze(gri.direct_loc_h(row, col, alt))
+    assert lonlatalt == pytest.approx(valid_lonlatalt, abs=1e-12)
+
+
 @pytest.mark.unit_tests
 def test_sensor_loc_inv(get_geotiff_grid):
     """

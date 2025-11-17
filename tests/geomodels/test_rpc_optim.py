@@ -663,6 +663,7 @@ def test_direct_loc_h(geom_path):
     np.testing.assert_allclose(res_optim[:, 0], res_py[:, 0], 0, 9e-16)
     np.testing.assert_allclose(res_optim[:, 1], res_py[:, 1], 0, 0)
     np.testing.assert_allclose(res_optim[:, 2], res_py[:, 2], 0, 0)
+    _ = rpc_optim.direct_loc_h(np.array(0), np.array(0), np.array(0))
 
 
 def test_get_alt_min_max():

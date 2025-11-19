@@ -12,6 +12,16 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.11 Multi H grid optimization (November 2025)
+
+### Changed
+
+ -  Direct location interpolation replaced with 3D Scipy interpolation. [#225]
+
+### Fixed
+
+ -  Grid margins fixed according to sensor image resolution.
+
 
 ## 0.2.10 RPC converter tool (September 2025)
 

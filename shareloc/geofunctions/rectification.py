@@ -247,10 +247,10 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     rectified_image_size = [int((maxy - miny) / mean_spacing), int((maxx - minx) / mean_spacing)]
 
     # Add margins for grids
-    minx -= margin * epi_step
-    miny -= margin * epi_step
-    maxx += margin * epi_step
-    maxy += margin * epi_step
+    minx -= margin * epi_step * mean_spacing
+    miny -= margin * epi_step * mean_spacing
+    maxx += margin * epi_step * mean_spacing
+    maxy += margin * epi_step * mean_spacing
 
     # 6) Georeferenced coordinates of the [ul, ll, lr, ur] position of left grid
     left_epi_ul = [

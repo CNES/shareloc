@@ -214,4 +214,4 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
         ground_coord[:, 0], ground_coord[:, 1], ground_coord[:, 2], using_geotransform
     )
 
-    return sensor_coord[:, 0], sensor_coord[:, 1], sensor_coord[:, 2]
+    return sensor_coord[:, 0], sensor_coord[:, 1], sensor_coord[:, 2], ground_coord

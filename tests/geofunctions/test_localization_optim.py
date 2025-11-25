@@ -71,13 +71,13 @@ def test_coloc():
     res_cpp_1 = bindings_cpp.coloc(rpc_cpp_right, rpc_cpp_left, row_vect, col_vect, dtm_cpp)
     res_cpp_2 = bindings_cpp.coloc(rpc_cpp_right, rpc_cpp_left, row_vect, col_vect, alt_vect)
 
-    res_py_1 = coloc(rpc_py_right, rpc_py_left, row_vect, col_vect, dtm_py, using_geotransform=False)
-    res_py_2 = coloc(rpc_py_right, rpc_py_left, row_vect, col_vect, alt_vect, using_geotransform=False)
+    res_py_1, _ = coloc(rpc_py_right, rpc_py_left, row_vect, col_vect, dtm_py, using_geotransform=False)
+    res_py_2, _ = coloc(rpc_py_right, rpc_py_left, row_vect, col_vect, alt_vect, using_geotransform=False)
 
-    np.testing.assert_allclose(res_cpp_1[0], res_py_1[0], 0, 2e-11)
-    np.testing.assert_allclose(res_cpp_1[1], res_py_1[1], 0, 8e-12)
-    np.testing.assert_allclose(res_cpp_1[2], res_py_1[2], 0, 0)
+    np.testing.assert_allclose(res_cpp_1[0], res_py_1[:, 0], 0, 2e-11)
+    np.testing.assert_allclose(res_cpp_1[1], res_py_1[:, 1], 0, 8e-12)
+    np.testing.assert_allclose(res_cpp_1[2], res_py_1[:, 2], 0, 0)
 
-    np.testing.assert_allclose(res_cpp_2[0], res_py_2[0], 0, 2e-11)
-    np.testing.assert_allclose(res_cpp_2[1], res_py_2[1], 0, 2e-11)
-    np.testing.assert_allclose(res_cpp_2[2], res_py_2[2], 0, 0)
+    np.testing.assert_allclose(res_cpp_2[0], res_py_2[:, 0], 0, 2e-11)
+    np.testing.assert_allclose(res_cpp_2[1], res_py_2[:, 1], 0, 2e-11)
+    np.testing.assert_allclose(res_cpp_2[2], res_py_2[:, 2], 0, 0)

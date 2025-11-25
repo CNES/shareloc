@@ -201,7 +201,7 @@ def test_moving_along_axis(init_rpc_geom_model):
         0,
     )
 
-    res_left_py, res_rigth_py = moving_along_axis(
+    res_left_py, res_rigth_py, _ = moving_along_axis(
         geom_left_py,
         geom_right_py,
         current_coords_py,
@@ -248,7 +248,7 @@ def test_compute_local_epipolar_line(init_rpc_geom_model):
 
     # with dtm
     left_point = np.array([140.3, 154.3, 50])
-    res_py_0, res_py_1 = compute_local_epipolar_line(geom_left_py, geom_right_py, left_point, dtm_py, 50)
+    res_py_0, res_py_1, _ = compute_local_epipolar_line(geom_left_py, geom_right_py, left_point, dtm_py, 50)
     res_cpp_0, res_cpp_1 = bindings_cpp.compute_local_epipolar_line(
         geom_left_cpp, geom_right_cpp, left_point[0], left_point[1], dtm_cpp, 50
     )
@@ -257,7 +257,7 @@ def test_compute_local_epipolar_line(init_rpc_geom_model):
 
     # with altitude
     left_point = np.array([140.3, 154.3, 50])
-    res_py_0, res_py_1 = compute_local_epipolar_line(geom_left_py, geom_right_py, left_point, 75, 50)
+    res_py_0, res_py_1, _ = compute_local_epipolar_line(geom_left_py, geom_right_py, left_point, 75, 50)
     res_cpp_0, res_cpp_1 = bindings_cpp.compute_local_epipolar_line(
         geom_left_cpp, geom_right_cpp, left_point[0], left_point[1], 75, 50
     )

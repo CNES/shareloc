@@ -757,7 +757,7 @@ def test_rectification_moving_along_lines(init_rpc_geom_model):
     col_pixel_size = 1.0
     reference_next_cords = np.array([[5000.5, 5000.5 + col_pixel_size, 0.0]], dtype=np.float64)
 
-    next_cords, _ = moving_along_axis(
+    next_cords, _, _ = moving_along_axis(
         geom_model_left,
         geom_model_right,
         current_coords,
@@ -789,7 +789,7 @@ def test_rectification_moving_to_next_line(init_rpc_geom_model):
     row_pixel_size = 1.0
     reference_next_cords = np.array([[5000.5 + row_pixel_size, 5000.5, 0.0]], dtype=np.float64)
 
-    next_cords, _ = moving_along_axis(
+    next_cords, _, _ = moving_along_axis(
         geom_model_left,
         geom_model_right,
         current_coords,
@@ -818,7 +818,7 @@ def test_rectification_moving_to_axis_error():
     default_elev = 0.0
 
     with pytest.raises(ValueError):
-        _, _ = moving_along_axis(
+        _, _, _ = moving_along_axis(
             geom_model_left, geom_model_right, current_coords, mean_spacing, default_elev, epi_step, alphas, 2
         )
 

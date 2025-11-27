@@ -568,6 +568,7 @@ def compute_strip_of_epipolar_grid(
     right_grid[0 : current_left_point.shape[0], 0 : current_left_point.shape[1], :] = current_right_point
 
     current_left_point = np.squeeze(current_left_point)
+    current_right_point = np.squeeze(current_right_point)
 
     # squeeze reduce 2 dimension if shape is like (1,1,3) we want to keep (1,3) dims
     if current_left_point.ndim == 1:
@@ -615,7 +616,8 @@ def compute_strip_of_epipolar_grid(
         ratio = 1
         # compute ratio
         if epi_reso is not None:
-            _, _, ground_coords = moving_along_axis(
+
+            temp_left_point, temp_right_point, ground_coords = moving_along_axis(
                 geom_model_left,
                 geom_model_right,
                 current_left_point,
@@ -635,24 +637,27 @@ def compute_strip_of_epipolar_grid(
 
             ratio[ratio > max_ratio] = max_ratio
             ratio[ratio < min_ratio] = min_ratio
-            # print(ratio)
             if sum_ratio is None:
                 sum_ratio = 1 / ratio
             else:
                 sum_ratio += 1 / ratio
+
+            # rescale the step
+            current_left_point = (temp_left_point - current_left_point) / ratio[:, np.newaxis] + current_left_point
+            current_right_point = (temp_right_point - current_right_point) / ratio[:, np.newaxis] + current_right_point
         else:
             sum_ratio += 1
 
-        current_left_point, current_right_point, ground_coords = moving_along_axis(
-            geom_model_left,
-            geom_model_right,
-            current_left_point,
-            spacing,
-            elevation,
-            epi_step / ratio,
-            epipolar_angles,
-            axis,
-        )
+            current_left_point, current_right_point, ground_coords = moving_along_axis(
+                geom_model_left,
+                geom_model_right,
+                current_left_point,
+                spacing,
+                elevation,
+                epi_step,
+                epipolar_angles,
+                axis,
+            )
 
         local_epi_start, local_epi_end, current_ground_coords = compute_local_epipolar_line(
             geom_model_left, geom_model_right, current_left_point, elevation, elevation_offset
@@ -925,7 +930,7 @@ def compute_stereorectification_epipolar_grids(
     )
 
     if adaptative_step:
-        ratio[:, -1] = ratio_first
+        ratio[:, -1] = np.squeeze(ratio_first)
     # Compute global mean baseline ratio using the two strip
     mean_baseline_ratio = (
         mean_br * (grid_size[1] * (grid_size[0] - 1) - nan_count) + mean_br_col * (grid_size[0] - nan_count_col)

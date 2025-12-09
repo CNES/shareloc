@@ -549,7 +549,7 @@ def compute_strip_of_epipolar_grid(
     else:
         max_ratio = 1
         min_ratio = 1
-    max_strip_size = strip_size * ((max_ratio - min_ratio) * scale + min_ratio)
+    max_strip_size = int(np.ceil(strip_size * ((max_ratio - min_ratio) * scale + min_ratio)))
 
     # compute the output size depending on axis
     size_shape = (

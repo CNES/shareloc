@@ -489,6 +489,7 @@ def compute_strip_of_epipolar_grid(
     elevation_offset: float = 50.0,
     epipolar_angles: np.ndarray = None,
     epi_reso: np.ndarray = None,
+    scale: float = 1.0,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float, int]:
     """
     Compute stereo-rectification epipolar grids by strip. We start with a starting positions_point,
@@ -520,6 +521,11 @@ def compute_strip_of_epipolar_grid(
     :param epipolar_angles: 2D array (rows,cols) containing epipolar angles at each grid node (angle in between epipolar
         coordinate system and left image coordinate system), size must be coherent with positions_point 1st,2nd dim
     :type epipolar_angles: np.ndarray
+    :param epi_reso: np.array of 2 elements, which contain the ground resolution along each axis, if epi_reso is None
+        then no scaling (default behaviour)
+    :type epi_reso: np.ndarray
+    :param scale: scaling factor for dem ratio, used when eip_reso is not None
+    :type sclae: float
     :return:
         - left  epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
         - right epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
@@ -540,10 +546,10 @@ def compute_strip_of_epipolar_grid(
         max_ratio = 3
         min_ratio = 1
         dist_plani_ref = epi_reso[axis]
-        # max strip size
     else:
         max_ratio = 1
-    max_strip_size = strip_size * max_ratio
+        min_ratio = 1
+    max_strip_size = strip_size * ((max_ratio - min_ratio) * scale + min_ratio)
 
     # compute the output size depending on axis
     size_shape = (
@@ -637,6 +643,7 @@ def compute_strip_of_epipolar_grid(
 
             ratio[ratio > max_ratio] = max_ratio
             ratio[ratio < min_ratio] = min_ratio
+            ratio += (ratio - min_ratio) * scale
             if sum_ratio is None:
                 sum_ratio = 1 / ratio
             else:
@@ -828,6 +835,7 @@ def compute_stereorectification_epipolar_grids(
     as_displacement_grid: bool = False,
     margin: int = 0,
     adaptative_step: bool = False,
+    scale_factor: float = 1.0,
 ) -> Tuple[np.ndarray, np.ndarray, List[int], float, Affine]:
     """
     Compute stereo-rectification epipolar grids. Rectification scheme is composed of :
@@ -908,6 +916,7 @@ def compute_stereorectification_epipolar_grids(
         elevation=elevation,
         elevation_offset=elevation_offset,
         epi_reso=dist_plani,
+        scale=scale_factor,
     )
 
     # Moving along row (axis = 1) using previous results
@@ -927,6 +936,7 @@ def compute_stereorectification_epipolar_grids(
         elevation_offset=elevation_offset,
         epipolar_angles=alphas,
         epi_reso=dist_plani,
+        scale=scale_factor,
     )
 
     if adaptative_step:

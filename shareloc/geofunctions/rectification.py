@@ -82,13 +82,9 @@ def compute_epipolar_gsd(
     epi_step: int = 1,
     elevation: Union[float, DTMIntersection] = 0.0,
     elevation_offset: float = 50.0,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float, int]:
+) -> Tuple[np.ndarray, float]:
     """
-    Compute stereo-rectification epipolar grids by strip. We start with a starting positions_point,
-    and optional already computed epipolar_angles at these points, and we move strip_size times along axis direction
-    (0 = along columns, 1 = along lines) to compute a strip of epipolar grid. positions_points is a (rows,cols,3)
-    array containing (rows,cols) 3D coordinates (row,col,alt).  If axis==0 (resp. 1)
-    rows (resp. cols) dimension must be 1.
+    Compute epipolar sampling distance for one grid step along each axis.
 
     :param geom_model_left: geometric model of the left image
     :type geom_model_left: GeomodelTemplate
@@ -96,31 +92,17 @@ def compute_epipolar_gsd(
     :type geom_model_right: GeomodelTemplate
     :param left_positions_point: array of size (rows,cols,3) containing positions for left points
     :type left_positions_point: np.ndarray
-    :param right_positions_point: array of size (rows,cols,3) containing positions for left points
-    :type right_positions_point: np.ndarray
     :param spacing: image spacing along axis dimension (in general mean image spacing)
     :type spacing: float
-    :param axis: displacement direction (0 = along columns, 1 = along lines)
-    :type axis: int
-    :param strip_size: desired size of grid along one axis for strip generation
-    :type strip_size: int
     :param epi_step: epipolar grid sampling step
     :type epi_step: int
     :param elevation: elevation
     :type elevation: shareloc.dtm or float
     :param elevation_offset: elevation difference used to estimate the local tangent
     :type elevation_offset: float
-    :param epipolar_angles: 2D array (rows,cols) containing epipolar angles at each grid node (angle in between epipolar
-        coordinate system and left image coordinate system), size must be coherent with positions_point 1st,2nd dim
-    :type epipolar_angles: np.ndarray
     :return:
-        - left  epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
-        - right epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
-        - array of epipolar angles (rows,cols)
-        - mean baseline ratio of the strip computed on rows x cols elements minus provided epipolar angles shape,
-            and number of  NaNs in local epipolar lines computations. We consider that if epipolar angles are provided,
-            then baseline ratio for these elements have been already computed.
-        - number of NaNs in mean baseline ratio
+        - dist_plani : epipolar gsd along each axis
+        - alti : altitude of gsd computation
     :rtype: Tuple
     """
 
@@ -153,7 +135,7 @@ def compute_epipolar_gsd(
     ground_coords = geom_model_left.direct_loc_h(coords[:, 0], coords[:, 1], coords[:, 2])
     ecef_coord = coordinates_conversion(ground_coords, geom_model_left.epsg, 4978)
     dist_plani = np.sqrt(np.sum((ecef_coord[:, :] - ecef_coord[0, :]) ** 2, axis=1))[1:]
-    return dist_plani
+    return dist_plani, coords[0, 2]
 
 
 def compute_epipolar_angle(end_line, start_line):
@@ -270,7 +252,7 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     # Choose a square spacing
     mean_spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
-    #  Pixel size (spacing) of the epipolar grids, convention [row, col]
+    # Pixel size (spacing) of the epipolar grids, convention [row, col]
     grid_pixel_size = np.full(shape=2, fill_value=epi_step, dtype=np.float64)
     grid_pixel_size *= mean_spacing
 
@@ -862,6 +844,10 @@ def compute_stereorectification_epipolar_grids(
     :type as_displacement_grid: bool
     :param margin: margin to add to the grid
     :type margin: int
+    :param adaptative_step: adapt epipolar step to terrain slope (False as default)
+    :type adaptative_step: bool
+    :param scale_factor: scale factor used in adaptative step (1.0 by default).
+    :type scale_factor: float
     :return:
         Returns left and right epipolar displacement/localisation  grid,
         epipolar image size, mean of base to height ratio
@@ -891,16 +877,18 @@ def compute_stereorectification_epipolar_grids(
 
     dist_plani = None
     if adaptative_step:
-        dist_plani = compute_epipolar_gsd(
+        dist_plani, alti = compute_epipolar_gsd(
             geom_model_left,
             geom_model_right,
             left_starting_point,
             spacing,
             epi_step=epi_step,
-            elevation=0,
+            elevation=elevation,
             elevation_offset=elevation_offset,
         )
-        logging.info("on ground distance for a grid step (m) : [%1.2f,%1.2f]", dist_plani[0], dist_plani[1])
+        logging.debug(
+            "sampling distance at %1.1f m for a grid step (m) : [%1.2f,%1.2f]", alti, dist_plani[0], dist_plani[1]
+        )
 
     # Create the first row by moving along columns (axis = 0) with number of rows of the grids.
     # It returns (grid_size[0],1,3) shaped grids, epipolar angles, and mean baseline ratio for the first columns.

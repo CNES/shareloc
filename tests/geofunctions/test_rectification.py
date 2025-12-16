@@ -39,6 +39,7 @@ from shareloc.dtm_reader import dtm_reader
 from shareloc.geofunctions.dtm_intersection import DTMIntersection
 from shareloc.geofunctions.rectification import (  # write_epipolar_grid,
     compute_epipolar_angle,
+    compute_epipolar_gsd,
     compute_stereorectification_epipolar_grids,
     get_epipolar_extent,
     moving_along_axis,
@@ -186,6 +187,81 @@ def test_compute_stereorectification_epipolar_grids_geomodel_rpc_displacement(in
 
     # Check mean_baseline_ratio
     reference_mean_br = 0.7040047235162911
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-11)
+
+
+def test_compute_stereorectification_epipolar_grids_geomodel_rpc_adaptative_scale(init_rpc_geom_model):
+    """
+    Test epipolar grids generation using adaptative scale (factor = 1.5)
+
+    Input Geomodels: RPC
+    Earth elevation: dtm
+    """
+    left_im = Image(os.path.join(data_path(), "rectification", "left_image.tif"))
+    right_im = Image(os.path.join(data_path(), "rectification", "right_image.tif"))
+
+    geom_model_left, geom_model_right = init_rpc_geom_model
+
+    # we use DTM and Geoid: a DTMIntersection class has to be used
+    dtm_file = os.path.join(data_path(), "dtm", "srtm_ventoux", "srtm90_non_void_filled", "N44E005.hgt")
+    geoid_file = os.path.join(data_path(), "dtm", "geoid", "egm96_15.gtx")
+    dtm_image = dtm_reader(dtm_file, geoid_file)
+    dtm_ventoux = DTMIntersection(
+        dtm_image.epsg,
+        dtm_image.alt_data,
+        dtm_image.nb_rows,
+        dtm_image.nb_columns,
+        dtm_image.transform,
+    )
+
+    epi_step = 30
+    elevation_offset = 50
+    left_grid, right_grid, [img_size_row, img_size_col], mean_br = compute_stereorectification_epipolar_grids(
+        left_im,
+        geom_model_left,
+        right_im,
+        geom_model_right,
+        dtm_ventoux,
+        epi_step,
+        elevation_offset,
+        adaptative_step=True,
+        scale_factor=1.5,
+    )
+
+    # update baseline
+    # grid_geotransform = Affine(epi_step, 0, -(epi_step * 0.5), 0, epi_step, -(epi_step * 0.5))
+    # write_epipolar_grid(left_grid, os.path.join(data_path(),
+    # 'shareloc_gt_left_grid_adaptative.tif'),grid_geotransform)
+    # write_epipolar_grid(right_grid, os.path.join(data_path(),
+    # 'shareloc_gt_right_grid_adaptative.tif'), grid_geotransform)
+
+    # Check size of rectified images
+    assert img_size_row == 675
+    assert img_size_col == 705
+
+    # Check mean_baseline_ratio
+    # ground truth mean baseline ratio from OTB
+    # a small change in value is foreseen, we are using adapative scale 1e-5 -> 1e-4
+    reference_mean_br = 0.704004705
+    assert mean_br == pytest.approx(reference_mean_br, abs=1e-4)
+
+    # Shareloc non regression reference
+    reference_left_grid = rasterio.open(
+        os.path.join(data_path(), "rectification", "shareloc_gt_left_grid_adaptative.tif")
+    ).read()
+    reference_right_grid = rasterio.open(
+        os.path.join(data_path(), "rectification", "shareloc_gt_right_grid_adaptative.tif")
+    ).read()
+
+    # Check epipolar grids
+    np.testing.assert_allclose(reference_left_grid[1], left_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_left_grid[0], left_grid[:, :, 1], atol=1.0e-10)
+
+    np.testing.assert_allclose(reference_right_grid[1], right_grid[:, :, 0], atol=1.0e-10)
+    np.testing.assert_allclose(reference_right_grid[0], right_grid[:, :, 1], atol=1.0e-10)
+
+    # Check mean_baseline_ratio
+    reference_mean_br = 0.7039422312686529
     assert mean_br == pytest.approx(reference_mean_br, abs=1e-11)
 
 
@@ -640,7 +716,7 @@ def test_prepare_rectification(init_rpc_geom_model):
     elevation_offset = 50
     default_elev = 0.0
     margin = 0
-    __, grid_size, rectified_image_size, footprint, _ = prepare_rectification(
+    __, grid_size, rectified_image_size, footprint, left_positions_point = prepare_rectification(
         left_im,
         geom_model_left,
         geom_model_right,
@@ -649,6 +725,16 @@ def test_prepare_rectification(init_rpc_geom_model):
         elevation_offset,
         margin,
     )
+
+    spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
+
+    dist_plani, alti = compute_epipolar_gsd(
+        geom_model_left, geom_model_right, left_positions_point, spacing, epi_step, default_elev, elevation_offset
+    )
+
+    assert alti == 0
+
+    np.testing.assert_allclose(dist_plani, [15.17216332, 15.1496704], rtol=0, atol=1e-7)
 
     # check size of the epipolar grids
     assert grid_size[0] == 22

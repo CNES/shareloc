@@ -13,13 +13,11 @@ stages:
 
 variables: 
     # template SonarQube
-    SONARQUBE_TOKEN: "${CARS_CI_SONARQUBE_TOKEN}"
+    SONAR_TOKEN: "${CARS_CI_SONARQUBE_TOKEN}"
 
 include:
   # Sonarqube job
-  - project: "usinelogicielle/public/gitlab-ci-templates"
-    ref: v1.1.3
-    file: "jobs/sonarqube-gitlab-ci.yml"
+  - component: $CI_SERVER_FQDN/usinelogicielle/public/gitlab-ci-components/sonarqube-component/sonarqube@1.1.0 
   # Variable defintion
   - component: $CI_SERVER_FQDN/dali/cars-park/cars-ci/cars-ci-variables@master
   # Jobs for gitlab-github synchronisation

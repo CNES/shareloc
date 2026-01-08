@@ -250,3 +250,10 @@ def test_sensor_loc_inv(get_geotiff_grid):
         rtol=0,
         atol=1e-8,
     )
+
+    # GRID altitudes plane is between [-30,1000]
+    for h in [-50, -30, -31, -29, 1000, 2000]:
+
+        [lon, lat, h] = gri.direct_loc_h(50, 100, h)[0]
+        res = np.squeeze(np.array(gri.inverse_loc(lon, lat, h)))
+        np.testing.assert_allclose(res, [50, 100, h], rtol=0, atol=1e-8)

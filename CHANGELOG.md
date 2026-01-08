@@ -12,6 +12,13 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+## 0.2.12 Inverse location altitude extrapolation (January 2026)
+
+### Fixed
+
+ -  Sonarqube CI fix.
+ -  Inverse location altitude extrapolation. [#364]
+
 ## 0.2.11 Multi H grid optimization (November 2025)
 
 ### Changed

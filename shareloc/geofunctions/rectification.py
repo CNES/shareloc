@@ -472,6 +472,7 @@ def compute_strip_of_epipolar_grid(
     epipolar_angles: np.ndarray = None,
     epi_reso: np.ndarray = None,
     scale: float = 1.0,
+    max_ratio: float = 3.0,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, float, int]:
     """
     Compute stereo-rectification epipolar grids by strip. We start with a starting positions_point,
@@ -506,8 +507,10 @@ def compute_strip_of_epipolar_grid(
     :param epi_reso: np.array of 2 elements, which contain the ground resolution along each axis, if epi_reso is None
         then no scaling (default behaviour)
     :type epi_reso: np.ndarray
-    :param scale: scaling factor for dem ratio, used when eip_reso is not None
+    :param scale: scaling factor for dem ratio, used when epi_reso is not None
     :type scale: float
+    :param max_ratio: upper threshold on ratio, used when epi_reso is not None
+    :type max_ratio: float
     :return:
         - left  epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
         - right epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
@@ -523,14 +526,12 @@ def compute_strip_of_epipolar_grid(
     mean_baseline_ratio = 0
     # count nan
     nan_count = 0
-
+    # min ratio is one by definition
+    min_ratio = 1
     if epi_reso is not None:
-        max_ratio = 3
-        min_ratio = 1
         dist_plani_ref = epi_reso[axis]
     else:
         max_ratio = 1
-        min_ratio = 1
     max_strip_size = int(np.ceil(strip_size * ((max_ratio - min_ratio) * scale + min_ratio)))
 
     # compute the output size depending on axis
@@ -615,7 +616,7 @@ def compute_strip_of_epipolar_grid(
                 epipolar_angles,
                 axis,
             )
-            # only plani
+
             diff_alti = np.abs(ground_coords[:, 2] - current_ground_coords[:, 2])
             # ecef_coord_next = coordinates_conversion(ground_coords, geom_model_left.epsg, 4978)
             # ecef_coord = coordinates_conversion(current_ground_coords, geom_model_left.epsg, 4978)
@@ -624,7 +625,6 @@ def compute_strip_of_epipolar_grid(
             ratio = np.sqrt(diff_alti**2 + dist_plani_ref**2) / dist_plani_ref
 
             ratio[ratio > max_ratio] = max_ratio
-            ratio[ratio < min_ratio] = min_ratio
             ratio += (ratio - min_ratio) * scale
             if sum_ratio is None:
                 sum_ratio = 1 / ratio
@@ -818,6 +818,7 @@ def compute_stereorectification_epipolar_grids(
     margin: int = 0,
     adaptative_step: bool = False,
     scale_factor: float = 1.0,
+    max_ratio: float = 3.0,
 ) -> Tuple[np.ndarray, np.ndarray, List[int], float, Affine]:
     """
     Compute stereo-rectification epipolar grids. Rectification scheme is composed of :
@@ -848,6 +849,8 @@ def compute_stereorectification_epipolar_grids(
     :type adaptative_step: bool
     :param scale_factor: scale factor used in adaptative step (1.0 by default).
     :type scale_factor: float
+    :param max_ratio: upper threshold on ratio, used in adaptative step (3.0 by default)
+    :type max_ratio: float
     :return:
         Returns left and right epipolar displacement/localisation  grid,
         epipolar image size, mean of base to height ratio
@@ -905,6 +908,7 @@ def compute_stereorectification_epipolar_grids(
         elevation_offset=elevation_offset,
         epi_reso=dist_plani,
         scale=scale_factor,
+        max_ratio=max_ratio,
     )
 
     # Moving along row (axis = 1) using previous results
@@ -925,6 +929,7 @@ def compute_stereorectification_epipolar_grids(
         epipolar_angles=alphas,
         epi_reso=dist_plani,
         scale=scale_factor,
+        max_ratio=max_ratio,
     )
 
     if adaptative_step:

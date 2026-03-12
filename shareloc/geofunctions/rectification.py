@@ -507,7 +507,7 @@ def compute_strip_of_epipolar_grid(
         then no scaling (default behaviour)
     :type epi_reso: np.ndarray
     :param scale: scaling factor for dem ratio, used when eip_reso is not None
-    :type sclae: float
+    :type scale: float
     :return:
         - left  epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)
         - right epipolar positions grid in shape (rows,cols,3) rows (resp. cols) is strip_size if axis = 0 (resp. 1)

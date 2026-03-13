@@ -689,13 +689,11 @@ def test_colocalization(col, row, alt):
     fctrat = GeoModel(file_dimap)
     fctrat_optim = GeoModel(file_dimap, "RPCoptim")
 
-    row_coloc, col_coloc, _ = coloc_rpc(fctrat, fctrat, row, col, alt)
-    row_coloc_optim, col_coloc_optim, _ = coloc_rpc(fctrat_optim, fctrat_optim, row, col, alt)
+    sensor_coloc, ground_coloc = coloc_rpc(fctrat, fctrat, row, col, alt)
+    sensor_coloc_optim, ground_coloc_optim = coloc_rpc(fctrat_optim, fctrat_optim, row, col, alt)
 
-    assert row == pytest.approx(row_coloc, abs=1e-1)
-    assert col == pytest.approx(col_coloc, abs=1e-1)
-    assert row == pytest.approx(row_coloc_optim, abs=1e-1)
-    assert col == pytest.approx(col_coloc_optim, abs=1e-1)
+    assert sensor_coloc == pytest.approx(sensor_coloc_optim, abs=1e-10)
+    assert ground_coloc_optim == pytest.approx(ground_coloc, abs=1e-10)
 
 
 @pytest.mark.parametrize("col,row,h", [(500.0, 200.0, 100.0)])
@@ -716,15 +714,15 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     image_filename_right = os.path.join(data_path(), "image/phr_ventoux/", "right_image_pixsize_0_5.tif")
     image_right = Image(image_filename_right)
 
-    row_coloc, col_coloc, _ = coloc_rpc(
+    sensor_coloc, ground_coloc = coloc_rpc(
         geom_model_left, geom_model_right, row, col, h, image_left, image_right, using_geotransform=True
     )
 
-    row_coloc_optim, col_coloc_optim, _ = coloc_rpc(
+    sensor_coloc_optim, ground_coloc_optim = coloc_rpc(
         geom_model_left_optim, geom_model_right_optim, row, col, h, image_left, image_right, using_geotransform=True
     )
-    np.testing.assert_allclose(row_coloc, row_coloc_optim, 0, 8e-10)
-    np.testing.assert_allclose(col_coloc, col_coloc_optim, 0, 3e-11)
+    np.testing.assert_allclose(sensor_coloc, sensor_coloc_optim, 0, 8e-10)
+    np.testing.assert_allclose(ground_coloc, ground_coloc_optim, 0, 8e-10)
 
     origin_left = [5000.0, 5000.0]
     pix_size_left = [0.5, 0.5]
@@ -738,8 +736,8 @@ def test_sensor_coloc_using_geotransform(col, row, h):
     pix_size_right = [0.5, 0.5]
     row_index = (row_inv - origin_right[0]) / pix_size_right[0] - 0.5
     col_index = (col_inv - origin_right[1]) / pix_size_right[1] - 0.5
-    assert row_coloc == row_index
-    assert col_coloc == col_index
+    assert sensor_coloc[0, 0] == row_index
+    assert sensor_coloc[0, 1] == col_index
 
 
 @pytest.mark.parametrize("col,row", [(500.0, 200.0)])

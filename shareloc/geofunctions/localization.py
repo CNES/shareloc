@@ -187,7 +187,7 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
     :param using_geotransform: using_geotransform
     :type using_geotransform: boolean
     :return: Corresponding sensor position [row, col, altitude] in the geometric model 2
-    :rtype: Tuple(1D np.array row position, 1D np.array col position, 1D np.array alt)
+    :rtype: Tuple(2D np.array sensor coordinates, 2D np.array ground coordinates)
        using row and col input dimensions
     """
     # Standardize row and col inputs in ndarray
@@ -214,4 +214,4 @@ def coloc(model1, model2, row, col, elevation=None, image1=None, image2=None, us
         ground_coord[:, 0], ground_coord[:, 1], ground_coord[:, 2], using_geotransform
     )
 
-    return sensor_coord[:, 0], sensor_coord[:, 1], sensor_coord[:, 2]
+    return sensor_coord, ground_coord

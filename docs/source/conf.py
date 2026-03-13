@@ -27,15 +27,16 @@ copyright = "2023, CNES"
 author = "Shareloc Team"
 
 # The full version, including alpha/beta/rc tags
-from pkg_resources import get_distribution
+from importlib.metadata import version as get_version
 
 try:
-    version = get_distribution("Shareloc").version
-    release = version
+    release = get_version("Shareloc")
+    version = release
 except Exception as error:
     print("WARNING: cannot find shareloc version")
     version = "Unknown"
     release = version
+
 
 # The master toctree document.
 master_doc = "index"

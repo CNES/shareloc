@@ -283,7 +283,7 @@ class Grid(GeoModelTemplate):
             position = self.check_lonlat(position)
         return position
 
-    def compute_los(self, row, col, epsg):
+    def compute_los(self, row, col, epsg, alts=None):
         """
         Compute Line of Sight
 
@@ -291,6 +291,8 @@ class Grid(GeoModelTemplate):
         :type row: float
         :param col: column sensor position
         :type col: float
+        :param alts: list of alt, if none alts are grid altitude plane
+        :type alts: numpy.array
         :param epsg: epsg code
         :type epsg: int
         :return: los
@@ -301,10 +303,14 @@ class Grid(GeoModelTemplate):
             col = np.array([col])
 
         nb_coords = row.size
-        los = np.zeros((nb_coords, self.nbalt, 3))
-        loslonlat = self.interpolate_grid_in_plani(row, col)
+        nb_alts = alts.shape[0] if alts is not None else self.nbalt
+        los = np.zeros((nb_coords, nb_alts, 3))
+        loslonlat = self.interpolate_grid_in_plani(row, col, alts)
         los[:, :, 0:2] = loslonlat
-        los[:, :, 2] = self.alts_down
+        if alts is None:
+            los[:, :, 2] = self.alts_down
+        else:
+            los[:, :, 2] = alts
         if epsg != self.epsg:
             los = coordinates_conversion(los, self.epsg, epsg)
         return los
@@ -331,10 +337,19 @@ class Grid(GeoModelTemplate):
         if np.any(filter_nan):
             row_filtered = row[filter_nan]
             col_filtered = col[filter_nan]
-            all_los = self.compute_los(row_filtered, col_filtered, dtm.get_epsg())
+
+            diff_alti_min, diff_alti_max = self.get_dtm_alt_offset(dtm.get_footprint_corners(), dtm)
+
+            min_dtm, max_dtm = (dtm.get_alt_min() - 1.0 + diff_alti_min, dtm.get_alt_max() + 1.0 + diff_alti_max)
+            alts = self.alts_down.copy()
+            if min_dtm < self.alts_down[-1]:
+                alts = np.append(alts, min_dtm)
+            if max_dtm > self.alts_down[0]:
+                alts = np.insert(alts, 0, max_dtm)
+            all_los = self.compute_los(row_filtered, col_filtered, dtm.get_epsg(), alts)
             points_dtm[filter_nan, :] = dtm.intersection_n_los_dtm(all_los)
-        if self.epsg == 4326:
-            points_dtm = self.check_lonlat(points_dtm)
+            if self.epsg == 4326:
+                points_dtm = self.check_lonlat(points_dtm)
         return points_dtm
 
     def los_extrema(self, row, col, alt_min, alt_max):
@@ -357,7 +372,7 @@ class Grid(GeoModelTemplate):
         los_edges[1, :] = self.direct_loc_h(row, col, alt_min)
         return los_edges
 
-    def interpolate_grid_in_plani(self, row, col):
+    def interpolate_grid_in_plani(self, row, col, alts=None):
         """
         interpolate positions on multi h grid
 
@@ -365,6 +380,8 @@ class Grid(GeoModelTemplate):
         :type row: np.ndarray
         :param col: column sensor position
         :type col: np.ndarray
+        :param alts: list of alt, if none alts are grid altitude plane
+        :type alts: np.ndarray
         :return: interpolated positions
         :rtype: np.ndarray
         """
@@ -372,13 +389,18 @@ class Grid(GeoModelTemplate):
             row = np.array([row])
             col = np.array([col])
 
-        alts = np.arange(self.nbalt)
-        rows = np.repeat(row, self.nbalt)
-        cols = np.repeat(col, self.nbalt)
-        alts = np.tile(alts, row.size)
-        points = np.concatenate((alts[:, np.newaxis], rows[:, np.newaxis], cols[:, np.newaxis]), axis=1)
+        if alts is None:
+            nb_alt = self.nbalt
+            alt_normalized = self.alt_normalise_interp(self.alts_down)
+        else:
+            nb_alt = alts.shape[0]
+            alt_normalized = self.alt_normalise_interp(alts)
+        rows = np.repeat(row, nb_alt)
+        cols = np.repeat(col, nb_alt)
+        alt_normalized = np.tile(alt_normalized, row.size)
+        points = np.concatenate((alt_normalized[:, np.newaxis], rows[:, np.newaxis], cols[:, np.newaxis]), axis=1)
         res = self.interpolator_lonlat(points)
-        return res.reshape((row.size, self.nbalt, 2))
+        return res.reshape((row.size, nb_alt, 2))
 
     def interpolate_grid_in_altitude(self, nbrow, nbcol, nbalt=None):
         """

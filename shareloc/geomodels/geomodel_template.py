@@ -23,8 +23,14 @@ This module contains the GeoModel abstract class
 """
 # Standard imports
 from abc import abstractmethod
+from typing import Union
 
 import numpy as np
+from affine import Affine
+
+import bindings_cpp
+from shareloc.geofunctions.dtm_intersection import DTMIntersection
+from shareloc.proj_utils import coordinates_conversion, transform_index_to_physical_point
 
 
 class GeoModelTemplate:
@@ -116,3 +122,26 @@ class GeoModelTemplate:
         )
         lonlath[filtering, :] = np.nan
         return lonlath
+
+    def get_dtm_alt_offset(self, corners: np.ndarray, dtm: Union[DTMIntersection, bindings_cpp.DTMIntersection]):
+        """
+        returns min/max altitude offset between dtm coordinates system and  Geomodel one
+
+        :param corners: corners of the DTM's footprint
+        :type corners: np.ndarray (4x2)
+        :param dtm: DTM to get alt offset from
+        :type dtm: DTMIntersection or bindings_cpp.DTMIntersection
+        :return: min/max altimetric difference between RPC's epsg minus dtm alti expressed in dtm epsg
+        :rtype: list of float (1x2)
+        """
+
+        alti_moy = (dtm.get_alt_min() + dtm.get_alt_max()) / 2.0
+
+        ground_corners = np.zeros([3, 4])
+        ground_corners[2, :] = alti_moy
+        transform = dtm.get_transform()
+        if not isinstance(transform, Affine):
+            transform = Affine.from_gdal(*transform)
+        ground_corners[1::-1, :] = transform_index_to_physical_point(transform, corners[:, 0], corners[:, 1])
+        converted_corners = coordinates_conversion(ground_corners.transpose(), dtm.get_epsg(), self.epsg)
+        return [np.min(converted_corners[:, 2]) - alti_moy, np.max(converted_corners[:, 2]) - alti_moy]

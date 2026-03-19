@@ -228,6 +228,18 @@ def test_gld_dtm(idxrow, idxcol, row0, col0, steprow, stepcol, nbrow, nbcol):
     valid_lonlatalt = np.squeeze(gri.direct_loc_dtm(row, col, dtmbsq))
     assert lonlatalt == pytest.approx(valid_lonlatalt, abs=1e-12)
 
+    # issue #366
+    # dtm has value in [3, 238] alts planes are  [4900. , 3667.5, 2435. , 1202.5,  -30. ]
+    dtm = DTMIntersection(
+        dtmbsq.epsg,
+        dtmbsq.alt_data - 500,
+        dtmbsq.nb_rows,
+        dtmbsq.nb_columns,
+        dtmbsq.transform.to_gdal(),
+    )
+    valid_lonlatalt = np.squeeze(gri.direct_loc_dtm(row, col, dtm))
+    assert [57.22112999422796, 21.964821264243184, -336.6518127830654] == pytest.approx(valid_lonlatalt, abs=1e-12)
+
 
 @pytest.mark.parametrize("col,row", [(50.5, 100.5)])
 @pytest.mark.parametrize("valid_lon,valid_lat,valid_alt", [(57.21700176041541, 21.959197148974, 238.0)])

@@ -27,21 +27,16 @@ RPC models covered are : DIMAP V1, DIMAP V2, DIMAP V3, ossim (geom file), geotif
 import logging
 import os
 from ast import literal_eval
-from typing import Union
 
 # Third party imports
 import numpy as np
-from affine import Affine
 from numba import config, njit, prange
-
-import bindings_cpp
-from shareloc.geofunctions.dtm_intersection import DTMIntersection
 
 # Shareloc imports
 from shareloc.geomodels.geomodel import GeoModel
 from shareloc.geomodels.geomodel_template import GeoModelTemplate
 from shareloc.geomodels.rpc_readers import rpc_reader
-from shareloc.proj_utils import coordinates_conversion, transform_index_to_physical_point
+from shareloc.proj_utils import coordinates_conversion
 
 # Set numba type of threading layer before parallel target compilation
 config.THREADING_LAYER = "omp"
@@ -322,7 +317,6 @@ class RPC(GeoModelTemplate):
 
         diff_alti_min, diff_alti_max = self.get_dtm_alt_offset(dtm.get_footprint_corners(), dtm)
 
-        # print("min {} max {}".format(dtm.Zmin,dtm.Zmax))
         (min_dtm, max_dtm) = (dtm.get_alt_min() - 1.0 + diff_alti_min, dtm.get_alt_max() + 1.0 + diff_alti_max)
         if min_dtm < self.offset_alt - self.scale_alt:
             logging.debug("minimum dtm value is outside RPC validity domain, extrapolation will be done")
@@ -567,29 +561,6 @@ class RPC(GeoModelTemplate):
         :rtype: list
         """
         return [self.offset_alt - self.scale_alt / 2.0, self.offset_alt + self.scale_alt / 2.0]
-
-    def get_dtm_alt_offset(self, corners: np.ndarray, dtm: Union[DTMIntersection, bindings_cpp.DTMIntersection]):
-        """
-        returns min/max altitude offset between dtm coordinates system and RPC one
-
-        :param corners: corners of the DTM's footprint
-        :type corners: np.ndarray (4x2)
-        :param dtm: DTM to get alt offset from
-        :type dtm: DTMIntersection or bindings_cpp.DTMIntersection
-        :return: min/max altimetric difference between RPC's epsg minus dtm alti expressed in dtm epsg
-        :rtype: list of float (1x2)
-        """
-
-        alti_moy = (dtm.get_alt_min() + dtm.get_alt_max()) / 2.0
-
-        ground_corners = np.zeros([3, 4])
-        ground_corners[2, :] = alti_moy
-        transform = dtm.get_transform()
-        if not isinstance(transform, Affine):
-            transform = Affine.from_gdal(*transform)
-        ground_corners[1::-1, :] = transform_index_to_physical_point(transform, corners[:, 0], corners[:, 1])
-        converted_corners = coordinates_conversion(ground_corners.transpose(), dtm.get_epsg(), self.epsg)
-        return [np.min(converted_corners[:, 2]) - alti_moy, np.max(converted_corners[:, 2]) - alti_moy]
 
     def los_extrema(self, row, col, alt_min=None, alt_max=None, fill_nan=False, epsg=None):
         """

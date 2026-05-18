@@ -115,7 +115,6 @@ class Grid(GeoModelTemplate):
         self.pred_ofset_scale_col = None
 
         self.read()
-
         # normalize alt
         index = np.arange(self.nbalt)
         self.alt_normalise_interp = interpolate.interp1d(
@@ -124,8 +123,8 @@ class Grid(GeoModelTemplate):
 
         # create direct interpolator
         x = np.arange(0, self.nbalt)
-        y = np.arange(self.row0, self.row0 + self.nbrow * self.steprow, self.steprow)
-        z = np.arange(self.col0, self.col0 + self.nbcol * self.stepcol, self.stepcol)
+        y = np.linspace(self.row0, self.row0 + self.nbrow * self.steprow, self.nbrow, endpoint=False)
+        z = np.linspace(self.col0, self.col0 + self.nbcol * self.stepcol, self.nbcol, endpoint=False)
         lonlat_data = np.moveaxis(np.array((self.lon_data, self.lat_data)), 0, -1)
         self.interpolator_lonlat = interpolate.RegularGridInterpolator(
             (x, y, z), lonlat_data, bounds_error=False, fill_value=None

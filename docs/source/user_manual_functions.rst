@@ -199,6 +199,12 @@ Shareloc rectification grids respects OTB convention for displacement grids if `
 To generate the images in epipolar geometry from the grids computed by shareloc and the original images, one can refer to the Orfeo Toolbox documentation `here <https://www.orfeo-toolbox.org/CookBook/recipes/stereo.html#resample-images-in-epipolar-geometry>`_ .
 Algorithm details can be found in reference below.
 
+The rectified image extent is computed to cover both input images.
+The corners of the right image are colocalized in the left image geometry.
+The bounding box of the left image footprint and the colocalized right image footprint is then computed in the local epipolar frame.
+
+When a DTM is provided, the right image footprint is evaluated at the minimum and maximum DTM altitudes so that the resulting rectification extent covers the possible altitude range.
+
 .. code-block:: python
 
     def compute_stereorectification_epipolar_grids(
@@ -256,14 +262,18 @@ We generate the left grid point by point, and for each point on the left grid, w
 
 The algorithm follows these broad guidelines:
 
- 1.Calculation of the top-left corner of the grid is performed using the *init_inputs_rectification* function.
+1.  The rectification extent and the top-left corner of the grid are computed by the ``init_inputs_rectification`` function.
+
+    The corners of the left image and the colocalized corners of the right image are expressed in the local epipolar frame. Their combined bounding box defines the origin and dimensions of the rectified image.
+
+    When a DTM is used, the right image corners are colocalized at the minimum and maximum DTM altitudes, and both footprints are included in the bounding-box computation.
  
- 2.Starting from this first point, we compute the first columns of the grid.*compute_strip_of_epipolar_grid(axis=0)*
+2.  Starting from this first point, we compute the first columns of the grid. ``compute_strip_of_epipolar_grid(axis=0)``
  
  .. image:: images/0.png
     :width: 40%
     
- 3.Computation of each row, by stride, from the first columns.*compute_strip_of_epipolar_grid(axis=1)*
+3.  Computation of each row, by stride, from the first columns. ``compute_strip_of_epipolar_grid(axis=1)``
  
  .. image:: images/1.png
     :width: 50%

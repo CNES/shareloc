@@ -221,16 +221,113 @@ def compute_local_epipolar_line(geom_model_left, geom_model_right, left_point, e
     return epi_line_start, epi_line_end, ground_coord
 
 
-# pylint: disable=too-many-locals
-def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset, margin=0):
+def _get_image_corners(image):
     """
-    Determine size and spacing of the epipolar grids.
-    Determine size of the epipolar images and the upper-left origin of the stereo-rectified left image (starting point)
+    Return the image extent corners in physical image coordinates.
+
+    Corners are ordered as [upper-left, lower-left, lower-right, upper-right].
+
+    :param image: input image
+    :type image: shareloc.image.Image
+    :return: image extent corners, shape (4, 2), convention [row, col]
+    :rtype: np.ndarray
+    """
+    indices = np.array(
+        [
+            [0, 0],
+            [image.nb_rows, 0],
+            [image.nb_rows, image.nb_columns],
+            [0, image.nb_columns],
+        ],
+        dtype=np.float64,
+    )
+
+    corners = [
+        transform_index_to_physical_point(
+            image.transform,
+            row,
+            col,
+        )
+        for row, col in indices
+    ]
+
+    return np.asarray(corners, dtype=np.float64)
+
+
+def _transform_points_to_epipolar_frame(
+    points,
+    origin,
+    unit_vector_along_epi_x,
+    unit_vector_along_epi_y,
+    unit_vector_ortho_epi_x,
+    unit_vector_ortho_epi_y,
+):
+    """
+    Transform points from left-image physical coordinates to the local
+    epipolar frame.
+
+    :param points: points in left-image geometry, shape (N, 2) or (N, 3),
+        convention [row, column, ...]
+    :type points: np.ndarray
+    :param origin: origin of the epipolar frame, convention [row, column]
+    :type origin: np.ndarray
+    :param unit_vector_along_epi_x: column component of the vector
+        tangent to the epipolar direction
+    :type unit_vector_along_epi_x: float
+    :param unit_vector_along_epi_y: row component of the vector
+        tangent to the epipolar direction
+    :type unit_vector_along_epi_y: float
+    :param unit_vector_ortho_epi_x: column component of the vector
+        orthogonal to the epipolar direction
+    :type unit_vector_ortho_epi_x: float
+    :param unit_vector_ortho_epi_y: row component of the vector
+        orthogonal to the epipolar direction
+    :type unit_vector_ortho_epi_y: float
+    :return: coordinates in the local epipolar frame, shape (N, 2),
+        convention [epipolar_x, epipolar_y]
+    :rtype: np.ndarray
+    """
+    points = np.asarray(points, dtype=float)
+    origin = np.asarray(origin, dtype=float)
+
+    delta_rows = points[:, 0] - origin[0]
+    delta_columns = points[:, 1] - origin[1]
+
+    epipolar_x = unit_vector_along_epi_y * delta_rows + unit_vector_along_epi_x * delta_columns
+
+    epipolar_y = unit_vector_ortho_epi_y * delta_rows + unit_vector_ortho_epi_x * delta_columns
+
+    return np.column_stack((epipolar_x, epipolar_y))
+
+
+# pylint: disable=too-many-locals
+def prepare_rectification(
+    left_im,
+    geom_model_left,
+    right_im,
+    geom_model_right,
+    elevation,
+    epi_step,
+    elevation_offset,
+    margin=0,
+):
+    """
+    Determine the size and spacing of the epipolar grids.
+
+    The rectification footprint covers the left image and the right image
+    colocalized in the left image geometry. When a DTM is provided, the
+    right image footprint is evaluated at the minimum and maximum DTM
+    altitudes.
+
+    Also determine the epipolar image size and the upper-left origin of
+    the stereo-rectified left image.
 
     :param left_im: left image
     :type left_im: shareloc.image object
     :param geom_model_left: geometric model of the left image
     :type geom_model_left: GeomodelTemplate
+    :param right_im: right image
+    :type right_im: shareloc.image object
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: GeomodelTemplate
     :param elevation: elevation
@@ -247,6 +344,7 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
         - epipolar images size, 1D np.array [number of row, number of columns]
         - epipolar grid corners in left image geometry [ul, ll, lr, ur]
             2D np.array [georef corner_row, georef corner_col, altitude]
+        - starting point of the epipolar grid in left image geometry
     :rtype: Tuple
     """
     # Choose a square spacing
@@ -278,31 +376,89 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     unit_vector_ortho_epi_x = -np.sin(alpha)
     unit_vector_ortho_epi_y = np.cos(alpha)
 
-    # 4) Compute the bounding box of the left input image in the epipolar geometry
-    # Coordinates of the 4 corners
-    ulx = 0
-    uly = 0
-    urx = unit_vector_along_epi_x * left_im.nb_columns * left_im.pixel_size_col
-    ury = unit_vector_ortho_epi_x * left_im.nb_columns * left_im.pixel_size_col
-    llx = unit_vector_along_epi_y * left_im.nb_rows * left_im.pixel_size_row
-    lly = unit_vector_ortho_epi_y * left_im.nb_rows * left_im.pixel_size_row
-    lrx = (
-        unit_vector_along_epi_x * left_im.nb_columns * left_im.pixel_size_col
-        + unit_vector_along_epi_y * left_im.nb_rows * left_im.pixel_size_row
-    )
-    lry = (
-        unit_vector_ortho_epi_x * left_im.nb_columns * left_im.pixel_size_col
-        + unit_vector_ortho_epi_y * left_im.nb_rows * left_im.pixel_size_row
+    # 4) Compute the bounding box covering both input images in the
+    # left image geometry.
+
+    left_corners = _get_image_corners(left_im)
+    right_corners = _get_image_corners(right_im)
+
+    # Colocalize the right image corners into the left image geometry.
+    has_altitude_range = hasattr(elevation, "get_alt_min") and hasattr(elevation, "get_alt_max")
+
+    if has_altitude_range:
+        alt_min = elevation.get_alt_min()
+        alt_max = elevation.get_alt_max()
+
+        right_corners_at_min, _ = coloc(
+            geom_model_right,
+            geom_model_left,
+            right_corners[:, 0],
+            right_corners[:, 1],
+            elevation=alt_min,
+        )
+
+        right_corners_at_max, _ = coloc(
+            geom_model_right,
+            geom_model_left,
+            right_corners[:, 0],
+            right_corners[:, 1],
+            elevation=alt_max,
+        )
+
+        right_corners_in_left = np.concatenate(
+            (
+                right_corners_at_min,
+                right_corners_at_max,
+            ),
+            axis=0,
+        )
+    else:
+        right_corners_in_left, _ = coloc(
+            geom_model_right,
+            geom_model_left,
+            right_corners[:, 0],
+            right_corners[:, 1],
+            elevation=elevation,
+        )
+
+    # Express both image footprints in the local epipolar frame.
+    left_corners_epi = _transform_points_to_epipolar_frame(
+        left_corners,
+        left_origin,
+        unit_vector_along_epi_x,
+        unit_vector_along_epi_y,
+        unit_vector_ortho_epi_x,
+        unit_vector_ortho_epi_y,
     )
 
-    # Bounding box
-    minx = min(urx, llx, lrx, ulx)
-    miny = min(ury, lly, lry, uly)
-    maxx = max(urx, llx, lrx, ulx)
-    maxy = max(ury, lly, lry, uly)
+    right_corners_epi = _transform_points_to_epipolar_frame(
+        right_corners_in_left,
+        left_origin,
+        unit_vector_along_epi_x,
+        unit_vector_along_epi_y,
+        unit_vector_ortho_epi_x,
+        unit_vector_ortho_epi_y,
+    )
 
-    # 5) Compute the size of epipolar images
-    rectified_image_size = [int((maxy - miny) / mean_spacing), int((maxx - minx) / mean_spacing)]
+    all_corners_epi = np.concatenate(
+        (
+            left_corners_epi,
+            right_corners_epi,
+        ),
+        axis=0,
+    )
+
+    # Bounding box covering the left image and the colocalized right image.
+    minx = np.min(all_corners_epi[:, 0])
+    miny = np.min(all_corners_epi[:, 1])
+    maxx = np.max(all_corners_epi[:, 0])
+    maxy = np.max(all_corners_epi[:, 1])
+
+    # 5) Compute the size of epipolar images.
+    rectified_image_size = [
+        int(np.ceil((maxy - miny) / mean_spacing)),
+        int(np.ceil((maxx - minx) / mean_spacing)),
+    ]
 
     # Add margins for grids
     minx -= margin * epi_step * mean_spacing
@@ -348,9 +504,11 @@ def prepare_rectification(left_im, geom_model_left, geom_model_right, elevation,
     return grid_pixel_size, grid_size, rectified_image_size, footprint, start_left
 
 
+# pylint: disable=too-many-arguments
 def get_epipolar_extent(
     left_im,
     geom_model_left,
+    right_im,
     geom_model_right,
     elevation=0.0,
     epi_step=30.0,
@@ -365,6 +523,8 @@ def get_epipolar_extent(
     :type left_im: shareloc.image object
     :param geom_model_left: geometric model of the left image
     :type geom_model_left: GeomodelTemplate
+    :param right_im: right image
+    :type right_im: shareloc.image object
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: GeomodelTemplate
     :param elevation: elevation
@@ -381,7 +541,7 @@ def get_epipolar_extent(
     :rtype: numpy.array
     """
     __, __, __, footprint, _ = prepare_rectification(
-        left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset, grid_margin
+        left_im, geom_model_left, right_im, geom_model_right, elevation, epi_step, elevation_offset, grid_margin
     )
 
     loc_left = Localization(geom_model_left, image=left_im)
@@ -724,7 +884,7 @@ def init_inputs_rectification(
     :type left_im: shareloc Image object
     :param geom_model_left: geometric model of the left image
     :type geom_model_left: GeoModelTemplate
-    :param right_im: right image (not used, be still here for API symmetry)
+    :param right_im: right image
     :type right_im: shareloc Image object
     :param geom_model_right: geometric model of the right image
     :type geom_model_right: GeoModelTemplate
@@ -749,7 +909,7 @@ def init_inputs_rectification(
     spacing = 0.5 * (abs(left_im.pixel_size_col) + abs(left_im.pixel_size_row))
 
     __, grid_size, rectified_image_size, _, starting_point = prepare_rectification(
-        left_im, geom_model_left, geom_model_right, elevation, epi_step, elevation_offset, margin
+        left_im, geom_model_left, right_im, geom_model_right, elevation, epi_step, elevation_offset, margin
     )
 
     # Starting points are NOT the upper-left origin of the left epipolar image, and its correspondent in the right image

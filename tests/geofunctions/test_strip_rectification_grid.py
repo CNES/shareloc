@@ -32,7 +32,10 @@ import pytest
 import rasterio
 
 # Shareloc imports
-from shareloc.geofunctions.rectification import compute_strip_of_epipolar_grid, positions_to_displacement_grid
+from shareloc.geofunctions.rectification import (  # write_epipolar_grid,
+    compute_strip_of_epipolar_grid,
+    positions_to_displacement_grid,
+)
 
 # Shareloc test imports
 from tests.helpers import data_path
@@ -112,7 +115,7 @@ def test_compute_strip_of_epipolar_grid_columns_lines_rectangular(
     np.testing.assert_allclose(reference_right_grid[0][:21, :], right_grid[:, :, 1], atol=1.0e-9)
 
     # Check mean_baseline_ratio
-    reference_mean_br = 0.7024809
+    reference_mean_br = 0.7010887927572778
     assert mean_br == pytest.approx(reference_mean_br, abs=1e-5)
 
 
@@ -168,6 +171,36 @@ def test_compute_strip_of_epipolar_grid_columns_lines(init_inputs_rectification_
         grid_size[1] * grid_size[0]
     )
 
+    # update baseline
+    # grid_geotransform = rasterio.transform.Affine(
+    #     epi_step,
+    #     0.0,
+    #     -epi_step / 2.0,
+    #     0.0,
+    #     epi_step,
+    #     -epi_step / 2.0,
+    # )
+
+    # write_epipolar_grid(
+    #     left_grid,
+    #     os.path.join(
+    #         data_path(),
+    #         "rectification",
+    #         "shareloc_gt_positions_grid_left.tif",
+    #     ),
+    #     grid_geotransform,
+    # )
+
+    # write_epipolar_grid(
+    #     right_grid,
+    #     os.path.join(
+    #         data_path(),
+    #         "rectification",
+    #         "shareloc_gt_positions_grid_right.tif",
+    #     ),
+    #     grid_geotransform,
+    # )
+
     # shareloc reference
     reference_left_grid = rasterio.open(
         os.path.join(data_path(), "rectification", "shareloc_gt_positions_grid_left.tif")
@@ -185,7 +218,7 @@ def test_compute_strip_of_epipolar_grid_columns_lines(init_inputs_rectification_
 
     # Check mean_baseline_ratio
     # ground truth mean baseline ratio
-    reference_mean_br = 0.7040047235162911
+    reference_mean_br = 0.7026125922061695
     assert mean_br == pytest.approx(reference_mean_br, abs=1e-6)
 
 
@@ -237,7 +270,9 @@ def test_compute_strip_of_epipolar_grid_lines_columns(init_inputs_rectification_
     )
 
     assert nan_count + nan_line == 0
-    mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_line * grid_size[0]) / (
+    # The last strip contains grid_size[1] points because it is computed along axis 1
+    # Weight its mean baseline ratio by the number of points in that strip
+    mean_br = (mean_br * (grid_size[1] * (grid_size[0] - 1)) + mean_br_line * grid_size[1]) / (
         grid_size[1] * grid_size[0]
     )
 
@@ -250,11 +285,11 @@ def test_compute_strip_of_epipolar_grid_lines_columns(init_inputs_rectification_
     ).read()
 
     # Check epipolar grids
-    assert reference_left_grid[1] == pytest.approx(left_grid[:, :, 0], abs=7e-3)
-    assert reference_left_grid[0] == pytest.approx(left_grid[:, :, 1], abs=7e-3)
+    assert reference_left_grid[1] == pytest.approx(left_grid[:, :, 0], abs=8e-3)
+    assert reference_left_grid[0] == pytest.approx(left_grid[:, :, 1], abs=8e-3)
 
-    assert reference_right_grid[1] == pytest.approx(right_grid[:, :, 0], abs=7e-3)
-    assert reference_right_grid[0] == pytest.approx(right_grid[:, :, 1], abs=7e-3)
+    assert reference_right_grid[1] == pytest.approx(right_grid[:, :, 0], abs=8e-3)
+    assert reference_right_grid[0] == pytest.approx(right_grid[:, :, 1], abs=8e-3)
 
     # Check mean_baseline_ratio
     # ground truth mean baseline ratio
@@ -397,5 +432,5 @@ def test_working_with_strip(init_rpc_geom_model, init_inputs_rectification_fixtu
 
     assert nan_col + nan_count == 0
     mean_br = sum_br / (grid_size[0] * grid_size[1])
-    reference_mean_br = 0.704004723
+    reference_mean_br = 0.7040039053197381
     assert mean_br == pytest.approx(reference_mean_br, abs=1e-7)

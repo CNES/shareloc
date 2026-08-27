@@ -31,6 +31,7 @@ import logging
 import numpy as np
 import rasterio
 from affine import Affine
+from pyproj import CRS
 
 # Project import
 from shareloc.proj_utils import transform_physical_point_to_index
@@ -179,7 +180,12 @@ class Image:
             self.pixel_rotation_col = self.transform[1]
 
             if self.dataset.crs is not None:
-                self.epsg = self.dataset.crs.to_epsg()
+                crs = CRS.from_wkt(self.dataset.crs.to_wkt())
+
+                if crs.is_compound:
+                    self.epsg = crs.sub_crs_list[0].to_epsg()
+                else:
+                    self.epsg = self.dataset.crs.to_epsg()
             else:
                 self.epsg = None
 

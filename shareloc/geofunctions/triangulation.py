@@ -50,7 +50,7 @@ def sensor_triangulation(
 
     Delvit J.M. et al. "The geometric supersite of Salon de Provence", ISPRS Congress Paris, 2006.
 
-    :param matches:  matches in sensor coordinates Nx[row (left), col (left), row (right), col (right)]
+    :param matches:  matches in sensor coordinates Nx[col (left), row (left), col (right), row (right)]
     :type matches: np.array
     :param geometrical_model_left: left image geometrical model
     :type geometrical_model_left: GeomodelTemplate
@@ -65,7 +65,7 @@ def sensor_triangulation(
     :param fill_nan: fill numpy.nan values with lon and lat offset if true (same as OTB/OSSIM), nan is returned
         otherwise
     :type fill_nan: boolean
-    :return: intersections in cartesian crs, intersections in wgs84 crs and optionnaly residues
+    :return: intersections in cartesian crs, intersections in wgs84 crs and optionally residues
     :rtype: (numpy.array,numpy,array,numpy.array)
     """
     # LOS instantiation
@@ -83,7 +83,7 @@ def sensor_triangulation(
 
     # refine matches
     intersections_residues = None
-    if residues is True:
+    if residues:
         intersections_residues = distance_point_los(left_los, intersections_ecef)
     return intersections_ecef, intersections_wgs84, intersections_residues
 

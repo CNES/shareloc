@@ -839,7 +839,6 @@ def compute_strip_of_epipolar_grid(
     elif nan_count > 0:
         logging.warning("local ratio contains NaN in current rectification strip")
 
-
     # reshape
     if axis == 0:
         epi_angles_out = epi_angles_out[:point, :]

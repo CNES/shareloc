@@ -778,9 +778,6 @@ def compute_strip_of_epipolar_grid(
             )
 
             diff_alti = np.abs(ground_coords[:, 2] - current_ground_coords[:, 2])
-            # ecef_coord_next = coordinates_conversion(ground_coords, geom_model_left.epsg, 4978)
-            # ecef_coord = coordinates_conversion(current_ground_coords, geom_model_left.epsg, 4978)
-            # dist_plani = np.sqrt(np.sum((ecef_coord_next - ecef_coord) ** 2, axis=1))
 
             ratio = np.sqrt(diff_alti**2 + dist_plani_ref**2) / dist_plani_ref
 
@@ -842,10 +839,6 @@ def compute_strip_of_epipolar_grid(
     elif nan_count > 0:
         logging.warning("local ratio contains NaN in current rectification strip")
 
-    # print("sum_ratio")
-    # print(f"computed point {point}")
-    # print(sum_ratio)
-    # print(f"size {strip_size}")
     # reshape
     if axis == 0:
         epi_angles_out = epi_angles_out[:point, :]

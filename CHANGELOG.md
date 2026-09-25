@@ -12,6 +12,27 @@ A new section Unreleased is opened then for next dev phase.
 
 ### Fixed
 
+
+## 0.3.0 variable step for epipolar grid (September 2026)
+
+### Added
+
+ - Variable step for epipolar grid [#361]
+
+### Changed
+
+ - Use left and right sensor images in epipolar extent computation [#317]
+ - Colocalization function API change.
+
+### Fixed
+
+ -  Sonarcube fix [#371]
+ -  Compound CRS. [#370]
+ -  Downgrade affine from 3.0.1 to 3.0.0.
+ -  Typo in doctring. [#369]
+ -  Fix arange numerical stability. [#368]
+ -  Grid models altitude extrapolation. [#366]
+
 ## 0.2.12 Inverse location altitude extrapolation (January 2026)
 
 ### Fixed

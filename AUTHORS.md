@@ -32,6 +32,8 @@ This file keeps track of authors contributions.
 * Mathis Roux <mathis.roux@cs-soprasteria.com>
 * Cédric Traizet <cedric.traizet@cs-soprasteria.com>
 * Tommy Calendini <tommy.calendini@cs-soprasteria.com>
+* Marian Rassat <marian.rassat@cs-soprasteria.com>
+* Maxime Robineau <maxime.robineau@cs-soprasteria.com>
 
 Update here with new contributors.
 
